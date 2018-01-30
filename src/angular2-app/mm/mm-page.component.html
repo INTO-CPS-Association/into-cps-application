@@ -1,0 +1,7 @@
+<panel [title]="'Overview'">
+    <mm-overview #overview [path]="path"></mm-overview>
+</panel>
+
+<panel [title]="'Configuration'" [open]="false">
+    <mm-configuration [path]="path" (change)="overview.parseConfig()"></mm-configuration>
+</panel>

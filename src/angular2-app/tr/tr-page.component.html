@@ -1,0 +1,27 @@
+
+<panel [title]="'FMUs'" [open] = "false">
+    <tr-fmu></tr-fmu>
+</panel>
+
+
+<panel [title]="'Users'" [open] = "false">
+    <tr-user></tr-user>
+</panel>
+
+<panel [title]="'Simulations'" [open] = "false">
+    <tr-sim></tr-sim>
+</panel>
+
+<panel [title]="'Requirements'">
+    <panel [title]="'Requirements without positive simulation or test results'" [open] = "false">
+        <tr-reqnoposres></tr-reqnoposres>
+    </panel>
+    <panel [title]="'Requirements without any simulation or test results'" [open] = "false">
+        <tr-reqnores></tr-reqnores>
+    </panel>
+    <panel [title]="'Requirements with at least one positive but no negative test results'" [open] = "false">
+        <tr-reqoneres></tr-reqoneres>
+    </panel>
+</panel>
+
+

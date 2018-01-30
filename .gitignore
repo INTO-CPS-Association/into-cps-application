@@ -1,0 +1,52 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# node-waf configuration
+.lock-wscript
+
+# Dependency directories
+node_modules
+jspm_packages
+
+# Build folder
+dist/
+
+# Vim auxiliary files
+.*.un~
+.*.swp
+.*.swo
+*~
+
+bower_components/
+typings/
+.vscode/
+
+
+.DS_Store
+
+test-create
+demo-project
+test-sim
+test-vdmsim
+target
+test-project/Models/watertankController/generated
+downloader-test/installed
+downloader-test/*.zip
+
+**/R_*
+**/test-project/downloads
+
+
+MakeFile
+
+pkg/
+
+# WebStorm project files
+.idea/

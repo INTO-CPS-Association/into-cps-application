@@ -1,0 +1,23 @@
+<div class="row">
+    <div class="col-md-4">
+        <label>{{mainObjectPropertyName1}}</label>
+    </div>
+    <div class="col-md-4">
+        <label>{{mainObjectPropertyName2}}</label>
+    </div>
+</div>
+
+
+<div *ngIf="resultsAvailible">
+    <div *ngFor="let result of mainObjecList">
+        <div class="row">
+            <hr>
+            <div class="col-md-4" style="overflow-wrap: break-word">
+                <h5>{{result.subObjectProperty1}}</h5>
+            </div>
+            <div class="col-md-4" style="overflow-wrap: break-word">
+                <h5>{{result.subObjectProperty2}}</h5>
+            </div>
+        </div>
+    </div>
+</div>

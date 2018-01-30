@@ -1,0 +1,7 @@
+<panel [title]="'Configuration'" [open]="false">
+    <coe-configuration [path]="path" (change)="sim.parseConfig()"></coe-configuration>
+</panel>
+
+<panel [title]="'Simulation'">
+    <coe-simulation #sim [path]="path"></coe-simulation>
+</panel>

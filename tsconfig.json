@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "outDir": "./dist/"
+    },
+    "compileOnSave": false,
+    "exclude": [
+        "./node_modules",
+        "./dist",
+        "./typings",
+        "./bower_components"
+    ]
+}

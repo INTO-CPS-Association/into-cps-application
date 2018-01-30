@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Traceability Hints and Tips</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/layout-default.css">
+    <!--Styles to fix issues with related to responsiveness and padding of ui-layout-->
+    <script src="rename.js"></script>
+    <style>
+        .no-top-padding {
+            margin-top: -10px;
+        }
+        
+        .full-width {
+            margin-left: -10px;
+            margin-right: -10px;
+        }
+    </style>
+
+</head>
+
+<body>
+<div class="container-fluid">
+ <h1>Traceability Hints and Tips</h1>   
+
+ <p> The INTO-CPS tool chain (including the INTO-CPS Application, Overture, 20-sim, OpenModelica, Modelio and analyses) 
+     records traceability and provenance data when modelling, simulating and analysing. This data is stored in a database
+     which runs whilst the INTO-CPS application is open.</p>
+
+ <p> The Neo4J viewer allows users to view all recorded traceability data for a project and also to query this data for 
+     uses such as impact analysis.</p>
+
+ <h2>Installing Neo4j</h2>
+ 
+ <p> The INTO-CPS Application automatically records traceability and provenance links, however, to view the database of 
+     links, users must install the Neo4j viewer. This is included in the lastest release of INTO-CPS tools (select 
+     <code>Show Download Manager</code> and download <i>Neo4J Community Edition - External Link</i></p>
+
+ <p> Once downloaded, extract the folder to the install or install-downloads folder.</p>
+
+ <h2>Using the Neo4j browser</h2>
+ 
+ <h3>Logging in</h3>
+
+ <p> When first opened, Neo4j requires a username and password to access the traceability database:</p>
+ <p>username = <kbd>intoCPSApp</kbd></p>
+ <p>password = <kbd>KLHJiK8k2378HKsg823jKKLJ89sjklJHBNf8j8JH7FxE</kbd></p>
+
+<h3>Querying the Traceability database</h3>
+<p>Once logged in, users are able to interact with the database. Neo4j uses the Cypher language to query the database. 
+   To enter new queries, use the textbox at the top of the view. For example, to see the full traceability graph enter:</p>
+
+<p><kbd>MATCH (nodes) RETURN nodes;</kbd></p>
+
+<p>For more details on queries, see <a href="http://neo4j.com/docs/developer-manual/3.1/cypher/">Cypher manual</a>.</p>
+
+<h3>Explaining the view</h3>
+
+<p>A traceabilty graph comprises a collection of <i>nodes</i> and <i>edges</i>. Nodes comprise <i>entities</i>, 
+   <i>activites</i> and <i>agents</i>. For more information, see Appendix A of <a href="http://into-cps.au.dk/fileadmin/into-cps.au.dk/PDF/Deliverables/D3_1b_Methods_Progress_Report_1.pdf">INTO-CPS Deliverable D3.1a</a>.
+</p>
+
+</div>
+
+</body>
+
+</html>

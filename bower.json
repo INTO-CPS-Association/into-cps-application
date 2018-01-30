@@ -1,0 +1,30 @@
+{
+  "name": "into-cps-app",
+  "productName": "INTO-CPS APP",
+  "version": "3.4.6-dev",
+  "description": "User interface for the INTO-CPS Toolchain",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intocps/intocps-ui.git"
+  },
+  "author": {
+    "name": "INTO-CPS Project",
+    "email": "",
+    "url": "http://into-cps.au.dk/"
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "jquery": "^2.2.3",
+    "plotly.js": "plotly/plotly.js#^1.13.0",
+    "ace-builds": "^1.2.3"
+  },
+  "overrides": {
+    "ace-builds": {
+      "main": [
+        "src-min-noconflict/ace.js",
+        "src-min-noconflict/ext-language_tools.js"
+      ]
+    }
+  }
+}
