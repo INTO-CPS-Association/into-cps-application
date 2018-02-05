@@ -269,8 +269,10 @@ export class CoeProcess {
     {
         fs.truncateSync(this.getLogFilePath());
         this.cbPrepSimCBs.forEach((val) => {val()});
-        this.coeLogPrinter.stopPrintingRemaining();
-        this.coeConsolePrinter.stopPrintingRemaining();
+        if(this.coeLogPrinter)
+            this.coeLogPrinter.stopPrintingRemaining();
+        if(this.coeConsolePrinter)
+            this.coeConsolePrinter.stopPrintingRemaining();
     }
 
     public subscribePrepareSimulationCallback(uiCrtlType: UICrtlType, callback: () => void)
