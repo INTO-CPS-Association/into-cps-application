@@ -31,7 +31,7 @@ For an editor, [Visual Studio Code](https://code.visualstudio.com/) is a good ch
 cross-platform and is actually built on top of Electron. That said, you can use
 whatever you want.
 
-Further developer info is available in https://github.com/into-cps/intocps-ui/wiki
+Further developer info is available in https://github.com/into-cps-association/into-cps-application/wiki
 
 Latest builds
 ---
