@@ -1,4 +1,4 @@
-intocps-ui
+INTO-CPS Application
 ---
 
 The INTO-CPS Application is the frontend of the INTO-CPS Tool Chain. It is used
