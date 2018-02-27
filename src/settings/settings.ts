@@ -32,6 +32,7 @@
 import fs = require("fs");
 import path = require("path");
 import {ISettingsValues} from "./ISettingsValues";
+import {SettingKeys} from "./SettingKeys";
 
 export default class Settings implements ISettingsValues {
   app: Electron.App;
@@ -91,7 +92,12 @@ export default class Settings implements ISettingsValues {
         return;
       }
 
+      // Reads settings.json from user's computer
       this.intoCpsDataObject = JSON.parse(fs.readFileSync(this.settingsFile, "UTF-8"));
+      
+      // To remove after migration into-cps project to into-cps-association is complete
+      this.migrateToAssociation();
+
     } catch (e) {
       console.log("Failed to read settings from file: " + this.settingsFile + ".");
       throw e;
@@ -109,6 +115,32 @@ export default class Settings implements ISettingsValues {
          console.log("Finished loading settings.");
        }
      });*/
+  }
+
+  // To remove after migration into-cps project to into-cps-association is complete
+  private migrateToAssociation() {
+
+    let changed : boolean = false;
+
+    if (this.intoCpsDataObject[SettingKeys.UPDATE_SITE] == 'https://raw.githubusercontent.com/into-cps/into-cps.github.io/master/download/') {
+      this.intoCpsDataObject[SettingKeys.UPDATE_SITE] = SettingKeys.DEFAULT_VALUES[SettingKeys.UPDATE_SITE];
+      changed = true;
+    }
+    if (this.intoCpsDataObject[SettingKeys.DEV_UPDATE_SITE] == 'https://raw.githubusercontent.com/into-cps/into-cps.github.io/development/download/') {
+      this.intoCpsDataObject[SettingKeys.DEV_UPDATE_SITE] = SettingKeys.DEFAULT_VALUES[SettingKeys.DEV_UPDATE_SITE];
+      changed = true;
+    }
+    if (this.intoCpsDataObject[SettingKeys.EXAMPLE_REPO] == 'https://raw.githubusercontent.com/into-cps/into-cps.github.io/master/examples/examples.json') {
+      this.intoCpsDataObject[SettingKeys.EXAMPLE_REPO] = SettingKeys.DEFAULT_VALUES[SettingKeys.EXAMPLE_REPO];
+      changed = true;
+    }
+    if (this.intoCpsDataObject[SettingKeys.DEV_EXAMPLE_REPO] == 'https://raw.githubusercontent.com/into-cps/into-cps.github.io/examples-dev/examples/examples.json') {
+      this.intoCpsDataObject[SettingKeys.DEV_EXAMPLE_REPO] = SettingKeys.DEFAULT_VALUES[SettingKeys.DEV_EXAMPLE_REPO];
+      changed = true;
+    }
+
+    if (changed) this.save();
+  
   }
 
   setValue(key: string, value: any) {
