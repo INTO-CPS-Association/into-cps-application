@@ -6,7 +6,8 @@ to configure and run FMI-based co-simulations. Other features include model
 checking, test automation and design space exploration.
 
 The App is primarily a UI. Most of the modelling and simulation work is done by
-the INTO-CPS tools themselves. These can be downloaded from within the app.
+the INTO-CPS tools themselves. These can be downloaded from within the app.  
+For additional details besides this document, see the [wiki](https://github.com/INTO-CPS-Association/into-cps-application/wiki). 
 
 ![The INTO-CPS Application](src/resources/screenshot.png?raw=true "The INTO-CPS App")
 
