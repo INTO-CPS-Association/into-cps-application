@@ -41,7 +41,7 @@ successful builds, is uploaded to: http://overture.au.dk/into-cps/into-cps-app/m
 
 These builds represent ongoing work. They have not been fully tested and are
 not guaranteed to work. Normally, you are advised to use one of the
-[releases](https://github.com/into-cps/intocps-ui/releases) .
+[releases](https://github.com/INTO-CPS-Association/into-cps-application/releases) .
 
 
 About
