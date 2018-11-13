@@ -6,7 +6,8 @@ to configure and run FMI-based co-simulations. Other features include model
 checking, test automation and design space exploration.
 
 The App is primarily a UI. Most of the modelling and simulation work is done by
-the INTO-CPS tools themselves. These can be downloaded from within the app.
+the INTO-CPS tools themselves. These can be downloaded from within the app.  
+For additional details besides this document, see the [wiki](https://github.com/INTO-CPS-Association/into-cps-application/wiki). 
 
 ![The INTO-CPS Application](src/resources/screenshot.png?raw=true "The INTO-CPS App")
 
@@ -17,7 +18,7 @@ The app is built with [Electron](http://electron.atom.io/) and
 [Node.js](https://nodejs.org/) (v6 recommended). You need npm (comes with Node.js). Npm 3 or higher is required. Npm
 can be upgraded with `npm install npm@latest -g`. We use Gulp to manage tasks. It's easiest to have it installed globally (`npm install -g gulp`). 
 
-After checking out the repo...
+After checking out the repo:
 
 1. To install node dependencies: `npm install`
 2. To install other resources: `gulp init`
@@ -40,7 +41,7 @@ successful builds, is uploaded to: http://overture.au.dk/into-cps/into-cps-app/m
 
 These builds represent ongoing work. They have not been fully tested and are
 not guaranteed to work. Normally, you are advised to use one of the
-[releases](https://github.com/into-cps/intocps-ui/releases) .
+[releases](https://github.com/INTO-CPS-Association/into-cps-application/releases) .
 
 
 About
