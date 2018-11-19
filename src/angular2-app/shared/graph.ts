@@ -172,7 +172,8 @@ export class Graph {
                         if (dataset) {
                             dataset.y.push(value);
                             dataset.x.push(xValue);
-                            this.truncateDataset(dataset, this.graphMaxDataPoints);
+                            if(this.graphMaxDataPoints > 0)
+                                this.truncateDataset(dataset, this.graphMaxDataPoints);
                         }
                     })
                 });

@@ -44,6 +44,7 @@ export class LineChartComponent implements OnInit {
 
     private lastUpdateTime: number = 0;
     private lastDatasets: Array<any>;
+    //https://plot.ly/javascript/reference/#layout
     private layout = {
         legend: {
             orientation: "v",
