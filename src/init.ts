@@ -456,7 +456,6 @@ menuHandler.deletePath = (path) => {
             if (err != null) {
                 console.error(err);
             }
-            //IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
     } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json")) {
@@ -466,7 +465,6 @@ menuHandler.deletePath = (path) => {
             if (err != null) {
                 console.error(err);
             }
-            //IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
     }
 };
