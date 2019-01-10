@@ -291,7 +291,7 @@ function showVersion(version: string, data: any) {
             let btn = createButton();
             var t = document.createTextNode("Release page");
             btn.appendChild(t);
-            let dh = new DialogHandler(releasePage, 640, 400, null, null, null);
+            let dh = new DialogHandler(releasePage, 640, 400);
             dh.externalUrl = true;
             divTool.appendChild(btn);
             btn.onclick = function (e) {

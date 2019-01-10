@@ -178,7 +178,7 @@ export class CoeSimulationService {
                 graphObj.webSocket = "ws://" + this.url + "/attachSession/" + this.sessionId;
                 graphObj.graphMaxDataPoints = this.graphMaxDataPoints;
                 console.log(graphObj);
-                let dh = new DialogHandler("angular2-app/coe/graph-window/graph-window.html", 800, 600, null, null, null);
+                let dh = new DialogHandler("angular2-app/coe/graph-window/graph-window.html", 800, 600);
                 dh.openWindow(JSON.stringify(graphObj), true);
                 this.externalGraphs.push(dh);
                 dh.win.webContents.on("did-finish-load", () => {

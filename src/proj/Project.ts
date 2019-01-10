@@ -251,8 +251,8 @@ export function checksum(str: string, algorithm: any, encoding: any): string {
 
 export function openProjectViaDirectoryDialog() {
 
-    let remote = require("electron").remote;
-    let dialog = remote.dialog;
+    let electron = require("electron");
+    let dialog = electron.dialog;
     let settings = IntoCpsApp.getInstance().getSettings();
     let defaultPath = settings.getValue(SettingKeys.DEFAULT_PROJECTS_FOLDER_PATH);
     let dialogResult: string[] = dialog.showOpenDialog({ defaultPath: defaultPath, properties: ["openDirectory"] });

@@ -39,17 +39,15 @@ import { IProject } from "./proj/IProject";
 import { Project } from "./proj/Project";
 import { IntoCpsAppEvents } from "./IntoCpsAppEvents";
 import { SettingKeys } from "./settings//SettingKeys";
-import { EventEmitter } from "events";
 import { TrManager } from "./traceability/trManager"
 import { Utilities } from "./utilities"
 import { CoeProcess } from "./coe-server-status/CoeProcess";
 
 // constants
 let topBarNameId: string = "activeTabTitle";
-
 const globalAny:any = global;
-export default class IntoCpsApp extends EventEmitter {
-
+//const globalAny:any = global;
+export default class IntoCpsApp { 
     app: Electron.App;
     platform: String
     window: Electron.BrowserWindow;
@@ -61,8 +59,7 @@ export default class IntoCpsApp extends EventEmitter {
     activeProject: IProject = null;
     isquitting = false;
 
-    constructor(app: Electron.App, processPlatform: String) {
-        super();
+    constructor(app: Electron.App, processPlatform: String) {   
         this.app = app;
         this.platform = processPlatform;
 
@@ -191,12 +188,6 @@ export default class IntoCpsApp extends EventEmitter {
             this.window.reload();
             console.info("fire event: " + event);
         }
-        try {
-            this.emit(IntoCpsAppEvents.PROJECT_CHANGED);
-        } catch (error) {
-
-        }
-
     }
 
 
@@ -227,7 +218,7 @@ export default class IntoCpsApp extends EventEmitter {
         if (remote){
             intoApp = remote.getGlobal("intoCpsApp");
         }else{
-            intoApp = globalAny.intoCpsApp;
+            intoApp = global.intoCpsApp;
         }
         return intoApp;
     }

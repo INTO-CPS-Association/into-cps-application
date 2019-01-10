@@ -64,7 +64,7 @@ declare var window: MyWindow;
 declare var w2prompt: any;
 declare var w2alert: any;
 
-import * as Menus from "./menus";
+
 import { provideForms, disableDeprecatedForms } from "@angular/forms";
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
@@ -120,7 +120,7 @@ class InitializationController {
             this.title.innerText = "Project: " + p.getName() + " - " + p.getRootFilePath();
         }
         let ipc: Electron.IpcRenderer = require("electron").ipcRenderer;
-        ipc.on(IntoCpsAppEvents.PROJECT_CHANGED, (event, arg) => {
+        ipc.on(IntoCpsAppEvents.PROJECT_CHANGED, () => {
             let p = app.getActiveProject();
             this.title.innerText = "Project: " + p.getName() + " - " + p.getRootFilePath();
         });
@@ -456,7 +456,7 @@ menuHandler.deletePath = (path) => {
             if (err != null) {
                 console.error(err);
             }
-            IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
+            //IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
     } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json")) {
@@ -466,7 +466,7 @@ menuHandler.deletePath = (path) => {
             if (err != null) {
                 console.error(err);
             }
-            IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
+            //IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
     }
 };
@@ -477,7 +477,7 @@ menuHandler.openWithSystemEditor = (path) => {
 
 menuHandler.rename = (path: string) => {
     var DialogHandler = require("./DialogHandler").default;
-    let renameHandler = new DialogHandler("proj/rename.html", 300, 200, null, null, null);
+    let renameHandler = new DialogHandler("proj/rename.html", 300, 200);
 
     if (path.endsWith("coe.json") || path.endsWith("mm.json")) {
         renameHandler.openWindow(Path.dirname(path));
@@ -485,7 +485,7 @@ menuHandler.rename = (path: string) => {
 };
 menuHandler.showTraceView = () => {
     var DialogHandler = require("./DialogHandler").default;
-    let renameHandler = new DialogHandler("traceability/traceHints.html", 600, 800, null, null, null);
+    let renameHandler = new DialogHandler("traceability/traceHints.html", 600, 800);
 
     renameHandler.openWindow();
     menuHandler.openHTMLInMainView("http://localhost:7474/browser/", "Traceability Graph View");
@@ -494,4 +494,4 @@ menuHandler.showTraceView = () => {
 menuHandler.exportOvertureFmu = Overture.exportOvertureFmu;
 
 
-Menus.configureIntoCpsMenu();
+//Menus.configureIntoCpsMenu();

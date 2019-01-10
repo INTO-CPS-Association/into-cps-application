@@ -285,10 +285,6 @@ export class BrowserController {
         });
 
         this.refreshProjectBrowser();
-
-        IntoCpsApp.getInstance().on(IntoCpsAppEvents.PROJECT_CHANGED, () => {
-            this.refreshProjectBrowser();
-        });
     }
 
     // set and refresh the prowser content
