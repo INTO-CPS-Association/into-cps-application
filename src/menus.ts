@@ -30,6 +30,7 @@
  */
 
 const electron = require('electron');
+// This has to be remote because the current context is a BrowserWindow
 const Menu = electron.remote.Menu;
 const fs = require('fs');
 const path = require('path');
@@ -74,14 +75,12 @@ export function openCOEServerStatusWindow(data: string = "", show:boolean=true) 
 export function configureIntoCpsMenu() {
 
   const {remote} = require('electron');
-  const app = remote.app
-  const {Menu, MenuItem} = remote;
+  const {app,shell, Menu, MenuItem} = remote;
 
   // Definitions needed for menu construction
   var defaultMenu = require('electron-default-menu')
   // Get template for default menu 
-  var menu: any[] = defaultMenu();
-
+  var menu: any[] = defaultMenu(app, shell);
 
   var fileMenuPos = 0;
 
@@ -125,7 +124,6 @@ export function configureIntoCpsMenu() {
         label: 'Open Project',
         accelerator: 'CmdOrCtrl+O',
         click: function (item: any, focusedWindow: any) {
-          //openProjectHandler.openWindow();
           openProjectViaDirectoryDialog();
         }
 
@@ -226,8 +224,4 @@ export function configureIntoCpsMenu() {
 
   // Set top-level application menu, using modified template 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
-
-
-
-
 }
