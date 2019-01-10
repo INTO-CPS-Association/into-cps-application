@@ -35,7 +35,7 @@
     "body-parser": "~1.16.0",
     "electron-default-menu": "~1.0.1",
     "es6-shim": "~0.35.1",
-    "express": "~4.14.0",
+    "express": "^4.16.4",
     "fs-extra": "~0.30.0",
     "fs-finder": "~1.8.1",
     "is-running": "~2.1.0",
