@@ -55,11 +55,7 @@ let openSettingsHandler = new DialogHandler("settings/settings.html", 500, 600);
 //createProjectHandler.install();
 //openDownloadManagerHandler.install();
 
-function openCOEServerStatusWindow(data: string = "", show:boolean=true) {
-  let coe = intoCpsApp.getCoeProcess();
-  if(!coe.isRunning())
-    intoCpsApp.getCoeProcess().start();
-}
+
 return {
 configureIntoCpsMenu : function() {
   // Definitions needed for menu construction
