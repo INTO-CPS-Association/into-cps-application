@@ -69,7 +69,7 @@
     "del": "~2.2.0",
     "electron": "~4.0.1",
     "electron-packager": "~13.0.1",
-    "gulp": "~3.9.1",
+    "gulp": "^4.0.0",
     "gulp-bower": "~0.0.13",
     "gulp-bump": "~2.4.0",
     "gulp-clean-css": "~2.3.2",

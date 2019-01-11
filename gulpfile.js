@@ -44,7 +44,7 @@ var outputPath = 'dist/',
         'src/styles.css',
         bowerFolder + '/bootstrap/dist/css/bootstrap.css',
         resourcesFolder + '/w2ui-1.5/w2ui.min.css'],
-    bowerSrcs = "",
+    bowerSrcs = [],
     customResources= [resourcesFolder+'/into-cps/**/*'],
     configJsons = ['./bower.json', './package.json']
     ;
@@ -202,8 +202,9 @@ gulp.task('copy-bower', function () {
     var path1 = gulp.src(mainBowerFiles())
         .pipe(filter('**/*.js'))
         .pipe(gulp.dest(outputPath + bowerFolder));
-    var path2 = gulp.src(bowerSrcs).pipe(gulp.dest(outputPath + bowerFolder));
-    return merge(path1, path2);
+    //var path2 = gulp.src(bowerSrcs).pipe(gulp.dest(outputPath + bowerFolder));
+    return path1;
+    //return merge(path1, path2);
 });
 
 // Copy bootstrap fonts to destination
@@ -219,14 +220,14 @@ gulp.task('copy-custom',function (){
 
 // Copy css to app folder
 gulp.task('copy-css', function () {
-    gulp.src(cssSrcs)
+    return gulp.src(cssSrcs)
         .pipe(cleancss())
         .pipe(gulp.dest(outputPath + 'css'));
 });
 
 // Copy html to app folder
 gulp.task('copy-html', function () {
-    gulp.src(htmlSrcs)
+    return gulp.src(htmlSrcs)
         .pipe(htmlhint({
             "attr-lowercase": ["*ngIf", "*ngFor", "[(ngModel)]", "[formGroup]", "[formControl]", "(ngSubmit)", "#configForm", "[basePath]", "(pathChange)", "[ngModel]", "(ngModelChange)", "[ngValue]", "[ngModelOptions]"],
             "doctype-first": false
@@ -237,21 +238,21 @@ gulp.task('copy-html', function () {
 
 // Copy js to app folder
 gulp.task('copy-js', function () {
-    gulp.src(jsSrcs)
+    return gulp.src(jsSrcs)
     // process js here if needed
         .pipe(gulp.dest(outputPath));
 });
 
 // Grab non-npm dependencies
-gulp.task('init', ['install-bower-components']);
+gulp.task('init', gulp.series('install-bower-components'));
 
 //Build App for debugging
-gulp.task('build', ['compile-ts', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
-  'copy-bower', 'copy-fonts','copy-custom']);
+gulp.task('build', gulp.series('compile-ts', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
+  'copy-bower', 'copy-fonts','copy-custom'));
 
 //Prep App for packaging
-gulp.task('prep-pkg', ['compile-ts-uglify', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
-  'copy-bower', 'copy-fonts','copy-custom']);
+gulp.task('prep-pkg', gulp.series('compile-ts-uglify', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
+  'copy-bower', 'copy-fonts','copy-custom'));
 
 //Build packages 
 gulp.task('package-win32', function (callback) {
@@ -351,7 +352,7 @@ gulp.task("pkg-linux", function(callback) {
     });
 });
 
-gulp.task('pkg-all',['pkg-win32','pkg-darwin','pkg-linux']);
+gulp.task('pkg-all', gulp.series('pkg-win32','pkg-darwin','pkg-linux'));
 
 // Watch for changes and rebuild on the fly
 gulp.task('watch', function () {
@@ -363,4 +364,4 @@ gulp.task('watch', function () {
 });
 
 // Default task
-gulp.task('default', ['build']);
+gulp.task('default', gulp.series('build'));
