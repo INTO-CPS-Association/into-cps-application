@@ -46,7 +46,8 @@ import { ViewController, IViewController } from "./iViewController";
 import * as CustomFs from "./custom-fs";
 import { IProject } from "./proj/IProject";
 import * as SystemUtil from "./SystemUtil";
-import { bootstrap } from '@angular/platform-browser-dynamic';
+//import { bootstrap } from '@angular/platform-browser-dynamic';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppComponent } from './angular2-app/app.component';
 import * as fs from 'fs';
 import * as Path from 'path';
@@ -65,7 +66,7 @@ declare var w2prompt: any;
 declare var w2alert: any;
 
 
-import { provideForms, disableDeprecatedForms } from "@angular/forms";
+//import { provideForms, disableDeprecatedForms } from "@angular/forms";
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { TrViewController } from "./angular2-app/tr/TrViewController";
@@ -73,6 +74,7 @@ import { DseViewController } from "./angular2-app/dse/DseViewController";
 import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
+import { AppModule } from "./angular2-app/app.module";
 
 class InitializationController {
     // constants
@@ -163,7 +165,8 @@ class InitializationController {
             }
 
             // Start Angular 2 application
-            bootstrap(AppComponent, [disableDeprecatedForms(), provideForms()]);
+            //bootstrap(AppComponent, [disableDeprecatedForms(), provideForms()]);
+            platformBrowserDynamic().bootstrapModule(AppModule);
         });
         this.layout.load("left", "proj/projbrowserview.html", "", () => {
             browserController.initialize();
@@ -493,3 +496,5 @@ menuHandler.exportOvertureFmu = Overture.exportOvertureFmu;
 
 
 //Menus.configureIntoCpsMenu();
+
+export = InitializationController

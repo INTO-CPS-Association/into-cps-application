@@ -32,7 +32,7 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import {FileSystemService} from "./shared/file-system.service";
 import {CoePageComponent} from "./coe/coe-page.component";
-import {HTTP_PROVIDERS, Http} from "@angular/http";
+import {Http} from "@angular/http";
 import {SettingsService} from "./shared/settings.service";
 import {MmPageComponent} from "./mm/mm-page.component";
 import {TrPageComponent} from "./tr/tr-page.component";
@@ -54,18 +54,6 @@ declare let window: MyWindow;
 
 @Component({
     selector: 'app',
-    directives: [
-        MmPageComponent,
-        CoePageComponent,
-        DsePageComponent,
-        TrPageComponent
-    ],
-    providers: [
-        HTTP_PROVIDERS,
-        FileSystemService,
-        SettingsService,
-        NavigationService
-    ],
     template: `
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
         <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
@@ -81,6 +69,7 @@ export class AppComponent implements OnInit {
                 private settings:SettingsService,
                 private fileSystem:FileSystemService,
                 private zone:NgZone) {
+                    console.log("AppComponent")
 
     }
 
