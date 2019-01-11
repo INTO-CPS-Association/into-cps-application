@@ -41,7 +41,7 @@ var ProjectFetcher = require("./proj/ProjectFetcher");
 let createProjectHandler = new DialogHandler("proj/new-project.html", 300, 200);
 
 let openDownloadManagerHandler = new DialogHandler("downloadManager/DownloadManager.html", 500, 500);
-let coeServerStatusHandler = new DialogHandler("coe-server-status/CoeServerStatus.html", 500, 500);
+let coeServerStatusHandlerp = new DialogHandler("coe-server-status/CoeServerStatus.html", 500, 500);
 let fmuBuilderHandler = new DialogHandler("http://sweng.au.dk/fmubuilder/", 500, 500);
 fmuBuilderHandler.externalUrl = true;
 let reportIssueHandler = new DialogHandler("https://github.com/INTO-CPS-Association/into-cps-application/issues/new", 600, 600);
@@ -57,7 +57,8 @@ let openSettingsHandler = new DialogHandler("settings/settings.html", 500, 600);
 
 
 return {
-configureIntoCpsMenu : function() {
+  coeServerStatusHandler: coeServerStatusHandlerp,
+  configureIntoCpsMenu : function() {
   // Definitions needed for menu construction
   var defaultMenu = require('electron-default-menu')
   // Get template for default menu 

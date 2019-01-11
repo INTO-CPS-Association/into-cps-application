@@ -47,7 +47,6 @@ import {IProject} from "../../proj/IProject";
 import {Project} from "../../proj/Project";
 import * as Path from 'path';
 import * as fs from 'fs';
-import {coeServerStatusHandler} from "../../menus";
 import {OutputConnectionsPair} from "../coe/models/Fmu";
 
 @Component({
@@ -832,6 +831,8 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     }
 
     onCoeLaunchClick() {
-        coeServerStatusHandler.openWindow("autolaunch");
+        var menus = require("../../menus");
+        var menusRet = menus(IntoCpsApp);
+        menusRet.coeServerStatusHandler.openWindow("autolaunch");
     }
 }

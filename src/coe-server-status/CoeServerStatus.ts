@@ -71,7 +71,7 @@ window.onbeforeunload = (ev: Event) => {
     }
 }
 
-ipcRenderer.on("kill", (event, message) => {
+ipcRenderer.on("kill", () => {
     killWindow = true;
     window.close();
 });

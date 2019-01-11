@@ -37,7 +37,6 @@ import { Http } from "@angular/http";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
 import IntoCpsApp from "../../IntoCpsApp";
 import { WarningMessage } from "../../intocps-configurations/Messages";
-import { openCOEServerStatusWindow } from "../../menus";
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
 
 @Component({
@@ -186,6 +185,5 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
         let coe = IntoCpsApp.getInstance().getCoeProcess();
         if (!coe.isRunning())
             IntoCpsApp.getInstance().getCoeProcess().start();
-        openCOEServerStatusWindow("autolaunch", false)
     }
 }
