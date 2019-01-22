@@ -33,6 +33,9 @@ import * as fs from 'fs';
 import Path = require("path");
 let JSZip = require("jszip");
 import { Utilities } from "../../../utilities"
+import { NgZone } from '@angular/core';
+import { reject } from 'bluebird';
+
 
 // Holds information about a .fmu container
 export class Fmu {
@@ -58,7 +61,14 @@ export class Fmu {
         this.path = path;
         this.scalarVariables.forEach(sv => sv.isConfirmed = false);
         this.platforms = [];
-        return this.populate().catch(() => this.pathNotFound = true);
+        
+        try {
+            return this.populate();
+        } catch(err){ 
+            console.log("Error in updating path: " + err); 
+            this.pathNotFound = true;    
+            return Promise.reject(err);}
+        //return this.populate().catch(() => this.pathNotFound = true);
     }
 
     public populate(): Promise<void> {
@@ -87,6 +97,7 @@ export class Fmu {
         let mdPath = Path.join(self.path, "modelDescription.xml")
         let checkFileExists = new Promise<Buffer>(function (resolve, reject) {
             try {
+                
                 if (fs.accessSync(mdPath, fs.constants.R_OK)) {
                     reject();
                 }

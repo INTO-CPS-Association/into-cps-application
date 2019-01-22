@@ -55,10 +55,10 @@ declare let window: MyWindow;
 @Component({
     selector: 'app',
     template: `
-        <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
-        <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
-        <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
-        <tr-page *ngIf="page === 'tr'" [path]="path"></tr-page>`
+        <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>`
+        // <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
+        // <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
+        // <tr-page *ngIf="page === 'tr'" [path]="path"></tr-page>`
 })
 export class AppComponent implements OnInit {
     private page:string;
@@ -84,10 +84,10 @@ export class AppComponent implements OnInit {
     }
 
     openCOE(path: string):void {
-        this.zone.run(() => {
-            this.path = path;
-            this.page = "coe";
-        });
+        // this.zone.run(() => {
+        //     this.path = path;
+        //     this.page = "coe";
+        // });
     }
 
     openMultiModel(path: string):void {
@@ -97,17 +97,17 @@ export class AppComponent implements OnInit {
         });
     }
 
-    openTraceability():void {
-        this.zone.run(() => {
-            this.page = "tr";
-        });
-    }
+    //openTraceability():void {
+    //    this.zone.run(() => {
+    //        this.page = "tr";
+    //    });
+    //}
 
     openDSE(path: string):void {
-        this.zone.run(() => {
-            this.path = path;
-            this.page = "dse";
-        });
+        // this.zone.run(() => {
+        //     this.path = path;
+        //     this.page = "dse";
+        // });
     }
 
     closeAll():void {

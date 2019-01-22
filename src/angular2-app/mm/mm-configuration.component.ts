@@ -38,7 +38,7 @@ import {
 } from "../coe/models/Fmu";
 import { FileBrowserComponent } from "./inputs/file-browser.component";
 import { IProject } from "../../proj/IProject";
-import { FormGroup, REACTIVE_FORM_DIRECTIVES, FORM_DIRECTIVES, FormArray, FormControl, Validators } from "@angular/forms";
+import { FormGroup, FormArray, FormControl, Validators, Form} from "@angular/forms";
 import { uniqueControlValidator } from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage, ErrorMessage } from "../../intocps-configurations/Messages";
@@ -50,11 +50,11 @@ import * as Path from 'path';
 @Component({
     selector: "mm-configuration",
     templateUrl: "./angular2-app/mm/mm-configuration.component.html",
-    directives: [
-        FORM_DIRECTIVES,
-        REACTIVE_FORM_DIRECTIVES,
-        FileBrowserComponent
-    ]
+    // directives: [
+    //     FORM_DIRECTIVES,
+    //     REACTIVE_FORM_DIRECTIVES,
+    //     FileBrowserComponent
+    // ]
 })
 export class MmConfigurationComponent {
     private _path: string;
@@ -151,15 +151,18 @@ export class MmConfigurationComponent {
     addFmu() {
         let fmu = this.config.addFmu();
 
-        let formArray = <FormArray>this.form.find('fmus');
-        let fmuArray = <FormArray>this.form.find('instances');
+        //let formArray = <FormArray>this.form.find('fmus');
+        let formArray = <FormArray>this.form.get('fmus');
+        //let fmuArray = <FormArray>this.form.find('instances');
+        let fmuArray = <FormArray>this.form.get('instances');
 
         fmuArray.push(new FormArray([], uniqueControlValidator));
         formArray.push(new FormControl(this.getFmuName(fmu), [Validators.required, Validators.pattern("[^{^}]*")]));
     }
 
     removeFmu(fmu: Fmu) {
-        let fmuArray = <FormArray>this.form.find('fmus');
+        //let fmuArray = <FormArray>this.form.find('fmus');
+        let fmuArray = <FormArray>this.form.get('fmus');
         let index = this.config.fmus.indexOf(fmu);
 
         if (this.selectedInstanceFmu === fmu)
@@ -197,7 +200,8 @@ export class MmConfigurationComponent {
         let instance = this.config.addInstance(fmu);
 
         let fmuIndex = this.config.fmus.indexOf(fmu);
-        let fmuArray = <FormArray>this.form.find('instances');
+        //let fmuArray = <FormArray>this.form.find('instances');
+        let fmuArray = <FormArray>this.form.get('instances');
         let instanceArray = <FormArray>fmuArray.controls[fmuIndex];
 
         instanceArray.push(new FormControl(instance.name, [Validators.required, Validators.pattern("[^\.]*")]));
@@ -210,7 +214,8 @@ export class MmConfigurationComponent {
 
     removeInstanceFromForm(instance: Instance) {
         let fmuIndex = this.config.fmus.indexOf(instance.fmu);
-        let fmuArray = <FormArray>this.form.find('instances');
+        //let fmuArray = <FormArray>this.form.find('instances');
+        let fmuArray = <FormArray>this.form.get('instances');
         let instanceArray = <FormArray>fmuArray.controls[fmuIndex];
         let index = this.getInstances(instance.fmu).indexOf(instance);
 
@@ -232,7 +237,8 @@ export class MmConfigurationComponent {
 
     getInstanceFormControl(fmu: Fmu, index: number): FormControl {
         let fmuIndex = this.config.fmus.indexOf(fmu);
-        let fmuArray = <FormArray>this.form.find('instances');
+        //let fmuArray = <FormArray>this.form.find('instances');
+        let fmuArray = <FormArray>this.form.get('instances');
         let instanceArray = <FormArray>fmuArray.controls[fmuIndex];
 
         return <FormControl>instanceArray.controls[index];

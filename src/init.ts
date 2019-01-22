@@ -57,6 +57,7 @@ import {Overture} from "./overture";
 import {TraceMessager} from "./traceability/trace-messenger"
 import { StatusBarHandler, PreviewHandler } from "./bottom"
 import {FmuImploder} from "./intocps-configurations/fmuImploder"
+
 interface MyWindow extends Window {
     ng2app: AppComponent;
 }
@@ -161,12 +162,14 @@ class InitializationController {
 
             let devMode = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.DEVELOPMENT_MODE);
             if (!devMode) {
-                enableProdMode();
+                //enableProdMode();
             }
 
             // Start Angular 2 application
             //bootstrap(AppComponent, [disableDeprecatedForms(), provideForms()]);
-            platformBrowserDynamic().bootstrapModule(AppModule);
+            console.log("Before AppModule")
+            platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err));
+            console.log("After appModule")
         });
         this.layout.load("left", "proj/projbrowserview.html", "", () => {
             browserController.initialize();

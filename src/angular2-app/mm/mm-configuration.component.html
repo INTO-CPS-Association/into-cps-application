@@ -33,11 +33,11 @@
 	<div class="row" *ngFor="let fmu of config.fmus; let i=index">
 		<div class="col-md-3 form-group">
 			<p *ngIf="!editing" class="form-control-static">{{getFmuName(fmu)}}</p>
-			<input *ngIf="editing" [formControl]="form.find('fmus').at(i)" [ngModel]="getFmuName(fmu)" (ngModelChange)="setFmuName(fmu, $event)"
+			<input *ngIf="editing" [formControl]="form.get('fmus').at(i)" [ngModel]="getFmuName(fmu)" (ngModelChange)="setFmuName(fmu, $event)"
 			 class="form-control input-fixed-size input-sm">
-			<div *ngIf="form.find('fmus').at(i).hasError('required')" class="alert alert-danger">This field is required.</div>
-			<div *ngIf="form.find('fmus').at(i).hasError('pattern')" class="alert alert-danger">"{" and "}" are not allowed.</div>
-			<div *ngIf="form.hasError('notUnique', 'fmus') && form.find('fmus').errors.notUnique == getFmuName(fmu)" class="alert alert-danger">Key is not unique.</div>
+			<div *ngIf="form.get('fmus').at(i).hasError('required')" class="alert alert-danger">This field is required.</div>
+			<div *ngIf="form.get('fmus').at(i).hasError('pattern')" class="alert alert-danger">{{ '{' }} and {{ '}' }} are not allowed.</div>
+			<div *ngIf="form.hasError('notUnique', 'fmus') && form.get('fmus').errors.notUnique == getFmuName(fmu)" class="alert alert-danger">Key is not unique.</div>
 		</div>
 		<div class="col-md-8 form-group">
 			<p *ngIf="!editing" class="form-control-static">{{createDisplayFmuPath(config.fmusRootPath,fmu.path)}}</p>
