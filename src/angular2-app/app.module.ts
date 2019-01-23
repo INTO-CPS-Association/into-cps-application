@@ -15,17 +15,22 @@ import {MmConfigurationComponent} from "./mm/mm-configuration.component";
 import {MmOverviewComponent} from "./mm/mm-overview.component";
 import {PanelComponent} from "./shared/panel.component";
 import {MmModule} from "./mm/mm.module"
+import {COEModule} from "./coe/coe.module"
 import {HttpModule} from '@angular/http';
+import { SharedModule } from './shared/shared.module';
+
 @NgModule({
-  imports: [HttpModule, BrowserModule, FormsModule, MmModule ], // module dependencies
-  declarations: [AppComponent], // components and directives
+  imports: [HttpModule, BrowserModule, FormsModule, MmModule, COEModule, SharedModule ], // module dependencies
+  declarations: [ // components and directives
+    AppComponent], 
   bootstrap: [AppComponent], // root component
-  providers: [FileSystemService, SettingsService, NavigationService], // services
+  providers: [FileSystemService, SettingsService, NavigationService],
+  exports: []
 })
 export class AppModule {
 
   constructor(){
-    console.log("MODULE")
+    console.log("APP MODULE")
   }
 }
 

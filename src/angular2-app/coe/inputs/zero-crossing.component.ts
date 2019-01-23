@@ -30,14 +30,13 @@
  */
 
 import {Component, Input} from "@angular/core";
-import {FormArray, FormControl, FormGroup, FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES} from "@angular/forms";
+import {FormArray, FormControl, FormGroup} from "@angular/forms";
 import {ZeroCrossingConstraint} from "../../../intocps-configurations/CoSimulationConfig";
 import {InstanceScalarPair} from "../models/Fmu";
 
 @Component({
     selector: 'zero-crossing',
-    templateUrl: "./angular2-app/coe/inputs/zero-crossing.component.html",
-    directives: [FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES]
+    templateUrl: "./angular2-app/coe/inputs/zero-crossing.component.html"
 })
 export class ZeroCrossingComponent {
     @Input()
@@ -72,7 +71,7 @@ export class ZeroCrossingComponent {
     }
 
     updatePortValidation() {
-        let formControl = <FormControl> this.formGroup.find('ports');
+        let formControl = <FormControl> this.formGroup.get('ports');
         formControl.updateValueAndValidity();
     }
 }

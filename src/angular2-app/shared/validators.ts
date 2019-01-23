@@ -29,19 +29,19 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {FormControl, FormArray, FormGroup} from "@angular/forms";
+import { FormControl, FormArray, FormGroup, AsyncValidatorFn } from "@angular/forms";
 
-function isString(x:any) {
+function isString(x: any) {
     return typeof x === 'string';
 }
 
-function isNumber(x:any) {
+function isNumber(x: any) {
     let number = Number(x);
 
     return !isNaN(number) && isFinite(number);
 }
 
-function isInteger(x:any) {
+function isInteger(x: any) {
     let number = Number(x);
 
     // TODO: It sees 1.0000000000000001 as an integer, due to floating point rounding error.
@@ -50,12 +50,12 @@ function isInteger(x:any) {
 
 export function numberValidator(control: FormControl): { [s: string]: boolean } {
     if (!isNumber(control.value))
-        return {invalidNumber: true};
+        return { invalidNumber: true };
 }
 
 export function integerValidator(control: FormControl): { [s: string]: boolean } {
     if (!isInteger(control.value))
-        return {invalidInteger: true};
+        return { invalidInteger: true };
 }
 
 export function lengthValidator(min: number = null, max: number = null) {
@@ -63,22 +63,22 @@ export function lengthValidator(min: number = null, max: number = null) {
         let length = control.value.length;
 
         if (length === undefined || min !== null && length < min || max !== null && length > max)
-            return {invalidLength: true};
+            return { invalidLength: true };
     }
 }
 
 export function uniqueGroupPropertyValidator(propertyName: string) {
     return (control: FormArray) => {
-        for(let i = 0; i < control.length; i++) {
-            let group:FormGroup = <FormGroup> control.at(i);
+        for (let i = 0; i < control.length; i++) {
+            let group: FormGroup = <FormGroup>control.at(i);
             let value = group.controls[propertyName].value;
 
-            for(let j = i+1; j < control.length; j++) {
-                let other:FormGroup = <FormGroup> control.at(j);
+            for (let j = i + 1; j < control.length; j++) {
+                let other: FormGroup = <FormGroup>control.at(j);
                 let otherValue = other.controls[propertyName].value;
 
                 if (value === otherValue)
-                    return {notUnique: value};
+                    return { notUnique: value };
             }
         }
     }
@@ -87,30 +87,33 @@ export function uniqueGroupPropertyValidator(propertyName: string) {
 export function uniqueValidator(control: FormControl) {
     var elements = control.value;
 
-    for(let i = 0; i < elements.length; i++) {
-        for(let j = i+1; j < elements.length; j++) {
+    for (let i = 0; i < elements.length; i++) {
+        for (let j = i + 1; j < elements.length; j++) {
             if (elements[i] === elements[j])
-                return {notUnique: true};
+                return { notUnique: true };
         }
     }
 }
 
 export function uniqueControlValidator(control: FormArray) {
-    for(let i = 0; i < control.length; i++) {
-        for(let j = i+1; j < control.length; j++) {
+    for (let i = 0; i < control.length; i++) {
+        for (let j = i + 1; j < control.length; j++) {
             if (control.at(i).value === control.at(j).value)
-                return {notUnique: control.at(i).value};
+                return { notUnique: control.at(i).value };
         }
     }
 }
 
-export function lessThanValidator(selfName:string, otherName:string) {
+export function lessThanValidator(selfName: string, otherName: string): AsyncValidatorFn {
     return (group: FormGroup) => {
-        let self = group.find(selfName);
-        let other = group.find(otherName);
+        return new Promise((resolve, reject) => {
+            let self = group.get(selfName);
+            let other = group.get(otherName);
 
-        if (self.value && other.value && Number(self.value) >= Number(other.value)) {
-            return {notLessThan:true};
-        }
+            if (self.value && other.value && Number(self.value) >= Number(other.value)) {
+                resolve({ notLessThan: true });
+            } else {
+                resolve(null);
+            }});
     }
 }

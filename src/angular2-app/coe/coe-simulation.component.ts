@@ -31,7 +31,6 @@
 
 import { Component, Input, NgZone, OnInit, OnDestroy } from "@angular/core";
 import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationConfig";
-import { LineChartComponent } from "../shared/line-chart.component";
 import { CoeSimulationService } from "./coe-simulation.service";
 import { Http } from "@angular/http";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
@@ -41,13 +40,8 @@ import { CoeProcess } from "../../coe-server-status/CoeProcess";
 
 @Component({
     selector: "coe-simulation",
-    providers: [
-        CoeSimulationService
-    ],
-    directives: [
-        LineChartComponent
-    ],
     templateUrl: "./angular2-app/coe/coe-simulation.component.html"
+
 })
 export class CoeSimulationComponent implements OnInit, OnDestroy {
     private _path: string;

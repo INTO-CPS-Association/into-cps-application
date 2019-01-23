@@ -36,9 +36,8 @@ import {
     Instance, ScalarVariable, CausalityType, InstanceScalarPair, isCausalityCompatible, isTypeCompatiple,
     Fmu, ScalarValuePair, ScalarVariableType
 } from "../coe/models/Fmu";
-import { FileBrowserComponent } from "./inputs/file-browser.component";
 import { IProject } from "../../proj/IProject";
-import { FormGroup, FormArray, FormControl, Validators, Form} from "@angular/forms";
+import { FormGroup, FormArray, FormControl, Validators} from "@angular/forms";
 import { uniqueControlValidator } from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage, ErrorMessage } from "../../intocps-configurations/Messages";
@@ -49,12 +48,7 @@ import * as Path from 'path';
 
 @Component({
     selector: "mm-configuration",
-    templateUrl: "./angular2-app/mm/mm-configuration.component.html",
-    // directives: [
-    //     FORM_DIRECTIVES,
-    //     REACTIVE_FORM_DIRECTIVES,
-    //     FileBrowserComponent
-    // ]
+    templateUrl: "./angular2-app/mm/mm-configuration.component.html"
 })
 export class MmConfigurationComponent {
     private _path: string;

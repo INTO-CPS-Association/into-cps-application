@@ -30,14 +30,13 @@
  */
 
 import { Component, Input } from "@angular/core";
-import { FormArray, FormControl, FormGroup, FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES } from "@angular/forms";
+import { FormArray, FormControl, FormGroup} from "@angular/forms";
 import { LiveGraph, CoSimulationConfig } from "../../../intocps-configurations/CoSimulationConfig";
 import { ScalarVariable, CausalityType, Instance, InstanceScalarPair, ScalarVariableType } from "../models/Fmu";
 
 @Component({
     selector: 'live-graph',
-    templateUrl: "./angular2-app/coe/inputs/live-graph-component.html",
-    directives: [FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES]
+    templateUrl: "./angular2-app/coe/inputs/live-graph-component.html"
 })
 export class LiveGraphComponent {
     @Input()

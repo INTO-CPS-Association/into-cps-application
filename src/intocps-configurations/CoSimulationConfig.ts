@@ -296,7 +296,7 @@ export class FixedStepAlgorithm implements ICoSimAlgorithm {
 
     constructor(public size: number = 0.1) {
 
-    }
+    }   
 
     toFormGroup() {
         return new FormGroup({
