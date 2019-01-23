@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="../css/bootstrap.css">
 
     <!--Styles to fix issues with related to responsiveness and padding of ui-layout-->
+    <!-- Hack to fix electron and typescript interoperability -->
+    <script> var exports = {}; </script> 
     <script src="examples.js"></script>
     <script src="../bower_components/jquery.js" onload="window.$ = window.jQuery = module.exports;"></script>
     <style>

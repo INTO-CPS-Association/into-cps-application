@@ -31,9 +31,7 @@
 
 import { Component, OnInit, NgZone } from '@angular/core';
 import { FileSystemService } from "../../shared/file-system.service";
-import { HTTP_PROVIDERS, Http } from "@angular/http";
-import { LineChartComponent } from "../../shared/line-chart.component";
-import { BehaviorSubject } from "rxjs/Rx";
+import { Http } from "@angular/http";
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
 import { Graph } from "../../shared/graph"
 import { ipcRenderer } from "electron";
@@ -52,11 +50,6 @@ declare let window: MyWindow;
 
 @Component({
     selector: 'app',
-    directives: [LineChartComponent],
-    providers: [
-        HTTP_PROVIDERS,
-        FileSystemService
-    ],
     templateUrl: "./graph.component.html"
 })
 export class AppComponent implements OnInit {
@@ -66,6 +59,7 @@ export class AppComponent implements OnInit {
     constructor(private http: Http,
         private fileSystem: FileSystemService,
         private zone: NgZone) {
+            console.log("Graph Window App Component")
 
     }
 

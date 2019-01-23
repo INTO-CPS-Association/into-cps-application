@@ -30,7 +30,9 @@
  */
 
 import { AppComponent } from './app.component';
-import { bootstrap } from '@angular/platform-browser-dynamic';  
+import { GraphWindowModule } from "./graph-window.module"
+//import { bootstrap } from '@angular/platform-browser-dynamic';  
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import {enableProdMode} from "@angular/core"
 
 function getParameterByName(name:string, url?:string) {
@@ -44,11 +46,12 @@ function getParameterByName(name:string, url?:string) {
 }
 // Start Angular 2 application
 enableProdMode();
-let ref = bootstrap(AppComponent, []).then((ref) => {
-    let data = getParameterByName("data");
-    let instance : AppComponent = ref.instance;
-    instance.initializeGraph(data);        
-});
+platformBrowserDynamic().bootstrapModule(GraphWindowModule).catch(err => console.error(err));
+// let ref = bootstrap(AppComponent, []).then((ref) => {
+//     let data = getParameterByName("data");
+//     let instance : AppComponent = ref.instance;
+//     instance.initializeGraph(data);        
+// });
 window.onload = function () {
     console.log("onload");
 }
