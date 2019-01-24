@@ -35,6 +35,7 @@ import { Http } from "@angular/http";
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
 import { Graph } from "../../shared/graph"
 import { ipcRenderer } from "electron";
+import { Location } from '@angular/common';
 
 
 
@@ -59,25 +60,36 @@ export class AppComponent implements OnInit {
     constructor(private http: Http,
         private fileSystem: FileSystemService,
         private zone: NgZone) {
-            console.log("Graph Window App Component")
-
+        console.log("Graph Window App Component")
     }
 
-    initializeGraph(data: any) {
-        let dataObj = JSON.parse(data);
+    // initializeGraph(data: any) {
+    initializeGraph() {
+        let dataObj = JSON.parse(this.getParameterByName("data"));
         this.zone.run(() => {
             this.graph.setGraphMaxDataPoints(dataObj.graphMaxDataPoints);
             let lg: LiveGraph = new LiveGraph();
-            lg.fromObject(dataObj.livestream,dataObj.title);      
-            this.graph.initializeSingleDataset(lg);        
+            lg.fromObject(dataObj.livestream, dataObj.title);
+            this.graph.initializeSingleDataset(lg);
             this.graph.launchWebSocket(dataObj.webSocket)
         });
-        ipcRenderer.on('close', () => { this.graph.closeSocket(); this.graph.setFinished();});
+        ipcRenderer.on('close', () => { this.graph.closeSocket(); this.graph.setFinished(); });
         window.onbeforeunload = ((ev) => {
-           this.graph.closeSocket();       
+            this.graph.closeSocket();
         });
     }
-
+    // Retrieves the query string value associated with name
+    private getParameterByName(name: string, url?: string) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
     ngOnInit() {
+        console.log("Graph Window App Component On Init");
+        this.initializeGraph();
     }
 }
