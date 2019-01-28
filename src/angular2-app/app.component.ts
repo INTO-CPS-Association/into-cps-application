@@ -30,11 +30,11 @@
  */
 
 import { Component, OnInit, NgZone } from '@angular/core';
-import {FileSystemService} from "./shared/file-system.service";
-import {Http} from "@angular/http";
-import {SettingsService} from "./shared/settings.service";
-import {CoeSimulationService} from "./coe/coe-simulation.service";
-import {NavigationService} from "./shared/navigation.service";
+import { Http } from "@angular/http";
+import { CoeSimulationService } from "./coe/coe-simulation.service";
+import { FileSystemService } from "./shared/file-system.service";
+import { NavigationService } from "./shared/navigation.service";
+import { SettingsService } from "./shared/settings.service";
 
 interface MyWindow extends Window {
     ng2app: AppComponent;
@@ -60,8 +60,8 @@ export class AppComponent implements OnInit {
     constructor(public navigationService:NavigationService,
                 private http:Http,
                 private settings:SettingsService,
-                private fileSystem:FileSystemService,
-                private zone:NgZone) {
+                private fileSystem:FileSystemService, private zone: NgZone
+                ) {
                     console.log("AppComponent")
 
     }
@@ -104,9 +104,9 @@ export class AppComponent implements OnInit {
     }
 
     closeAll():void {
-        this.zone.run(() => {
+        // this.zone.run(() => {
             this.path = null;
             this.page = null;
-        });
+        // });
     }
 }

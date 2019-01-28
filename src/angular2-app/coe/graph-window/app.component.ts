@@ -10,10 +10,10 @@
  * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
  * THIS INTO-CPS ASSOCIATION PUBLIC LICENSE VERSION 1.0.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL 
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL
  * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The INTO-CPS toolchain  and the INTO-CPS Association Public License 
+ * The INTO-CPS toolchain  and the INTO-CPS Association Public License
  * are obtained from the INTO-CPS Association, either from the above address,
  * from the URLs: http://www.into-cps.org, and in the INTO-CPS toolchain distribution.
  * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
@@ -26,70 +26,60 @@
  *
  * See the full INTO-CPS Association Public License conditions for more details.
  *
- * See the CONTRIBUTORS file for author and contributor information. 
+ * See the CONTRIBUTORS file for author and contributor information.
  */
 
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone } from "@angular/core";
 import { FileSystemService } from "../../shared/file-system.service";
 import { Http } from "@angular/http";
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
-import { Graph } from "../../shared/graph"
+import { Graph } from "../../shared/graph";
 import { ipcRenderer } from "electron";
-import { Location } from '@angular/common';
-
-
-
-
-interface MyWindow extends Window {
-    ng2app: AppComponent;
-}
-
-declare let window: MyWindow;
-
-// Main application component.
-// Handles routing between the pages that use Angular 2.
 
 @Component({
-    selector: 'app',
-    templateUrl: "./graph.component.html"
+  selector: "app",
+  templateUrl: "./graph.component.html"
 })
 export class AppComponent implements OnInit {
-    private webSocket: WebSocket;
-    graph: Graph = new Graph();
+  graph: Graph = new Graph();
 
-    constructor(private http: Http,
-        private fileSystem: FileSystemService,
-        private zone: NgZone) {
-        console.log("Graph Window App Component")
-    }
+  constructor(
+    private http: Http,
+    private fileSystem: FileSystemService,
+    private zone: NgZone
+  ) {
+    console.log("Graph Window App Component");
+  }
 
-    // initializeGraph(data: any) {
-    initializeGraph() {
-        let dataObj = JSON.parse(this.getParameterByName("data"));
-        this.zone.run(() => {
-            this.graph.setGraphMaxDataPoints(dataObj.graphMaxDataPoints);
-            let lg: LiveGraph = new LiveGraph();
-            lg.fromObject(dataObj.livestream, dataObj.title);
-            this.graph.initializeSingleDataset(lg);
-            this.graph.launchWebSocket(dataObj.webSocket)
-        });
-        ipcRenderer.on('close', () => { this.graph.closeSocket(); this.graph.setFinished(); });
-        window.onbeforeunload = ((ev) => {
-            this.graph.closeSocket();
-        });
-    }
-    // Retrieves the query string value associated with name
-    private getParameterByName(name: string, url?: string) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
-    ngOnInit() {
-        console.log("Graph Window App Component On Init");
-        this.initializeGraph();
-    }
+  initializeGraph() {
+    let dataObj = JSON.parse(this.getParameterByName("data"));
+    this.zone.run(() => {
+      this.graph.setGraphMaxDataPoints(dataObj.graphMaxDataPoints);
+      let lg: LiveGraph = new LiveGraph();
+      lg.fromObject(dataObj.livestream, dataObj.title);
+      this.graph.initializeSingleDataset(lg);
+      this.graph.launchWebSocket(dataObj.webSocket);
+    });
+    ipcRenderer.on("close", () => {
+      this.graph.closeSocket();
+      this.graph.setFinished();
+    });
+    window.onbeforeunload = ev => {
+      this.graph.closeSocket();
+    };
+  }
+  // Retrieves the query string value associated with name
+  private getParameterByName(name: string, url?: string) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return "";
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+  }
+  ngOnInit() {
+    console.log("Graph Window App Component On Init");
+    this.initializeGraph();
+  }
 }
