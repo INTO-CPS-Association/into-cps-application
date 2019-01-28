@@ -140,55 +140,6 @@ export class CoeConfigurationComponent {
               )
               .reduce((a, b) => a.concat(...b), []);
 
-            let startTime = new FormControl(config.startTime, [
-              Validators.required,
-              numberValidator
-            ]);
-            let endTime = new FormControl(config.endTime, [
-              Validators.required,
-              numberValidator
-            ]);
-            let liveGraphs = new FormArray(
-              config.liveGraphs.map(g => g.toFormGroup()),
-              uniqueGroupPropertyValidator("id")
-            );
-            let livestreamInterval = new FormControl(
-              config.livestreamInterval,
-              [Validators.required, numberValidator]
-            );
-            let liveGraphColumns = new FormControl(config.liveGraphColumns, [
-              Validators.required,
-              numberValidator
-            ]);
-            let liveGraphVisibleRowCount = new FormControl(
-              config.liveGraphVisibleRowCount,
-              [Validators.required, numberValidator]
-            );
-            let algorithm = this.algorithmFormGroups.get(this.config.algorithm);
-            let global_absolute_tolerance = new FormControl(
-              config.global_absolute_tolerance,
-              [Validators.required, numberValidator]
-            );
-            let global_relative_tolerance = new FormControl(
-              config.global_relative_tolerance,
-              [Validators.required, numberValidator]
-            );
-            let fg = new FormGroup(
-              {
-                startTime: startTime,
-                endTime: endTime,
-                liveGraphs: liveGraphs,
-                livestreamInterval: livestreamInterval,
-                liveGraphColumns: liveGraphColumns,
-                liveGraphVisibleRowCount: liveGraphVisibleRowCount,
-                algorithm: algorithm,
-                global_absolute_tolerance: global_absolute_tolerance,
-                global_relative_tolerance: global_relative_tolerance
-              },
-              null,
-              lessThanValidator("startTime", "endTime")
-            ); // There is an error in angular 2.0.2 with asyncvalidators. They should return a promise
-
             // Create a form group for validation
             this.form = new FormGroup(
               {
@@ -241,7 +192,6 @@ export class CoeConfigurationComponent {
       .catch(error =>
         console.error(`Error during parsing of config: ${error}`)
       );
-
       
   }
 
