@@ -36,8 +36,9 @@ import { BoundedDifferenceConstraint, CoSimulationConfig, FixedStepAlgorithm, Fm
 import { WarningMessage } from "../../intocps-configurations/Messages";
 import IntoCpsApp from "../../IntoCpsApp";
 import { NavigationService } from "../shared/navigation.service";
-import { lessThanValidator, numberValidator, uniqueGroupPropertyValidator } from "../shared/validators";
+import { lessThanValidator2, lessThanValidator, numberValidator, uniqueGroupPropertyValidator } from "../shared/validators";
 import { CausalityType, Instance, InstanceScalarPair, ScalarVariable, ScalarVariableType } from "./models/Fmu";
+import { bind } from "bluebird";
 
 @Component({
   selector: "coe-configuration",
@@ -154,7 +155,7 @@ export class CoeConfigurationComponent {
                 liveGraphs: new FormArray(
                   config.liveGraphs.map(g => g.toFormGroup()),
                   uniqueGroupPropertyValidator("id")
-                ), //, uniqueGroupPropertyValidator("id")
+                ),
                 livestreamInterval: new FormControl(config.livestreamInterval, [
                   Validators.required,
                   numberValidator
@@ -177,8 +178,9 @@ export class CoeConfigurationComponent {
                   [Validators.required, numberValidator]
                 )
               },
-              null,
-              lessThanValidator("startTime", "endTime")
+              lessThanValidator2("startTime", "endTime"),
+              null
+              //lessThanValidator("startTime", "endTime").bind(this)
             );
             console.log("Parsing finished!");
             this.isLoaded = true;

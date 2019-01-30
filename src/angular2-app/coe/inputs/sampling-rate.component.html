@@ -30,9 +30,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.base"
-        name="base"
+        formControlName="base"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('required', 'base')"
@@ -56,9 +55,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.rate"
-        name="rate"
+        formControlName="rate"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('required', 'rate')"
@@ -84,9 +82,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.startTime"
-        name="startTime"
+        formControlName="startTime"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('required', 'startTime')"

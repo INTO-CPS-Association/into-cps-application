@@ -6,9 +6,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.id"
-        name="id"
+        formControlName="id"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('required', 'id')"
@@ -102,9 +101,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.abstol"
-        name="abstol"
+        formControlName="abstol"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('invalidNumber', 'abstol')"
@@ -124,9 +122,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.reltol"
-        name="reltol"
+        formControlName="reltol"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('invalidNumber', 'reltol')"
@@ -146,9 +143,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.safety"
-        name="safety"
+        formControlName="safety"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('invalidNumber', 'safety')"
@@ -162,13 +158,13 @@
   <div class="form-group">
     <label class="col-sm-3 control-label">Skip Discrete</label>
     <div class="col-sm-9">
+      <fieldset [disabled]="!editing">
       <input
-        [disabled]="!editing"
         [(ngModel)]="constraint.skipDiscrete"
-        name="skipDiscrete"
+        formControlName="skipDiscrete"
         type="checkbox"
-        [ngModelOptions]="{ standalone: true }"
       />
+    </fieldset>
     </div>
   </div>
 </div>

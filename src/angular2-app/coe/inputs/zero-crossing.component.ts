@@ -10,10 +10,10 @@
  * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
  * THIS INTO-CPS ASSOCIATION PUBLIC LICENSE VERSION 1.0.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL 
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL
  * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The INTO-CPS toolchain  and the INTO-CPS Association Public License 
+ * The INTO-CPS toolchain  and the INTO-CPS Association Public License
  * are obtained from the INTO-CPS Association, either from the above address,
  * from the URLs: http://www.into-cps.org, and in the INTO-CPS toolchain distribution.
  * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
@@ -26,52 +26,53 @@
  *
  * See the full INTO-CPS Association Public License conditions for more details.
  *
- * See the CONTRIBUTORS file for author and contributor information. 
+ * See the CONTRIBUTORS file for author and contributor information.
  */
 
-import {Component, Input} from "@angular/core";
-import {FormArray, FormControl, FormGroup} from "@angular/forms";
-import {ZeroCrossingConstraint} from "../../../intocps-configurations/CoSimulationConfig";
-import {InstanceScalarPair} from "../models/Fmu";
+import { Component, Input } from "@angular/core";
+import { FormArray, FormControl, FormGroup } from "@angular/forms";
+import { ZeroCrossingConstraint } from "../../../intocps-configurations/CoSimulationConfig";
+import { InstanceScalarPair } from "../models/Fmu";
 
 @Component({
-    selector: 'zero-crossing',
-    templateUrl: "./angular2-app/coe/inputs/zero-crossing.component.html"
+  selector: "zero-crossing",
+  templateUrl: "./angular2-app/coe/inputs/zero-crossing.component.html"
 })
 export class ZeroCrossingComponent {
-    @Input()
-    constraint:ZeroCrossingConstraint;
+  @Input()
+  constraint: ZeroCrossingConstraint;
 
-    @Input()
-    ports:Array<InstanceScalarPair> = [];
+  @Input()
+  ports: Array<InstanceScalarPair> = [];
 
-    @Input()
-    formGroup:FormGroup;
+  _formGroup: FormGroup;
+  @Input()
+  formGroup:FormGroup;
 
-    @Input()
-    editing:boolean = false;
+  @Input()
+  editing: boolean = false;
 
-    customTrackBy(index:number, obj: any):any {
-        return index;
-    }
+  customTrackBy(index: number, obj: any): any {
+    return index;
+  }
 
-    addPort() {
-        this.constraint.ports.push(this.ports[0]);
-        this.updatePortValidation();
-    }
+  addPort() {
+    this.constraint.ports.push(this.ports[0]);
+    this.updatePortValidation();
+  }
 
-    removePort(port:InstanceScalarPair) {
-        this.constraint.ports.splice(this.constraint.ports.indexOf(port), 1);
-        this.updatePortValidation();
-    }
+  removePort(port: InstanceScalarPair) {
+    this.constraint.ports.splice(this.constraint.ports.indexOf(port), 1);
+    this.updatePortValidation();
+  }
 
-    onPortChange(output: InstanceScalarPair, index: number) {
-        this.constraint.ports[index] = output;
-        this.updatePortValidation();
-    }
+  onPortChange(output: InstanceScalarPair, index: number) {
+    this.constraint.ports[index] = output;
+    this.updatePortValidation();
+  }
 
-    updatePortValidation() {
-        let formControl = <FormControl> this.formGroup.get('ports');
-        formControl.updateValueAndValidity();
-    }
+  updatePortValidation() {
+    let formControl = <FormControl>this.formGroup.get("ports");
+    formControl.updateValueAndValidity();
+  }
 }

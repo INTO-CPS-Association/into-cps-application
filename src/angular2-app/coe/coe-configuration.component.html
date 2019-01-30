@@ -1,16 +1,12 @@
-<div *ngIf="parseError">
+<!-- <div *ngIf="parseError">
   <div class="alert alert-danger alert-big">
     <p>Error: Could not parse config.</p>
     <p>Message: {{ parseError }}</p>
     <p>Path: {{ path }}</p>
   </div>
-</div>
+</div> -->
 
-<form
-  *ngIf="isLoaded"
-  [formGroup]="form"
-  (ngSubmit)="onSubmit()"
->
+<form *ngIf="isLoaded" [formGroup]="form" (ngSubmit)="onSubmit()">
   <button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
   </button>
@@ -45,11 +41,12 @@
                 {{ config.startTime }}
               </p>
               <input
-				*ngIf="editing"
-				formControlName="startTime"
+                *ngIf="editing"
+                [(ngModel)]="config.startTime"
+                formControlName="startTime"
                 class="form-control"
-			  />
-              <!-- <div
+              />
+              <div
                 *ngIf="form.hasError('required', 'startTime')"
                 class="alert alert-danger"
               >
@@ -66,11 +63,11 @@
                 class="alert alert-danger"
               >
                 Start time is after end time.
-              </div> -->
+              </div>
             </div>
           </div>
 
-          <!-- <div class="form-group">
+          <div class="form-group">
             <label class="col-sm-5 col-md-4 control-label">End time</label>
             <div class="col-sm-7 col-md-8">
               <p *ngIf="!editing" class="form-control-static">
@@ -78,8 +75,8 @@
               </p>
               <input
                 *ngIf="editing"
-                formControlName="endTime"
                 [(ngModel)]="config.endTime"
+                formControlName="endTime"
                 class="form-control"
               />
               <div
@@ -101,9 +98,9 @@
                 End time is before start time.
               </div>
             </div>
-          </div> -->
+          </div>
 
-          <!-- <div class="form-group">
+          <div class="form-group">
             <label class="col-sm-5 col-md-4 control-label">Algorithm</label>
             <div class="col-sm-7 col-md-8">
               <p *ngIf="!editing" class="form-control-static">
@@ -123,265 +120,269 @@
                 >
               </select>
             </div>
-          </div> -->
+          </div>
 
           <hr />
-
-          <!-- <div
-            *ngIf="config.algorithm.name == 'Fixed Step'"
-            [formGroup]="form.get('algorithm')"
-          >
-            <div class="form-horizontal">
-              <div class="form-group">
-                <label class="col-sm-5 col-md-4 control-label">Step size</label>
-                <div class="col-sm-7 col-md-8">
-                  <p *ngIf="!editing" class="form-control-static">
-                    {{ config.algorithm.size }}
-                  </p>
-                  <input
-                    *ngIf="editing"
-                    formControlName="size"
-                    [(ngModel)]="config.algorithm.size"
-                    class="form-control"
-                  />
-                  <div
-                    *ngIf="form.get('algorithm').hasError('required', 'size')"
-                    class="alert alert-danger"
+          <div formGroupName="algorithm">
+            <!-- FIXED STEP -->
+            <div *ngIf="config.algorithm.name == 'Fixed Step'">
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="col-sm-5 col-md-4 control-label"
+                    >Step size</label
                   >
-                    This field is required.
+                  <div class="col-sm-7 col-md-8">
+                    <p *ngIf="!editing" class="form-control-static">
+                      {{ config.algorithm.size }}
+                    </p>
+                    <input
+                      *ngIf="editing"
+                      [(ngModel)]="config.algorithm.size"
+                      formControlName="size"
+                      class="form-control"
+                    />
+                    <div
+                      *ngIf="form.get('algorithm').hasError('required', 'size')"
+                      class="alert alert-danger"
+                    >
+                      This field is required.
+                    </div>
+                    <div
+                      *ngIf="
+                        form.get('algorithm').hasError('invalidNumber', 'size')
+                      "
+                      class="alert alert-danger"
+                    >
+                      Only numbers are allowed.
+                    </div>
                   </div>
-                  <div
-                    *ngIf="
-                      form.get('algorithm').hasError('invalidNumber', 'size')
-                    "
-                    class="alert alert-danger"
+                </div>
+              </div>
+            </div>
+            <!-- VARIABLE STEP -->
+            <div
+              *ngIf="config.algorithm.name == 'Variable Step'"
+            >
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="col-sm-5 col-md-4 control-label"
+                    >Initial step size</label
                   >
-                    Only numbers are allowed.
+                  <div class="col-sm-7 col-md-8">
+                    <p *ngIf="!editing" class="form-control-static">
+                      {{ config.algorithm.initSize }}
+                    </p>
+                    <input
+                      *ngIf="editing"
+                      formControlName="initSize"
+                      [(ngModel)]="config.algorithm.initSize"
+                      class="form-control"
+                    />
+                    <div
+                      *ngIf="
+                        form.get('algorithm').hasError('required', 'initSize')
+                      "
+                      class="alert alert-danger"
+                    >
+                      This field is required.
+                    </div>
+                    <div
+                      *ngIf="
+                        form
+                          .get('algorithm')
+                          .hasError('invalidNumber', 'initSize')
+                      "
+                      class="alert alert-danger"
+                    >
+                      Only numbers are allowed.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-5 col-md-4 control-label"
+                    >Minimum step size</label
+                  >
+                  <div class="col-sm-7 col-md-8">
+                    <p *ngIf="!editing" class="form-control-static">
+                      {{ config.algorithm.sizeMin }}
+                    </p>
+                    <input
+                      *ngIf="editing"
+                      formControlName="sizeMin"
+                      [(ngModel)]="config.algorithm.sizeMin"
+                      class="form-control"
+                    />
+                    <div
+                      *ngIf="
+                        form.get('algorithm').hasError('required', 'sizeMin')
+                      "
+                      class="alert alert-danger"
+                    >
+                      This field is required.
+                    </div>
+                    <div
+                      *ngIf="
+                        form
+                          .get('algorithm')
+                          .hasError('invalidNumber', 'sizeMin')
+                      "
+                      class="alert alert-danger"
+                    >
+                      Only numbers are allowed.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-5 col-md-4 control-label"
+                    >Maximum step size</label
+                  >
+                  <div class="col-sm-7 col-md-8">
+                    <p *ngIf="!editing" class="form-control-static">
+                      {{ config.algorithm.sizeMax }}
+                    </p>
+                    <input
+                      *ngIf="editing"
+                      formControlName="sizeMax"
+                      [(ngModel)]="config.algorithm.sizeMax"
+                      class="form-control"
+                    />
+                    <div
+                      *ngIf="
+                        form.get('algorithm').hasError('required', 'sizeMax')
+                      "
+                      class="alert alert-danger"
+                    >
+                      This field is required.
+                    </div>
+                    <div
+                      *ngIf="
+                        form
+                          .get('algorithm')
+                          .hasError('invalidNumber', 'sizeMax')
+                      "
+                      class="alert alert-danger"
+                    >
+                      Only numbers are allowed.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-5 col-md-4 control-label"
+                    >Constraints</label
+                  >
+                  <div class="col-sm-7 col-md-8">
+                    <div *ngIf="editing" class="input-group">
+                      <select
+                        [(ngModel)]="newConstraint"
+                        [ngModelOptions]="{ standalone: true }"
+                        class="form-control"
+                      >
+                        <option
+                          *ngFor="let constraint of constraintConstructors"
+                          [ngValue]="constraint"
+                          >{{ getConstraintName(constraint) }}</option
+                        >
+                      </select>
+                      <span class="input-group-btn">
+                        <button
+                          type="button"
+                          (click)="addConstraint(newConstraint.value)"
+                          class="btn btn-default"
+                        >
+                          <span class="glyphicon glyphicon-plus"></span> Add
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="constraint-container">
+                <div
+                  class="panel panel-default constraint-panel"
+                  *ngFor="
+                    let constraint of config.algorithm.constraints;
+                    let i = index
+                  "
+                  formArrayName="constraints"
+                >
+                  <div class="panel-heading">
+                    <a
+                      *ngIf="editing"
+                      (click)="removeConstraint(constraint)"
+                      class="pull-right"
+                      ><span class="glyphicon glyphicon-remove"></span
+                    ></a>
+                    {{ getConstraintName(constraint) }}
+                  </div>
+                  <div class="panel-body">
+                    <zero-crossing
+                      [editing]="editing"
+                      [ports]="
+                        getFilterTypes(outputPorts, [
+                          Fmu_x.ScalarVariableType.Int,
+                          Fmu_x.ScalarVariableType.Real
+                        ])
+                      "
+                      [constraint]="constraint"
+                      [formGroup]="
+                        form
+                          .get('algorithm')
+                          .get('constraints')
+                          .at(i)
+                      "
+                      *ngIf="constraint.type === 'zerocrossing'"
+                    ></zero-crossing>
+
+                    <bounded-difference
+                      [editing]="editing"
+                      [ports]="
+                        getFilterTypes(outputPorts, [
+                          Fmu_x.ScalarVariableType.Int,
+                          Fmu_x.ScalarVariableType.Real
+                        ])
+                      "
+                      [constraint]="constraint"
+                      [formGroup]="
+                        form
+                          .get('algorithm')
+                          .get('constraints')
+                          .at(i)
+                      "
+                      *ngIf="constraint.type === 'boundeddifference'"
+                    ></bounded-difference>
+
+                    <sampling-rate
+                      [editing]="editing"
+                      [constraint]="constraint"
+                      [formGroup]="
+                        form
+                          .get('algorithm')
+                          .get('constraints')
+                          .at(i)
+                      "
+                      *ngIf="constraint.type === 'samplingrate'"
+                    ></sampling-rate>
+
+                    <fmu-max-step-size
+                      [constraint]="constraint"
+                      [formGroup]="
+                        form
+                          .get('algorithm')
+                          .get('constraints')
+                          .at(i)
+                      "
+                      *ngIf="constraint.type === 'fmumaxstepsize'"
+                    >
+                    </fmu-max-step-size>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div
-            *ngIf="config.algorithm.name == 'Variable Step'"
-            [formGroup]="form.get('algorithm')"
-          >
-            <div class="form-horizontal">
-              <div class="form-group">
-                <label class="col-sm-5 col-md-4 control-label"
-                  >Initial step size</label
-                >
-                <div class="col-sm-7 col-md-8">
-                  <p *ngIf="!editing" class="form-control-static">
-                    {{ config.algorithm.initSize }}
-                  </p>
-                  <input
-                    *ngIf="editing"
-                    formControlName="initSize"
-                    [(ngModel)]="config.algorithm.initSize"
-                    class="form-control"
-                  />
-                  <div
-                    *ngIf="
-                      form.get('algorithm').hasError('required', 'initSize')
-                    "
-                    class="alert alert-danger"
-                  >
-                    This field is required.
-                  </div>
-                  <div
-                    *ngIf="
-                      form
-                        .get('algorithm')
-                        .hasError('invalidNumber', 'initSize')
-                    "
-                    class="alert alert-danger"
-                  >
-                    Only numbers are allowed.
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="col-sm-5 col-md-4 control-label"
-                  >Minimum step size</label
-                >
-                <div class="col-sm-7 col-md-8">
-                  <p *ngIf="!editing" class="form-control-static">
-                    {{ config.algorithm.sizeMin }}
-                  </p>
-                  <input
-                    *ngIf="editing"
-                    formControlName="sizeMin"
-                    [(ngModel)]="config.algorithm.sizeMin"
-                    class="form-control"
-                  />
-                  <div
-                    *ngIf="
-                      form.get('algorithm').hasError('required', 'sizeMin')
-                    "
-                    class="alert alert-danger"
-                  >
-                    This field is required.
-                  </div>
-                  <div
-                    *ngIf="
-                      form.get('algorithm').hasError('invalidNumber', 'sizeMin')
-                    "
-                    class="alert alert-danger"
-                  >
-                    Only numbers are allowed.
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="col-sm-5 col-md-4 control-label"
-                  >Maximum step size</label
-                >
-                <div class="col-sm-7 col-md-8">
-                  <p *ngIf="!editing" class="form-control-static">
-                    {{ config.algorithm.sizeMax }}
-                  </p>
-                  <input
-                    *ngIf="editing"
-                    formControlName="sizeMax"
-                    [(ngModel)]="config.algorithm.sizeMax"
-                    class="form-control"
-                  />
-                  <div
-                    *ngIf="
-                      form.get('algorithm').hasError('required', 'sizeMax')
-                    "
-                    class="alert alert-danger"
-                  >
-                    This field is required.
-                  </div>
-                  <div
-                    *ngIf="
-                      form.get('algorithm').hasError('invalidNumber', 'sizeMax')
-                    "
-                    class="alert alert-danger"
-                  >
-                    Only numbers are allowed.
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="col-sm-5 col-md-4 control-label"
-                  >Constraints</label
-                >
-                <div class="col-sm-7 col-md-8">
-                  <div *ngIf="editing" class="input-group">
-                    <select
-                      [(ngModel)]="newConstraint"
-                      [ngModelOptions]="{ standalone: true }"
-                      class="form-control"
-                    >
-                      <option
-                        *ngFor="let constraint of constraintConstructors"
-                        [ngValue]="constraint"
-                        >{{ getConstraintName(constraint) }}</option
-                      >
-                    </select>
-                    <span class="input-group-btn">
-                      <button
-                        type="button"
-                        (click)="addConstraint(newConstraint.value)"
-                        class="btn btn-default"
-                      >
-                        <span class="glyphicon glyphicon-plus"></span> Add
-                      </button>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="constraint-container">
-              <div
-                class="panel panel-default constraint-panel"
-                *ngFor="
-                  let constraint of config.algorithm.constraints;
-                  let i = index
-                "
-              >
-                <div class="panel-heading">
-                  <a
-                    *ngIf="editing"
-                    (click)="removeConstraint(constraint)"
-                    class="pull-right"
-                    ><span class="glyphicon glyphicon-remove"></span
-                  ></a>
-                  {{ getConstraintName(constraint) }}
-                </div>
-                <div class="panel-body">
-                  <zero-crossing
-                    [editing]="editing"
-                    [ports]="
-                      getFilterTypes(outputPorts, [
-                        Fmu_x.ScalarVariableType.Int,
-                        Fmu_x.ScalarVariableType.Real
-                      ])
-                    "
-                    [constraint]="constraint"
-                    [formGroup]="
-                      form
-                        .get('algorithm')
-                        .get('constraints')
-                        .at(i)
-                    "
-                    *ngIf="constraint.type === 'zerocrossing'"
-                  ></zero-crossing>
-
-                  <bounded-difference
-                    [editing]="editing"
-                    [ports]="
-                      getFilterTypes(outputPorts, [
-                        Fmu_x.ScalarVariableType.Int,
-                        Fmu_x.ScalarVariableType.Real
-                      ])
-                    "
-                    [constraint]="constraint"
-                    [formGroup]="
-                      form
-                        .get('algorithm')
-                        .get('constraints')
-                        .at(i)
-                    "
-                    *ngIf="constraint.type === 'boundeddifference'"
-                  ></bounded-difference>
-
-                  <sampling-rate
-                    [editing]="editing"
-                    [constraint]="constraint"
-                    [formGroup]="
-                      form
-                        .get('algorithm')
-                        .get('constraints')
-                        .at(i)
-                    "
-                    *ngIf="constraint.type === 'samplingrate'"
-                  ></sampling-rate>
-
-                  <fmu-max-step-size
-                    [constraint]="constraint"
-                    [formGroup]="
-                      form
-                        .get('algorithm')
-                        .get('constraints')
-                        .at(i)
-                    "
-                    *ngIf="constraint.type === 'fmumaxstepsize'"
-                  >
-                  </fmu-max-step-size>
-                </div>
-              </div>
-            </div>
-          </div> -->
-
           <hr />
         </div>
       </div>
@@ -480,9 +481,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="panel panel-info">
+      <!-- <div class="panel panel-info">
         <div class="panel-heading">
           <h4 class="panel-title">
             <a
@@ -577,9 +578,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="panel panel-info">
+      <!-- <div class="panel panel-info">
         <div class="panel-heading">
           <h4 class="panel-title">
             <a
@@ -715,9 +716,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="panel panel-info">
+      <!-- <div class="panel panel-info">
         <div class="panel-heading">
           <h4 class="panel-title">
             <a
@@ -819,9 +820,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="panel panel-info">
+      <!-- <div class="panel panel-info">
         <div class="panel-heading">
           <h4 class="panel-title">
             <a
@@ -875,9 +876,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="panel panel-info">
+      <!-- <div class="panel panel-info">
         <div class="panel-heading">
           <h4 class="panel-title">
             <a
@@ -913,7 +914,7 @@
 
   <hr />
 
-  <!-- <div *ngIf="warnings.length > 0">
+  <div *ngIf="warnings.length > 0">
     <strong>Please fix the following issues before saving.</strong>
     <div *ngFor="let warning of warnings" class="alert alert-warning alert-big">
       {{ warning.message }}
@@ -925,11 +926,11 @@
     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
   </button>
   <button
-    *ngIf="editing"
+    *ngIf="editing && isLoaded"
     class="btn btn-default"
-    [disabled]="!configForm.form.valid"
+    [disabled]="!form.valid"
   >
     <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span>
     Save
-  </button> -->
+  </button>
 </form>

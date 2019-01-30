@@ -6,9 +6,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.id"
-        name="id"
+        formControlName="id"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('required', 'id')"
@@ -69,7 +68,6 @@
           </select>
           <span class="input-group-btn">
             <button
-              [disabled]="constraint.ports.length == 1"
               type="button"
               (click)="removePort(port)"
               class="btn btn-default"
@@ -102,22 +100,18 @@
         <label class="radio-inline">
           <input
             [(ngModel)]="constraint.order"
+            formControlName="order"
             type="radio"
-            [name]="constraint.name"
-            [attr.name]="constraint.name"
             value="1"
-            [ngModelOptions]="{ standalone: true }"
           />
           1
         </label>
         <label class="radio-inline">
           <input
             [(ngModel)]="constraint.order"
+            formControlName="order"
             type="radio"
-            [name]="constraint.name"
-            [attr.name]="constraint.name"
             value="2"
-            [ngModelOptions]="{ standalone: true }"
           />
           2
         </label>
@@ -134,9 +128,8 @@
       <input
         *ngIf="editing"
         [(ngModel)]="constraint.abstol"
-        name="abstol"
+        formControlName="abstol"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('invalidNumber', 'abstol')"
@@ -154,11 +147,11 @@
         {{ constraint.safety }}
       </p>
       <input
-        *ngIf="editing"
+        
+        formControlName="safety"
         [(ngModel)]="constraint.safety"
-        name="safety"
+        *ngIf="editing"
         class="form-control"
-        [ngModelOptions]="{ standalone: true }"
       />
       <div
         *ngIf="formGroup.hasError('invalidNumber', 'safety')"

@@ -357,13 +357,13 @@ export interface VariableStepConstraint {
 export class ZeroCrossingConstraint implements VariableStepConstraint {
     type = "zerocrossing";
     private static index: number = 0;
-    public readonly name: string;
+    public readonly name: string;   
     constructor(
         public id: string = "zc",
         public ports: Array<InstanceScalarPair> = [],
         public order: string = "2", // Can be 1 or 2.
-        public abstol?: number,
-        public safety?: number
+        public abstol: number = 10**(-3),
+        public safety: number = 0.0
     ) {
         this.name = "order" + ZeroCrossingConstraint.index++;
 
@@ -373,7 +373,7 @@ export class ZeroCrossingConstraint implements VariableStepConstraint {
         return new FormGroup({
             id: new FormControl(this.id),
             ports: new FormControl(this.ports, [lengthValidator(1, 2), uniqueValidator]),
-            [this.name]: new FormControl(this.order),
+            order: new FormControl(this.order),
             abstol: new FormControl(this.abstol, [numberValidator]),
             safety: new FormControl(this.safety, [numberValidator])
         });
@@ -424,9 +424,9 @@ export class BoundedDifferenceConstraint implements VariableStepConstraint {
     constructor(
         public id: string = "bd",
         public ports: Array<InstanceScalarPair> = [],
-        public abstol?: number,
-        public reltol?: number,
-        public safety?: number,
+        public abstol: number = 10**(-3),
+        public reltol: number = 10**(-2),
+        public safety: number = 0.0,
         public skipDiscrete: boolean = true
     ) {
     }
@@ -449,9 +449,9 @@ export class BoundedDifferenceConstraint implements VariableStepConstraint {
             skipDiscrete: !!this.skipDiscrete
         };
 
-        if (this.abstol) obj.abstol = Number(this.abstol);
-        if (this.reltol) obj.reltol = Number(this.reltol);
-        if (this.safety) obj.safety = Number(this.safety);
+        obj.abstol = Number(this.abstol);
+        obj.reltol = Number(this.reltol);
+        obj.safety = Number(this.safety);
 
         return obj;
     }
@@ -462,9 +462,9 @@ export class SamplingRateConstraint implements VariableStepConstraint {
 
     constructor(
         public id: string = "sr",
-        public base: number,
-        public rate: number,
-        public startTime: number
+        public base: number = 0,
+        public rate: number = 0,
+        public startTime: number = 0
     ) {
     }
 
