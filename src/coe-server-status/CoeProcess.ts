@@ -169,7 +169,7 @@ export class CoeProcess {
 
         if (!this.checkCoeAvaliablity()) {
             const { dialog } = require('electron')
-            dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Please install the: " + "'Co-simulation Orchestration Engine'" + " first." }, function (button: any) { });
+            dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Please install the: 'Co-simulation Orchestration Engine' first." }, function (button: any) { });
             return;
         }
 
