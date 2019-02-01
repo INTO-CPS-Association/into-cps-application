@@ -180,7 +180,6 @@ export class CoeConfigurationComponent {
               },
               lessThanValidator2("startTime", "endTime"),
               null
-              //lessThanValidator("startTime", "endTime").bind(this)
             );
             console.log("Parsing finished!");
             this.isLoaded = true;
