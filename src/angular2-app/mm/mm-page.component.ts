@@ -33,11 +33,6 @@ import { Component, Input } from "@angular/core";
 
 @Component({
   selector: "mm-page",
-  // directives: [
-  //     PanelComponent,
-  //     MmConfigurationComponent,
-  //     MmOverviewComponent
-  // ],
   templateUrl: "./angular2-app/mm/mm-page.component.html"
 })
 export class MmPageComponent {

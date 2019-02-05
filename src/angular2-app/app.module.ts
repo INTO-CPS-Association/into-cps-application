@@ -9,14 +9,18 @@ import { FileSystemService } from "./shared/file-system.service";
 import { NavigationService } from "./shared/navigation.service";
 import { SettingsService } from "./shared/settings.service";
 import { SharedModule } from './shared/shared.module';
+import { DseConfigurationComponent } from './dse/dse-configuration.component';
+import { DsePageComponent } from './dse/dse-page.component';
 
 
 @NgModule({
   imports: [HttpModule, BrowserModule, FormsModule, MmModule, ReactiveFormsModule,
     COEModule, 
-    SharedModule ], // module dependencies
+    SharedModule], // module dependencies
   declarations: [ // components and directives
-    AppComponent], 
+    AppComponent,
+    DsePageComponent,
+    DseConfigurationComponent ], 
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService],
   exports: []

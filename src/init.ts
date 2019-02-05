@@ -46,7 +46,6 @@ import { ViewController, IViewController } from "./iViewController";
 import * as CustomFs from "./custom-fs";
 import { IProject } from "./proj/IProject";
 import * as SystemUtil from "./SystemUtil";
-//import { bootstrap } from '@angular/platform-browser-dynamic';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppComponent } from './angular2-app/app.component';
 import * as fs from 'fs';
@@ -67,7 +66,7 @@ declare var w2prompt: any;
 declare var w2alert: any;
 
 
-//import { provideForms, disableDeprecatedForms } from "@angular/forms";
+
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { TrViewController } from "./angular2-app/tr/TrViewController";
@@ -162,11 +161,10 @@ class InitializationController {
 
             let devMode = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.DEVELOPMENT_MODE);
             if (!devMode) {
-                //enableProdMode();
+                enableProdMode();
             }
 
             // Start Angular 2 application
-            //bootstrap(AppComponent, [disableDeprecatedForms(), provideForms()]);
             console.log("Before AppModule")
             platformBrowserDynamic().bootstrapModule(AppModule).catch(err => console.error(err));
             console.log("After appModule")
@@ -316,14 +314,6 @@ menuHandler.openFmu = () => {
     IntoCpsApp.setTopName("FMUs");
 };
 
-//menuHandler.createDse = (path) => {
-//    // create empty DSE file and load it.
-//    openView("dse/dse.html", () => {
-//        menuHandler.openDseView("");
-//    });
-//};
-//
-
 menuHandler.createMultiModel = (path, msgTitle = 'New Multi-Model') => {
     let appInstance = IntoCpsApp.getInstance();
     let project = appInstance.getActiveProject();
@@ -418,12 +408,10 @@ menuHandler.implodeConfig = (path) => {
     FmuImploder.createImplodeFMU(path);
 }
 menuHandler.createCoSimConfiguration = (path) => {
-
     let appInstance = IntoCpsApp.getInstance();
     let project = appInstance.getActiveProject();
 
     if (project) {
-        //let name    = Path.basename(path, ".sysml.json");
         let ivname = project.freshFilename(Path.dirname(path), `co-sim`);
 
         let msgTitle = 'New Co-Simulation Configuration';
@@ -497,7 +485,5 @@ menuHandler.showTraceView = () => {
 
 menuHandler.exportOvertureFmu = Overture.exportOvertureFmu;
 
-
-//Menus.configureIntoCpsMenu();
 
 export = InitializationController
