@@ -229,7 +229,7 @@ gulp.task('copy-css', function () {
 gulp.task('copy-html', function () {
     return gulp.src(htmlSrcs)
         .pipe(htmlhint({
-            "attr-lowercase": ["*ngIf", "*ngFor", "[(ngModel)]", "[formGroup]", "[formControl]", "(ngSubmit)", "#configForm", "[basePath]", "(pathChange)", "[ngModel]", "(ngModelChange)", "[ngValue]", "[ngModelOptions]"],
+            "attr-lowercase": ["formControlName", "formGroupName", "formArrayName", "*ngIf", "*ngFor", "[(ngModel)]", "[formGroup]", "[formControl]", "(ngSubmit)", "#configForm", "[basePath]", "(pathChange)", "[ngModel]", "(ngModelChange)", "[ngValue]", "[ngModelOptions]"],
             "doctype-first": false
         }))
         .pipe(htmlhint.reporter())
