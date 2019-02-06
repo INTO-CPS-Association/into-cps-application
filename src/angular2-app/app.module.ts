@@ -11,11 +11,13 @@ import { SettingsService } from "./shared/settings.service";
 import { SharedModule } from './shared/shared.module';
 import { DseConfigurationComponent } from './dse/dse-configuration.component';
 import { DsePageComponent } from './dse/dse-page.component';
+import { TrModule } from './tr/tr.module';
 
 
 @NgModule({
   imports: [HttpModule, BrowserModule, FormsModule, MmModule, ReactiveFormsModule,
     COEModule, 
+    TrModule,
     SharedModule], // module dependencies
   declarations: [ // components and directives
     AppComponent,

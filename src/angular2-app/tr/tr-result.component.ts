@@ -36,9 +36,6 @@ import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
 
 @Component({
     selector: "tr-sim",
-    directives: [
-        PanelComponent,
-        TrResultComponent],
     templateUrl: "./angular2-app/tr/tr-overview.component.html"
 })
 
