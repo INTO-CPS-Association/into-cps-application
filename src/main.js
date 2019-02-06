@@ -79,6 +79,7 @@ function createWindow() {
   }
 
   mainWindow.on('close', function (ev) {
+    console.log("mainwindow on close");
     intoCpsApp.isquitting = true;
     BrowserWindow.getAllWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
 

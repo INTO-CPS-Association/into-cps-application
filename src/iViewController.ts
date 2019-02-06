@@ -39,4 +39,6 @@ export interface IViewController {
 
 export abstract class ViewController implements IViewController {
     constructor(protected viewDiv: HTMLDivElement) {};
+    initialize?(): void;
+    deInitialize?(): boolean;
 }

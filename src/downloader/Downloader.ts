@@ -227,7 +227,7 @@ export function downloadTool(tool: any, targetDirectory: string, progressCallbac
 
 function launchToolInstaller(filePath: string) {
     return new Promise<string>((resolve, reject) => {
-        childProcess.execFile(filePath, function (error: string, stdout: string, stderr: string) {
+        childProcess.execFile(filePath, function (error: Error, stdout: string, stderr: string) {
             if (!error) {
                 resolve(stdout);
             } else {

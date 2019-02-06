@@ -47,7 +47,7 @@ export class FileSystemService {
         });
     }
 
-    readFile(path:string):Promise<string> {
+    readFile(path:string):Promise<{}> {
         return this.wrap((reject, resolve) => {
             fs.readFile(path, "utf8", (error, data) => {
                 if (error)

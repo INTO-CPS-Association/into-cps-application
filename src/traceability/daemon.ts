@@ -59,6 +59,7 @@ class Trace {
 }
 
 import { TraceNode, TraceNodeBase, TraceRel, TraceRelProps, TraceLink } from './db';
+import { AddressInfo } from 'net';
 
 
 export class Daemon {
@@ -172,10 +173,10 @@ export class Daemon {
                         reject(err);
                         return;
                     }
-                    console.log('Traceability daemon listening on port %s.', server.address().port);
-                    this.port = server.address().port;
+                    console.log('Traceability daemon listening on port %s.', (server.address() as AddressInfo).port);
+                    this.port = (server.address() as AddressInfo).port;
                     this.isRunning = true;
-                    resolve(server.address().port);
+                    resolve((server.address() as AddressInfo).port);
                 });
             } catch (err) {
                 reject(err);

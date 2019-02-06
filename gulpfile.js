@@ -263,13 +263,33 @@ gulp.task('package-win32', function (callback) {
   );
 });
 
-gulp.task('package-darwin', function (callback) {
-  runSequence(
-    'clean',
-    'prep-pkg',
-    'pkg-darwin'
-  );
-});
+gulp.task("pkg-darwin", function(done) {
+
+    var options = {
+        dir: '.',
+        name: packageJSON.name+'-'+packageJSON.version,
+        platform: "darwin",
+        arch: "x64",
+        overwrite:true,
+        prune:true,
+        icon: 'src/resources/into-cps/appicon/into-cps-logo.png.icns',
+        out: 'pkg',
+        "app-version": packageJSON.version,
+        "version-string": {
+            "CompanyName": packageJSON.author.name,
+            "ProductName": packageJSON.productName
+        }
+    };
+    return packager(options)
+        .then(appPaths =>
+              {
+                  console.log(appPaths);
+                  done();
+              })
+        .catch((e) => console.error(e));
+    });
+
+gulp.task('package-darwin', gulp.series('clean','prep-pkg','pkg-darwin'));
 
 gulp.task('package-linux', function (callback) {
   runSequence(
@@ -287,27 +307,6 @@ gulp.task('package-all', function (callback) {
   );
 });
 
-gulp.task("pkg-darwin", function(callback) {
-    var options = {
-        dir: '.',
-        name: packageJSON.name+'-'+packageJSON.version,
-        platform: "darwin",
-        arch: "x64",
-        overwrite:true,
-        prune:true,
-        icon: 'src/resources/into-cps/appicon/into-cps-logo.png.icns',
-        out: 'pkg',
-        "app-version": packageJSON.version,
-        "version-string": {
-            "CompanyName": packageJSON.author.name,
-            "ProductName": packageJSON.productName
-        }
-    };
-    packager(options, function done (err, appPath) {
-        if(err) { return console.log(err); }
-        callback();
-    });
-});
 
 gulp.task("pkg-win32", function(callback) {
     var options = {
