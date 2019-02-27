@@ -284,20 +284,38 @@ gulp.task("pkg-darwin", function(done) {
         .then(appPaths =>
               {
                   console.log(appPaths);
-                  done();
+                  return;
               })
         .catch((e) => console.error(e));
     });
 
 gulp.task('package-darwin', gulp.series('clean','prep-pkg','pkg-darwin'));
 
-gulp.task('package-linux', function (callback) {
-  runSequence(
-    'clean',
-    'prep-pkg',
-    'pkg-linux'
-  );
+gulp.task("pkg-linux", function(callback) {
+    var options = {
+        dir: '.',
+        name: packageJSON.name+'-'+packageJSON.version,
+        platform: "linux",
+        arch: "ia32,x64",
+        overwrite:true,
+        prune:true,
+        out: 'pkg',
+        "app-version": packageJSON.version,
+        "version-string": {
+            "CompanyName": packageJSON.author.name,
+            "ProductName": packageJSON.productName
+        }
+    };
+    return packager(options).then(appPaths =>
+                                  {
+                                      console.log(appPaths);
+                                      return;
+                                  })
+        .catch((e) => console.error(e));
 });
+
+
+gulp.task('package-linux', gulp.series('clean','prep-pkg','pkg-linux'));
 
 gulp.task('package-all', function (callback) {
   runSequence(
@@ -330,26 +348,6 @@ gulp.task("pkg-win32", function(callback) {
     });
 });
 
-gulp.task("pkg-linux", function(callback) {
-    var options = {
-        dir: '.',
-        name: packageJSON.name+'-'+packageJSON.version,
-        platform: "linux",
-        arch: "ia32,x64",
-        overwrite:true,
-        prune:true,
-        out: 'pkg',
-        "app-version": packageJSON.version,
-        "version-string": {
-            "CompanyName": packageJSON.author.name,
-            "ProductName": packageJSON.productName
-        }
-    };
-    packager(options, function done (err, appPath) {
-        if(err) { return console.log(err); }
-        callback();
-    });
-});
 
 gulp.task('pkg-all', gulp.series('pkg-win32','pkg-darwin','pkg-linux'));
 
