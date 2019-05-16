@@ -39,6 +39,7 @@ import { isResultValid } from "../intocps-configurations/ResultConfig";
 import * as fs from 'fs';
 import Path = require("path");
 const rimraf = require("rimraf");
+const { BrowserWindow } = require('electron').remote
 import { RTTester } from "../rttester/RTTester";
 import { IntoCpsAppMenuHandler } from "../IntoCpsAppMenuHandler";
 import { Utilities } from "../utilities";
@@ -412,6 +413,22 @@ export class BrowserController {
                 parent.refresh();
                 return null;
             }
+            
+            else if (path.endsWith("index.html") && !this.isResultFolder(Path.dirname(path))){
+			//open the GUI
+			parent.img = "into-cps-icon-projbrowser-config";
+			(<any>parent).coeConfig = path;
+			parent.opensInMainWindow = false;
+			let url = "file://"+path;
+			parent.dblClickHandler = function (item:ProjectBrowserItem){
+				let authWindow = new BrowserWindow({width:800,height:600,webPreferences:{nodeIntegration: false}});
+				
+				authWindow.loadURL(url);
+				authWindow.show;
+			};
+			parent.refresh();
+			return null
+		}
             else if (path.endsWith("mm.json") && !this.isResultFolder(Path.dirname(path))) {
                 // merge MultiModelConfig and folder
                 parent.img = "into-cps-icon-projbrowser-multimodel";
