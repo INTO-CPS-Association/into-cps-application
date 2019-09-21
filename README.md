@@ -25,6 +25,8 @@ After checking out the repo:
 3. To build the UI: `gulp`
 4. To run it: `npm start`
 
+For working with multiple versino of Node, the node package `n` can be of help.
+
 
 Development
 ---
