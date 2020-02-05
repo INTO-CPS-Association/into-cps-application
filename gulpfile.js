@@ -243,15 +243,15 @@ gulp.task('copy-js', function () {
 });
 
 // Grab non-npm dependencies
-gulp.task('init', ['install-bower-components']);
+gulp.task('init', gulp.series('install-bower-components'));
 
 //Build App for debugging
-gulp.task('build', ['compile-ts', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
-  'copy-bower', 'copy-fonts','copy-custom']);
+gulp.task('build', gulp.series('compile-ts', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
+  'copy-bower', 'copy-fonts','copy-custom'));
 
 //Prep App for packaging
-gulp.task('prep-pkg', ['compile-ts-uglify', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
-  'copy-bower', 'copy-fonts','copy-custom']);
+gulp.task('prep-pkg', gulp.series('compile-ts-uglify', 'compile-ng2', 'copy-js', 'copy-html', 'copy-css',
+  'copy-bower', 'copy-fonts','copy-custom'));
 
 //Build packages 
 gulp.task('package-win32', function (callback) {
@@ -351,7 +351,7 @@ gulp.task("pkg-linux", function(callback) {
     });
 });
 
-gulp.task('pkg-all',['pkg-win32','pkg-darwin','pkg-linux']);
+gulp.task('pkg-all',gulp.series('pkg-win32','pkg-darwin','pkg-linux'));
 
 // Watch for changes and rebuild on the fly
 gulp.task('watch', function () {
@@ -363,4 +363,4 @@ gulp.task('watch', function () {
 });
 
 // Default task
-gulp.task('default', ['build']);
+gulp.task('default', gulp.series('build'));
