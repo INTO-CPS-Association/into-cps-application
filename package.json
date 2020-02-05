@@ -71,7 +71,7 @@
     "electron": "~1.4.15",
     "electron-packager": "~8.5.2",
     "gulp": "~4.0.2",
-    "gulp-bower": "~0.0.13",
+    "gulp-bower": "0.0.15",
     "gulp-bump": "~2.4.0",
     "gulp-clean-css": "~2.3.2",
     "gulp-concat": "~2.6.0",
