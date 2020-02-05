@@ -70,7 +70,7 @@
     "del": "~2.2.0",
     "electron": "~1.4.15",
     "electron-packager": "~8.5.2",
-    "gulp": "~3.9.1",
+    "gulp": "~4.0.2",
     "gulp-bower": "~0.0.13",
     "gulp-bump": "~2.4.0",
     "gulp-clean-css": "~2.3.2",
