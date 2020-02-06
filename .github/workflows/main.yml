@@ -26,4 +26,5 @@ jobs:
       run: gulp init 
     - name: Run Gulp
       run: gulp
-       
+    - name: Run tests
+      run: npm test
