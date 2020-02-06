@@ -24,3 +24,6 @@ jobs:
       run: npm install  
     - name: Run Gulp init
       run: gulp init 
+    - name: Run Gulp
+      run: gulp
+       
