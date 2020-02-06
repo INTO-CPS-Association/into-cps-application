@@ -91,7 +91,7 @@
     "mocha": "^7.0.1",
     "run-sequence": "~1.2.2",
     "semver": "~5.3.0",
-    "spectron": "^6.0.0",
+    "spectron": "~3.4.0",
     "webpack": "~1.13.0"
   }
 }
