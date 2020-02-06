@@ -22,3 +22,5 @@ jobs:
         node-version: '11.x'
     - name: Install Dependencies
       run: npm install  
+    - name: Run Gulp init
+      run: gulp init 
