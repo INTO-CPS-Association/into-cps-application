@@ -172,8 +172,7 @@ export class CoeProcess {
   }
 
   // check if java is running and which version
-  private javaversion(): boolean {
-    var res = false;
+  private javaversion() {
     var spawn = child_process.spawn("java", ["-version"]);
     spawn.on("error", err => {
       console.error(err);
@@ -185,16 +184,24 @@ export class CoeProcess {
         ? data.split(" ")[2].replace(/"/g, "")
         : false;
       if (javaVersion != false) {
-        console.log(javaVersion);
+        console.log("true" + javaVersion);
         // TODO: We have Java installed
-        res = true;
       } else {
-        console.log(javaVersion);
+        console.log("false" + javaVersion);
         // TODO: No Java installed
-        res = false;
+        const { dialog } = require("electron");
+        dialog.showMessageBox(
+          {
+            type: "error",
+            buttons: ["OK"],
+            message: "Java is missing" // or is the wrong version
+          },
+          function(button: any) {}
+        );
+        return;
       }
     });
-    return res;
+    return;
   }
 
   //start or restart the COE process
@@ -215,18 +222,7 @@ export class CoeProcess {
       return;
     }
     // the message should be updated.
-    if (!this.javaversion()) {
-      const { dialog } = require("electron");
-      dialog.showMessageBox(
-        {
-          type: "error",
-          buttons: ["OK"],
-          message: "Java is missing" // or is the wrong version
-        },
-        function(button: any) {}
-      );
-      return;
-    }
+    this.javaversion();
 
     if (CoeProcess.firstStart) {
       //fs.unlinkSync(this.getLogFilePath())
