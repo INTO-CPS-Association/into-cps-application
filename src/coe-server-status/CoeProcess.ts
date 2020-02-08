@@ -44,6 +44,9 @@ export class CoeProcess {
   private static firstStart = true;
   private process: child_process.ChildProcess = null;
   private maxReadSize = 100000;
+  // java check
+  private static javaversionprop: string = "";
+  private static javaprop: boolean = false;
   private coeLogPrinter: CoeLogPrinter;
   private coeConsolePrinter: CoeLogPrinter;
   private cbPrepSimCBs: Map<UICrtlType, () => void> = new Map<
@@ -171,7 +174,8 @@ export class CoeProcess {
     return fs.existsSync(this.getCoePath());
   }
 
-  // check if java is running and which version
+  // check if java is running and which version no working
+  // inspiration from https://stackoverflow.com/questions/19734477/verify-if-java-is-installed-from-node-js
   private javaversion() {
     var spawn = child_process.spawn("java", ["-version"]);
     spawn.on("error", err => {
@@ -186,7 +190,11 @@ export class CoeProcess {
       if (javaVersion != false) {
         console.log("true" + javaVersion);
         // TODO: We have Java installed
-      } else {
+        CoeProcess.javaversionprop = javaVersion;
+        CoeProcess.javaprop = true;
+        // is this needed ?
+        return;
+      } else if (javaVersion === false && CoeProcess.javaprop === false) {
         console.log("false" + javaVersion);
         // TODO: No Java installed
         const { dialog } = require("electron");
@@ -198,9 +206,18 @@ export class CoeProcess {
           },
           function(button: any) {}
         );
+        // is this needed - return included?
+        /* spawn.unref(); */
+        /* spawn.kill(); */
         return;
       }
     });
+    console.log(
+      "after check: " +
+        CoeProcess.javaprop +
+        " Version: " +
+        CoeProcess.javaversionprop
+    );
     return;
   }
 
@@ -221,8 +238,6 @@ export class CoeProcess {
       );
       return;
     }
-    // the message should be updated.
-    this.javaversion();
 
     if (CoeProcess.firstStart) {
       //fs.unlinkSync(this.getLogFilePath())
@@ -241,6 +256,10 @@ export class CoeProcess {
         // fs.unlinkSync(this.getLogFilePath())
       }
     }
+
+    // the message should be updated.
+    this.javaversion();
+
     var spawn = child_process.spawn;
 
     let childCwd = this.getWorkingDir();
