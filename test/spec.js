@@ -1,5 +1,6 @@
 const Application = require('spectron').Application
 const assert = require('assert')
+const expect = require('chai').expect;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
 const path = require('path')
 
@@ -26,6 +27,7 @@ describe('Application launch', function () {
       assert.equal(count, 1)
       // Please note that getWindowCount() will return 2 if `dev tools` are opened.
       // assert.equal(count, 2)
+    
     })
   })
 
@@ -37,7 +39,7 @@ describe('Application launch', function () {
 
   it('displays Welcome in mainView', function () {
     return this.app.client.getText('#mainView').then(function (title) {
-      assert.equal(title, 'Welcome to the INTO-CPS Application version '+ process.env.npm_package_version)
+      expect(title).contain('Welcome to the INTO-CPS Application version '+ process.env.npm_package_version)
     })
   })
 })

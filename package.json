@@ -34,6 +34,7 @@
     "@types/w2ui": "~1.4.30",
     "bluebird": "~3.4.7",
     "body-parser": "~1.16.0",
+    "chai": "^4.2.0",
     "electron-default-menu": "~0.2.0",
     "es6-shim": "~0.35.1",
     "express": "~4.14.0",
