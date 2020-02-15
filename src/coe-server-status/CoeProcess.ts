@@ -176,7 +176,7 @@ export class CoeProcess {
 
   // check if java is running and which version no working
   // inspiration from https://stackoverflow.com/questions/19734477/verify-if-java-is-installed-from-node-js
-  private javaversion() {
+  private Checkjavaversion() {
     var spawn = child_process.spawn("java", ["-version"]);
     spawn.on("error", err => {
       console.error(err);
@@ -188,37 +188,27 @@ export class CoeProcess {
         ? data.split(" ")[2].replace(/"/g, "")
         : false;
       if (javaVersion != false) {
-        console.log("true" + javaVersion);
-        // TODO: We have Java installed
-        CoeProcess.javaversionprop = javaVersion;
+        // for later use if specific java version is needed.
+        /* CoeProcess.javaversionprop = javaVersion; */
         CoeProcess.javaprop = true;
-        // is this needed ?
-        return;
       } else if (javaVersion === false && CoeProcess.javaprop === false) {
-        console.log("false" + javaVersion);
-        // TODO: No Java installed
         const { dialog } = require("electron");
         dialog.showMessageBox(
           {
             type: "error",
             buttons: ["OK"],
-            message: "Java is missing" // or is the wrong version
+            message:
+              "Java wasn´t detected on your system \n" +
+              "JRE is needed to run the COE"
           },
           function(button: any) {}
         );
-        // is this needed - return included?
-        /* spawn.unref(); */
-        /* spawn.kill(); */
-        return;
       }
     });
-    console.log(
-      "after check: " +
-        CoeProcess.javaprop +
-        " Version: " +
-        CoeProcess.javaversionprop
-    );
-    return;
+    spawn.on("close", (code, signal) => {
+      // for future work if deallocation on this process is needed
+      console.log("the java dependency check subprocess has been closed");
+    });
   }
 
   //start or restart the COE process
@@ -257,8 +247,8 @@ export class CoeProcess {
       }
     }
 
-    // the message should be updated.
-    this.javaversion();
+    // Checking if java is installed.
+    this.Checkjavaversion();
 
     var spawn = child_process.spawn;
 
