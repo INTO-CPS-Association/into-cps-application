@@ -38,6 +38,7 @@ import * as child_process from "child_process";
 import { CoeLogPrinter } from "./../coeLogPrinter";
 import { UICrtlType } from "./../CoeServerStatusUiController";
 import DialogHandler from "../DialogHandler";
+import { DepCheckjavaversion } from "../angular2-app/dependencies/Dependencychecker";
 
 export class CoeProcess {
   private settings: ISettingsValues;
@@ -45,7 +46,6 @@ export class CoeProcess {
   private process: child_process.ChildProcess = null;
   private maxReadSize = 100000;
   // java check
-  private static javaversionprop: string = "";
   private static javaprop: boolean = false;
   private coeLogPrinter: CoeLogPrinter;
   private coeConsolePrinter: CoeLogPrinter;
@@ -183,7 +183,7 @@ export class CoeProcess {
       return false;
     });
     spawn.stderr.on("data", function(data) {
-      data = data.toString().split("\n")[0];
+      data = data.toString();
       var javaVersion = new RegExp("java version").test(data)
         ? data.split(" ")[2].replace(/"/g, "")
         : false;
@@ -191,7 +191,11 @@ export class CoeProcess {
         // for later use if specific java version is needed.
         /* CoeProcess.javaversionprop = javaVersion; */
         CoeProcess.javaprop = true;
-      } else if (javaVersion === false && CoeProcess.javaprop === false) {
+      } else if (javaVersion === false) {
+      }
+    });
+    spawn.on("close", (code, signal) => {
+      if (code != 0) {
         const { dialog } = require("electron");
         dialog.showMessageBox(
           {
@@ -204,8 +208,6 @@ export class CoeProcess {
           function(button: any) {}
         );
       }
-    });
-    spawn.on("close", (code, signal) => {
       // for future work if deallocation on this process is needed
       console.log("the java dependency check subprocess has been closed");
     });
@@ -249,6 +251,7 @@ export class CoeProcess {
 
     // Checking if java is installed.
     this.Checkjavaversion();
+    /* DepCheckjavaversion(CoeProcess.javaprop);  */
 
     var spawn = child_process.spawn;
 
