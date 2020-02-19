@@ -182,18 +182,6 @@ export class CoeProcess {
       console.error(err);
       return false;
     });
-    spawn.stderr.on("data", function(data) {
-      data = data.toString();
-      var javaVersion = new RegExp("java version").test(data)
-        ? data.split(" ")[2].replace(/"/g, "")
-        : false;
-      if (javaVersion != false) {
-        // for later use if specific java version is needed.
-        /* CoeProcess.javaversionprop = javaVersion; */
-        CoeProcess.javaprop = true;
-      } else if (javaVersion === false) {
-      }
-    });
     spawn.on("close", (code, signal) => {
       if (code != 0) {
         const { dialog } = require("electron");
