@@ -38,7 +38,7 @@ import * as child_process from "child_process";
 import { CoeLogPrinter } from "./../coeLogPrinter";
 import { UICrtlType } from "./../CoeServerStatusUiController";
 import DialogHandler from "../DialogHandler";
-import { DepCheckjavaversion } from "../angular2-app/dependencies/Dependencychecker";
+import { dependencyCheckJava } from "../angular2-app/dependencies/Dependencychecker";
 
 export class CoeProcess {
   private settings: ISettingsValues;
@@ -174,33 +174,6 @@ export class CoeProcess {
     return fs.existsSync(this.getCoePath());
   }
 
-  // check if java is running and which version no working
-  // inspiration from https://stackoverflow.com/questions/19734477/verify-if-java-is-installed-from-node-js
-  private Checkjavaversion() {
-    var spawn = child_process.spawn("java", ["-version"]);
-    spawn.on("error", err => {
-      console.error(err);
-      return false;
-    });
-    spawn.on("close", (code, signal) => {
-      if (code != 0) {
-        const { dialog } = require("electron");
-        dialog.showMessageBox(
-          {
-            type: "error",
-            buttons: ["OK"],
-            message:
-              "Java wasn´t detected on your system \n" +
-              "JRE is needed to run the COE"
-          },
-          function(button: any) {}
-        );
-      }
-      // for future work if deallocation on this process is needed
-      console.log("the java dependency check subprocess has been closed");
-    });
-  }
-
   //start or restart the COE process
   public start() {
     if (!this.checkCoeAvaliablity()) {
@@ -238,8 +211,7 @@ export class CoeProcess {
     }
 
     // Checking if java is installed.
-    this.Checkjavaversion();
-    /* DepCheckjavaversion(CoeProcess.javaprop);  */
+    dependencyCheckJava();
 
     var spawn = child_process.spawn;
 
