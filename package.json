@@ -55,6 +55,7 @@
     "showdown": "^1.7.1",
     "sql.js": "~0.3.2",
     "tree-kill": "~1.1.0",
+    "tslib": "^1.10.0",
     "typescript": "~2.1.5",
     "uuid": "~3.0.1",
     "xml2js": "~0.4.17",
@@ -92,6 +93,9 @@
     "run-sequence": "~1.2.2",
     "semver": "~5.3.0",
     "spectron": "~3.4.0",
+    "spectron-fake-dialog": "0.0.1",
+    "spectron-fake-menu": "0.0.1",
+    "spectron-menu-addon": "^0.4.1",
     "webpack": "~1.13.0"
   }
 }
