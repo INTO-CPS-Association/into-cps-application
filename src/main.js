@@ -61,7 +61,7 @@ function createWindow() {
   //First load the last active project, but not until app is ready
   intoCpsApp.loadPreviousActiveProject();
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 800, height: 600 });
+  mainWindow = new BrowserWindow({ width: 800, height: 600});
 
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html');
