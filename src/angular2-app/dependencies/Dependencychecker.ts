@@ -35,11 +35,11 @@ export function dependencyCheckPythonVersion() {
   });
   spawn.stderr.on("data", function(data) {
     data = data.toString("utf8").split("\n")[0];
+    // the pythonVersion is false if the output from the spawn do not follow the stardard of: "Python *.*.*"
     var pythonVersion = data.split(" ")[1] ? data.split(" ")[1] : false;
     if (pythonVersion != false) {
+      // this converts a string of "*.*.*"" into a number *.*
       var pythonversion = parseFloat(pythonVersion);
-      // to show Hugo
-      console.log("as a number " + pythonversion);
     } else if (pythonVersion === false) {
       console.log(data);
       dialog.showMessageBox(
@@ -47,7 +47,7 @@ export function dependencyCheckPythonVersion() {
           type: "error",
           buttons: ["OK"],
           message:
-            "INTO-CBS found Python on your system. \n" +
+            "INTO-CPS found Python on your system. \n" +
             "But was unable to assess your version of Python. \n" +
             "Your python version needs to be 2.7 or newer."
         },
@@ -61,7 +61,7 @@ export function dependencyCheckPythonVersion() {
           type: "error",
           buttons: ["OK"],
           message:
-            "INTO-CBS has assest your python version to be older than 2.7.  \n" +
+            "INTO-CPS has assest your python version to be older than 2.7.  \n" +
             "Your python version needs to be 2.7 or newer"
         },
         function(button: any) {}
@@ -69,6 +69,7 @@ export function dependencyCheckPythonVersion() {
     }
   });
   spawn.on("close", (code, signal) => {
+    // the shell returns != 0 if it fails to run python.
     if (code != 0) {
       dialog.showMessageBox(
         {
@@ -79,7 +80,7 @@ export function dependencyCheckPythonVersion() {
         function(button: any) {}
       );
     }
-    // for future work if deallocation on this process is needed
+    
     console.log("the python dependency check subprocess has been closed");
   });
 }

@@ -803,7 +803,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         let absoluteProjectPath = IntoCpsApp.getInstance().getActiveProject().getRootFilePath();
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
         let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
-
+        // check if python is installed.
         dependencyCheckPythonVersion();
 
 
