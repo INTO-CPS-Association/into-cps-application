@@ -49,6 +49,7 @@ import * as Path from 'path';
 import * as fs from 'fs';
 import {coeServerStatusHandler} from "../../menus";
 import {OutputConnectionsPair} from "../coe/models/Fmu";
+import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
 
 @Component({
     selector: "dse-configuration",
@@ -802,6 +803,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         let absoluteProjectPath = IntoCpsApp.getInstance().getActiveProject().getRootFilePath();
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
         let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
+
+        dependencyCheckPythonVersion();
+
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
         let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 

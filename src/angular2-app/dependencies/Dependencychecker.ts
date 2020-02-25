@@ -26,3 +26,60 @@ export function dependencyCheckJava() {
     console.log("the java dependency check subprocess has been closed");
   });
 }
+
+export function dependencyCheckPythonVersion() {
+  var spawn = child_process.spawn("python", ["--version"]);
+  spawn.on("error", err => {
+    console.error(err);
+    return false;
+  });
+  spawn.stderr.on("data", function(data) {
+    data = data.toString("utf8").split("\n")[0];
+    var pythonVersion = data.split(" ")[1] ? data.split(" ")[1] : false;
+    if (pythonVersion != false) {
+      var pythonversion = parseFloat(pythonVersion);
+      // to show Hugo
+      console.log("as a number " + pythonversion);
+    } else if (pythonVersion === false) {
+      console.log(data);
+      dialog.showMessageBox(
+        {
+          type: "error",
+          buttons: ["OK"],
+          message:
+            "INTO-CBS found Python on your system. \n" +
+            "But was unable to assess your version of Python. \n" +
+            "Your python version needs to be 2.7 or newer."
+        },
+        function(button: any) {}
+      );
+    } else if (pythonversion < 2.6 || pythonversion >= 3.0) {
+      console.log(pythonversion);
+
+      dialog.showMessageBox(
+        {
+          type: "error",
+          buttons: ["OK"],
+          message:
+            "INTO-CBS has assest your python version to be older than 2.7.  \n" +
+            "Your python version needs to be 2.7 or newer"
+        },
+        function(button: any) {}
+      );
+    }
+  });
+  spawn.on("close", (code, signal) => {
+    if (code != 0) {
+      dialog.showMessageBox(
+        {
+          type: "error",
+          buttons: ["OK"],
+          message: "Python wasn't found on your system"
+        },
+        function(button: any) {}
+      );
+    }
+    // for future work if deallocation on this process is needed
+    console.log("the python dependency check subprocess has been closed");
+  });
+}
