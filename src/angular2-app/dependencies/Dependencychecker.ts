@@ -11,16 +11,11 @@ export function dependencyCheckJava() {
   });
   spawn.on("close", (code, signal) => {
     if (code != 0) {
-      const { dialog } = require("electron");
+      let remote = require("electron").remote;
+      let dialog = remote.dialog;
       dialog.showMessageBox(
-        {
-          type: "error",
-          buttons: ["OK"],
-          message:
-            "Java wasn´t detected on your system \n" +
-            "JRE is needed to run the COE"
-        },
-        function(button: any) {}
+        {title: "error", buttons: ["OK"], message: "Java wasn´t detected on your system \n" +
+        "JRE is needed to run the COE"}
       );
     }
     console.log("the java dependency check subprocess has been closed");

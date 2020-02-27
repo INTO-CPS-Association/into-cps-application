@@ -186,8 +186,7 @@ export class CoeProcess {
             "Please install the: " +
             "'Co-simulation Orchestration Engine'" +
             " first."
-        },
-        function(button: any) {}
+        }
       );
       return;
     }

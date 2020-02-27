@@ -243,7 +243,62 @@ function showVersion(version: string, data: any) {
             let remote = require("electron").remote;
             let dialog = remote.dialog;
             let buttons: string[] = ["No", "Yes"];
-            dialog.showMessageBox({ type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }, function (button: any) {
+            let val = dialog.showMessageBox(null, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" })
+            val.then(function(res) {
+                if(res.response == 1)// yes
+                {
+                    $("<div>").load("./progress-bar-component.html", function (event: JQueryEventObject) {
+                        let progressBarComponent = <HTMLDivElement>(<HTMLDivElement>this).firstElementChild;
+                        //Prepend the child
+                        if (progressDiv.hasChildNodes) {
+                            progressDiv.insertBefore(progressBarComponent, progressDiv.firstChild)
+                        }
+                        else { progressDiv.appendChild(progressBarComponent); }
+
+                        //Get the filling div
+                        let component = <HTMLDivElement>(<HTMLDivElement>progressBarComponent).querySelector("#coe-progress");
+                        component.scrollIntoView();
+                        //Start the download
+                        downloader.downloadTool(tool, getTempDir(), progressFunction(tool.name, component)).then(function (filePath) {
+                            console.log("Download complete: " + filePath);
+                            const { shell } = require('electron');
+
+                            if (downloader.checkToolAction(tool, downloader.DownloadAction.UNPACK)) {
+                                let installDirectory = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR)
+                                downloader.unpackTool(filePath, installDirectory);
+                                shell.showItemInFolder(installDirectory);
+                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.LAUNCH)) {
+                               let launch = dialog.showMessageBox(null, { type: 'question', buttons: buttons, message: "Accept launch of installer: " + Path.basename(filePath) + " downloaded for: " + tool.name + " (" + tool.version + ")" }) 
+                               launch.catch((error: Error) => {
+                                   console.error(error);
+                                   return;
+                               });
+                               launch.then((res) => {
+                                   if(res.response === 1)//yes
+                                    {
+                                    shell.openExternal(filePath);
+                                   }
+                               });
+
+                               /* {
+                                    if (buttonInstall == 1)//yes
+                                    {
+                                        shell.openExternal(filePath);
+                                    }
+                                }); */
+
+                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.SHOW)) {
+                                shell.showItemInFolder(filePath);
+                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.NONE)) {
+                                //do nothing
+                            } else {
+                                dialog.showMessageBox(null, { type: 'info', buttons: ["OK"], message: "Download completed: " + filePath });
+                            }
+                        }, function (error) { dialog.showErrorBox("Invalid Checksum", error); });
+                    });
+                }
+            })
+            /* function (button: any) {
                 if (button == 1)//yes
                 {
                     $("<div>").load("./progress-bar-component.html", function (event: JQueryEventObject) {
@@ -283,8 +338,7 @@ function showVersion(version: string, data: any) {
                             }
                         }, function (error) { dialog.showErrorBox("Invalid Checksum", error); });
                     });
-                }
-            });
+                } */
         };
         let releasePage = tool.releasepage;
         if (releasePage) {
