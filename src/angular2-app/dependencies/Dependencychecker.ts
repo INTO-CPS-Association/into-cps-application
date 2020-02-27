@@ -2,7 +2,6 @@ import * as child_process from "child_process";
 const { dialog } = require("electron");
 
 // check if java is running and which version no working
-// inspiration from https://stackoverflow.com/questions/19734477/verify-if-java-is-installed-from-node-js
 export function dependencyCheckJava() {
   var spawn = child_process.spawn("java", ["-version"]);
   spawn.on("error", err => {
