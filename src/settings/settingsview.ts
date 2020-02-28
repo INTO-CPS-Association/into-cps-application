@@ -112,8 +112,14 @@ class SettingsView {
         this.settings.save();
         let remote = require("electron").remote;
         let dialog = remote.dialog;
-        dialog.showMessageBox({ type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." }, function (button: any) {
-            if (button == 0) {
+        let save = dialog.showMessageBox(null, { type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." });
+        save.catch((error) => {
+            console.error(error);
+            return;
+        })
+        save.then((res) => {
+            if(res.response == 0)
+            {
                 remote.app.relaunch();
                 remote.app.exit();
             } else {

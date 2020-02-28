@@ -58,6 +58,7 @@ module.exports = {
     },
 
     module: {
+        // not in the current version needs update.
         loaders: [
             {
                 test: /\.ts$/,
@@ -78,11 +79,16 @@ module.exports = {
             }
         ]
     },
-
+    // unknown for the object needs update
     ts: {
         transpileOnly: true
     },
-
+    // needs update
+    /* optimization: {
+        splitChunks: {
+            names: ['@angular', 'common'], minChunks: Infinity
+        }
+    }, */
     plugins: [
         new CommonsChunkPlugin({ names: ['@angular', 'common'], minChunks: Infinity })
     ],

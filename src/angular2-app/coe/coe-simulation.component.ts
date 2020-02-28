@@ -176,6 +176,8 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
     }
 
     onCoeLaunchClick() {
+//        openCOEServerStatusWindow("autolaunch", false);
+
         let coe = IntoCpsApp.getInstance().getCoeProcess();
         if (!coe.isRunning())
             IntoCpsApp.getInstance().getCoeProcess().start();

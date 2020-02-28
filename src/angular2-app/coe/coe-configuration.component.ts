@@ -193,7 +193,7 @@ export class CoeConfigurationComponent {
       .catch(error =>
         console.error(`Error during parsing of config: ${error}`)
       );
-      
+
   }
 
   public setPostProcessingScript(config: CoSimulationConfig, path: string) {
