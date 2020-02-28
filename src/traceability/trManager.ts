@@ -198,7 +198,7 @@ export class TrManager {
         let handleError = (err: any) => {
             console.info(err);
             const { dialog } = require('electron')
-            dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Neo4J: " + err }, function (button: any) { });
+            dialog.showMessageBox(null, { type: 'error', buttons: ["OK"], message: "Neo4J: " + err });
 
         };
 
