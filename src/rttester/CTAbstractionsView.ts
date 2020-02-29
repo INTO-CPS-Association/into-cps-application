@@ -111,14 +111,20 @@ export class CTAbstractionsView extends ViewController {
             document.getElementById("simulationFileBrowse").onclick = (ev: MouseEvent) => {
                 let remote = require("electron").remote;
                 let dialog = remote.dialog;
-                let dialogResult: string[] = dialog.showOpenDialog({
+                let dialogResult = dialog.showOpenDialog({
                     filters: [{ name: "Signal Log-Files (*.json)", extensions: ["json"] }]
                 });
-                if (dialogResult != undefined) {
-                    self.currentInput.abstraction.simulationBased.fileName
+                dialogResult.catch((error) => {
+                    console.error(error);
+                    return;
+                });
+                dialogResult.then((res) => {
+                    if(res.filePaths != undefined) {
+                        self.currentInput.abstraction.simulationBased.fileName
                         = this.hSimulationFile.value
-                        = dialogResult[0];
-                }
+                        = res.filePaths[0];
+                    }
+                });
             };
         });
     }

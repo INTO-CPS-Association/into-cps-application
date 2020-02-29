@@ -255,12 +255,15 @@ export function openProjectViaDirectoryDialog() {
     let dialog = remote.dialog;
     let settings = IntoCpsApp.getInstance().getSettings();
     let defaultPath = settings.getValue(SettingKeys.DEFAULT_PROJECTS_FOLDER_PATH);
-    let dialogResult: string[] = dialog.showOpenDialog({ defaultPath: defaultPath, properties: ["openDirectory"] });
-    if (dialogResult != undefined) {
+    let dialogResult = dialog.showOpenDialog({ defaultPath: defaultPath, properties: ["openDirectory"] });
+    dialogResult.catch((error) => {
+        console.error(error);
+        return;
+    });
+    dialogResult.then((res) => {
         try {
-
-            let path = Path.join(dialogResult[0], ".project.json");
-            if (fs.accessSync(path, fs.constants.R_OK)) {
+            let path = Path.join(res.filePaths[0], ".project.json");
+            if (fs.accessSync(path, fs.constants.R_OK) === null) {
                 console.info("Cannot open project: "+ path);
                 dialog.showErrorBox("Cannot open project", "Unable to find project at path: " + path);
                 return;
@@ -275,7 +278,7 @@ export function openProjectViaDirectoryDialog() {
                 }
             }
         } catch (e) {
-            dialog.showErrorBox("Cannot open project", "Unable to find project at path: " + dialogResult[0] + " Error: " + e);
+            dialog.showErrorBox("Cannot open project", "Unable to find project at path: " + res.filePaths[0] + " Error: " + e);
         }
-    }
+    });
 }

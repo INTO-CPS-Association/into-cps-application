@@ -53,13 +53,19 @@ export class CreateTDGProjectController extends ViewController {
     xmiModelBrowser() {
         let remote = require("electron").remote;
         let dialog = remote.dialog;
-        let dialogResult: string[] = dialog.showOpenDialog({
+        let dialogResult = dialog.showOpenDialog({
             filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
         });
-        if (dialogResult != undefined) {
-            let hText: HTMLInputElement = <HTMLInputElement>document.getElementById("XMIModelPathText");
-            hText.value = dialogResult[0];
-        }
+        dialogResult.catch((error) => {
+            console.error(error);
+            return;
+        });
+        dialogResult.then((res) => {
+            if(res.filePaths != undefined) {
+                let hText: HTMLInputElement = <HTMLInputElement>document.getElementById("XMIModelPathText");
+                hText.value = res.filePaths[0];
+            } 
+        });
     }
 
     createProject(): void {
