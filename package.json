@@ -57,7 +57,7 @@
     "showdown": "^1.9.1",
     "sql.js": "~0.3.2",
     "tree-kill": "^1.2.2",
-    "typescript": "^3.8.3",
+    "typescript": "^2.1.5",
     "uuid": "~3.0.1",
     "webpack": "^1.13.0",
     "xml2js": "^0.4.23",
