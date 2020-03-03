@@ -71,14 +71,12 @@ export class FileBrowserComponent implements OnInit {
     }
 
     browse(properties: ('openFile' | 'openDirectory' | 'multiSelections' | 'createDirectory')[] = ["openFile", "openDirectory"]) {
-        /* let dialogResult: string[] */let dialogResult = this.dialog.showOpenDialog({defaultPath: this.basePath,  properties: properties });
-        dialogResult.catch((error: Error) => {
+        /* let dialogResult: string[] = */ this.dialog.showOpenDialog({defaultPath: this.basePath,  properties: properties }).then((res) => {
+            if(res) this.onChange(res.filePaths[0]);
+        }).catch((error: Error) => {
             console.error(error);
             return;
-        })
-        dialogResult.then((res) => {
-            if(res) this.onChange(res.filePaths[0]);
-        })
+        });
         /* if (dialogResult) this.onChange(dialogResult[0]); */
     }
 

@@ -65,17 +65,15 @@ export class CreateMCProjectController extends ViewController {
     xmiModelBrowser() {
         let remote = require("electron").remote;
         let dialog = remote.dialog;
-        let dialogResult = dialog.showOpenDialog({
+        /* let dialogResult = */ dialog.showOpenDialog({
             filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
-        });
-        dialogResult.catch((error) => {
-            console.error(error);
-            return;
-        });
-        dialogResult.then((res) => {
+        }).then((res) => {
             if(res.filePaths != undefined) {
                 this.hPath.value = res.filePaths[0];
             }
+        }).catch((error) => {
+            console.error(error);
+            return;
         });
     }
 

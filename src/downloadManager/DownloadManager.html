@@ -11,7 +11,8 @@
    
     <!--Styles to fix issues with related to responsiveness and padding of ui-layout-->
     <script src="DownloadManager.js"></script>
-    <script src="../bower_components/jquery.js" onload="window.$ = window.jQuery = module.exports;"></script>
+    <script>window.$ = window.jQuery = require('jquery');</script>
+   <!--  <script src="../bower_components/jquery.js" onload="window.$ = window.jQuery = module.exports;"></script> -->
     <style>
         .no-top-padding {
             margin-top: -10px;

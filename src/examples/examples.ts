@@ -43,15 +43,14 @@ let request = require("request");
 function launchProjectExplorer() {
     let remote = require("electron").remote;
     let dialog = remote.dialog;
-    let dialogResult = dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
-    dialogResult.catch((error) => {
+    /* let dialogResult =  */dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
+        var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
+        p.value = res.filePaths[0];
+    }).catch((error) => {
         console.error(error);
         return;
     });
-    dialogResult.then((res) => {
-        var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
-        p.value = res.filePaths[0];
-    })
+
 
 }
 
