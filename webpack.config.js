@@ -30,19 +30,20 @@
  */
 
 var path = require('path');
-var CommonsChunkPlugin = require('webpack').optimize.CommonsChunkPlugin;
 var webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 
 
 module.exports = {
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     entry: {
         '@angular': [
             'rxjs',
             'reflect-metadata',
             'zone.js'
         ],
-        'common': ['es6-shim']
+        'common': ['es6-shim'],
+        'src': ['main.js']
     },
 
     output: {
@@ -56,6 +57,25 @@ module.exports = {
     resolve: {
         extensions: ['.ts','.js','.json', '.css', '.html']
     },
+    optimization: {
+        splitChunks: {
+          cacheGroups: {
+            commons: {
+              name: 'commons',
+              chunks: 'initial',
+              minChunks: 2
+            }
+          }
+        },
+        minimizer: [
+            new TerserPlugin({
+                cache: true,
+                parallel: true,
+                sourceMap: true,
+                terserOptions: {}
+            })
+        ]
+      },
 
     module: {
         rules: [{
@@ -83,7 +103,8 @@ module.exports = {
         new webpack.LoaderOptionsPlugin({
                 debug: true
        }),
-        new CommonsChunkPlugin({ names: ['@angular', 'common'], minChunks: Infinity })
+       new webpack.SourceMapDevToolPlugin({
+       })
     ],
     target:'electron-renderer'
 };
