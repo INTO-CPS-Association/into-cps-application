@@ -5,7 +5,6 @@ const electronPath = require('electron') // Require Electron from the binaries i
 const path = require('path')
 const fakeMenu = require('spectron-fake-menu')
 
-
 describe('Application launch', function () {
   this.timeout(120000)
 
@@ -16,6 +15,7 @@ describe('Application launch', function () {
     })
 
     fakeMenu.apply(this.app);
+    
     return this.app.start()
   })
 
@@ -45,10 +45,13 @@ describe('Application launch', function () {
     })
   })
 
+  //Step 2. To open a project, select File > Open Project
   it('File->Open Project Menu Click', function () {
     fakeMenu.clickMenu('File', 'Open Project');
   })
 
+  //Step 5. Click the + symbol next to Non-3D multimodel to expand it
+  //Step 6. Double click to open Experiment1.
   it('Go to Non-3D > Experiment1 from sidebar', function () {
     return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
       .doubleClick('#node_ProjectBrowserItem_29')
@@ -67,6 +70,7 @@ describe('Application launch', function () {
       })
   })
 
+  //Step 7. Click Launch
   it('Co-Simulation Engine online', function () {
     return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
       .doubleClick('#node_ProjectBrowserItem_29')
@@ -76,9 +80,9 @@ describe('Application launch', function () {
         expect(text).contain('online')
       })
   })
-
-
-  it('Simulate enabled', function(){
+  
+  //Step 8. Click simulate to run a co-simulation
+  it('Button shows Stop after clicking Simulate button', function(){
     return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
     .doubleClick('#node_ProjectBrowserItem_29')
     .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
@@ -88,4 +92,38 @@ describe('Application launch', function () {
       expect(text).contain('Stop')
     })
   })
+
+  it('Click on COE Console', function(){
+    return this.app.client.$('#coe-status-btn-status').doubleClick().pause(3000)
+    .$('.navbar-brand').getText()
+    .then(function(text){
+      expect(text).contain('COE Status')
+    })
+  })
+
+  //Step 10. Expand the configuration
+  it('Click Edit button to change the Co-Simulation parameters', function(){
+    return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
+    .doubleClick('#node_ProjectBrowserItem_29')
+    .$('coe-page').$('.panel-heading').click()
+    .$('.btn.btn-default').click()
+    .$('.btn.btn-default').getText()
+    .then(function(text){
+      expect(text).contain('Save')
+    })
+  })
+
+  //Step 11. Click Edit Button, set Start time 
+  it('Change Start Time Co-Simulation parameter', function(){
+    return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
+    .doubleClick('#node_ProjectBrowserItem_29')
+    .$('coe-page').$('.panel-heading').click()
+    .$('.btn.btn-default').click().pause(3000)
+    .$('.form-control.ng-untouched.ng-pristine.ng-valid').setValue('0')
+    .$('.form-control.ng-untouched.ng-pristine.ng-valid').getValue()
+    .then(function(text){
+      expect(text).contain('0')
+    })
+  })
+
 })
