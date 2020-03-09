@@ -105,7 +105,7 @@ export default class IntoCpsApp extends EventEmitter {
         let activeProjectPath = this.settings.getSetting(SettingKeys.ACTIVE_PROJECT);
         if (activeProjectPath) {
             try {
-                if (!fs.accessSync(activeProjectPath, fs.constants.R_OK)) {
+                if (fs.accessSync(activeProjectPath, fs.constants.R_OK) !== null) {
 
                     this.activeProject = this.loadProject(activeProjectPath);
                 } else {

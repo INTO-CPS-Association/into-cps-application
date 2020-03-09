@@ -62,7 +62,7 @@ export function display(dir: string): void {
     let create = () => {
         let ltlDir = Path.join(dir, hQueryName.value);
         let err = fs.mkdirSync(ltlDir);
-        if (err) {
+        if (err === undefined || null) {
             hModalFail.innerText = "Error creating folder '" + ltlDir + "'.";
             hModalFail.style.display = "block";
             return;
@@ -76,7 +76,7 @@ export function display(dir: string): void {
         };
         let queryFileName = Path.join(ltlDir, "query.json");
         err = fs.writeFileSync(queryFileName, JSON.stringify(jsonObject, null, 4));
-        if (err) {
+        if (err ===  undefined || null) {
             hModalFail.innerText = "Error writing query file '" + queryFileName + "'.";
             hModalFail.style.display = "block";
             return;

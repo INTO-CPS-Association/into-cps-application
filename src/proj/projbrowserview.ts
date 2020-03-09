@@ -732,7 +732,7 @@ export class BrowserController {
         let projectFile = Path.normalize(Path.join(path, ".project"));
 
         try {
-            if (!fs.accessSync(projectFile, fs.constants.R_OK)) {
+            if (fs.accessSync(projectFile, fs.constants.R_OK) !== null) {
                 let content = fs.readFileSync(projectFile, "UTF-8");
                 return content.indexOf("org.overture.ide.vdmrt.core.nature") >= 0;
 

@@ -28,7 +28,7 @@
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
-
+'use strict'
 import { IntoCpsAppEvents } from "./IntoCpsAppEvents";
 import { SettingKeys } from "./settings/SettingKeys";
 import { IntoCpsApp } from "./IntoCpsApp";

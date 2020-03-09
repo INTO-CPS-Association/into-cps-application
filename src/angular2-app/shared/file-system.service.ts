@@ -42,7 +42,7 @@ export class FileSystemService {
 
     // Wrap the filesystem API in a promise and the Angular zone
     private wrap(fn:(resolve:Function, reject:Function) => void) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             this.zone.run(() => fn(resolve, reject));
         });
     }

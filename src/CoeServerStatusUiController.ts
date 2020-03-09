@@ -165,11 +165,11 @@ export class CoeServerStatusUiController {
             window.setInterval(() => { this.consoleAutoScroll() }, 800);
             this.coeStatusRunning = true;
         }
-        window.addEventListener("beforeunload",(ev) => {
+        window.addEventListener("beforeunload",(ev: BeforeUnloadEvent) => {
             remote.getCurrentWindow().removeAllListeners();
             coe.unloadPrintView(this.type);
         });
-        window.onbeforeunload = ((ev) => {
+        window.onbeforeunload = ((ev: BeforeUnloadEvent) => {
             
          });
     }
