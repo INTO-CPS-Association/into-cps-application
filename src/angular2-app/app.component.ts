@@ -31,15 +31,8 @@
 
 import { Component, OnInit, NgZone } from '@angular/core';
 import {FileSystemService} from "./shared/file-system.service";
-import {CoePageComponent} from "./coe/coe-page.component";
 import {Http} from "@angular/http";
 import {SettingsService} from "./shared/settings.service";
-import {MmPageComponent} from "./mm/mm-page.component";
-import {TrPageComponent} from "./tr/tr-page.component";
-import {DsePageComponent} from "./dse/dse-page.component";
-import {CoSimulationConfig} from "../intocps-configurations/CoSimulationConfig";
-import IntoCpsApp from "../IntoCpsApp";
-import {MultiModelConfig} from "../intocps-configurations/MultiModelConfig";
 import {CoeSimulationService} from "./coe/coe-simulation.service";
 import {NavigationService} from "./shared/navigation.service";
 
@@ -54,21 +47,10 @@ declare let window: MyWindow;
 
 @Component({
     selector: 'app',
-   /*  directives: [
-        MmPageComponent,
-        CoePageComponent,
-        DsePageComponent,
-        TrPageComponent
-    ], */
-    /* providers: [
-        HTTP_PROVIDERS,
-        FileSystemService,
-        SettingsService,
-        NavigationService
-    ], */
     template: `
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
-        <!-- <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
+         <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
+         <!--
         <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
         <tr-page *ngIf="page === 'tr'" [path]="path"></tr-page> -->`
 })
@@ -96,10 +78,10 @@ export class AppComponent implements OnInit {
     }
 
     openCOE(path: string):void {
-        /* this.zone.run(() => {
+        this.zone.run(() => {
             this.path = path;
             this.page = "coe";
-        }); */
+        });
     }
 
     openMultiModel(path: string):void {

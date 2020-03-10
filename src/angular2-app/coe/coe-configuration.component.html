@@ -32,7 +32,7 @@
 						<label class="col-sm-5 col-md-4 control-label">Start time</label>
 						<div class="col-sm-7 col-md-8">
 							<p *ngIf="!editing" class="form-control-static">{{config.startTime}}</p>
-							<input *ngIf="editing" name="startTime" [(ngModel)]="config.startTime" class="form-control">
+							<input *ngIf="editing" formControlName="startTime" [(ngModel)]="config.startTime" class="form-control">
 							<div *ngIf="form.hasError('required', 'startTime')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'startTime')" class="alert alert-danger">Only numbers are allowed.</div>
 							<div *ngIf="form.hasError('notLessThan')" class="alert alert-danger">Start time is after end time.</div>
@@ -43,7 +43,7 @@
 						<label class="col-sm-5 col-md-4 control-label">End time</label>
 						<div class="col-sm-7 col-md-8">
 							<p *ngIf="!editing" class="form-control-static">{{config.endTime}}</p>
-							<input *ngIf="editing" name="endTime" [(ngModel)]="config.endTime" class="form-control">
+							<input *ngIf="editing" formControlName="endTime" [(ngModel)]="config.endTime" class="form-control">
 							<div *ngIf="form.hasError('required', 'endTime')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'endTime')" class="alert alert-danger">Only numbers are allowed.</div>
 							<div *ngIf="form.hasError('notLessThan')" class="alert alert-danger">End time is before start time.</div>
@@ -64,29 +64,29 @@
 
 					<hr>
 
-					<div *ngIf="config.algorithm.name == 'Fixed Step'" [formGroup]="form.find('algorithm')">
+					<div *ngIf="config.algorithm.name == 'Fixed Step'" [formGroup]="form.get('algorithm')">
 						<div class="form-horizontal">
 							<div class="form-group">
 								<label class="col-sm-5 col-md-4 control-label">Step size</label>
 								<div class="col-sm-7 col-md-8">
 									<p *ngIf="!editing" class="form-control-static">{{config.algorithm.size}}</p>
-									<input *ngIf="editing" name="size" [(ngModel)]="config.algorithm.size" class="form-control">
-									<div *ngIf="form.find('algorithm').hasError('required', 'size')" class="alert alert-danger">This field is required.</div>
-									<div *ngIf="form.find('algorithm').hasError('invalidNumber', 'size')" class="alert alert-danger">Only numbers are allowed.</div>
+									<input *ngIf="editing" formControlName="size" [(ngModel)]="config.algorithm.size" class="form-control">
+									<div *ngIf="form.get('algorithm').hasError('required', 'size')" class="alert alert-danger">This field is required.</div>
+									<div *ngIf="form.get('algorithm').hasError('invalidNumber', 'size')" class="alert alert-danger">Only numbers are allowed.</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					<div *ngIf="config.algorithm.name == 'Variable Step'" [formGroup]="form.find('algorithm')">
+					<div *ngIf="config.algorithm.name == 'Variable Step'" [formGroup]="form.get('algorithm')">
 						<div class="form-horizontal">
 							<div class="form-group">
 								<label class="col-sm-5 col-md-4 control-label">Initial step size</label>
 								<div class="col-sm-7 col-md-8">
 									<p *ngIf="!editing" class="form-control-static">{{config.algorithm.initSize}}</p>
-									<input *ngIf="editing" name="initSize" [(ngModel)]="config.algorithm.initSize" class="form-control">
-									<div *ngIf="form.find('algorithm').hasError('required', 'initSize')" class="alert alert-danger">This field is required.</div>
-									<div *ngIf="form.find('algorithm').hasError('invalidNumber', 'initSize')" class="alert alert-danger">Only numbers are allowed.</div>
+									<input *ngIf="editing" formControlName="initSize" [(ngModel)]="config.algorithm.initSize" class="form-control">
+									<div *ngIf="form.get('algorithm').hasError('required', 'initSize')" class="alert alert-danger">This field is required.</div>
+									<div *ngIf="form.get('algorithm').hasError('invalidNumber', 'initSize')" class="alert alert-danger">Only numbers are allowed.</div>
 								</div>
 							</div>
 
@@ -94,9 +94,9 @@
 								<label class="col-sm-5 col-md-4 control-label">Minimum step size</label>
 								<div class="col-sm-7 col-md-8">
 									<p *ngIf="!editing" class="form-control-static">{{config.algorithm.sizeMin}}</p>
-									<input *ngIf="editing" name="sizeMin" [(ngModel)]="config.algorithm.sizeMin" class="form-control">
-									<div *ngIf="form.find('algorithm').hasError('required', 'sizeMin')" class="alert alert-danger">This field is required.</div>
-									<div *ngIf="form.find('algorithm').hasError('invalidNumber', 'sizeMin')" class="alert alert-danger">Only numbers are allowed.</div>
+									<input *ngIf="editing" formControlName="sizeMin" [(ngModel)]="config.algorithm.sizeMin" class="form-control">
+									<div *ngIf="form.get('algorithm').hasError('required', 'sizeMin')" class="alert alert-danger">This field is required.</div>
+									<div *ngIf="form.get('algorithm').hasError('invalidNumber', 'sizeMin')" class="alert alert-danger">Only numbers are allowed.</div>
 								</div>
 							</div>
 
@@ -104,9 +104,9 @@
 								<label class="col-sm-5 col-md-4 control-label">Maximum step size</label>
 								<div class="col-sm-7 col-md-8">
 									<p *ngIf="!editing" class="form-control-static">{{config.algorithm.sizeMax}}</p>
-									<input *ngIf="editing" name="sizeMax" [(ngModel)]="config.algorithm.sizeMax" class="form-control">
-									<div *ngIf="form.find('algorithm').hasError('required', 'sizeMax')" class="alert alert-danger">This field is required.</div>
-									<div *ngIf="form.find('algorithm').hasError('invalidNumber', 'sizeMax')" class="alert alert-danger">Only numbers are allowed.</div>
+									<input *ngIf="editing" formControlName="sizeMax" [(ngModel)]="config.algorithm.sizeMax" class="form-control">
+									<div *ngIf="form.get('algorithm').hasError('required', 'sizeMax')" class="alert alert-danger">This field is required.</div>
+									<div *ngIf="form.get('algorithm').hasError('invalidNumber', 'sizeMax')" class="alert alert-danger">Only numbers are allowed.</div>
 								</div>
 							</div>
 
@@ -133,16 +133,16 @@
 									<a *ngIf="editing" (click)="removeConstraint(constraint)" class="pull-right"><span class="glyphicon glyphicon-remove"></span></a>									{{getConstraintName(constraint)}}
 								</div>
 								<div class="panel-body">
-									<zero-crossing [editing]="editing" [ports]="getFilterTypes(outputPorts,[ Fmu_x.ScalarVariableType.Int,	Fmu_x.ScalarVariableType.Real])" [constraint]="constraint" [formGroup]="form.find('algorithm').find('constraints').at(i)"
+									<zero-crossing [editing]="editing" [ports]="getFilterTypes(outputPorts,[ Fmu_x.ScalarVariableType.Int,	Fmu_x.ScalarVariableType.Real])" [constraint]="constraint" [formGroup]="form.get('algorithm').get('constraints').at(i)"
 									 *ngIf="constraint.type === 'zerocrossing'"></zero-crossing>
 
-									<bounded-difference [editing]="editing" [ports]="getFilterTypes(outputPorts,[ Fmu_x.ScalarVariableType.Int,	Fmu_x.ScalarVariableType.Real])" [constraint]="constraint" [formGroup]="form.find('algorithm').find('constraints').at(i)"
+									<bounded-difference [editing]="editing" [ports]="getFilterTypes(outputPorts,[ Fmu_x.ScalarVariableType.Int,	Fmu_x.ScalarVariableType.Real])" [constraint]="constraint" [formGroup]="form.get('algorithm').get('constraints').at(i)"
 									 *ngIf="constraint.type === 'boundeddifference'"></bounded-difference>
 
-									<sampling-rate [editing]="editing" [constraint]="constraint" [formGroup]="form.find('algorithm').find('constraints').at(i)"
+									<sampling-rate [editing]="editing" [constraint]="constraint" [formGroup]="form.get('algorithm').get('constraints').at(i)"
 									 *ngIf="constraint.type === 'samplingrate'"></sampling-rate>
 
-									<fmu-max-step-size [constraint]="constraint" [formGroup]="form.find('algorithm').find('constraints').at(i)" *ngIf="constraint.type === 'fmumaxstepsize'">
+									<fmu-max-step-size [constraint]="constraint" [formGroup]="form.get('algorithm').get('constraints').at(i)" *ngIf="constraint.type === 'fmumaxstepsize'">
 									</fmu-max-step-size>
 								</div>
 							</div>
@@ -230,7 +230,7 @@
 						<label class="col-sm-5 col-md-4 control-label">Global Absolute Tolerance</label>
 						<div class="col-sm-7 col-md-8">
 							<p *ngIf="!editing" class="form-control-static">{{config.global_absolute_tolerance}}</p>
-							<input *ngIf="editing" name="global_absolute_tolerance" [(ngModel)]="config.global_absolute_tolerance" class="form-control">
+							<input *ngIf="editing" formControlName="global_absolute_tolerance" [(ngModel)]="config.global_absolute_tolerance" class="form-control">
 							<div *ngIf="form.hasError('required', 'global_absolute_tolerance')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'global_absolute_tolerance')" class="alert alert-danger">Only numbers are allowed.</div>
 						</div>
@@ -240,7 +240,7 @@
 						<label class="col-sm-5 col-md-4 control-label">Global Relative Tolerance</label>
 						<div class="col-sm-7 col-md-8">
 							<p *ngIf="!editing" class="form-control-static">{{config.global_relative_tolerance}}</p>
-							<input *ngIf="editing" name="global_relative_tolerance" [(ngModel)]="config.global_relative_tolerance" class="form-control">
+							<input *ngIf="editing" formControlName="global_relative_tolerance" [(ngModel)]="config.global_relative_tolerance" class="form-control">
 							<div *ngIf="form.hasError('required', 'global_relative_tolerance')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'global_relative_tolerance')" class="alert alert-danger">Only numbers are allowed.</div>
 						</div>
@@ -262,7 +262,7 @@
 						<label class="col-sm-5 col-md-4 control-label config">Graph sampling interval (0[s]=allways)</label>
 						<div class="col-sm-7 col-md-8 form-group">
 							<p *ngIf="!editing" class="form-control-static">{{config.livestreamInterval}}</p>
-							<input *ngIf="editing" name="livestreamInterval" [(ngModel)]="config.livestreamInterval" class="form-control">
+							<input *ngIf="editing" formControlName="livestreamInterval" [(ngModel)]="config.livestreamInterval" class="form-control">
 							<div *ngIf="form.hasError('required', 'livestreamInterval')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'livestreamInterval')" class="alert alert-danger">Only numbers are allowed.</div>
 						</div>
@@ -271,7 +271,7 @@
 						<label class="col-sm-5 col-md-4 control-label config">Number of graph columns</label>
 						<div class="col-sm-7 col-md-8 form-group">
 							<p *ngIf="!editing" class="form-control-static">{{config.liveGraphColumns}}</p>
-							<input *ngIf="editing" name="liveGraphColumns" [(ngModel)]="config.liveGraphColumns" class="form-control">
+							<input *ngIf="editing" formControlName="liveGraphColumns" [(ngModel)]="config.liveGraphColumns" class="form-control">
 							<div *ngIf="form.hasError('required', 'liveGraphColumns')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'liveGraphColumns')" class="alert alert-danger">Only numbers are allowed.</div>
 						</div>
@@ -280,7 +280,7 @@
 						<label class="col-sm-5 col-md-4 control-label config">Number of visible graph rows. The graphs will scale such that the given number of rows will be visible without scrolling.</label>
 						<div class="col-sm-7 col-md-8 form-group">
 							<p *ngIf="!editing" class="form-control-static">{{config.liveGraphVisibleRowCount}}</p>
-							<input *ngIf="editing" name="liveGraphVisibleRowCount" [(ngModel)]="config.liveGraphVisibleRowCount" class="form-control">
+							<input *ngIf="editing" formControlName="liveGraphVisibleRowCount" [(ngModel)]="config.liveGraphVisibleRowCount" class="form-control">
 							<div *ngIf="form.hasError('required', 'liveGraphVisibleRowCount')" class="alert alert-danger">This field is required.</div>
 							<div *ngIf="form.hasError('invalidNumber', 'liveGraphVisibleRowCount')" class="alert alert-danger">Only numbers are allowed.</div>
 						</div>
@@ -299,7 +299,7 @@
 								<a *ngIf="editing" (click)="removeGraph(g)" class="pull-right"><span class="glyphicon glyphicon-remove"></span></a>									Graph Variables
 							</div>
 							<div class="panel-body">
-								<live-graph [graph]="g" [formGroup]="form.find('liveGraphs').at(i)" [config]="config" [editing]="editing">
+								<live-graph [graph]="g" [formGroup]="form.get('liveGraphs').at(i)" [config]="config" [editing]="editing">
 								</live-graph>
 							</div>
 						</div>
@@ -370,7 +370,7 @@
 						<label class="col-sm-5 col-md-4 control-label">Slowdown simulation to real-time</label>
 						<div class="col-sm-7 col-md-8">
 							<p *ngIf="!editing" class="form-control-static">{{config.simulationProgramDelay}}</p>
-							<input *ngIf="editing" type="checkbox" [disabled]="!editing" name="fmu-visible" class="form-control" [checked]="config.simulationProgramDelay"
+							<input *ngIf="editing" type="checkbox" [disabled]="!editing" formControlName="fmu-visible" class="form-control" [checked]="config.simulationProgramDelay"
 							 (change)="config.simulationProgramDelay=$event.target.checked" />
 						</div>
 					</div>
@@ -380,7 +380,7 @@
 						<label class="col-sm-5 col-md-4 control-label">Use parallelization</label>
 						<div class="col-sm-7 col-md-8">
 							<p *ngIf="!editing" class="form-control-static">{{config.parallelSimulation}}</p>
-							<input *ngIf="editing" type="checkbox" [disabled]="!editing" name="fmu-visible" class="form-control" [checked]="config.parallelSimulation"
+							<input *ngIf="editing" type="checkbox" [disabled]="!editing" formControlName="fmu-visible" class="form-control" [checked]="config.parallelSimulation"
 							 (change)="config.parallelSimulation=$event.target.checked" />
 						</div>
 					</div>

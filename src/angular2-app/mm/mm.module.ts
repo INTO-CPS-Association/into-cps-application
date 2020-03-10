@@ -3,15 +3,15 @@ import {MmPageComponent} from "./mm-page.component";
 import {MmConfigurationComponent} from "./mm-configuration.component";
 import {MmOverviewComponent} from "./mm-overview.component";
 import {PanelComponent} from "../shared/panel.component";
+import { SharedModule } from "../shared/shared.module";
 import { BrowserModule } from '@angular/platform-browser'
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import {FileBrowserComponent} from "./inputs/file-browser.component"
 @NgModule({
-    imports: [ BrowserModule, FormsModule, ReactiveFormsModule], // module dependencies
-    declarations: [ MmPageComponent, PanelComponent,
+    imports: [ BrowserModule, FormsModule, ReactiveFormsModule, SharedModule], // module dependencies
+    declarations: [ MmPageComponent, 
       MmConfigurationComponent,
-      MmOverviewComponent,
-      FileBrowserComponent], // components and directives
+      MmOverviewComponent], // components and directives
     exports: [MmPageComponent]
   })
   export class MmModule {

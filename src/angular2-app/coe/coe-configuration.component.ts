@@ -38,28 +38,12 @@ import {
     VariableStepConstraint, FmuMaxStepSizeConstraint, LiveGraph
 } from "../../intocps-configurations/CoSimulationConfig";
 import { ScalarVariable, CausalityType, Instance, InstanceScalarPair, ScalarVariableType } from "./models/Fmu";
-import { LiveGraphComponent } from "./inputs/live-graph-component";
-import { ZeroCrossingComponent } from "./inputs/zero-crossing.component";
-import { BoundedDifferenceComponent } from "./inputs/bounded-difference.component";
-import { FmuMaxStepSizeComponent } from "./inputs/fmu-max-step-size.component";
-import { SamplingRateComponent } from "./inputs/sampling-rate.component";
 import { numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage } from "../../intocps-configurations/Messages";
-import { FileBrowserComponent } from "../mm/inputs/file-browser.component";
 
 @Component({
     selector: "coe-configuration",
-   /*  directives: [
-        FORM_DIRECTIVES,
-        REACTIVE_FORM_DIRECTIVES,
-        ZeroCrossingComponent,
-        FmuMaxStepSizeComponent,
-        BoundedDifferenceComponent,
-        SamplingRateComponent,
-        FileBrowserComponent,
-        LiveGraphComponent
-    ], */
     templateUrl: "./angular2-app/coe/coe-configuration.component.html"
 })
 export class CoeConfigurationComponent {
@@ -146,11 +130,33 @@ export class CoeConfigurationComponent {
                             .map(sv => this.config.multiModel.getInstanceScalarPair(instance.fmu.name, instance.name, sv.name)))
                         .reduce((a, b) => a.concat(...b), []);
 
+                        let startTime = new FormControl(config.startTime, [Validators.required, numberValidator]);
+                        let endTime = new FormControl(config.endTime, [Validators.required, numberValidator]);
+                        let liveGraphs = new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id"));                    
+                        let livestreamInterval = new FormControl(config.livestreamInterval, [Validators.required, numberValidator]);
+                        let liveGraphColumns =  new FormControl(config.liveGraphColumns, [Validators.required, numberValidator]);
+                        let liveGraphVisibleRowCount = new FormControl(config.liveGraphVisibleRowCount, [Validators.required, numberValidator]);
+                        let algorithm = this.algorithmFormGroups.get(this.config.algorithm);
+                        let global_absolute_tolerance= new FormControl(config.global_absolute_tolerance, [Validators.required, numberValidator]);
+                        let global_relative_tolerance= new FormControl(config.global_relative_tolerance, [Validators.required, numberValidator]);
+                        let fg = new FormGroup({
+                            startTime: startTime,
+                            endTime: endTime,
+                            liveGraphs: liveGraphs,
+                            livestreamInterval: livestreamInterval,
+                            liveGraphColumns: liveGraphColumns,
+                            liveGraphVisibleRowCount: liveGraphVisibleRowCount,
+                            algorithm: algorithm,
+                            global_absolute_tolerance: global_absolute_tolerance,
+                            global_relative_tolerance: global_relative_tolerance
+                        }, null, lessThanValidator('startTime', 'endTime')); // There is an error in angular 2.0.2 with asyncvalidators. They should return a promise
+
+
                     // Create a form group for validation
                     this.form = new FormGroup({
                         startTime: new FormControl(config.startTime, [Validators.required, numberValidator]),
                         endTime: new FormControl(config.endTime, [Validators.required, numberValidator]),
-                        liveGraphs:  new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id")),//, uniqueGroupPropertyValidator("id")
+                        liveGraphs: new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id")),//, uniqueGroupPropertyValidator("id")
                         livestreamInterval: new FormControl(config.livestreamInterval, [Validators.required, numberValidator]),
                         liveGraphColumns: new FormControl(config.liveGraphColumns, [Validators.required, numberValidator]),
                         liveGraphVisibleRowCount: new FormControl(config.liveGraphVisibleRowCount, [Validators.required, numberValidator]),

@@ -30,14 +30,13 @@
  */
 
 import {Component, Input} from "@angular/core";
-import {FormGroup, FormArray, FormControl, FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES} from "@angular/forms";
+import {FormGroup, FormArray, FormControl} from "@angular/forms";
 import {BoundedDifferenceConstraint} from "../../../intocps-configurations/CoSimulationConfig";
 import {InstanceScalarPair} from "../models/Fmu";
 
 @Component({
     selector: 'bounded-difference',
-    templateUrl: "./angular2-app/coe/inputs/bounded-difference.component.html",
-    directives: [FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES]
+    templateUrl: "./angular2-app/coe/inputs/bounded-difference.component.html"
 })
 export class BoundedDifferenceComponent {
     @Input()
@@ -72,7 +71,7 @@ export class BoundedDifferenceComponent {
     }
 
     updatePortValidation() {
-        let formControl = <FormControl> this.formGroup.find('ports');
+        let formControl = <FormControl> this.formGroup.get('ports');
         formControl.updateValueAndValidity();
     }
 }
