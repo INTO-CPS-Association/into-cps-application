@@ -30,7 +30,7 @@
  */
 
 import { Component, Input, EventEmitter, Output, NgZone } from "@angular/core";
-import { FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES, Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
+import { Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
 import {
     CoSimulationConfig, ICoSimAlgorithm, FixedStepAlgorithm,
@@ -50,7 +50,7 @@ import { FileBrowserComponent } from "../mm/inputs/file-browser.component";
 
 @Component({
     selector: "coe-configuration",
-    directives: [
+   /*  directives: [
         FORM_DIRECTIVES,
         REACTIVE_FORM_DIRECTIVES,
         ZeroCrossingComponent,
@@ -59,7 +59,7 @@ import { FileBrowserComponent } from "../mm/inputs/file-browser.component";
         SamplingRateComponent,
         FileBrowserComponent,
         LiveGraphComponent
-    ],
+    ], */
     templateUrl: "./angular2-app/coe/coe-configuration.component.html"
 })
 export class CoeConfigurationComponent {
@@ -253,7 +253,7 @@ export class CoeConfigurationComponent {
         if (!this.newConstraint) return;
 
         let algorithm = <VariableStepAlgorithm>this.config.algorithm;
-        let formArray = <FormArray>this.form.find('algorithm').find('constraints');
+        let formArray = <FormArray>this.form.get('algorithm').get('constraints');
         let constraint = new this.newConstraint();
         algorithm.constraints.push(constraint);
         formArray.push(constraint.toFormGroup());
@@ -261,7 +261,7 @@ export class CoeConfigurationComponent {
 
     removeConstraint(constraint: VariableStepConstraint) {
         let algorithm = <VariableStepAlgorithm>this.config.algorithm;
-        let formArray = <FormArray>this.form.find('algorithm').find('constraints');
+        let formArray = <FormArray>this.form.get('algorithm').get('constraints');
         let index = algorithm.constraints.indexOf(constraint);
 
         algorithm.constraints.splice(index, 1);
@@ -272,13 +272,13 @@ export class CoeConfigurationComponent {
     addLiveGraph() {
         let g = new LiveGraph();
         this.config.liveGraphs.push(g);
-        let formArray = <FormArray>this.form.find('liveGraphs');
+        let formArray = <FormArray>this.form.get('liveGraphs');
         formArray.push(g.toFormGroup());
     }
 
     removeGraph(graph: LiveGraph)
     {
-        let formArray = <FormArray>this.form.find('liveGraphs');
+        let formArray = <FormArray>this.form.get('liveGraphs');
         let index = this.config.liveGraphs.indexOf(graph);
         this.config.liveGraphs.splice(index, 1);
         formArray.removeAt(index);
