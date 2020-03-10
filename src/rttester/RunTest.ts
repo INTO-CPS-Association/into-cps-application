@@ -88,7 +88,15 @@ class FMUAssignments {
         this.hAddFMUButton.addEventListener("click", () => {
             let remote = require("electron").remote;
             let dialog = remote.dialog;
-            /* let dialogResult = */ dialog.showOpenDialog({
+            let dialogResult: string[] = dialog.showOpenDialog({
+                filters: [{ name: "FMU-Files", extensions: ["fmu"] }],
+                defaultPath: RTTester.getProjectOfFile(controller.testCase)
+            });
+            if (dialogResult != undefined) {
+                let fmu = new FMUAssignment(this, dialogResult[0]);
+            }
+            // for electron v8
+             /* dialog.showOpenDialog({
                 filters: [{ name: "FMU-Files", extensions: ["fmu"] }],
                 defaultPath: RTTester.getProjectOfFile(controller.testCase)
             }).then(res => {
@@ -98,7 +106,7 @@ class FMUAssignments {
             }).catch(error => {
                 console.error(error);
                 return;
-            });
+            }); */
         });
     }
     add(fmu: FMUAssignment) {

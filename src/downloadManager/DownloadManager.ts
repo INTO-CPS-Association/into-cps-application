@@ -243,7 +243,50 @@ function showVersion(version: string, data: any) {
             let remote = require("electron").remote;
             let dialog = remote.dialog;
             let buttons: string[] = ["No", "Yes"];
-            let val = dialog.showMessageBox(null, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" })
+            dialog.showMessageBox({ type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }, function (button: any) {
+                if (button == 1)//yes
+                {
+                    $("<div>").load("./progress-bar-component.html", function (event: JQueryEventObject) {
+                        let progressBarComponent = <HTMLDivElement>(<HTMLDivElement>this).firstElementChild;
+                        //Prepend the child
+                        if (progressDiv.hasChildNodes) {
+                            progressDiv.insertBefore(progressBarComponent, progressDiv.firstChild)
+                        }
+                        else { progressDiv.appendChild(progressBarComponent); }
+
+                        //Get the filling div
+                        let component = <HTMLDivElement>(<HTMLDivElement>progressBarComponent).querySelector("#coe-progress");
+                        component.scrollIntoView();
+                        //Start the download
+                        downloader.downloadTool(tool, getTempDir(), progressFunction(tool.name, component)).then(function (filePath) {
+                            console.log("Download complete: " + filePath);
+                            const { shell } = require('electron');
+
+                            if (downloader.checkToolAction(tool, downloader.DownloadAction.UNPACK)) {
+                                let installDirectory = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR)
+                                downloader.unpackTool(filePath, installDirectory);
+                                shell.showItemInFolder(installDirectory);
+                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.LAUNCH)) {
+                                dialog.showMessageBox({ type: 'question', buttons: buttons, message: "Accept launch of installer: " + Path.basename(filePath) + " downloaded for: " + tool.name + " (" + tool.version + ")" }, function (buttonInstall: any) {
+                                    if (buttonInstall == 1)//yes
+                                    {
+                                        shell.openExternal(filePath);
+                                    }
+                                });
+
+                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.SHOW)) {
+                                shell.showItemInFolder(filePath);
+                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.NONE)) {
+                                //do nothing
+                            } else {
+                                dialog.showMessageBox({ type: 'info', buttons: ["OK"], message: "Download completed: " + filePath }, function (button: any) { });
+                            }
+                        }, function (error) { dialog.showErrorBox("Invalid Checksum", error); });
+                    });
+                }
+            });
+            // for electron v8
+            /* let val = dialog.showMessageBox(null, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" })
             val.then(function(res) {
                 if(res.response == 1)// yes
                 {
@@ -289,8 +332,8 @@ function showVersion(version: string, data: any) {
                             }
                         }, function (error) { dialog.showErrorBox("Invalid Checksum", error); });
                     });
-                }
-            })
+                } 
+            }) */
             
         };
         let releasePage = tool.releasepage;
@@ -298,7 +341,7 @@ function showVersion(version: string, data: any) {
             let btn = createButton();
             var t = document.createTextNode("Release page");
             btn.appendChild(t);
-            let dh = new DialogHandler(releasePage, 640, 400, null, null, null);
+            let dh = new DialogHandler(releasePage, 640, 400);
             dh.externalUrl = true;
             divTool.appendChild(btn);
             btn.onclick = function (e) {

@@ -35,11 +35,18 @@
 
 
 import {IntoCpsApp} from  "../IntoCpsApp";
+import {remote} from "electron";
 
 function launchProjectExplorer() {
-    let remote = require("electron").remote;
-    let dialog = remote.dialog;
-    /* let dialogResult = */ dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
+    let dialogResult: string[] = remote.dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
+    if (dialogResult != undefined) {
+
+        var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
+        p.value = dialogResult[0];
+        //       this.app.createProject("my project",this.projectRootPath.value);
+    }
+    // for electron v8
+     /* dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
         console.log(res);
         if(res.filePaths != undefined) {
             var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
@@ -48,7 +55,7 @@ function launchProjectExplorer() {
     }).catch((error) => {
         console.error(error);
         return;
-    });
+    }); */
 
 
 }
@@ -62,7 +69,8 @@ function createProject() {
     var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
     var n: HTMLInputElement = <HTMLInputElement>document.getElementById("name");
 
-    IntoCpsApp.getInstance().emit('new-project-create', { name: n.value, path: p.value });
+    IntoCpsApp.getInstance().createProject(n.value, p.value);
+    window.top.close();
 
 }
 

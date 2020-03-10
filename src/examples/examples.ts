@@ -43,13 +43,21 @@ let request = require("request");
 function launchProjectExplorer() {
     let remote = require("electron").remote;
     let dialog = remote.dialog;
-    /* let dialogResult =  */dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
+    let dialogResult: string[] = dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
+    if (dialogResult != undefined) {
+
+        var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
+        p.value = dialogResult[0];
+        //       this.app.createProject("my project",this.projectRootPath.value);
+    }
+    // for electron v8
+    /* dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
         var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
         p.value = res.filePaths[0];
     }).catch((error) => {
         console.error(error);
         return;
-    });
+    }); */
 
 
 }

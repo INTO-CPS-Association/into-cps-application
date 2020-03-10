@@ -196,6 +196,15 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
             let remote = require("electron").remote;
             let dialog = remote.dialog;
             let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+
+            if (res == 0) {
+                return;
+            } else {
+                override = true;
+                this.warnings = [];
+            }
+            // for electron v8
+           /*  let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
             res.catch(() => {
                 return
             });
@@ -206,13 +215,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                     override = true;
                     this.warnings = [];
                 }
-            })
-           /*  if (res == 0) {
-                return;
-            } else {
-                override = true;
-                this.warnings = [];
-            } */
+            }) */
         }
 
         this.config.save()

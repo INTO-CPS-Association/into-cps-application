@@ -31,7 +31,7 @@
 
 import IntoCpsApp from  "./IntoCpsApp";
 import {SettingKeys} from "./settings/SettingKeys"
-import {remote} from "electron"
+import {remote, BrowserWindow} from "electron"
 export default class DialogHandler {
 
     doAction: (arg: any) => void;
@@ -46,11 +46,11 @@ export default class DialogHandler {
     win: Electron.BrowserWindow = null;
 
     constructor(htmlPath: string, windowWidth: number,
-        windowHeight: number, ipcOpenEventName: string, ipcDoActionEventName: string, doAction: (arg: any) => void) {
+        windowHeight: number/* , ipcOpenEventName: string, ipcDoActionEventName: string, doAction: (arg: any) => void */) {
         this.htmlPath = htmlPath;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
-        this.ipcDoActionEventName = ipcDoActionEventName;
+       /*  this.ipcDoActionEventName = ipcDoActionEventName;
         this.doAction = doAction;
         this.ipcOpenEventName = ipcOpenEventName;
     }
@@ -71,19 +71,22 @@ export default class DialogHandler {
                 this.doAction(arg);
                 this.win.close();
             });
-        }
+        } */
 
     }
 
     public openWindow(data:string = '', showWindow:boolean = true) : Electron.BrowserWindow {
         let self = this;
-        this.win = new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow });
+       /*  this.win = new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow }); */
+       this.win = (BrowserWindow 
+        ? new BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow }) 
+        : new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow }));
         if(!IntoCpsApp.getInstance().getSettings().getSetting(SettingKeys.DEVELOPMENT_MODE) && this.win.setMenu)
             this.win.setMenu(null);
 
         // Open the DevTools.
         //this.win.webContents.openDevTools();
-        window.onbeforeunload = (ev: BeforeUnloadEvent) => {if(this.win) this.win.removeAllListeners();}
+       /*  window.onbeforeunload = (ev: BeforeUnloadEvent) => {if(this.win) this.win.removeAllListeners();} */
 
         this.win.on('closed', function () {
             self.win.removeAllListeners();
