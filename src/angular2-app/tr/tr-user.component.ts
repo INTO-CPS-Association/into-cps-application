@@ -36,9 +36,9 @@ import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
 
 @Component({
     selector: "tr-user",
-    directives: [
+/*     directives: [
         PanelComponent,
-        TrUserComponent],
+        TrUserComponent], */
     templateUrl: "./angular2-app/tr/tr-overview.component.html"
 })
 

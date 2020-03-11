@@ -41,7 +41,7 @@ import {PanelComponent} from "../shared/panel.component";
 
 @Component({
     selector: "tr-page",
-    directives: [
+/*     directives: [
         PanelComponent,
         TrResultComponent,
         TrFUMsComponent,
@@ -51,7 +51,7 @@ import {PanelComponent} from "../shared/panel.component";
         ReqOneResultComponent
         
 //        MmOverviewComponent
-    ],
+    ], */
     templateUrl: "./angular2-app/tr/tr-page.component.html",
 })
 export class TrPageComponent {

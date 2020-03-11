@@ -36,9 +36,9 @@ import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
 
 @Component({
     selector: "tr-reqnores",
-    directives: [
+ /*    directives: [
         PanelComponent,
-        ReqNoResultComponent],
+        ReqNoResultComponent], */
     templateUrl: "./angular2-app/tr/tr-singlelist.component.html"
 })
 

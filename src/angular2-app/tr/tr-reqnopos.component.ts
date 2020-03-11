@@ -31,14 +31,14 @@
 
 import {OnInit, Component, Input, NgZone} from "@angular/core";
 
-import {PanelComponent} from "../shared/panel.component";
+/* import {PanelComponent} from "../shared/panel.component"; */
 import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
 
 @Component({
     selector: "tr-reqnoposres",
-    directives: [
+/*     directives: [
         PanelComponent,
-        ReqNoPosResultComponent],
+        ReqNoPosResultComponent], */
     templateUrl: "./angular2-app/tr/tr-singlelist.component.html"
 })
 

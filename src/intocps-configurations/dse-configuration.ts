@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES, Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
+import { Validators, FormControl, FormGroup } from "@angular/forms";
 import { numberValidator } from "../angular2-app/shared/validators";
 import * as fs from "fs"
 import { DseParser } from "./dse-parser"

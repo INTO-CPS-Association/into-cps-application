@@ -29,16 +29,16 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {OnInit, Component, Input, NgZone} from "@angular/core";
+import { Component, NgZone} from "@angular/core";
 
-import {PanelComponent} from "../shared/panel.component";
+/* import {PanelComponent} from "../shared/panel.component"; */
 import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
 
 @Component({
     selector: "tr-fmu",
-    directives: [
+/*     directives: [
         PanelComponent,
-        TrFUMsComponent],
+        TrFUMsComponent], */
     templateUrl: "./angular2-app/tr/tr-overview.component.html"
 })
 
