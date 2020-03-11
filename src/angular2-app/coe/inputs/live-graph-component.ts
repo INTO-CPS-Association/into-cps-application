@@ -59,6 +59,7 @@ export class LiveGraphComponent {
     formGroup: FormGroup;
 
 
+    private _editing: boolean = false;
     @Input()
     editing: boolean = false;
 

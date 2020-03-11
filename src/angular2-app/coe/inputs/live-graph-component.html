@@ -14,14 +14,18 @@
             <div class="form-group">
                 <label class="col-sm-5 col-md-4 control-label">Name:</label>
                 <p *ngIf="!editing" class="form-control-static col-sm-7 col-md-8">{{graph.title}}</p>
-                <input *ngIf="editing" [(ngModel)]="graph.title" formControlName="title" class="form-control col-sm-7 col-md-8">
+               <!--  <input *ngIf="editing" [(ngModel)]="graph.title" formControlName="title" class="form-control col-sm-7 col-md-8"> -->
+                <!-- See this post regarding [ngModelOptions]="{standalone: true}"
+                     https://stackoverflow.com/questions/38365761/angular2-use-ngmodel-with-ngmodeloptions-standalone-true-to-link-to-a -->
+                     <input *ngIf="editing" [(ngModel)]="graph.title" name="title" class="form-control col-sm-7 col-md-8" [ngModelOptions]="{standalone: true}">
             </div>
             <div class="form-group">
                 <label class="col-sm-5 col-md-4 control-label">External Window</label>
                 <div class="checkbox col-sm-7 col-md-8">
                     <label>
-                                <input type="checkbox" [disabled]="!editing" name="externalWindow" [checked]="graph.externalWindow"
-                        formControlName="externalWindow" >
+                                <!-- <input type="checkbox" [disabled]="!editing" name="externalWindow" [checked]="graph.externalWindow"
+                        formControlName="externalWindow" > -->
+                        <input name="externalWindow" [(ngModel)]="graph.externalWindow" [ngModelOptions]="{standalone: true}" type="checkbox" [disabled]="!editing" name="externalWindow" [checked]="graph.externalWindow">
                     </label>
                 </div>
             </div>

@@ -107,6 +107,7 @@ export function uniqueControlValidator(control: FormArray) {
 }
 
 export function lessThanValidator(selfName:string, otherName:string): AsyncValidatorFn {
+    return (group: FormGroup) => {
     return new Promise((resolve, reject) => {
         let self = group.get(selfName);
         let other = group.get(otherName);
@@ -115,6 +116,6 @@ export function lessThanValidator(selfName:string, otherName:string): AsyncValid
             resolve({notLessThan: true});
         } else {
             resolve(null);
-        });
-    }
+        }});
+        }
 }
