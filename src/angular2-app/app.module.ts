@@ -2,7 +2,7 @@ import { NgModule, NgZone } from '@angular/core'
 import { BrowserModule } from '@angular/platform-browser'
 
 import { AppComponent } from './app.component'
-import { FormsModule } from "@angular/forms";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 /* import { Http } from "@angular/http"; */
 import {FileSystemService} from "./shared/file-system.service";
 import {SettingsService} from "./shared/settings.service";
@@ -20,7 +20,7 @@ import {HttpModule} from '@angular/http';
 import { SharedModule } from './shared/shared.module';
 
 @NgModule({
-  imports: [HttpModule, BrowserModule, FormsModule, MmModule, COEModule, SharedModule ], // module dependencies
+  imports: [HttpModule, BrowserModule, FormsModule, MmModule, COEModule, ReactiveFormsModule, SharedModule ], // module dependencies
   declarations: [AppComponent/* , MmPageComponent, CoePageComponent, DsePageComponent, TrPageComponent */], // components and directives
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService], // services

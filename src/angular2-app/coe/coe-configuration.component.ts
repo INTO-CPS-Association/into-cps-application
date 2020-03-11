@@ -38,9 +38,10 @@ import {
     VariableStepConstraint, FmuMaxStepSizeConstraint, LiveGraph
 } from "../../intocps-configurations/CoSimulationConfig";
 import { ScalarVariable, CausalityType, Instance, InstanceScalarPair, ScalarVariableType } from "./models/Fmu";
-import { numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
+import { lessThanValidator2, numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage } from "../../intocps-configurations/Messages";
+import { bind } from "bluebird";
 
 @Component({
     selector: "coe-configuration",
@@ -72,7 +73,7 @@ export class CoeConfigurationComponent {
     outputPorts: Array<InstanceScalarPair> = [];
     newConstraint: new (...args: any[]) => VariableStepConstraint;
     editing: boolean = false;
-    
+    isLoaded : boolean = false;
     logVariablesSearchName: string = '';
     parseError: string = null;
     warnings: WarningMessage[] = [];
@@ -107,7 +108,6 @@ export class CoeConfigurationComponent {
         CoSimulationConfig
             .parse(this.path, project.getRootFilePath(), project.getFmusPath())
             .then(config => {
-                this.zone.run(() => {
                     this.config = config;
 
                     this.parseError = null;
@@ -130,27 +130,7 @@ export class CoeConfigurationComponent {
                             .map(sv => this.config.multiModel.getInstanceScalarPair(instance.fmu.name, instance.name, sv.name)))
                         .reduce((a, b) => a.concat(...b), []);
 
-                        let startTime = new FormControl(config.startTime, [Validators.required, numberValidator]);
-                        let endTime = new FormControl(config.endTime, [Validators.required, numberValidator]);
-                        let liveGraphs = new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id"));                    
-                        let livestreamInterval = new FormControl(config.livestreamInterval, [Validators.required, numberValidator]);
-                        let liveGraphColumns =  new FormControl(config.liveGraphColumns, [Validators.required, numberValidator]);
-                        let liveGraphVisibleRowCount = new FormControl(config.liveGraphVisibleRowCount, [Validators.required, numberValidator]);
-                        let algorithm = this.algorithmFormGroups.get(this.config.algorithm);
-                        let global_absolute_tolerance= new FormControl(config.global_absolute_tolerance, [Validators.required, numberValidator]);
-                        let global_relative_tolerance= new FormControl(config.global_relative_tolerance, [Validators.required, numberValidator]);
-                        let fg = new FormGroup({
-                            startTime: startTime,
-                            endTime: endTime,
-                            liveGraphs: liveGraphs,
-                            livestreamInterval: livestreamInterval,
-                            liveGraphColumns: liveGraphColumns,
-                            liveGraphVisibleRowCount: liveGraphVisibleRowCount,
-                            algorithm: algorithm,
-                            global_absolute_tolerance: global_absolute_tolerance,
-                            global_relative_tolerance: global_relative_tolerance
-                        }, null, lessThanValidator('startTime', 'endTime')); // There is an error in angular 2.0.2 with asyncvalidators. They should return a promise
-
+                      
 
                     // Create a form group for validation
                     this.form = new FormGroup({
@@ -163,8 +143,9 @@ export class CoeConfigurationComponent {
                         algorithm: this.algorithmFormGroups.get(this.config.algorithm),
                         global_absolute_tolerance: new FormControl(config.global_absolute_tolerance, [Validators.required, numberValidator]),
                         global_relative_tolerance: new FormControl(config.global_relative_tolerance, [Validators.required, numberValidator])
-                    }, null, lessThanValidator('startTime', 'endTime'));
-                });
+                    }, lessThanValidator2('startTime', 'endTime'), null);
+                    console.log("Parsing finished!");
+                    this.isLoaded = true;
             }, error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
     }
 
@@ -187,10 +168,13 @@ export class CoeConfigurationComponent {
     }
 
     onAlgorithmChange(algorithm: ICoSimAlgorithm) {
-        this.config.algorithm = algorithm;
+        this.zone.run(() => {
+            this.config.algorithm = algorithm;
 
         this.form.removeControl('algorithm');
         this.form.addControl('algorithm', this.algorithmFormGroups.get(algorithm));
+        })
+        
     }
 
     onSubmit() {
@@ -204,7 +188,10 @@ export class CoeConfigurationComponent {
 
             let remote = require("electron").remote;
             let dialog = remote.dialog;
-            let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            let res = dialog.showMessageBox({type: "question",
+            message: "Validation failed",
+            detail: "Do you want to save anyway?",
+            buttons: ["No", "Yes"] });
 
             if (res == 0) {
                 return;

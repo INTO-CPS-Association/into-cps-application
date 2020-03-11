@@ -29,9 +29,8 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {FormControl, FormArray, FormGroup, AsyncValidatorFn} from "@angular/forms";
-import { resolve } from "bluebird";
-import { ValidationError } from "jsonschema";
+import {FormControl, FormArray, FormGroup, AsyncValidatorFn, AbstractControl} from "@angular/forms";
+import {Observable} from 'rxjs';
 
 function isString(x:any) {
     return typeof x === 'string';
@@ -107,15 +106,29 @@ export function uniqueControlValidator(control: FormArray) {
 }
 
 export function lessThanValidator(selfName:string, otherName:string): AsyncValidatorFn {
+    return (group: AbstractControl) : Promise<{ [key: string]: any } | null> | Observable<{ [key: string]: any } | null>=> {
+        return new Promise((resolve, reject) => {
+            let self = group.get(selfName);
+            let other = group.get(otherName);
+
+            if (self.value && other.value && Number(self.value) >= Number(other.value)) {
+                resolve({ notLessThan: true });
+            } else {
+                resolve(null);
+            }});
+    }
+
+    
+}
+
+export function lessThanValidator2(selfName:string, otherName:string) {
     return (group: FormGroup) => {
-    return new Promise((resolve, reject) => {
         let self = group.get(selfName);
         let other = group.get(otherName);
 
         if (self.value && other.value && Number(self.value) >= Number(other.value)) {
-            resolve({notLessThan: true});
-        } else {
-            resolve(null);
-        }});
+            return {notLessThan:true};
         }
+        else return null;
+    }
 }
