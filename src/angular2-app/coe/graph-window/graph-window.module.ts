@@ -1,10 +1,11 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, APP_INITIALIZER } from '@angular/core';
+import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { HttpModule } from '@angular/http';
 import { LineChartComponent } from '../../shared/line-chart.component';
 import { FileSystemService } from '../../shared/file-system.service';
+import { Location } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -21,5 +22,5 @@ import { FileSystemService } from '../../shared/file-system.service';
 export class GraphWindowModule { 
 
     constructor()
-    {console.log("GraphWindowModule")}
+    {console.log("GraphWindowModule");}
 }

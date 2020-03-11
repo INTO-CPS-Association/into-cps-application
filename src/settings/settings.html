@@ -34,7 +34,8 @@
                      <span class="glyphicon glyphicon-ok"></span> Save
                 </button>
     </div>
-    <!-- Hack to fix electron and typescript interoperability -->
+    <!-- Hack to fix electron and typescript interoperability
+    https://stackoverflow.com/a/43702240/1308616 -->
     <script> var exports = {}; </script> 
     <script src="../bower_components/jquery.js" onload="window.$ = window.jQuery = module.exports;"></script>
     <script src="../bower_components/bootstrap.js"></script>

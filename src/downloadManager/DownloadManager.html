@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="../css/bootstrap.css">
    
     <!--Styles to fix issues with related to responsiveness and padding of ui-layout-->
+    <!-- Hack to fix electron and typescript interoperability
+    https://stackoverflow.com/a/43702240/1308616 -->
     <script> var exports = {}; </script> 
     <script src="DownloadManager.js"></script>
     <script>window.$ = window.jQuery = require('jquery');</script>

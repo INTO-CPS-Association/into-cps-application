@@ -35,6 +35,7 @@ import { Http } from "@angular/http";
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
 import { Graph } from "../../shared/graph"
 import { ipcRenderer } from "electron";
+import { Location } from '@angular/common';
 
 
 
@@ -62,8 +63,9 @@ export class AppComponent implements OnInit {
             console.log("Graph Window App Component")
     }
 
-    initializeGraph(data: any) {
-        let dataObj = JSON.parse(data);
+    initializeGraph() {
+        /* let dataObj = JSON.parse(data); */
+        let dataObj = JSON.parse(this.getParameterByName("data"));
         this.zone.run(() => {
             this.graph.setGraphMaxDataPoints(dataObj.graphMaxDataPoints);
             let lg: LiveGraph = new LiveGraph();
@@ -76,7 +78,18 @@ export class AppComponent implements OnInit {
            this.graph.closeSocket();       
         });
     }
-
+// Retrieves the query string value associated with name
+private getParameterByName(name: string, url?: string) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
     ngOnInit() {
+        console.log("Graph Window App Component On Init");
+        this.initializeGraph();
     }
 }

@@ -29,9 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { AppComponent } from './app.component';
 import { GraphWindowModule } from "./graph-window.module"
-//import { bootstrap } from '@angular/platform-browser-dynamic';  
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import {enableProdMode} from "@angular/core"
 
@@ -45,13 +43,13 @@ function getParameterByName(name:string, url?:string) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 // Start Angular 2 application
-enableProdMode();
 /* let ref = bootstrap(AppComponent, []).then((ref) => {
     let data = getParameterByName("data");
     let instance : AppComponent = ref.instance;
     instance.initializeGraph(data);        
 }); */
-platformBrowserDynamic().bootstrapModule(GraphWindowModule).catch(err => console.error(err));
 window.onload = function () {
     console.log("onload");
+    enableProdMode();
+    platformBrowserDynamic().bootstrapModule(GraphWindowModule).catch(err => console.error(err));
 }
