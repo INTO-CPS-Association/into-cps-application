@@ -43,6 +43,7 @@ import * as jsonschema from 'jsonschema';
 import Path = require("path");
 var fs = require('fs');
 import * as GitConn from "./git-connection"
+import { AddressInfo } from 'net';
 
 /**
  * Trace
@@ -172,10 +173,10 @@ export class Daemon {
                         reject(err);
                         return;
                     }
-                    console.log('Traceability daemon listening on port %s.', server.address().port);
-                    this.port = server.address().port;
+                    console.log('Traceability daemon listening on port %s.', (server.address() as AddressInfo).port);
+                    this.port = (server.address() as AddressInfo).port;
                     this.isRunning = true;
-                    resolve(server.address().port);
+                    resolve((server.address() as AddressInfo).port);
                 });
             } catch (err) {
                 reject(err);

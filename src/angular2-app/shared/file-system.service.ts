@@ -47,6 +47,7 @@ export class FileSystemService {
         });
     }
 
+    // this causes a flaw in coe-simulation.service
     readFile(path:string):Promise<string> {
         return this.wrap((reject, resolve) => {
             fs.readFile(path, "utf8", (error, data) => {

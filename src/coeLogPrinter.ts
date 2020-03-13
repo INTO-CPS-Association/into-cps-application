@@ -103,7 +103,7 @@ export class CoeLogPrinter {
                 clearInterval(this.intervalHandle)
                 this.stopPrintingRemaining();
             }
-        }/* not part of newer node */ , this.interval);
+        }/* not part of newer node , this.interval*/ );
     }
 
     public stopWatching() {

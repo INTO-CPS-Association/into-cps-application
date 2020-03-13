@@ -177,7 +177,7 @@ export class Fmu {
         //output
         var iterator = document.evaluate('//ScalarVariable', oDOM, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
 
-        var thisNode = iterator.iterateNext();
+        var thisNode: Element = iterator.iterateNext() as Element;
 
         while (thisNode) {
 
@@ -187,20 +187,20 @@ export class Fmu {
             let initialNode = thisNode.attributes.getNamedItem("initial");
             var type: ScalarVariableType;
 
-            var tNode: Node = document.evaluate('Real', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            var tNode: Element = document.evaluate('Real', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
 
             if (tNode != null) {
                 type = ScalarVariableType.Real;
             } else {
-                tNode = document.evaluate('Boolean', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                tNode = document.evaluate('Boolean', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                 if (tNode != null) {
                     type = ScalarVariableType.Bool;
                 } else {
-                    tNode = document.evaluate('Integer', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    tNode = document.evaluate('Integer', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                     if (tNode != null) {
                         type = ScalarVariableType.Int;
                     } else {
-                        tNode = document.evaluate('String', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        tNode = document.evaluate('String', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                         if (tNode != null) {
                             type = ScalarVariableType.String;
                     }
@@ -281,7 +281,7 @@ export class Fmu {
             sv.start = start;
             sv.initial = initial;
 
-            thisNode = iterator.iterateNext();
+            thisNode = iterator.iterateNext() as Element;
         }
 
         this.scalarVariables.sort((a, b) => a.name.localeCompare(b.name));
@@ -289,11 +289,11 @@ export class Fmu {
 
         iterator = document.evaluate('fmiModelDescription/LogCategories/*[@name]/@name', oDOM, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
 
-        thisNode = iterator.iterateNext();
+        thisNode = iterator.iterateNext() as Element;
 
         while (thisNode) {
             this.logCategories.push(thisNode.nodeValue);
-            thisNode = iterator.iterateNext();
+            thisNode = iterator.iterateNext() as Element;
         }
 
         this.logCategories.sort((a, b) => a.localeCompare(b));
