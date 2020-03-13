@@ -45,6 +45,7 @@ export class ZeroCrossingComponent {
     @Input()
     ports:Array<InstanceScalarPair> = [];
 
+    _formGroup: FormGroup
     @Input()
     formGroup:FormGroup;
 
