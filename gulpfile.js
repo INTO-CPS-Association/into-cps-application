@@ -235,6 +235,9 @@ gulp.task("copy-html", function() {
     .pipe(
       htmlhint({
         "attr-lowercase": [
+          "formControlName",
+          "formGroupName",
+          "formArrayName", 
           "*ngIf",
           "*ngFor",
           "[(ngModel)]",
