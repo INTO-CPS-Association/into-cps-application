@@ -50,8 +50,8 @@ declare let window: MyWindow;
     template: `
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
          <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
+         <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
          <!--
-        <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
         <tr-page *ngIf="page === 'tr'" [path]="path"></tr-page> -->`
 })
 export class AppComponent implements OnInit {
@@ -98,10 +98,10 @@ export class AppComponent implements OnInit {
     } */
 
     openDSE(path: string):void {
-      /*   this.zone.run(() => {
+        this.zone.run(() => {
             this.path = path;
             this.page = "dse";
-        }); */
+        });
     }
 
     closeAll():void {

@@ -65,7 +65,6 @@ declare var w2prompt: any;
 declare var w2alert: any;
 
 
-// import { provideForms, disableDeprecatedForms } from "@angular/forms";
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { TrViewController } from "./angular2-app/tr/TrViewController";
@@ -165,7 +164,6 @@ class InitializationController {
             }
 
             // Start Angular 2 application
-            /* bootstrap(AppComponent, [disableDeprecatedForms(), provideForms()]); */
             platformBrowserDynamic().bootstrapModule(AppModule);
         });
         this.layout.load("left", "proj/projbrowserview.html", "", () => {
@@ -313,14 +311,6 @@ menuHandler.openFmu = () => {
     IntoCpsApp.setTopName("FMUs");
 };
 
-//menuHandler.createDse = (path) => {
-//    // create empty DSE file and load it.
-//    openView("dse/dse.html", () => {
-//        menuHandler.openDseView("");
-//    });
-//};
-//
-
 menuHandler.createMultiModel = (path, msgTitle = 'New Multi-Model') => {
     let appInstance = IntoCpsApp.getInstance();
     let project = appInstance.getActiveProject();
@@ -420,7 +410,6 @@ menuHandler.createCoSimConfiguration = (path) => {
     let project = appInstance.getActiveProject();
 
     if (project) {
-        //let name    = Path.basename(path, ".sysml.json");
         let ivname = project.freshFilename(Path.dirname(path), `co-sim`);
 
         let msgTitle = 'New Co-Simulation Configuration';
@@ -497,5 +486,4 @@ menuHandler.showTraceView = () => {
 menuHandler.exportOvertureFmu = Overture.exportOvertureFmu;
 
 
-/* Menus.configureIntoCpsMenu(); */
 export = InitializationController 

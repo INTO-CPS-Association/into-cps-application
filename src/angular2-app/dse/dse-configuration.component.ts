@@ -42,13 +42,11 @@ import {SettingsService, SettingKeys} from "../shared/settings.service";
 import {ParetoDimension, InternalFunction, DseConfiguration, ParetoRanking, ExternalScript, DseParameter, DseScenario, DseParameterConstraint, DseObjectiveConstraint,IDseAlgorithm, GeneticSearch, ExhaustiveSearch} from "../../intocps-configurations/dse-configuration";
 import { WarningMessage } from "../../intocps-configurations/Messages";
 import { NavigationService } from "../shared/navigation.service";
-import { FormGroup, FormArray, FormControl, Validators } from "@angular/forms";
-import {IProject} from "../../proj/IProject";
+import { FormGroup, FormArray, FormControl } from "@angular/forms";
 import {Project} from "../../proj/Project";
 import * as Path from 'path';
 import * as fs from 'fs';
 /* import {coeServerStatusHandler} from "../../menus"; */
-import {OutputConnectionsPair} from "../coe/models/Fmu";
 
 @Component({
     selector: "dse-configuration",
@@ -795,6 +793,8 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
             && this.dseWarnings.length === 0
             && this.coeWarnings.length === 0
             //&& this.config.dseSearchParameters.length > 1 
+            && this.config
+            && this.config.extScrObjectives
             && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2;
             //&& (<ParetoRanking> this.config.ranking).dimensions.length == 2;
     }
