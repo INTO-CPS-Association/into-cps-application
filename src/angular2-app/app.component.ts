@@ -105,9 +105,9 @@ export class AppComponent implements OnInit {
     }
 
     closeAll():void {
-        /* this.zone.run(() => { */
+      /*   this.zone.run(() => { */
             this.path = null;
             this.page = null;
-       /*  }); */
+ /*        }); */
     }
 }

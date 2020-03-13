@@ -35,16 +35,6 @@ import { Http } from "@angular/http";
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
 import { Graph } from "../../shared/graph"
 import { ipcRenderer } from "electron";
-import { Location } from '@angular/common';
-
-
-
-
-interface MyWindow extends Window {
-    ng2app: AppComponent;
-}
-
-declare let window: MyWindow;
 
 // Main application component.
 // Handles routing between the pages that use Angular 2.
@@ -54,7 +44,6 @@ declare let window: MyWindow;
     templateUrl: "./graph.component.html"
 })
 export class AppComponent implements OnInit {
-    private webSocket: WebSocket;
     graph: Graph = new Graph();
 
     constructor(private http: Http,
@@ -74,7 +63,7 @@ export class AppComponent implements OnInit {
             this.graph.launchWebSocket(dataObj.webSocket)
         });
         ipcRenderer.on('close', () => { this.graph.closeSocket(); this.graph.setFinished();});
-        window.onbeforeunload = ((ev) => {
+        window.onbeforeunload = ((ev: any) => {
            this.graph.closeSocket();       
         });
     }

@@ -5,7 +5,6 @@ import { AppComponent } from './app.component';
 import { HttpModule } from '@angular/http';
 import { LineChartComponent } from '../../shared/line-chart.component';
 import { FileSystemService } from '../../shared/file-system.service';
-import { Location } from '@angular/common';
 
 @NgModule({
   declarations: [
