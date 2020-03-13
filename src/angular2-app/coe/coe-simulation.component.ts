@@ -189,7 +189,6 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
   }
 
   onCoeLaunchClick() {
-    console.log("this is called");
    this.coeSimulation.
     openCOEServerStatusWindow("autolaunch", false);
   }
