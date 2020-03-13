@@ -86,6 +86,14 @@ export class CoeSimulationService {
         });
     }
 
+    openCOEServerStatusWindow(
+        data: string = "",
+        show: boolean = true
+      ) {
+        this.coe = IntoCpsApp.getInstance().getCoeProcess();
+        if (!this.coe.isRunning()) IntoCpsApp.getInstance().getCoeProcess().start();
+      }
+
     run(config: CoSimulationConfig, errorReport: (hasError: boolean, message: string) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
         this.coe = IntoCpsApp.getInstance().getCoeProcess();
         this.errorReport = errorReport;
