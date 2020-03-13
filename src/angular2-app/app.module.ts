@@ -8,7 +8,6 @@ import {FileSystemService} from "./shared/file-system.service";
 import {SettingsService} from "./shared/settings.service";
 import {NavigationService} from "./shared/navigation.service";
 /* import {MmPageComponent} from "./mm/mm-page.component"; */
-/* import {TrPageComponent} from "./tr/tr-page.component"; */
 /*
 import {CoePageComponent} from "./coe/coe-page.component";
 import {MmConfigurationComponent} from "./mm/mm-configuration.component";
@@ -20,9 +19,11 @@ import {MmModule} from "./mm/mm.module"
 import {COEModule} from "./coe/coe.module"
 import {HttpModule} from '@angular/http';
 import { SharedModule } from './shared/shared.module';
+import { TrModule } from './tr/tr.module';
 
 @NgModule({
-  imports: [HttpModule, BrowserModule, FormsModule, MmModule, COEModule, ReactiveFormsModule, SharedModule ], // module dependencies
+  imports: [HttpModule, BrowserModule, FormsModule,
+     MmModule, COEModule, ReactiveFormsModule, SharedModule, TrModule ], // module dependencies
   declarations: [AppComponent , DsePageComponent, DseConfigurationComponent/* , MmPageComponent, CoePageComponent, TrPageComponent */], // components and directives
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService], // services

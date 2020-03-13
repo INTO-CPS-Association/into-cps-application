@@ -278,7 +278,7 @@ export class TrManager {
                 fileContent += 'dbms.directories.logs=' + this.toNixPathFormat(this.workdingDir) + ' \n';
                 fileContent += 'dbms.logs.http.enabled=true' + '\n';
 
-                fs.writeFile(Path.join(this.workdingDir, ".gitignore"), "data\n*.log\n*.conf\n");
+                fs.writeFileSync(Path.join(this.workdingDir, ".gitignore"), "data\n*.log\n*.conf\n");
 
                 fs.writeFileSync(confFileName, fileContent);
                 resolve();

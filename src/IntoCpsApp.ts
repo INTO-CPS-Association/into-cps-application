@@ -40,8 +40,8 @@ import { Project } from "./proj/Project";
 import { IntoCpsAppEvents } from "./IntoCpsAppEvents";
 import { SettingKeys } from "./settings//SettingKeys";
 /* import { EventEmitter } from "events"; */
-import { TrManager } from "./traceability/trManager"
-import { Utilities } from "./utilities"
+import { TrManager } from "./traceability/trManager";
+import { Utilities } from "./utilities";
 import { CoeProcess } from "./coe-server-status/CoeProcess";
 
 // constants
@@ -260,4 +260,4 @@ class SerializationHelper {
 }
 
 
-export { IntoCpsApp }
+export { IntoCpsApp };

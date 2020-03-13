@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {OnInit, Component, Input, NgZone} from "@angular/core";
+import { Input, NgZone} from "@angular/core";
 //import {MultiModelConfig} from "../../intocps-configurations/MultiModelConfig";
 //import {Serializer} from "../../intocps-configurations/Parser";
 import IntoCpsApp from "../../IntoCpsApp";

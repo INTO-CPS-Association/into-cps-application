@@ -30,15 +30,10 @@
  */
 
 import { Component, NgZone} from "@angular/core";
-
-/* import {PanelComponent} from "../shared/panel.component"; */
 import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
 
 @Component({
     selector: "tr-fmu",
-/*     directives: [
-        PanelComponent,
-        TrFUMsComponent], */
     templateUrl: "./angular2-app/tr/tr-overview.component.html"
 })
 
