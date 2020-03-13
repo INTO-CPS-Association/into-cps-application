@@ -48,4 +48,7 @@ import {PanelComponent} from "../shared/panel.component"; */
 export class MmPageComponent {
     @Input()
     path:string;
+    constructor() {
+        console.log("MMPAGECOMPONENT");
+      }
 }

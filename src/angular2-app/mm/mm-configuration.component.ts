@@ -33,7 +33,9 @@ import { Component, Input, NgZone, Output, EventEmitter } from "@angular/core";
 import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
 import IntoCpsApp from "../../IntoCpsApp";
 import {
-    Instance, ScalarVariable, CausalityType, InstanceScalarPair, isCausalityCompatible, isTypeCompatiple,
+    Instance,
+    ScalarVariable,
+    CausalityType, InstanceScalarPair, isCausalityCompatible, isTypeCompatiple,
     Fmu, ScalarValuePair, ScalarVariableType
 } from "../coe/models/Fmu";
 import { IProject } from "../../proj/IProject";
@@ -92,19 +94,26 @@ export class MmConfigurationComponent {
         MultiModelConfig
             .parse(this.path, project.getFmusPath())
             .then(config => {
-                this.zone.run(() => {
+                /* this.zone.run(() => { */
                     this.parseError = null;
 
                     this.config = config;
 
                     // Create a form group for validation
                     this.form = new FormGroup({
-                        fmus: new FormArray(this.config.fmus.map(fmu => new FormControl(this.getFmuName(fmu), [Validators.required, Validators.pattern("[^{^}]*")])), uniqueControlValidator),
-                        instances: new FormArray(this.config.fmus.map(fmu => new FormArray(this.getInstances(fmu).map(instance => new FormControl(instance.name, [Validators.required, Validators.pattern("[^\.]*")])), uniqueControlValidator)))
+                        fmus: new FormArray(this.config.fmus.map(fmu =>
+                             new FormControl(this.getFmuName(fmu),
+                              [Validators.required, Validators.pattern("[^{^}]*")])),
+                               uniqueControlValidator),
+                        instances: new FormArray(this.config.fmus.map(fmu =>
+                             new FormArray(this.getInstances(fmu).map(instance =>
+                                 new FormControl(instance.name, [Validators.required,
+                                    Validators.pattern("[^\.]*")])), uniqueControlValidator)))
                     });
                     this.warnings = this.config.validate();
-                });
-            }, error => this.zone.run(() => this.parseError = error));
+              /*   }); */
+                
+            }, error => this.parseError = error); /*  this.zone.run(() => */
     }
 
     onNavigate(): boolean {

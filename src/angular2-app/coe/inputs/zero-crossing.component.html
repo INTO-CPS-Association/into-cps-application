@@ -3,7 +3,7 @@
         <label class="col-sm-3 control-label">ID</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{constraint.id}}</p>
-            <input *ngIf="editing" [(ngModel)]="constraint.id" name="id" class="form-control">
+            <input *ngIf="editing" [(ngModel)]="constraint.id" formControlName="id" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'id')" class="alert alert-danger">This field is required.</div>
             <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === constraint.id" class="alert alert-danger">ID is not unique.</div>
         </div>
@@ -41,10 +41,10 @@
             <p *ngIf="!editing" class="form-control-static">{{constraint.order}}</p>
             <div *ngIf="editing">
                 <label class="radio-inline">
-                    <input [(ngModel)]="constraint.order" type="radio" [name]="constraint.name" [attr.name]="constraint.name"  value="1"> 1
+                    <input [(ngModel)]="constraint.order" type="radio" formControlName="order" value="1"> 1
                 </label>
                 <label class="radio-inline">
-                    <input [(ngModel)]="constraint.order" type="radio" [name]="constraint.name" [attr.name]="constraint.name" value="2"> 2
+                    <input [(ngModel)]="constraint.order" type="radio" formControlName="order" value="2"> 2
                 </label>
             </div>
         </div>
@@ -54,7 +54,7 @@
         <label class="col-sm-3 control-label">Absolute Tolerance</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{constraint.abstol}}</p>
-            <input *ngIf="editing" [(ngModel)]="constraint.abstol" name="abstol" class="form-control">
+            <input *ngIf="editing" [(ngModel)]="constraint.abstol" formControlName="abstol" class="form-control">
             <div *ngIf="formGroup.hasError('invalidNumber', 'abstol')" class="alert alert-danger">Only numbers are allowed.</div>
         </div>
     </div>
@@ -63,7 +63,7 @@
         <label class="col-sm-3 control-label">Safety</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{constraint.safety}}</p>
-            <input *ngIf="editing" [(ngModel)]="constraint.safety" name="safety" class="form-control">
+            <input *ngIf="editing" [(ngModel)]="constraint.safety" formControlName="safety" class="form-control">
             <div *ngIf="formGroup.hasError('invalidNumber', 'safety')" class="alert alert-danger">Only numbers are allowed.</div>
         </div>
     </div>

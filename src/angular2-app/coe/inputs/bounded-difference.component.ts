@@ -30,7 +30,7 @@
  */
 
 import {Component, Input} from "@angular/core";
-import {FormGroup, FormArray, FormControl} from "@angular/forms";
+import {FormGroup, FormControl} from "@angular/forms";
 import {BoundedDifferenceConstraint} from "../../../intocps-configurations/CoSimulationConfig";
 import {InstanceScalarPair} from "../models/Fmu";
 
