@@ -91,23 +91,19 @@ export class CoeLogPrinter {
                     // Advance the file position
                     this.filePosition = currentFileSize-truncateSizeInBytes;
                     alteredFilePosition = true;
-                    return this.interval;
+                    
                     //console.log(`CoeLogPrinter watching file: ${this.path} advanced file position to: ${this.filePosition}`);
                 }
                 let readSize = this.readFunction(this.path, currentFileSize, this.remainingMaxFileReadSize, alteredFilePosition, this.callback)
                 if (readSize && readSize < this.maxFileReadSize) {
                     this.stopPrintingRemaining();
-                    // i guess
-                    return this.interval;
                 }
             }
             else {
                 clearInterval(this.intervalHandle)
                 this.stopPrintingRemaining();
-                // i guess
-                return this.interval;
             }
-        }/* not part of newer node , this.interval */);
+        }/* not part of newer node */ , this.interval);
     }
 
     public stopWatching() {
