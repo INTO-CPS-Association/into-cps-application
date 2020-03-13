@@ -231,11 +231,18 @@ export class CoeSimulationService {
 
     private downloadResults() {
         this.graph.closeSocket();
+        let markedForDeletionExternalGraphs : DialogHandler[]= [];
         this.externalGraphs.forEach((eg) => {
-            if (eg.win)
-                //This also causes a redraw event for the external graphs.
+            if (!eg.win.isDestroyed()){
                 eg.win.webContents.send("close");
-        })
+            } else{
+                // The window have been destroyed, remove it from external graphs
+                markedForDeletionExternalGraphs.push(eg);
+            }
+        });
+        markedForDeletionExternalGraphs.forEach((eg) => {
+            this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0),1);
+        });
         this.simulationCompletedHandler();
 
         let resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
