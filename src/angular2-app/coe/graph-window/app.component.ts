@@ -31,7 +31,8 @@
 
 import { Component, OnInit, NgZone } from '@angular/core';
 import { FileSystemService } from "../../shared/file-system.service";
-import { Http } from "@angular/http";
+/* import { Http } from "@angular/http"; */
+import { HttpClient } from '@angular/common/http';
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
 import { Graph } from "../../shared/graph"
 import { ipcRenderer } from "electron";
@@ -46,7 +47,7 @@ import { ipcRenderer } from "electron";
 export class AppComponent implements OnInit {
     graph: Graph = new Graph();
 
-    constructor(private http: Http,
+    constructor(private http: HttpClient,
         private fileSystem: FileSystemService,
         private zone: NgZone) {
             console.log("Graph Window App Component")

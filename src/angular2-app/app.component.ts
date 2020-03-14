@@ -31,7 +31,8 @@
 
 import { Component, OnInit, NgZone } from '@angular/core';
 import {FileSystemService} from "./shared/file-system.service";
-import {Http} from "@angular/http";
+/* import {Http} from "@angular/http"; */
+import { HttpClient } from '@angular/common/http';
 import {SettingsService} from "./shared/settings.service";
 import {CoeSimulationService} from "./coe/coe-simulation.service";
 import {NavigationService} from "./shared/navigation.service";
@@ -58,7 +59,7 @@ export class AppComponent implements OnInit {
     private path:string;
 
     constructor(public navigationService:NavigationService,
-                private http:Http,
+                private http:HttpClient,
                 private settings:SettingsService,
                 private fileSystem:FileSystemService,
                 private zone:NgZone) {

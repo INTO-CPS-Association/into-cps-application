@@ -33,7 +33,8 @@ import { Component, Input, NgZone, OnInit, OnDestroy } from "@angular/core";
 import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationConfig";
 /* import { LineChartComponent } from "../shared/line-chart.component"; */
 import { CoeSimulationService } from "./coe-simulation.service";
-import { Http } from "@angular/http";
+import { HttpClient } from '@angular/common/http';
+/* import { Http } from "@angular/http"; */
 import { SettingsService, SettingKeys } from "../shared/settings.service";
 import IntoCpsApp from "../../IntoCpsApp";
 import { WarningMessage } from "../../intocps-configurations/Messages";
@@ -82,7 +83,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
   constructor(
     private coeSimulation: CoeSimulationService,
-    private http: Http,
+    private http: HttpClient,
     private zone: NgZone,
     private settings: SettingsService
   ) {}
@@ -178,7 +179,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
     this.http
       .get(this.url)
       .timeout(2000)
-      .map(response => response.json())
+      .map(response => response)
       .subscribe(
         (data: any) => {
           this.online = true;

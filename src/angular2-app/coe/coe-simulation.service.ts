@@ -31,7 +31,8 @@
 
 import { FileSystemService } from "../shared/file-system.service";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
-import { Http, Response } from "@angular/http";
+/* import { Response } from "@angular/http"; */
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Serializer } from "../../intocps-configurations/Parser";
 import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
@@ -69,7 +70,7 @@ export class CoeSimulationService {
     public graph: Graph = new Graph();;
     public externalGraphs: Array<DialogHandler> = new Array<DialogHandler>();
 
-    constructor(private http: Http,
+    constructor(private http: HttpClient,
         private settings: SettingsService,
         private fileSystem: FileSystemService,
         private zone: NgZone) {
@@ -137,7 +138,8 @@ export class CoeSimulationService {
 
         this.http.get(`http://${this.url}/createSession`)
             .subscribe((response: Response) => {
-                this.sessionId = response.json().sessionId;
+                console.log(response.url);
+                /* this.sessionId = response.json().sessionId; */
                 this.uploadFmus();
             });
     }
@@ -233,7 +235,7 @@ export class CoeSimulationService {
     errorHandler(err: Response) {
         console.warn(err);
         this.progress = 0;
-        this.errorReport(true, "Error: " + err.text());
+        this.errorReport(true, "Error: " + err.statusText);
 
     }
 
@@ -258,11 +260,11 @@ export class CoeSimulationService {
         let mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
         let logPath = Path.normalize(`${this.resultDir}/log.zip`);
 
-        this.http.get(`http://${this.url}/result/${this.sessionId}/plain`)
+        this.http.get(`http://${this.url}/result/${this.sessionId}/plain`, {responseType: 'text'})
             .subscribe(response => {
                 // Write results to disk and save a copy of the multi model and coe configs
                 Promise.all([
-                    this.fileSystem.writeFile(resultPath, response.text()),
+                    this.fileSystem.writeFile(resultPath, response),
                     this.fileSystem.copyFile(this.config.sourcePath, coeConfigPath),
                     this.fileSystem.copyFile(this.config.multiModel.sourcePath, mmConfigPath)
                 ]).then(() => {

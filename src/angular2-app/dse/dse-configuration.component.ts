@@ -37,7 +37,8 @@ import {
 } from "../coe/models/Fmu";
 import {CoeSimulationService} from "../coe/coe-simulation.service";
 import IntoCpsApp from "../../IntoCpsApp";
-import {Http} from "@angular/http";
+/* import {Http} from "@angular/http"; */
+import { HttpClient } from '@angular/common/http';
 import {SettingsService, SettingKeys} from "../shared/settings.service";
 import {ParetoDimension, InternalFunction, DseConfiguration, ParetoRanking, ExternalScript, DseParameter, DseScenario, DseParameterConstraint, DseObjectiveConstraint,IDseAlgorithm, GeneticSearch, ExhaustiveSearch} from "../../intocps-configurations/dse-configuration";
 import { WarningMessage } from "../../intocps-configurations/Messages";
@@ -122,7 +123,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
   
     constructor(private coeSimulation:CoeSimulationService,
-        private http:Http,
+        private http:HttpClient,
         private zone:NgZone,
         private settings:SettingsService, private navigationService: NavigationService) {
         this.navigationService.registerComponent(this);
@@ -833,7 +834,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         this.http
             .get(`http://${this.url}/version`)
             .timeout(2000)
-            .map(response => response.json())
+            .map(response => response)
             .subscribe((data:any) => {
                 this.online = true;
                 this.version = data.version;
