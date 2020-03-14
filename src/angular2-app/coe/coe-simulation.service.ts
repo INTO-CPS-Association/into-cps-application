@@ -60,7 +60,7 @@ export class CoeSimulationService {
     postProcessingOutputReport: (hasError: boolean, message: string) => void = function () { };
 
     private webSocket: WebSocket;
-    private sessionId: number;
+    private sessionId: string;
     private remoteCoe: boolean;
     private coe: CoeProcess; 
     private url: string;
@@ -135,11 +135,9 @@ export class CoeSimulationService {
 
     private createSession() {
         this.errorReport(false, "");
-
         this.http.get(`http://${this.url}/createSession`)
-            .subscribe((response: Response) => {
-                console.log(response.url);
-                /* this.sessionId = response.json().sessionId; */
+            .subscribe((response: any) => {
+                this.sessionId = response.sessionId;
                 this.uploadFmus();
             });
     }
