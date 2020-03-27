@@ -67,8 +67,7 @@
     "uuid": "~3.0.1",
     "xml2js": "^0.4.23",
     "yauzl": "~2.6.0",
-    "zone.js": "^0.8.29",
-    "rxjs-compat": "^6.0.0-rc.0"
+    "zone.js": "^0.8.29"
   },
   "devDependencies": {
     "@types/bluebird": "~3.0.37",
