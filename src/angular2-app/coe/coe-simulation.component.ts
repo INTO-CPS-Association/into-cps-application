@@ -1,3 +1,5 @@
+
+
 /*
  * This file is part of the INTO-CPS toolchain.
  *
@@ -28,7 +30,7 @@
  *
  * See the CONTRIBUTORS file for author and contributor information.
  */
-
+import {map, timeout} from 'rxjs/operators';
 import { Component, Input, NgZone, OnInit, OnDestroy } from "@angular/core";
 import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationConfig";
 /* import { LineChartComponent } from "../shared/line-chart.component"; */
@@ -177,9 +179,9 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
   isCoeOnline() {
     this.http
-      .get(this.url)
-      .timeout(2000)
-      .map(response => response)
+      .get(this.url).pipe(
+      timeout(2000),
+      map(response => response),)
       .subscribe(
         (data: any) => {
           this.online = true;

@@ -1,3 +1,5 @@
+
+import {map, timeout} from 'rxjs/operators';
 /*
  * This file is part of the INTO-CPS toolchain.
  *
@@ -832,9 +834,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     isCoeOnline() {
         this.http
-            .get(`http://${this.url}/version`)
-            .timeout(2000)
-            .map(response => response)
+            .get(`http://${this.url}/version`).pipe(
+            timeout(2000),
+            map(response => response),)
             .subscribe((data:any) => {
                 this.online = true;
                 this.version = data.version;

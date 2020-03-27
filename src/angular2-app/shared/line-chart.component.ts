@@ -30,7 +30,7 @@
  */
 
 import { OnInit, Component, ViewChild, ElementRef, Input } from "@angular/core";
-import { BehaviorSubject } from "rxjs/Rx";
+import { BehaviorSubject } from "rxjs";
 
 declare let Plotly: any;
 

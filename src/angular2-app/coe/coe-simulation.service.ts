@@ -37,7 +37,7 @@ import { Serializer } from "../../intocps-configurations/Parser";
 import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
 import * as Path from "path";
-import { BehaviorSubject } from "rxjs/Rx";
+import { BehaviorSubject } from "rxjs";
 import { Injectable, NgZone } from "@angular/core";
 import { CoSimulationConfig, LiveGraph } from "../../intocps-configurations/CoSimulationConfig";
 import { storeResultCrc } from "../../intocps-configurations/ResultConfig";
