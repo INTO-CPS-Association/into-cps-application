@@ -105,6 +105,7 @@ export function uniqueControlValidator(control: FormArray) {
     }
 }
 
+// from angular v6 their is a pending call which is new to abstractControls if problems should arise with this function look into that.
 export function lessThanValidator(selfName:string, otherName:string): AsyncValidatorFn {
     return (group: AbstractControl) : Promise<{ [key: string]: any } | null> | Observable<{ [key: string]: any } | null>=> {
         return new Promise((resolve, reject) => {
