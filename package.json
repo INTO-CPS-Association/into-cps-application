@@ -99,7 +99,7 @@
     "mocha": "^7.1.0",
     "run-sequence": "~1.2.2",
     "semver": "~5.3.0",
-    "spectron": "~3.4.0",
+    "spectron": "^6.0.0",
     "terser-webpack-plugin": "^2.3.5",
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11"
