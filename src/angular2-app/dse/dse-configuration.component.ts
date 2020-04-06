@@ -1,5 +1,5 @@
 
-import {map, timeout} from 'rxjs/operators';
+
 /*
  * This file is part of the INTO-CPS toolchain.
  *
@@ -30,7 +30,7 @@ import {map, timeout} from 'rxjs/operators';
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
-
+import {map, timeout} from 'rxjs/operators';
 import { Component, Input, NgZone, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
 import {Serializer} from "../../intocps-configurations/Parser";
 import {
@@ -844,6 +844,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     }
 
     onCoeLaunchClick() {
-        /* coeServerStatusHandler.openWindow("autolaunch"); */
+        this.coeSimulation.
+    openCOEServerStatusWindow("autolaunch", false);
     }
 }
