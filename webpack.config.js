@@ -43,7 +43,6 @@ module.exports = {
             'zone.js'
         ],
         'common': ['es6-shim'],
-        'src': ['init.js']
     },
 
     output: {
