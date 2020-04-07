@@ -47,7 +47,7 @@
     "fs-extra": "~0.30.0",
     "fs-finder": "~1.8.1",
     "is-running": "~2.1.0",
-    "jquery": "^2.2.4",
+    "jquery": "^3.4.0",
     "jsonschema": "~1.1.1",
     "jszip": "^3.2.2",
     "md5-promised": "~1.0.1",
