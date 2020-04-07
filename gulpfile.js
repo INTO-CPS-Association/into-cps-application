@@ -391,10 +391,12 @@ gulp.task("pkg-win32", function (callback) {
 
 gulp.task("package-win32", gulp.series("clean", "prep-pkg", "pkg-win32"));
 
-
-gulp.task("pkg-all", gulp.series("pkg-win32", "pkg-darwin", "pkg-linux"));
-
-gulp.task('package-all', gulp.series('clean', 'prep-pkg', 'pkg-all'));
+gulp.task("package-all", 
+  gulp.series(
+    "package-win32", 
+    "package-linux", 
+    "package-darwin")
+);
 
 // Watch for changes and rebuild on the fly
 gulp.task("watch", function () {
