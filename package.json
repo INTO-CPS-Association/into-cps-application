@@ -14,7 +14,7 @@
     "email": "",
     "url": "http://into-cps.au.dk/"
   },
-  "electronVersion": "8.0.2",
+  "electronVersion": "4.0.0",
   "scripts": {
     "start": "electron dist/main.js",
     "test": "mocha"
