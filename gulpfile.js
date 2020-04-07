@@ -138,25 +138,17 @@ gulp.task("create-new-tag", function (cb) {
   });
 });
 
-gulp.task("prep-release", function (callback) {
-  runSequence(
+gulp.task("prep-release",
+  gulp.series(
     "bump-rel",
     "commit-changes",
     "push-changes",
     "create-new-tag",
     "bump-dev",
     "commit-changes",
-    "push-changes",
-    function (error) {
-      if (error) {
-        console.log(error.message);
-      } else {
-        console.log("RELEASE PREP FINISHED SUCCESSFULLY");
-      }
-      callback(error);
-    }
-  );
-});
+    "push-changes"
+    )
+);
 
 // Install bower components
 gulp.task("install-bower-components", function () {
