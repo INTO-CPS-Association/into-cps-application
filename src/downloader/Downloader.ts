@@ -227,7 +227,7 @@ export function downloadTool(tool: any, targetDirectory: string, progressCallbac
 
 function launchToolInstaller(filePath: string) {
     return new Promise<string>((resolve, reject) => {
-        childProcess.execFile(filePath, function(error: Error, stdout: string, stderr: string) {
+        childProcess.execFile(filePath, function (error: Error, stdout: string, stderr: string) {
             if (!error) {
                 resolve(stdout);
             } else {
@@ -238,7 +238,7 @@ function launchToolInstaller(filePath: string) {
 }
 
 
-export function checkToolAction(tool: any, testAction:string) {
+export function checkToolAction(tool: any, testAction: string) {
     let platFormToUse = tool.platforms.any ? "any" : SYSTEM_PLATFORM;
     const action: string = tool.platforms[platFormToUse].action;
     return action === testAction;
@@ -247,32 +247,49 @@ export function checkToolAction(tool: any, testAction:string) {
 export function unpackTool(filePath: string, targetDirectory: string) {
     return new Promise((resolve, reject) => {
         yauzl.open(filePath, { lazyEntries: true }, function (err: any, zipfile: any) {
-            if (err) throw err;
+
+            if (err) {
+                reject(Error(err));
+                throw err
+            }
+
+
             zipfile.readEntry();
             zipfile.on("entry", function (entry: any) {
                 let desiredPath = path.join(targetDirectory, entry.fileName);
                 //let desiredPath = targetDirectory + entry.fileName;
                 if (/\/$/.test(entry.fileName)) {
                     // directory file names end with '/'
-                    mkdirp(desiredPath, function (err: any) {
-                        if (err) throw err;
-                        zipfile.readEntry();
-                    });
+                    mkdirp(desiredPath)
+                        .then((value: string) => {
+                            zipfile.readEntry();
+                        })
+                        .catch((err: any) => {
+                            reject(err);
+                            throw err
+                        });
                 } else {
                     // file entry
                     zipfile.openReadStream(entry, function (err: any, readStream: any) {
-                        if (err) throw err;
+                        if (err) reject(err);
                         // ensure parent directory exists
-                        mkdirp(path.dirname(desiredPath), function (err: any) {
-                            if (err) throw err;
-                            readStream.pipe(fs.createWriteStream(desiredPath));
-                            readStream.on("end", function () {
-                                zipfile.readEntry();
-                                resolve();
+                        mkdirp(path.dirname(desiredPath))
+                            .then((value: string) => {
+                                readStream.pipe(fs.createWriteStream(desiredPath));
+                                readStream.on("end", function () {
+                                    zipfile.readEntry();
+                                });
+                            })
+                            .catch((err: any) => {
+                                reject(Error(err));
+                                throw err
                             });
-                        });
                     });
                 }
+            });
+            zipfile.once("end", function () {
+                zipfile.close();
+                resolve("Unziped file: " + filePath)
             });
         });
     });

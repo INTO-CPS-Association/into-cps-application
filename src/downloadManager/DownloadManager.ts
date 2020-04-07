@@ -264,8 +264,15 @@ function showVersion(version: string, data: any) {
 
                             if (downloader.checkToolAction(tool, downloader.DownloadAction.UNPACK)) {
                                 let installDirectory = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR)
-                                downloader.unpackTool(filePath, installDirectory);
-                                shell.showItemInFolder(installDirectory);
+                                downloader.unpackTool(filePath, installDirectory)
+                                    .then(value => {
+                                        console.log("Unpacked zip...\n" + value);
+                                        shell.showItemInFolder(installDirectory);
+                                    })
+                                    .catch(error => {
+                                        console.log("Failed to unpack zip");
+                                        dialog.showErrorBox("Error", "Failed to unpack: " + filePath);
+                                    });
                             } else if (downloader.checkToolAction(tool, downloader.DownloadAction.LAUNCH)) {
                                 dialog.showMessageBox({ type: 'question', buttons: buttons, message: "Accept launch of installer: " + Path.basename(filePath) + " downloaded for: " + tool.name + " (" + tool.version + ")" }, function (buttonInstall: any) {
                                     if (buttonInstall == 1)//yes
@@ -334,7 +341,7 @@ function showVersion(version: string, data: any) {
                     });
                 } 
             }) */
-            
+
         };
         let releasePage = tool.releasepage;
         if (releasePage) {
