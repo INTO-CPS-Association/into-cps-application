@@ -4,9 +4,12 @@ const expect = require('chai').expect;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
 const path = require('path')
 const fakeMenu = require('spectron-fake-menu')
+//const ServerMock = require('mock-http-server')
 
 describe('Application launch', function () {
   this.timeout(120000)
+ 
+  //const server = new ServerMock({ host: "localhost", port: 12345 });
 
   beforeEach(function () {
     this.app = new Application({
@@ -15,6 +18,8 @@ describe('Application launch', function () {
     })
 
     fakeMenu.apply(this.app);
+
+    //server.start(done);
     
     return this.app.start()
   })
@@ -22,7 +27,9 @@ describe('Application launch', function () {
   afterEach(function () {
     if (this.app && this.app.isRunning()) {
       return this.app.stop()
-    }
+     }
+
+     //server.stop(done);
   })
 
   it('shows an initial window', function () {
@@ -126,4 +133,44 @@ describe('Application launch', function () {
     })
   })
 
+  /* Tutorial 2 */
+  //step 2,6,7,8
+  it('Add a new FMU entry from Configuration', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+    .$('mm-page').$$('panel')[1].$('.panel-heading').click().pause(5000)                   //Since there are 2 identical panels, this tests takes the first panel id, and therefore closes overview! 
+    .$('.btn.btn-default').click().pause(3000)
+    .$('.btn.btn-default.btn-xs').click()
+    .$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid').getValue()
+      .then(function (text) {
+        assert.equal(text, 'FMU')
+      })
+  })
+
+  //step 24
+  it('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
+    .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
+    .$('#Ok').click().pause(2000)
+    .getText('#activeTabTitle')
+    .then(function (title) {
+      expect(title).contain('3DRobot')
+    })
+  })
+
+  // //https://www.npmjs.com/package/mock-http-server/v/1.4.2
+  // it('COE mock server', function(done) {
+  //     server.on({
+  //         method: 'GET', 
+  //         path: '/version',
+  //         reply: {
+  //             status:  200,
+  //             headers: { "content-type": "application/json" },
+  //             body:    JSON.stringify({ version: "1.0.4", artifactId: "coe", groupId:"org.into-cps.orchestration" })
+  //         }
+  //     });
+
+  //     done();
+  //     // Now the server mock will handle a GET http://localhost:8082/version
+  //     // and will reply with 200 
+  // })
 })
