@@ -809,7 +809,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
      */
     runDse() {
         var spawn = require('child_process').spawn;
-        let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_TMP_DIR);
+        let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR);
 
         let absoluteProjectPath = IntoCpsApp.getInstance().getActiveProject().getRootFilePath();
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
