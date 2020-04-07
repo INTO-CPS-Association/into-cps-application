@@ -40,7 +40,6 @@
     "bluebird": "~3.4.7",
     "body-parser": "^1.19.0",
     "chai": "^4.2.0",
-    "electron": "^4.0.0",
     "electron-default-menu": "^1.0.1",
     "es6-shim": "^0.35.5",
     "express": "^4.17.1",
@@ -72,6 +71,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.901.0",
+    "electron": "^4.0.0",
     "@types/bluebird": "~3.0.37",
     "@types/bunyan": "0.0.35",
     "@types/node": "^12.12.29",
