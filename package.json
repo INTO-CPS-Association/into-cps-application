@@ -70,7 +70,6 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.901.0",
-    "electron": "^4.0.0",
     "@types/bluebird": "~3.0.37",
     "@types/bunyan": "0.0.35",
     "@types/node": "^12.12.29",
@@ -78,6 +77,7 @@
     "@types/xml2js": "0.0.32",
     "chai": "^4.2.0",
     "del": "~2.2.0",
+    "electron": "^4.0.0",
     "electron-packager": "^14.2.1",
     "gulp": "~4.0.2",
     "gulp-bower": "0.0.15",
@@ -93,6 +93,7 @@
     "gulp-typescript": "^4.0.0",
     "gulp-uglify": "^3.0.2",
     "gulp-util": "~3.0.7",
+    "gulp-zip": "^5.0.1",
     "main-bower-files": "^2.13.3",
     "merge-stream": "~1.0.0",
     "minimist": "^1.2.5",

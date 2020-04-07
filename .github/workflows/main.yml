@@ -30,3 +30,4 @@ jobs:
       uses: GabrielBB/xvfb-action@v1.0
       with:
         run: npm test
+

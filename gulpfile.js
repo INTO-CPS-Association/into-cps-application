@@ -71,8 +71,8 @@ var gulp = require("gulp"),
   cleancss = require("gulp-clean-css"),
   uglify = require("gulp-uglify"),
   pipeline = require('readable-stream').pipeline,
-  saveLicense = require("uglify-save-license");
-
+  saveLicense = require("uglify-save-license"),
+  zip = require('gulp-zip');
 // Tasks
 
 // Automated Release Prep
@@ -147,7 +147,7 @@ gulp.task("prep-release",
     "bump-dev",
     "commit-changes",
     "push-changes"
-    )
+  )
 );
 
 // Install bower components
@@ -183,10 +183,10 @@ gulp.task("compile-ts", function () {
 
 // Compile Angular 2 application
 gulp.task("compile-ng2", function (callback) {
-  webpack(require("./webpack.config.js"), function (err,stats) {
-    if (err)  {guitl.log(err);}
-    if (stats) {gutil.log(stats);}
-    callback(); 
+  webpack(require("./webpack.config.js"), function (err, stats) {
+    if (err) { guitl.log(err); }
+    if (stats) { gutil.log(stats); }
+    callback();
   });
 });
 
@@ -383,12 +383,41 @@ gulp.task("pkg-win32", function (callback) {
 
 gulp.task("package-win32", gulp.series("clean", "prep-pkg", "pkg-win32"));
 
-gulp.task("package-all", 
+gulp.task("package-all",
   gulp.series(
-    "package-win32", 
-    "package-linux", 
+    "package-win32",
+    "package-linux",
     "package-darwin")
 );
+
+gulp.task("pkg", function (callback) {
+  del('pkg');
+  del('zipped');
+  var options = {
+    dir: ".",
+    name: packageJSON.name + "-" + packageJSON.version,
+    overwrite: true,
+    prune: true,
+    icon: "src/resources/into-cps/appicon/into-cps-logo.png.ico",
+    out: "pkg",
+    "app-version": packageJSON.version,
+    "version-string": {
+      CompanyName: packageJSON.author.name,
+      ProductName: packageJSON.productName
+    }
+  };
+  return packager(options).then(appPaths => {
+    gulp.src(appPaths[0] + '/**')
+      .pipe(zip(appPaths[0] +'.zip'))
+      .pipe(gulp.dest('zipped'))
+  })
+    .catch((e) => console.error(e));
+});
+
+
+gulp.task("package", gulp.series("clean", "prep-pkg", "pkg"));
+
+
 
 // Watch for changes and rebuild on the fly
 gulp.task("watch", function () {

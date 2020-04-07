@@ -1,0 +1,67 @@
+name: Package
+
+on: 
+   push:
+     branches: 
+       - master
+
+jobs:
+  package:
+    runs-on: ${{ matrix.os }}
+  
+    strategy:
+      matrix:
+        os: [ubuntu-latest,windows-latest]
+
+
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v2
+        with: 
+          ref: master
+      - name: Set Version
+        run: echo ::set-env name=APP_VERSION::${GITHUB_REF#refs/*/} ; echo $APP_VERSION
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '11.x'
+  
+      - name: Install Dependencies
+        run: npm install  
+
+      - name: Install Gulp In Mac
+        run: npm install -g gulp 
+        if: startsWith(matrix.os, 'mac')
+
+      - name: Initialize gulp
+        run: gulp init 
+
+      - name: Build and Package
+        run: gulp package
+
+      - name: Upload Linux Version
+        uses: actions/upload-artifact@v1
+        with:
+          path: ./zipped/pkg/into-cps-app-$APP_VERSION-linux-x64.zip
+          name: linux-archive.zip
+        if: startsWith(matrix.os, 'ubuntu')
+
+      - name: Upload Windows Version
+        uses: actions/upload-artifact@v1
+        with:
+          path: ./zipped/pkg/into-cps-app-$APP_VERSION-win32-x64.zip
+          name: windows-archive.zip
+        if: startsWith(matrix.os, 'windows')
+
+      - name: Zip Darwin Version
+        run: cd pkg ; zip into-cps-app-$APP_VERSION-darwin-x64.zip . -rq
+        if: startsWith(matrix.os, 'mac')
+
+      - name: Upload Darwin Version
+        uses: actions/upload-artifact@v1
+        with:
+          path: ./pkg/into-cps-app-$APP_VERSION-darwin-x64.zip
+          name: darwin-archive.zip
+        if: startsWith(matrix.os, 'mac')
+
