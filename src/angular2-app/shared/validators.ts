@@ -29,7 +29,8 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {FormControl, FormArray, FormGroup} from "@angular/forms";
+import {FormControl, FormArray, FormGroup, AsyncValidatorFn, AbstractControl} from "@angular/forms";
+import {Observable} from 'rxjs';
 
 function isString(x:any) {
     return typeof x === 'string';
@@ -104,13 +105,31 @@ export function uniqueControlValidator(control: FormArray) {
     }
 }
 
-export function lessThanValidator(selfName:string, otherName:string) {
+// from angular v6 their is a pending call which is new to abstractControls if problems should arise with this function look into that.
+export function lessThanValidator(selfName:string, otherName:string): AsyncValidatorFn {
+    return (group: AbstractControl) : Promise<{ [key: string]: any } | null> | Observable<{ [key: string]: any } | null>=> {
+        return new Promise((resolve, reject) => {
+            let self = group.get(selfName);
+            let other = group.get(otherName);
+
+            if (self.value && other.value && Number(self.value) >= Number(other.value)) {
+                resolve({ notLessThan: true });
+            } else {
+                resolve(null);
+            }});
+    }
+
+    
+}
+
+export function lessThanValidator2(selfName:string, otherName:string) {
     return (group: FormGroup) => {
-        let self = group.find(selfName);
-        let other = group.find(otherName);
+        let self = group.get(selfName);
+        let other = group.get(otherName);
 
         if (self.value && other.value && Number(self.value) >= Number(other.value)) {
             return {notLessThan:true};
         }
+        else return null;
     }
 }

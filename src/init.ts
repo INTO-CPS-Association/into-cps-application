@@ -28,7 +28,7 @@
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
-
+'use strict'
 import { IntoCpsAppEvents } from "./IntoCpsAppEvents";
 import { SettingKeys } from "./settings/SettingKeys";
 import { IntoCpsApp } from "./IntoCpsApp";
@@ -46,7 +46,7 @@ import { ViewController, IViewController } from "./iViewController";
 import * as CustomFs from "./custom-fs";
 import { IProject } from "./proj/IProject";
 import * as SystemUtil from "./SystemUtil";
-import { bootstrap } from '@angular/platform-browser-dynamic';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppComponent } from './angular2-app/app.component';
 import * as fs from 'fs';
 import * as Path from 'path';
@@ -64,8 +64,7 @@ declare var window: MyWindow;
 declare var w2prompt: any;
 declare var w2alert: any;
 
-import * as Menus from "./menus";
-import { provideForms, disableDeprecatedForms } from "@angular/forms";
+
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { TrViewController } from "./angular2-app/tr/TrViewController";
@@ -73,6 +72,8 @@ import { DseViewController } from "./angular2-app/dse/DseViewController";
 import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
+import { AppModule } from "./angular2-app/app.module";
+
 
 class InitializationController {
     // constants
@@ -120,7 +121,7 @@ class InitializationController {
             this.title.innerText = "Project: " + p.getName() + " - " + p.getRootFilePath();
         }
         let ipc: Electron.IpcRenderer = require("electron").ipcRenderer;
-        ipc.on(IntoCpsAppEvents.PROJECT_CHANGED, (event, arg) => {
+        ipc.on(IntoCpsAppEvents.PROJECT_CHANGED, () => {
             let p = app.getActiveProject();
             this.title.innerText = "Project: " + p.getName() + " - " + p.getRootFilePath();
         });
@@ -163,7 +164,7 @@ class InitializationController {
             }
 
             // Start Angular 2 application
-            bootstrap(AppComponent, [disableDeprecatedForms(), provideForms()]);
+            platformBrowserDynamic().bootstrapModule(AppModule);
         });
         this.layout.load("left", "proj/projbrowserview.html", "", () => {
             browserController.initialize();
@@ -310,14 +311,6 @@ menuHandler.openFmu = () => {
     IntoCpsApp.setTopName("FMUs");
 };
 
-//menuHandler.createDse = (path) => {
-//    // create empty DSE file and load it.
-//    openView("dse/dse.html", () => {
-//        menuHandler.openDseView("");
-//    });
-//};
-//
-
 menuHandler.createMultiModel = (path, msgTitle = 'New Multi-Model') => {
     let appInstance = IntoCpsApp.getInstance();
     let project = appInstance.getActiveProject();
@@ -417,7 +410,6 @@ menuHandler.createCoSimConfiguration = (path) => {
     let project = appInstance.getActiveProject();
 
     if (project) {
-        //let name    = Path.basename(path, ".sysml.json");
         let ivname = project.freshFilename(Path.dirname(path), `co-sim`);
 
         let msgTitle = 'New Co-Simulation Configuration';
@@ -456,7 +448,7 @@ menuHandler.deletePath = (path) => {
             if (err != null) {
                 console.error(err);
             }
-            IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
+           //  IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
     } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json")) {
@@ -466,7 +458,7 @@ menuHandler.deletePath = (path) => {
             if (err != null) {
                 console.error(err);
             }
-            IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
+          //   IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
     }
 };
@@ -477,7 +469,7 @@ menuHandler.openWithSystemEditor = (path) => {
 
 menuHandler.rename = (path: string) => {
     var DialogHandler = require("./DialogHandler").default;
-    let renameHandler = new DialogHandler("proj/rename.html", 300, 200, null, null, null);
+    let renameHandler = new DialogHandler("proj/rename.html", 300, 200/* , null, null, null */);
 
     if (path.endsWith("coe.json") || path.endsWith("mm.json")) {
         renameHandler.openWindow(Path.dirname(path));
@@ -485,7 +477,7 @@ menuHandler.rename = (path: string) => {
 };
 menuHandler.showTraceView = () => {
     var DialogHandler = require("./DialogHandler").default;
-    let renameHandler = new DialogHandler("traceability/traceHints.html", 600, 800, null, null, null);
+    let renameHandler = new DialogHandler("traceability/traceHints.html", 600, 800/* , null, null, null */);
 
     renameHandler.openWindow();
     menuHandler.openHTMLInMainView("http://localhost:7474/browser/", "Traceability Graph View");
@@ -494,4 +486,4 @@ menuHandler.showTraceView = () => {
 menuHandler.exportOvertureFmu = Overture.exportOvertureFmu;
 
 
-Menus.configureIntoCpsMenu();
+export = InitializationController 

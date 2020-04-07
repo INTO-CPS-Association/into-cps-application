@@ -31,46 +31,31 @@
 
 import { Component, OnInit, NgZone } from '@angular/core';
 import { FileSystemService } from "../../shared/file-system.service";
-import { HTTP_PROVIDERS, Http } from "@angular/http";
-import { LineChartComponent } from "../../shared/line-chart.component";
-import { BehaviorSubject } from "rxjs/Rx";
+/* import { Http } from "@angular/http"; */
+import { HttpClient } from '@angular/common/http';
 import { LiveGraph } from "../../../intocps-configurations/CoSimulationConfig";
 import { Graph } from "../../shared/graph"
 import { ipcRenderer } from "electron";
-
-
-
-
-interface MyWindow extends Window {
-    ng2app: AppComponent;
-}
-
-declare let window: MyWindow;
 
 // Main application component.
 // Handles routing between the pages that use Angular 2.
 
 @Component({
     selector: 'app',
-    directives: [LineChartComponent],
-    providers: [
-        HTTP_PROVIDERS,
-        FileSystemService
-    ],
     templateUrl: "./graph.component.html"
 })
 export class AppComponent implements OnInit {
-    private webSocket: WebSocket;
     graph: Graph = new Graph();
 
-    constructor(private http: Http,
+    constructor(private http: HttpClient,
         private fileSystem: FileSystemService,
         private zone: NgZone) {
-
+            console.log("Graph Window App Component")
     }
 
-    initializeGraph(data: any) {
-        let dataObj = JSON.parse(data);
+    initializeGraph() {
+        /* let dataObj = JSON.parse(data); */
+        let dataObj = JSON.parse(this.getParameterByName("data"));
         this.zone.run(() => {
             this.graph.setGraphMaxDataPoints(dataObj.graphMaxDataPoints);
             let lg: LiveGraph = new LiveGraph();
@@ -78,12 +63,23 @@ export class AppComponent implements OnInit {
             this.graph.initializeSingleDataset(lg);        
             this.graph.launchWebSocket(dataObj.webSocket)
         });
-        ipcRenderer.on('close', (event, data) => { this.graph.closeSocket(); this.graph.setFinished();});
-        window.onbeforeunload = ((ev) => {
+        ipcRenderer.on('close', () => { this.graph.closeSocket(); this.graph.setFinished();});
+        window.onbeforeunload = ((ev: any) => {
            this.graph.closeSocket();       
         });
     }
-
+// Retrieves the query string value associated with name
+private getParameterByName(name: string, url?: string) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
     ngOnInit() {
+        console.log("Graph Window App Component On Init");
+        this.initializeGraph();
     }
 }

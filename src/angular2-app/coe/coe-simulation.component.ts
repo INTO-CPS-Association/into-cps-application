@@ -1,3 +1,5 @@
+
+
 /*
  * This file is part of the INTO-CPS toolchain.
  *
@@ -28,22 +30,24 @@
  *
  * See the CONTRIBUTORS file for author and contributor information.
  */
-
+import {map, timeout} from 'rxjs/operators';
 import { Component, Input, NgZone, OnInit, OnDestroy } from "@angular/core";
 import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationConfig";
-import { LineChartComponent } from "../shared/line-chart.component";
+/* import { LineChartComponent } from "../shared/line-chart.component"; */
 import { CoeSimulationService } from "./coe-simulation.service";
-import { Http } from "@angular/http";
+import { HttpClient } from '@angular/common/http';
+/* import { Http } from "@angular/http"; */
 import { SettingsService, SettingKeys } from "../shared/settings.service";
 import IntoCpsApp from "../../IntoCpsApp";
 import { WarningMessage } from "../../intocps-configurations/Messages";
-import { openCOEServerStatusWindow } from "../../menus";
+// needs an alternativ!!
+/* import { openCOEServerStatusWindow } from "../../menus"; */
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
 
 @Component({
   selector: "coe-simulation",
-  providers: [CoeSimulationService],
-  directives: [LineChartComponent],
+/*   providers: [CoeSimulationService],
+  directives: [LineChartComponent], */
   templateUrl: "./angular2-app/coe/coe-simulation.component.html"
 })
 export class CoeSimulationComponent implements OnInit, OnDestroy {
@@ -81,7 +85,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
   constructor(
     private coeSimulation: CoeSimulationService,
-    private http: Http,
+    private http: HttpClient,
     private zone: NgZone,
     private settings: SettingsService
   ) {}
@@ -175,9 +179,9 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
   isCoeOnline() {
     this.http
-      .get(this.url)
-      .timeout(2000)
-      .map(response => response.json())
+      .get(this.url).pipe(
+      timeout(2000),
+      map(response => response),)
       .subscribe(
         (data: any) => {
           this.online = true;
@@ -188,6 +192,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
   }
 
   onCoeLaunchClick() {
+   this.coeSimulation.
     openCOEServerStatusWindow("autolaunch", false);
   }
 }

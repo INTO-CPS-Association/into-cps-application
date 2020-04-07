@@ -29,16 +29,11 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {OnInit, Component, Input, NgZone} from "@angular/core";
-
-import {PanelComponent} from "../shared/panel.component";
-import {TrOverviewComponent, subObjectClass} from "./tr-overview.component";
+import { Component, NgZone} from "@angular/core";
+import {TrOverviewComponent} from "./tr-overview.component";
 
 @Component({
     selector: "tr-reqnores",
-    directives: [
-        PanelComponent,
-        ReqNoResultComponent],
     templateUrl: "./angular2-app/tr/tr-singlelist.component.html"
 })
 

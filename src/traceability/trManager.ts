@@ -199,6 +199,8 @@ export class TrManager {
             console.info(err);
             const { dialog } = require('electron')
             dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Neo4J: " + err }, function (button: any) { });
+            // for electron v8
+           /*  dialog.showMessageBox(null, { type: 'error', buttons: ["OK"], message: "Neo4J: " + err }); */
 
         };
 
@@ -276,7 +278,7 @@ export class TrManager {
                 fileContent += 'dbms.directories.logs=' + this.toNixPathFormat(this.workdingDir) + ' \n';
                 fileContent += 'dbms.logs.http.enabled=true' + '\n';
 
-                fs.writeFile(Path.join(this.workdingDir, ".gitignore"), "data\n*.log\n*.conf\n");
+                fs.writeFileSync(Path.join(this.workdingDir, ".gitignore"), "data\n*.log\n*.conf\n");
 
                 fs.writeFileSync(confFileName, fileContent);
                 resolve();

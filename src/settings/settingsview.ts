@@ -120,6 +120,21 @@ class SettingsView {
                 window.top.close();
             }
         });
+        // for electron v8
+       /*  let save = dialog.showMessageBox(null, { type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." });
+        save.catch((error) => {
+            console.error(error);
+            return;
+        })
+        save.then((res) => {
+            if(res.response == 0)
+            {
+                remote.app.relaunch();
+                remote.app.exit();
+            } else {
+                window.top.close();
+            }
+        }); */
 
         return false;
     }

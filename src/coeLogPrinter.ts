@@ -91,6 +91,7 @@ export class CoeLogPrinter {
                     // Advance the file position
                     this.filePosition = currentFileSize-truncateSizeInBytes;
                     alteredFilePosition = true;
+                    
                     //console.log(`CoeLogPrinter watching file: ${this.path} advanced file position to: ${this.filePosition}`);
                 }
                 let readSize = this.readFunction(this.path, currentFileSize, this.remainingMaxFileReadSize, alteredFilePosition, this.callback)
@@ -102,7 +103,7 @@ export class CoeLogPrinter {
                 clearInterval(this.intervalHandle)
                 this.stopPrintingRemaining();
             }
-        }, this.interval);
+        }/* not part of newer node , this.interval*/ );
     }
 
     public stopWatching() {

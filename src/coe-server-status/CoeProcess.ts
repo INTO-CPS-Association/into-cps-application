@@ -183,12 +183,10 @@ export class CoeProcess {
           type: "error",
           buttons: ["OK"],
           message:
-            "Please install the: " +
-            "'Co-simulation Orchestration Engine'" +
-            " first."
-        },
-        function(button: any) {}
+            "Please install the: 'Co-simulation Orchestration Engine' first."
+        }
       );
+      // might not be nessasery
       return;
     }
 

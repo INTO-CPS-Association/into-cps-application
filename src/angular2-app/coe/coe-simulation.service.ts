@@ -31,12 +31,13 @@
 
 import { FileSystemService } from "../shared/file-system.service";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
-import { Http, Response } from "@angular/http";
+/* import { Response } from "@angular/http"; */
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Serializer } from "../../intocps-configurations/Parser";
 import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
 import * as Path from "path";
-import { BehaviorSubject } from "rxjs/Rx";
+import { BehaviorSubject } from "rxjs";
 import { Injectable, NgZone } from "@angular/core";
 import { CoSimulationConfig, LiveGraph } from "../../intocps-configurations/CoSimulationConfig";
 import { storeResultCrc } from "../../intocps-configurations/ResultConfig";
@@ -59,7 +60,7 @@ export class CoeSimulationService {
     postProcessingOutputReport: (hasError: boolean, message: string) => void = function () { };
 
     private webSocket: WebSocket;
-    private sessionId: number;
+    private sessionId: string;
     private remoteCoe: boolean;
     private coe: CoeProcess; 
     private url: string;
@@ -69,7 +70,7 @@ export class CoeSimulationService {
     public graph: Graph = new Graph();;
     public externalGraphs: Array<DialogHandler> = new Array<DialogHandler>();
 
-    constructor(private http: Http,
+    constructor(private http: HttpClient,
         private settings: SettingsService,
         private fileSystem: FileSystemService,
         private zone: NgZone) {
@@ -85,6 +86,14 @@ export class CoeSimulationService {
             this.graph.reset();
         });
     }
+
+    openCOEServerStatusWindow(
+        data: string = "",
+        show: boolean = true
+      ) {
+        this.coe = IntoCpsApp.getInstance().getCoeProcess();
+        if (!this.coe.isRunning()) IntoCpsApp.getInstance().getCoeProcess().start();
+      }
 
     run(config: CoSimulationConfig, errorReport: (hasError: boolean, message: string) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
         this.coe = IntoCpsApp.getInstance().getCoeProcess();
@@ -126,10 +135,9 @@ export class CoeSimulationService {
 
     private createSession() {
         this.errorReport(false, "");
-
         this.http.get(`http://${this.url}/createSession`)
-            .subscribe((response: Response) => {
-                this.sessionId = response.json().sessionId;
+            .subscribe((response: any) => {
+                this.sessionId = response.sessionId;
                 this.uploadFmus();
             });
     }
@@ -178,7 +186,7 @@ export class CoeSimulationService {
                 graphObj.webSocket = "ws://" + this.url + "/attachSession/" + this.sessionId;
                 graphObj.graphMaxDataPoints = this.graphMaxDataPoints;
                 console.log(graphObj);
-                let dh = new DialogHandler("angular2-app/coe/graph-window/graph-window.html", 800, 600, null, null, null);
+                let dh = new DialogHandler("angular2-app/coe/graph-window/graph-window.html", 800, 600);
                 dh.openWindow(JSON.stringify(graphObj), true);
                 this.externalGraphs.push(dh);
                 dh.win.webContents.on("did-finish-load", () => {
@@ -225,17 +233,24 @@ export class CoeSimulationService {
     errorHandler(err: Response) {
         console.warn(err);
         this.progress = 0;
-        this.errorReport(true, "Error: " + err.text());
+        this.errorReport(true, "Error: " + err.statusText);
 
     }
 
     private downloadResults() {
         this.graph.closeSocket();
+        let markedForDeletionExternalGraphs : DialogHandler[]= [];
         this.externalGraphs.forEach((eg) => {
-            if (eg.win)
-                //This also causes a redraw event for the external graphs.
+            if (!eg.win.isDestroyed()){
                 eg.win.webContents.send("close");
-        })
+            } else{
+                // The window have been destroyed, remove it from external graphs
+                markedForDeletionExternalGraphs.push(eg);
+            }
+        });
+        markedForDeletionExternalGraphs.forEach((eg) => {
+            this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0),1);
+        });
         this.simulationCompletedHandler();
 
         let resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
@@ -243,11 +258,11 @@ export class CoeSimulationService {
         let mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
         let logPath = Path.normalize(`${this.resultDir}/log.zip`);
 
-        this.http.get(`http://${this.url}/result/${this.sessionId}/plain`)
+        this.http.get(`http://${this.url}/result/${this.sessionId}/plain`, {responseType: 'text'})
             .subscribe(response => {
                 // Write results to disk and save a copy of the multi model and coe configs
                 Promise.all([
-                    this.fileSystem.writeFile(resultPath, response.text()),
+                    this.fileSystem.writeFile(resultPath, response),
                     this.fileSystem.copyFile(this.config.sourcePath, coeConfigPath),
                     this.fileSystem.copyFile(this.config.multiModel.sourcePath, mmConfigPath)
                 ]).then(() => {

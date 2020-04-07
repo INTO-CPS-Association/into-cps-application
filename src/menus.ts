@@ -29,97 +29,60 @@
  * See the CONTRIBUTORS file for author and contributor information.
  */
 
-const electron = require("electron");
-const Menu = electron.remote.Menu;
-const fs = require("fs");
-const path = require("path");
-var settings = require("./settings/settings").default;
-var SettingKeys = require("./settings/SettingKeys");
+
+module.exports = function(intoCpsApp : any){
+  const {app,shell, Menu, MenuItem} = require('electron');
 var IntoCpsApp = require("./IntoCpsApp").default;
-import * as SystemUtil from "./SystemUtil";
-import { openProjectViaDirectoryDialog } from "./proj/Project";
+var SystemUtil = require ("./SystemUtil");
+const {openProjectViaDirectoryDialog} = require("./proj/Project");
 
 var DialogHandler = require("./DialogHandler").default;
 var IntoCpsAppEvents = require("./IntoCpsAppEvents");
 var ProjectFetcher = require("./proj/ProjectFetcher");
 
-const intoCpsApp = IntoCpsApp.getInstance();
 
-let createProjectHandler = new DialogHandler(
-  "proj/new-project.html",
-  300,
-  200,
-  IntoCpsAppEvents.OPEN_CREATE_PROJECT_WINDOW,
-  "new-project-create",
-  (arg: any) => {
-    intoCpsApp.createProject(arg.name, arg.path);
-  }
-);
-
+let createProjectHandler = new DialogHandler("proj/new-project.html", 300, 200);
 let openDownloadManagerHandler = new DialogHandler(
   "downloadManager/DownloadManager.html",
   500,
-  500,
-  null,
-  null,
-  null
+  500
 );
-export let coeServerStatusHandler = new DialogHandler(
+let coeServerStatusHandler = new DialogHandler(
   "coe-server-status/CoeServerStatus.html",
   500,
-  500,
-  null,
-  null,
-  null
+  500
 );
 let fmuBuilderHandler = new DialogHandler(
   "http://sweng.au.dk/fmubuilder/",
   500,
-  500,
-  null,
-  null,
-  null
+  500
 );
 fmuBuilderHandler.externalUrl = true;
 let reportIssueHandler = new DialogHandler(
   "https://github.com/INTO-CPS-Association/into-cps-application/issues/new",
   600,
-  600,
-  null,
-  null,
-  null
+  600
 );
 reportIssueHandler.externalUrl = true;
 
 let fetchProjectFromGitHandler = new DialogHandler(
   "proj/ProjectFetcher.html",
   500,
-  300,
-  null,
-  null,
-  null
+  300
 );
 let openExamplesFromGitHandler = new DialogHandler(
   "examples/examples.html",
   500,
-  400,
-  null,
-  null,
-  null
+  400
 );
 let openSettingsHandler = new DialogHandler(
   "settings/settings.html",
   500,
-  600,
-  null,
-  null,
-  null
+  600
 );
 
-createProjectHandler.install();
-openDownloadManagerHandler.install();
 
-export function openCOEServerStatusWindow(
+function openCOEServerStatusWindow(
   data: string = "",
   show: boolean = true
 ) {
@@ -127,15 +90,13 @@ export function openCOEServerStatusWindow(
   if (!coe.isRunning()) intoCpsApp.getCoeProcess().start();
 }
 
-export function configureIntoCpsMenu() {
-  const { remote } = require("electron");
-  const app = remote.app;
-  const { Menu, MenuItem } = remote;
 
+return {
+  configureIntoCpsMenu : function() {
   // Definitions needed for menu construction
   var defaultMenu = require("electron-default-menu");
   // Get template for default menu
-  var menu: any[] = defaultMenu();
+  var menu: any[] = defaultMenu(app, shell);
 
   var fileMenuPos = 0;
 
@@ -268,4 +229,5 @@ export function configureIntoCpsMenu() {
 
   // Set top-level application menu, using modified template
   Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
+}}
 }

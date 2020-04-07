@@ -69,7 +69,10 @@ var gulp = require("gulp"),
   minimist = require("minimist"),
   semver = require("semver"),
   cleancss = require("gulp-clean-css"),
-  uglify = require("gulp-uglify");
+  uglify = require("gulp-uglify"),
+  pipeline = require('readable-stream').pipeline,
+  saveLicense = require("uglify-save-license");
+
 // Tasks
 
 // Automated Release Prep
@@ -87,7 +90,7 @@ var knownOptions = {
 
 var options = minimist(process.argv.slice(2), knownOptions);
 
-gulp.task("bump-rel", function() {
+gulp.task("bump-rel", function () {
   var pkg = getPackageJson();
   var newVer = semver.inc(pkg.version, options.vt);
 
@@ -102,7 +105,7 @@ gulp.task("bump-rel", function() {
     .pipe(gulp.dest("./"));
 });
 
-gulp.task("bump-dev", function() {
+gulp.task("bump-dev", function () {
   var pkg = getPackageJson();
   var newVer = semver.inc(pkg.version, "prepatch", "dev");
   newVer = newVer.slice(0, -2);
@@ -113,21 +116,21 @@ gulp.task("bump-dev", function() {
     .pipe(gulp.dest("./"));
 });
 
-gulp.task("commit-changes", function() {
+gulp.task("commit-changes", function () {
   return gulp
     .src(["./bower.json", "./package.json"])
     .pipe(git.add())
     .pipe(git.commit("[GULP] Bump version number"));
 });
 
-gulp.task("push-changes", function(cb) {
+gulp.task("push-changes", function (cb) {
   git.push("origin", "master", cb);
 });
 
-gulp.task("create-new-tag", function(cb) {
+gulp.task("create-new-tag", function (cb) {
   var version = getPackageJson().version;
   var tag = "v" + version;
-  git.tag(tag, "Created Tag for version: " + version, function(error) {
+  git.tag(tag, "Created Tag for version: " + version, function (error) {
     if (error) {
       return cb(error);
     }
@@ -135,7 +138,7 @@ gulp.task("create-new-tag", function(cb) {
   });
 });
 
-gulp.task("prep-release", function(callback) {
+gulp.task("prep-release", function (callback) {
   runSequence(
     "bump-rel",
     "commit-changes",
@@ -144,7 +147,7 @@ gulp.task("prep-release", function(callback) {
     "bump-dev",
     "commit-changes",
     "push-changes",
-    function(error) {
+    function (error) {
       if (error) {
         console.log(error.message);
       } else {
@@ -156,26 +159,28 @@ gulp.task("prep-release", function(callback) {
 });
 
 // Install bower components
-gulp.task("install-bower-components", function() {
+gulp.task("install-bower-components", function () {
   return bower();
 });
 
 // Clean everything!
-gulp.task("clean", function() {
+gulp.task("clean", function () {
   return del([outputPath]);
 });
 
 // Compile and uglify. Only used for packaged app
-gulp.task("compile-ts-uglify", function() {
-  var tsResult = gulp.src(tsSrcs).pipe(tsProject());
-
-  return tsResult.js
-    .pipe(uglify({ preserveComments: "license" }))
-    .pipe(gulp.dest(outputPath));
+gulp.task("compile-ts-uglify", function () {
+  return pipeline(
+    gulp.src(tsSrcs),
+    tsProject(),
+    uglify({
+      output: { comments: saveLicense }
+    }),
+    gulp.dest(outputPath));
 });
 
 // Compile TS->JS with sourcemaps.
-gulp.task("compile-ts", function() {
+gulp.task("compile-ts", function () {
   var tsResult = gulp
     .src(tsSrcs)
     .pipe(sourcemap.init())
@@ -185,15 +190,17 @@ gulp.task("compile-ts", function() {
 });
 
 // Compile Angular 2 application
-gulp.task("compile-ng2", function(callback) {
-  webpack(require("./webpack.config.js"), function() {
-    callback();
+gulp.task("compile-ng2", function (callback) {
+  webpack(require("./webpack.config.js"), function (err,stats) {
+    if (err)  {guitl.log(err);}
+    if (stats) {gutil.log(stats);}
+    callback(); 
   });
 });
 
 // Copy important bower files to destination
 // mainBowerFiles does not take jquery-ui and jquery-layout
-gulp.task("copy-bower", function() {
+gulp.task("copy-bower", function () {
   // solved from issue #26
   var path1 = gulp
     .src(mainBowerFiles())
@@ -205,21 +212,21 @@ gulp.task("copy-bower", function() {
 });
 
 // Copy bootstrap fonts to destination
-gulp.task("copy-fonts", function() {
+gulp.task("copy-fonts", function () {
   return gulp
     .src(bowerFolder + "/bootstrap/fonts/**/*")
     .pipe(gulp.dest(outputPath + "fonts"));
 });
 
 // Copy custom resources
-gulp.task("copy-custom", function() {
+gulp.task("copy-custom", function () {
   return gulp
     .src(customResources)
     .pipe(gulp.dest(outputPath + "resources/into-cps"));
 });
 
 // Copy css to app folder
-gulp.task("copy-css", function() {
+gulp.task("copy-css", function () {
   // solved from issue #26
   return gulp
     .src(cssSrcs)
@@ -228,13 +235,16 @@ gulp.task("copy-css", function() {
 });
 
 // Copy html to app folder
-gulp.task("copy-html", function() {
+gulp.task("copy-html", function () {
   // solved from issue #26
   return gulp
     .src(htmlSrcs)
     .pipe(
       htmlhint({
         "attr-lowercase": [
+          "formControlName",
+          "formGroupName",
+          "formArrayName",
           "*ngIf",
           "*ngFor",
           "[(ngModel)]",
@@ -257,7 +267,7 @@ gulp.task("copy-html", function() {
 });
 
 // Copy js to app folder
-gulp.task("copy-js", function() {
+gulp.task("copy-js", function () {
   // solved from issue #26
   return (
     gulp
@@ -301,23 +311,7 @@ gulp.task(
 );
 
 //Build packages
-gulp.task("package-win32", function(callback) {
-  runSequence("clean", "prep-pkg", "pkg-win32");
-});
-
-gulp.task("package-darwin", function(callback) {
-  runSequence("clean", "prep-pkg", "pkg-darwin");
-});
-
-gulp.task("package-linux", function(callback) {
-  runSequence("clean", "prep-pkg", "pkg-linux");
-});
-
-gulp.task("package-all", function(callback) {
-  runSequence("clean", "prep-pkg", "pkg-all");
-});
-
-gulp.task("pkg-darwin", function(callback) {
+gulp.task("pkg-darwin", function (done) {
   var options = {
     dir: ".",
     name: packageJSON.name + "-" + packageJSON.version,
@@ -333,15 +327,46 @@ gulp.task("pkg-darwin", function(callback) {
       ProductName: packageJSON.productName
     }
   };
-  packager(options, function done(err, appPath) {
-    if (err) {
-      return console.log(err);
-    }
-    callback();
-  });
+
+  return packager(options)
+    .then(appPaths => {
+      console.log(appPaths);
+      return;
+    })
+    .catch((e) => console.error(e));
 });
 
-gulp.task("pkg-win32", function(callback) {
+gulp.task('package-darwin', gulp.series('clean', 'prep-pkg', 'pkg-darwin'));
+
+
+gulp.task("pkg-linux", function (callback) {
+  var options = {
+    dir: '.',
+    name: packageJSON.name + '-' + packageJSON.version,
+    platform: "linux",
+    arch: "ia32,x64",
+    overwrite: true,
+    prune: true,
+    out: 'pkg',
+    "app-version": packageJSON.version,
+    "version-string": {
+      "CompanyName": packageJSON.author.name,
+      "ProductName": packageJSON.productName
+    }
+  };
+
+  return packager(options)
+    .then(appPaths => {
+      console.log(appPaths);
+      return;
+    })
+    .catch((e) => console.error(e));
+});
+
+gulp.task('package-linux', gulp.series('clean', 'prep-pkg', 'pkg-linux'));
+
+
+gulp.task("pkg-win32", function (callback) {
   var options = {
     dir: ".",
     name: packageJSON.name + "-" + packageJSON.version,
@@ -357,41 +382,22 @@ gulp.task("pkg-win32", function(callback) {
       ProductName: packageJSON.productName
     }
   };
-  packager(options, function done(err, appPath) {
-    if (err) {
-      return console.log(err);
-    }
-    callback();
-  });
+  return packager(options).then(appPaths => {
+    console.log(appPaths);
+    return;
+  })
+    .catch((e) => console.error(e));
 });
 
-gulp.task("pkg-linux", function(callback) {
-  var options = {
-    dir: ".",
-    name: packageJSON.name + "-" + packageJSON.version,
-    platform: "linux",
-    arch: "ia32,x64",
-    overwrite: true,
-    prune: true,
-    out: "pkg",
-    "app-version": packageJSON.version,
-    "version-string": {
-      CompanyName: packageJSON.author.name,
-      ProductName: packageJSON.productName
-    }
-  };
-  packager(options, function done(err, appPath) {
-    if (err) {
-      return console.log(err);
-    }
-    callback();
-  });
-});
+gulp.task("package-win32", gulp.series("clean", "prep-pkg", "pkg-win32"));
+
 
 gulp.task("pkg-all", gulp.series("pkg-win32", "pkg-darwin", "pkg-linux"));
 
+gulp.task('package-all', gulp.series('clean', 'prep-pkg', 'pkg-all'));
+
 // Watch for changes and rebuild on the fly
-gulp.task("watch", function() {
+gulp.task("watch", function () {
   gulp.watch(htmlSrcs, ["copy-html"]);
   gulp.watch(jsSrcs, ["copy-js"]);
   gulp.watch(tsSrcs, ["compile-ts"]);

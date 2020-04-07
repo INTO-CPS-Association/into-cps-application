@@ -1,3 +1,5 @@
+
+
 /*
  * This file is part of the INTO-CPS toolchain.
  *
@@ -28,7 +30,7 @@
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
-
+import {map, timeout} from 'rxjs/operators';
 import { Component, Input, NgZone, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
 import {Serializer} from "../../intocps-configurations/Parser";
 import {
@@ -37,29 +39,24 @@ import {
 } from "../coe/models/Fmu";
 import {CoeSimulationService} from "../coe/coe-simulation.service";
 import IntoCpsApp from "../../IntoCpsApp";
-import {Http} from "@angular/http";
+/* import {Http} from "@angular/http"; */
+import { HttpClient } from '@angular/common/http';
 import {SettingsService, SettingKeys} from "../shared/settings.service";
 import {ParetoDimension, InternalFunction, DseConfiguration, ParetoRanking, ExternalScript, DseParameter, DseScenario, DseParameterConstraint, DseObjectiveConstraint,IDseAlgorithm, GeneticSearch, ExhaustiveSearch} from "../../intocps-configurations/dse-configuration";
 import { WarningMessage } from "../../intocps-configurations/Messages";
 import { NavigationService } from "../shared/navigation.service";
-import { FormGroup, REACTIVE_FORM_DIRECTIVES, FORM_DIRECTIVES, FormArray, FormControl, Validators } from "@angular/forms";
-import {IProject} from "../../proj/IProject";
+import { FormGroup, FormArray, FormControl } from "@angular/forms";
 import {Project} from "../../proj/Project";
 import * as Path from 'path';
 import * as fs from 'fs';
-import {coeServerStatusHandler} from "../../menus";
-import {OutputConnectionsPair} from "../coe/models/Fmu";
+/* import {coeServerStatusHandler} from "../../menus"; */
 
 @Component({
     selector: "dse-configuration",
     providers: [
         CoeSimulationService
     ],
-    templateUrl: "./angular2-app/dse/dse-configuration.component.html",
-    directives: [
-        FORM_DIRECTIVES,
-        REACTIVE_FORM_DIRECTIVES
-    ]    
+    templateUrl: "./angular2-app/dse/dse-configuration.component.html"  
 })
 export class DseConfigurationComponent implements OnInit, OnDestroy {
     private _path:string;
@@ -128,7 +125,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
   
     constructor(private coeSimulation:CoeSimulationService,
-        private http:Http,
+        private http:HttpClient,
         private zone:NgZone,
         private settings:SettingsService, private navigationService: NavigationService) {
         this.navigationService.registerComponent(this);
@@ -203,6 +200,19 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                 override = true;
                 this.warnings = [];
             }
+            // for electron v8
+           /*  let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            res.catch(() => {
+                return
+            });
+            res.then(function(res) {
+                if (res.response == 0) {
+                    return;
+                } else {
+                    override = true;
+                    this.warnings = [];
+                }
+            }) */
         }
 
         this.config.save()
@@ -548,7 +558,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     addParameterConstraint(){
         let pc = this.config.addParameterConstraint();
-        let pcArray = <FormArray>this.form.find('paramConstraints');
+        let pcArray = <FormArray>this.form.get('paramConstraints');
         
         pcArray.push(new FormControl(this.getParameterConstraint(pc)));
     }
@@ -563,7 +573,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     removeParameterConstraint(pc:DseParameterConstraint){
         this.config.removeParameterConstraint(pc);
-        let pcArray = <FormArray>this.form.find('paramConstraints');
+        let pcArray = <FormArray>this.form.get('paramConstraints');
         let index = this.config.paramConst.indexOf(pc);
         
         pcArray.removeAt(index);
@@ -663,7 +673,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     addObjectiveConstraint(){
         let oc = this.config.addObjectiveConstraint();
-        let ocArray = <FormArray>this.form.find('objConstraints');
+        let ocArray = <FormArray>this.form.get('objConstraints');
         
         ocArray.push(new FormControl(this.getObjectiveConstraint(oc)));
     }
@@ -678,7 +688,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     removeObjectiveConstraint(oc:DseObjectiveConstraint){
         this.config.removeObjectiveConstraint(oc);
-        let ocArray = <FormArray>this.form.find('objConstraints');
+        let ocArray = <FormArray>this.form.get('objConstraints');
         let index = this.config.objConst.indexOf(oc);
         
         ocArray.removeAt(index);
@@ -742,7 +752,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     addScenario(){
         let s = this.config.addScenario();
-        let sArray = <FormArray>this.form.find('scenarios');
+        let sArray = <FormArray>this.form.get('scenarios');
         
         sArray.push(new FormControl(this.getScenario(s)));
     }
@@ -757,7 +767,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     removeScenario(s:DseScenario){
         this.config.removeScenario(s);
-        let sArray = <FormArray>this.form.find('scenarios');
+        let sArray = <FormArray>this.form.get('scenarios');
         let index = this.config.scenarios.indexOf(s);
         
         sArray.removeAt(index);
@@ -786,6 +796,8 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
             && this.dseWarnings.length === 0
             && this.coeWarnings.length === 0
             //&& this.config.dseSearchParameters.length > 1 
+            && this.config
+            && this.config.extScrObjectives
             && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2;
             //&& (<ParetoRanking> this.config.ranking).dimensions.length == 2;
     }
@@ -822,9 +834,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     isCoeOnline() {
         this.http
-            .get(`http://${this.url}/version`)
-            .timeout(2000)
-            .map(response => response.json())
+            .get(`http://${this.url}/version`).pipe(
+            timeout(2000),
+            map(response => response),)
             .subscribe((data:any) => {
                 this.online = true;
                 this.version = data.version;
@@ -832,6 +844,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     }
 
     onCoeLaunchClick() {
-        coeServerStatusHandler.openWindow("autolaunch");
+        this.coeSimulation.
+    openCOEServerStatusWindow("autolaunch", false);
     }
 }

@@ -30,19 +30,19 @@
  */
 
 var path = require('path');
-var CommonsChunkPlugin = require('webpack').optimize.CommonsChunkPlugin;
+var webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
+
 
 module.exports = {
     devtool: 'source-map',
-    debug: true,
-
     entry: {
         '@angular': [
             'rxjs',
             'reflect-metadata',
             'zone.js'
         ],
-        'common': ['es6-shim']
+        'common': ['es6-shim'],
     },
 
     output: {
@@ -54,37 +54,56 @@ module.exports = {
     },
 
     resolve: {
-        extensions: ['','.ts','.js','.json', '.css', '.html']
+        extensions: ['.ts','.js','.json', '.css', '.html']
     },
+    optimization: {
+        splitChunks: {
+          cacheGroups: {
+            commons: {
+              name: 'commons',
+              chunks: 'initial',
+              minChunks: 2
+            }
+          }
+        },
+        minimizer: [
+            new TerserPlugin({
+                cache: true,
+                parallel: true,
+                sourceMap: true,
+                terserOptions: {}
+            })
+        ]
+      },
 
     module: {
-        loaders: [
-            {
-                test: /\.ts$/,
-                loader: 'ts',
-                exclude: [ /node_modules/, /dist/ ]
-            },
-            {
-                test: /\.json$/,
-                loader: 'json'
-            },
-            {
-                test: /\.(css|html)$/,
-                loader: 'raw'
-            },
-            {
-                test: /\.(png|jpg)$/,
-                loader: 'url?limit=10000'
-            }
-        ]
-    },
+        rules: [{
+            test: /\.ts$/,
+            loader: 'ts-loader?',
+            options: { transpileOnly: true},
+            exclude: [/node_modules/, /dist/]
+        },
+        {
+            test: /\.json$/,
+            loader: 'json-loader'
+        },
+        {
+            test: /\.(css|html)$/,
+            loader: 'raw-loader'
 
-    ts: {
-        transpileOnly: true
-    },
-
+        },
+        {
+            test: /\.(png|jpg)$/,
+            loader: 'url-loader',
+            options: { limit: 10000 }
+        }
+        ]},
     plugins: [
-        new CommonsChunkPlugin({ names: ['@angular', 'common'], minChunks: Infinity })
+        new webpack.LoaderOptionsPlugin({
+                debug: true
+       }),
+       new webpack.SourceMapDevToolPlugin({
+       })
     ],
     target:'electron-renderer'
 };
