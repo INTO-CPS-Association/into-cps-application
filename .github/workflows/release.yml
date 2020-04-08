@@ -11,7 +11,7 @@ jobs:
   
     strategy:
       matrix:
-        os: [ubuntu-latest,windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
 
     steps:
@@ -19,8 +19,12 @@ jobs:
         uses: actions/checkout@v2
         with: 
           ref: master
-      - name: Set Version
-        run: echo ::set-env name=APP_VERSION::${GITHUB_REF#refs/*/} ; echo $APP_VERSION
+
+      - name: Get App Version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(git fetch -t; git describe --tags `git rev-list --tags --max-count=1`)
+        shell: bash
+
 
       - name: Setup Node
         uses: actions/setup-node@v1
@@ -43,25 +47,25 @@ jobs:
       - name: Upload Linux Version
         uses: actions/upload-artifact@v1
         with:
-          path: ./zipped/pkg/into-cps-app-$APP_VERSION-linux-x64.zip
+          path: ./zipped/pkg/into-cps-app-${{ steps.get_version.outputs.VERSION }}-linux-x64.zip
           name: linux-archive.zip
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Upload Windows Version
         uses: actions/upload-artifact@v1
         with:
-          path: ./zipped/pkg/into-cps-app-$APP_VERSION-win32-x64.zip
+          path: ./zipped/pkg/into-cps-app-${{ steps.get_version.outputs.VERSION }}-win32-x64.zip
           name: windows-archive.zip
         if: startsWith(matrix.os, 'windows')
 
       - name: Zip Darwin Version
-        run: cd pkg ; zip into-cps-app-$APP_VERSION-darwin-x64.zip . -rq
+        run: cd pkg ; zip into-cps-app-${{ steps.get_version.outputs.VERSION }}-darwin-x64.zip . -rq
         if: startsWith(matrix.os, 'mac')
 
       - name: Upload Darwin Version
         uses: actions/upload-artifact@v1
         with:
-          path: ./pkg/into-cps-app-$APP_VERSION-darwin-x64.zip
+          path: ./pkg/into-cps-app-${{ steps.get_version.outputs.VERSION }}-darwin-x64.zip
           name: darwin-archive.zip
         if: startsWith(matrix.os, 'mac')
 
