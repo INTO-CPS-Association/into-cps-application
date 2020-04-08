@@ -143,7 +143,12 @@ gulp.task("prep-release",
     "bump-rel",
     "commit-changes",
     "push-changes",
-    "create-new-tag",
+    "create-new-tag"
+  )
+);
+
+gulp.task("prep-new-dev",
+  gulp.series(
     "bump-dev",
     "commit-changes",
     "push-changes"
@@ -408,7 +413,7 @@ gulp.task("pkg", function (callback) {
   };
   return packager(options).then(appPaths => {
     gulp.src(appPaths[0] + '/**')
-      .pipe(zip(appPaths[0] +'.zip'))
+      .pipe(zip(appPaths[0] + '.zip'))
       .pipe(gulp.dest('zipped'))
   })
     .catch((e) => console.error(e));
