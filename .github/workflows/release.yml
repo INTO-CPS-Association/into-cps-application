@@ -22,7 +22,7 @@ jobs:
 
       - name: Get App Version
         id: get_version
-        run: echo ::set-output name=VERSION::$(git fetch -t; git describe --tags `git rev-list --tags --max-count=1`)
+        run: echo ::set-output name=VERSION::$(git fetch -t; git describe --tags `git rev-list --tags --max-count=1` | cut -c2-)
         shell: bash
 
 
