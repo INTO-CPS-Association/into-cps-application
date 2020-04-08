@@ -32,11 +32,9 @@
 'use strict';
 
 const electron = require('electron');
-const fs = require('fs');
-const path = require('path');
-var settings = require("./settings/settings").default;
 var SettingKeys = require("./settings/SettingKeys");
 var IntoCpsApp = require("./IntoCpsApp").default;
+var Menus = require("./menus");
 
 
 // Module to control application life.
@@ -61,7 +59,7 @@ function createWindow() {
   //First load the last active project, but not until app is ready
   intoCpsApp.loadPreviousActiveProject();
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 800, height: 600 });
+  mainWindow = new BrowserWindow({ width: 800, height: 600, webPreferences: {  nodeIntegration: true}});
 
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html');
@@ -73,16 +71,24 @@ function createWindow() {
 
   intoCpsApp.setWindow(mainWindow);
 
+  function recursivelyCloseBrowserWindows(bw){
+    bw.getChildWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
+    bw.removeAllListeners();
+    bw.close();
+  }
+
 
   mainWindow.on('close', function (ev) {
+    console.log("mainwindow on close");
     intoCpsApp.isquitting = true;
 
-    BrowserWindow.getAllWindows().forEach((bw => {
+    /* BrowserWindow.getAllWindows().forEach((bw => {
       if (bw != mainWindow) {
         bw.removeAllListeners();
         bw.close();
       }
-    }));
+    })); */
+    BrowserWindow.getAllWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
 
     if (intoCpsApp.trmanager.running) {
       ev.preventDefault();
@@ -120,6 +126,7 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
+  Menus(intoCpsApp).configureIntoCpsMenu();
   createWindow();
 });
 

@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component } from '@angular/core';
 
 @Component({
     selector: 'panel',
@@ -37,7 +37,7 @@ import { Input, Component, OnInit } from '@angular/core';
 })
 export class PanelComponent {
     @Input()
-    open:boolean = true;
+    open:boolean;
 
     @Input()
     title:string = "";

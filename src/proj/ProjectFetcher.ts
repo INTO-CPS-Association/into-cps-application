@@ -57,8 +57,15 @@ function launchProjectExplorer() {
         p.value = dialogResult[0];
         //       this.app.createProject("my project",this.projectRootPath.value);
     }
-
-
+   // for electron v8
+    /*  dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
+        console.log(res);
+        if(!res.canceled)
+        {
+            var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
+            p.value = res.filePaths[0];
+        }
+    }).catch((error) => {console.error(error); return;}); */
 }
 
 

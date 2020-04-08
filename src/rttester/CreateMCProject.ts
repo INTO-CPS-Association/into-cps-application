@@ -71,6 +71,17 @@ export class CreateMCProjectController extends ViewController {
         if (dialogResult != undefined) {
             this.hPath.value = dialogResult[0];
         }
+        // for electron v8
+        /*  dialog.showOpenDialog({
+            filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
+        }).then((res) => {
+            if(res.filePaths != undefined) {
+                this.hPath.value = res.filePaths[0];
+            }
+        }).catch((error) => {
+            console.error(error);
+            return;
+        }); */
     }
 
     createDefaultAbstractionsPromise(c: ModalCommand.GenericModalCommand, xmiFileName: string, targetDir: string) {

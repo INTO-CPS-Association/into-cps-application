@@ -31,15 +31,9 @@
 
 import { Component, OnInit, NgZone } from '@angular/core';
 import {FileSystemService} from "./shared/file-system.service";
-import {CoePageComponent} from "./coe/coe-page.component";
-import {HTTP_PROVIDERS, Http} from "@angular/http";
+/* import {Http} from "@angular/http"; */
+import { HttpClient } from '@angular/common/http';
 import {SettingsService} from "./shared/settings.service";
-import {MmPageComponent} from "./mm/mm-page.component";
-import {TrPageComponent} from "./tr/tr-page.component";
-import {DsePageComponent} from "./dse/dse-page.component";
-import {CoSimulationConfig} from "../intocps-configurations/CoSimulationConfig";
-import IntoCpsApp from "../IntoCpsApp";
-import {MultiModelConfig} from "../intocps-configurations/MultiModelConfig";
 import {CoeSimulationService} from "./coe/coe-simulation.service";
 import {NavigationService} from "./shared/navigation.service";
 
@@ -54,33 +48,22 @@ declare let window: MyWindow;
 
 @Component({
     selector: 'app',
-    directives: [
-        MmPageComponent,
-        CoePageComponent,
-        DsePageComponent,
-        TrPageComponent
-    ],
-    providers: [
-        HTTP_PROVIDERS,
-        FileSystemService,
-        SettingsService,
-        NavigationService
-    ],
     template: `
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
-        <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
-        <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
-        <tr-page *ngIf="page === 'tr'" [path]="path"></tr-page>`
+         <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
+         <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
+        <tr-page *ngIf="page === 'tr'"></tr-page>`
 })
 export class AppComponent implements OnInit {
     private page:string;
     private path:string;
 
     constructor(public navigationService:NavigationService,
-                private http:Http,
+                private http:HttpClient,
                 private settings:SettingsService,
                 private fileSystem:FileSystemService,
                 private zone:NgZone) {
+                    console.log("appComponent");
 
     }
 
@@ -122,9 +105,9 @@ export class AppComponent implements OnInit {
     }
 
     closeAll():void {
-        this.zone.run(() => {
+      /*   this.zone.run(() => { */
             this.path = null;
             this.page = null;
-        });
+ /*        }); */
     }
 }

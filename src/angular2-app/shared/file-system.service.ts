@@ -42,11 +42,12 @@ export class FileSystemService {
 
     // Wrap the filesystem API in a promise and the Angular zone
     private wrap(fn:(resolve:Function, reject:Function) => void) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             this.zone.run(() => fn(resolve, reject));
         });
     }
 
+    // this causes a flaw in coe-simulation.service
     readFile(path:string):Promise<string> {
         return this.wrap((reject, resolve) => {
             fs.readFile(path, "utf8", (error, data) => {

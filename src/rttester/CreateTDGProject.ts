@@ -60,6 +60,18 @@ export class CreateTDGProjectController extends ViewController {
             let hText: HTMLInputElement = <HTMLInputElement>document.getElementById("XMIModelPathText");
             hText.value = dialogResult[0];
         }
+        // for electron v8
+        /*  dialog.showOpenDialog({
+            filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
+        }).then((res) => {
+            if(res.filePaths != undefined) {
+                let hText: HTMLInputElement = <HTMLInputElement>document.getElementById("XMIModelPathText");
+                hText.value = res.filePaths[0];
+            } 
+        }).catch((error) => {
+            console.error(error);
+            return;
+        }); */
     }
 
     createProject(): void {

@@ -33,6 +33,8 @@ import * as fs from 'fs';
 import Path = require("path");
 let JSZip = require("jszip");
 import { Utilities } from "../../../utilities"
+import { NgZone } from '@angular/core';
+import { reject } from 'bluebird';
 
 // Holds information about a .fmu container
 export class Fmu {
@@ -54,11 +56,17 @@ export class Fmu {
         return !!this.platforms.find(x => x === this.system_platform);
     }
 
-    public updatePath(path: string): Promise<void> {
+    public updatePath(path: string): Promise<Boolean | void> {
         this.path = path;
         this.scalarVariables.forEach(sv => sv.isConfirmed = false);
         this.platforms = [];
-        return this.populate().catch(() => this.pathNotFound = true);
+        try {
+            return this.populate();
+        } catch(err){ 
+            console.log("Error in updating path: " + err); 
+            this.pathNotFound = true;    
+            return Promise.reject(err);}
+        /* return this.populate().catch(() => this.pathNotFound = true); */
     }
 
     public populate(): Promise<void> {
@@ -87,7 +95,7 @@ export class Fmu {
         let mdPath = Path.join(self.path, "modelDescription.xml")
         let checkFileExists = new Promise<Buffer>(function (resolve, reject) {
             try {
-                if (fs.accessSync(mdPath, fs.constants.R_OK)) {
+                if (fs.accessSync(mdPath, fs.constants.R_OK) === null) {
                     reject();
                 }
                 self.pathNotFound = false;
@@ -125,7 +133,7 @@ export class Fmu {
     public populateFromZip(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             try {
-                if (fs.accessSync(this.path, fs.constants.R_OK))
+                if (fs.accessSync(this.path, fs.constants.R_OK) === null)
                     return reject();
 
                 fs.readFile(this.path, (err, data) => {
@@ -169,7 +177,7 @@ export class Fmu {
         //output
         var iterator = document.evaluate('//ScalarVariable', oDOM, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
 
-        var thisNode = iterator.iterateNext();
+        var thisNode: Element = iterator.iterateNext() as Element;
 
         while (thisNode) {
 
@@ -179,20 +187,20 @@ export class Fmu {
             let initialNode = thisNode.attributes.getNamedItem("initial");
             var type: ScalarVariableType;
 
-            var tNode: Node = document.evaluate('Real', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            var tNode: Element = document.evaluate('Real', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
 
             if (tNode != null) {
                 type = ScalarVariableType.Real;
             } else {
-                tNode = document.evaluate('Boolean', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                tNode = document.evaluate('Boolean', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                 if (tNode != null) {
                     type = ScalarVariableType.Bool;
                 } else {
-                    tNode = document.evaluate('Integer', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    tNode = document.evaluate('Integer', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                     if (tNode != null) {
                         type = ScalarVariableType.Int;
                     } else {
-                        tNode = document.evaluate('String', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        tNode = document.evaluate('String', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                         if (tNode != null) {
                             type = ScalarVariableType.String;
                     }
@@ -273,7 +281,7 @@ export class Fmu {
             sv.start = start;
             sv.initial = initial;
 
-            thisNode = iterator.iterateNext();
+            thisNode = iterator.iterateNext() as Element;
         }
 
         this.scalarVariables.sort((a, b) => a.name.localeCompare(b.name));
@@ -281,11 +289,11 @@ export class Fmu {
 
         iterator = document.evaluate('fmiModelDescription/LogCategories/*[@name]/@name', oDOM, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
 
-        thisNode = iterator.iterateNext();
+        thisNode = iterator.iterateNext() as Element;
 
         while (thisNode) {
             this.logCategories.push(thisNode.nodeValue);
-            thisNode = iterator.iterateNext();
+            thisNode = iterator.iterateNext() as Element;
         }
 
         this.logCategories.sort((a, b) => a.localeCompare(b));

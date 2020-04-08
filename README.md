@@ -24,6 +24,7 @@ After checking out the repo:
 2. To install other resources: `gulp init`
 3. To build the UI: `gulp`
 4. To run it: `npm start`
+5. To run the tests: `npm test`
 
 For working with multiple versino of Node, the node package `n` can be of help.
 

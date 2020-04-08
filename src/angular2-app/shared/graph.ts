@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { BehaviorSubject } from "rxjs/Rx";
+import { BehaviorSubject } from "rxjs";
 import { CoSimulationConfig, LiveGraph } from "../../intocps-configurations/CoSimulationConfig";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
 import { Serializer } from "../../intocps-configurations/Parser";

@@ -95,6 +95,18 @@ class FMUAssignments {
             if (dialogResult != undefined) {
                 let fmu = new FMUAssignment(this, dialogResult[0]);
             }
+            // for electron v8
+             /* dialog.showOpenDialog({
+                filters: [{ name: "FMU-Files", extensions: ["fmu"] }],
+                defaultPath: RTTester.getProjectOfFile(controller.testCase)
+            }).then(res => {
+                if(res.filePaths != undefined) {
+                    let fmu = new FMUAssignment(this, res.filePaths[0]);
+                }
+            }).catch(error => {
+                console.error(error);
+                return;
+            }); */
         });
     }
     add(fmu: FMUAssignment) {

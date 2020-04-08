@@ -30,14 +30,13 @@
  */
 
 import {Component, Input} from "@angular/core";
-import {FormArray, FormControl, FormGroup, FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES} from "@angular/forms";
+import {FormArray, FormControl, FormGroup} from "@angular/forms";
 import {FmuMaxStepSizeConstraint} from "../../../intocps-configurations/CoSimulationConfig";
 
 
 @Component({
     selector: 'fmu-max-step-size',
-    templateUrl: "./angular2-app/coe/inputs/fmu-max-step-size.component.html",
-    directives: [FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES]
+    templateUrl: "./angular2-app/coe/inputs/fmu-max-step-size.component.html"
 })
 export class FmuMaxStepSizeComponent {
     @Input()

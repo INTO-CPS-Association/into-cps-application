@@ -107,6 +107,9 @@ export namespace Overture {
             }); // content loaded from the server
         } else {
             dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Please install: " + "Overture FMU Import / Exporter CLI - Overture FMI Support" + " first." }, function (button: any) { });
+            // for electron v8
+            // might not dismiss the dialog box this should be tested.
+           /*  dialog.showMessageBox(null, { type: 'error', buttons: ["OK"], message: "Please install: " + "Overture FMU Import / Exporter CLI - Overture FMI Support" + " first." }); */
         }
     };
 

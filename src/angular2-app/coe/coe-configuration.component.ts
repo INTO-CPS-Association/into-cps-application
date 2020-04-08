@@ -30,7 +30,7 @@
  */
 
 import { Component, Input, EventEmitter, Output, NgZone } from "@angular/core";
-import { FORM_DIRECTIVES, REACTIVE_FORM_DIRECTIVES, Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
+import { Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
 import {
     CoSimulationConfig, ICoSimAlgorithm, FixedStepAlgorithm,
@@ -38,28 +38,13 @@ import {
     VariableStepConstraint, FmuMaxStepSizeConstraint, LiveGraph
 } from "../../intocps-configurations/CoSimulationConfig";
 import { ScalarVariable, CausalityType, Instance, InstanceScalarPair, ScalarVariableType } from "./models/Fmu";
-import { LiveGraphComponent } from "./inputs/live-graph-component";
-import { ZeroCrossingComponent } from "./inputs/zero-crossing.component";
-import { BoundedDifferenceComponent } from "./inputs/bounded-difference.component";
-import { FmuMaxStepSizeComponent } from "./inputs/fmu-max-step-size.component";
-import { SamplingRateComponent } from "./inputs/sampling-rate.component";
-import { numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
+import { lessThanValidator2, numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage } from "../../intocps-configurations/Messages";
-import { FileBrowserComponent } from "../mm/inputs/file-browser.component";
+import { bind } from "bluebird";
 
 @Component({
     selector: "coe-configuration",
-    directives: [
-        FORM_DIRECTIVES,
-        REACTIVE_FORM_DIRECTIVES,
-        ZeroCrossingComponent,
-        FmuMaxStepSizeComponent,
-        BoundedDifferenceComponent,
-        SamplingRateComponent,
-        FileBrowserComponent,
-        LiveGraphComponent
-    ],
     templateUrl: "./angular2-app/coe/coe-configuration.component.html"
 })
 export class CoeConfigurationComponent {
@@ -88,7 +73,7 @@ export class CoeConfigurationComponent {
     outputPorts: Array<InstanceScalarPair> = [];
     newConstraint: new (...args: any[]) => VariableStepConstraint;
     editing: boolean = false;
-    
+    isLoaded : boolean = false;
     logVariablesSearchName: string = '';
     parseError: string = null;
     warnings: WarningMessage[] = [];
@@ -123,7 +108,6 @@ export class CoeConfigurationComponent {
         CoSimulationConfig
             .parse(this.path, project.getRootFilePath(), project.getFmusPath())
             .then(config => {
-                this.zone.run(() => {
                     this.config = config;
 
                     this.parseError = null;
@@ -146,19 +130,22 @@ export class CoeConfigurationComponent {
                             .map(sv => this.config.multiModel.getInstanceScalarPair(instance.fmu.name, instance.name, sv.name)))
                         .reduce((a, b) => a.concat(...b), []);
 
+                      
+
                     // Create a form group for validation
                     this.form = new FormGroup({
                         startTime: new FormControl(config.startTime, [Validators.required, numberValidator]),
                         endTime: new FormControl(config.endTime, [Validators.required, numberValidator]),
-                        liveGraphs:  new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id")),//, uniqueGroupPropertyValidator("id")
+                        liveGraphs: new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id")),//, uniqueGroupPropertyValidator("id")
                         livestreamInterval: new FormControl(config.livestreamInterval, [Validators.required, numberValidator]),
                         liveGraphColumns: new FormControl(config.liveGraphColumns, [Validators.required, numberValidator]),
                         liveGraphVisibleRowCount: new FormControl(config.liveGraphVisibleRowCount, [Validators.required, numberValidator]),
                         algorithm: this.algorithmFormGroups.get(this.config.algorithm),
                         global_absolute_tolerance: new FormControl(config.global_absolute_tolerance, [Validators.required, numberValidator]),
                         global_relative_tolerance: new FormControl(config.global_relative_tolerance, [Validators.required, numberValidator])
-                    }, null, lessThanValidator('startTime', 'endTime'));
-                });
+                    }, lessThanValidator2('startTime', 'endTime'), null);
+                    console.log("Parsing finished!");
+                    this.isLoaded = true;
             }, error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
     }
 
@@ -181,10 +168,13 @@ export class CoeConfigurationComponent {
     }
 
     onAlgorithmChange(algorithm: ICoSimAlgorithm) {
-        this.config.algorithm = algorithm;
+        this.zone.run(() => {
+            this.config.algorithm = algorithm;
 
         this.form.removeControl('algorithm');
         this.form.addControl('algorithm', this.algorithmFormGroups.get(algorithm));
+        })
+        
     }
 
     onSubmit() {
@@ -198,7 +188,10 @@ export class CoeConfigurationComponent {
 
             let remote = require("electron").remote;
             let dialog = remote.dialog;
-            let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            let res = dialog.showMessageBox({type: "question",
+            message: "Validation failed",
+            detail: "Do you want to save anyway?",
+            buttons: ["No", "Yes"] });
 
             if (res == 0) {
                 return;
@@ -206,6 +199,19 @@ export class CoeConfigurationComponent {
                 override = true;
                 this.warnings = [];
             }
+            // for electron v8
+            /* let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            res.catch(() => {
+                return
+            });
+            res.then(function(res) {
+                if (res.response == 0) {
+                    return;
+                } else {
+                    override = true;
+                    this.warnings = [];
+                }
+            }) */
         }
 
         if (override) {
@@ -240,7 +246,7 @@ export class CoeConfigurationComponent {
         if (!this.newConstraint) return;
 
         let algorithm = <VariableStepAlgorithm>this.config.algorithm;
-        let formArray = <FormArray>this.form.find('algorithm').find('constraints');
+        let formArray = <FormArray>this.form.get('algorithm').get('constraints');
         let constraint = new this.newConstraint();
         algorithm.constraints.push(constraint);
         formArray.push(constraint.toFormGroup());
@@ -248,7 +254,7 @@ export class CoeConfigurationComponent {
 
     removeConstraint(constraint: VariableStepConstraint) {
         let algorithm = <VariableStepAlgorithm>this.config.algorithm;
-        let formArray = <FormArray>this.form.find('algorithm').find('constraints');
+        let formArray = <FormArray>this.form.get('algorithm').get('constraints');
         let index = algorithm.constraints.indexOf(constraint);
 
         algorithm.constraints.splice(index, 1);
@@ -259,13 +265,13 @@ export class CoeConfigurationComponent {
     addLiveGraph() {
         let g = new LiveGraph();
         this.config.liveGraphs.push(g);
-        let formArray = <FormArray>this.form.find('liveGraphs');
+        let formArray = <FormArray>this.form.get('liveGraphs');
         formArray.push(g.toFormGroup());
     }
 
     removeGraph(graph: LiveGraph)
     {
-        let formArray = <FormArray>this.form.find('liveGraphs');
+        let formArray = <FormArray>this.form.get('liveGraphs');
         let index = this.config.liveGraphs.indexOf(graph);
         this.config.liveGraphs.splice(index, 1);
         formArray.removeAt(index);
