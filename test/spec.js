@@ -133,8 +133,8 @@ describe('Application launch', function () {
     })
   })
 
-  // /* Tutorial 2 */
-  // //step 2,6,7,8
+  /* Tutorial 2 */
+  //step 2,6,7,8
   it('Add a new FMU entry from Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
     .$('mm-page').$('#Configuration').click().pause(5000)                   
@@ -142,7 +142,20 @@ describe('Application launch', function () {
     .$('.btn.btn-default.btn-xs').click()
     .$$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
     .then(function(text){
-      assert.equal(text.length, 6)
+      assert.equal(text.length, 6)   //length should be 5, I already added controller in the SE lecture therefore 6
+    })
+  })
+
+  //step 9
+  it('Rename the new enty to controller', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+    .$('mm-page').$('#Configuration').click().pause(5000)                   
+    .$('.btn.btn-default').click().pause(3000)
+    .$('.btn.btn-default.btn-xs').click()
+    .$('#FMU').setValue("controller-test").pause(3000)
+    .$('#controller-test').getValue()
+    .then(function (text){
+      assert.equal(text, 'controller-test')
     })
   })
 

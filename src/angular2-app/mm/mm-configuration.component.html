@@ -33,7 +33,7 @@
 	<div class="row" *ngFor="let fmu of config.fmus; let i=index">
 		<div class="col-md-3 form-group">
 			<p *ngIf="!editing" class="form-control-static">{{getFmuName(fmu)}}</p>
-			<input *ngIf="editing" [formControl]="form.find('fmus').at(i)" [ngModel]="getFmuName(fmu)" (ngModelChange)="setFmuName(fmu, $event)"
+			<input id="{{getFmuName(fmu)}}" *ngIf="editing" [formControl]="form.find('fmus').at(i)" [ngModel]="getFmuName(fmu)" (ngModelChange)="setFmuName(fmu, $event)"
 			 class="form-control input-fixed-size input-sm">
 			<div *ngIf="form.find('fmus').at(i).hasError('required')" class="alert alert-danger">This field is required.</div>
 			<div *ngIf="form.find('fmus').at(i).hasError('pattern')" class="alert alert-danger">"{" and "}" are not allowed.</div>
