@@ -157,6 +157,31 @@ describe('Application launch', function () {
     })
   })
 
+  /* Tutorial 7 */
+  // step 2 Opening a DSE Configuration
+  it('Select the Experiment/lfr-non3d multi model', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
+    .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
+    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+    .selectByVisibleText('Experiment | lfr-non3d').pause(3000)
+    .getText('option:checked')
+    .then(function(text){
+      expect(text).contain("lfr-non3d")
+    })
+  })
+
+  it('Select the Experiment/lfr-non3d multi model and click save', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
+    .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
+    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+    .selectByVisibleText('Experiment | lfr-non3d').pause(2000)
+    .$('.btn.btn-default').click().pause(2000)
+    .$('.form-control-static').getText()
+    .then(function (text){
+      expect(text).contain("lfr-non3d | Multi-models")
+    })
+  })
+
   // //https://www.npmjs.com/package/mock-http-server/v/1.4.2
   // it('COE mock server', function(done) {
   //     server.on({
