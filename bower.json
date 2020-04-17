@@ -1,7 +1,7 @@
 {
   "name": "into-cps-app",
   "productName": "INTO-CPS APP",
-  "version": "3.4.9-dev",
+  "version": "4.0.1-dev",
   "description": "User interface for the INTO-CPS Toolchain",
   "license": "MIT",
   "repository": {
