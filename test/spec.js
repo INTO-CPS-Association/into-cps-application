@@ -182,6 +182,19 @@ describe('Application launch', function () {
     })
   })
 
+  it('algorithm choice Exhaustive showing after multi-model is set ', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
+    .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
+    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+    .selectByVisibleText('Experiment | lfr-non3d').pause(2000)
+    .$('.btn.btn-default').click().pause(2000)
+    .$('.col-sm-7.col-md-8')
+    .$('.form-control-static').getText()
+    .then(function (text){
+      expect(text).contain("Exhaustive")
+    })
+  })
+
   // //https://www.npmjs.com/package/mock-http-server/v/1.4.2
   // it('COE mock server', function(done) {
   //     server.on({
