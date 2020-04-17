@@ -133,17 +133,17 @@ describe('Application launch', function () {
     })
   })
 
-  /* Tutorial 2 */
-  //step 2,6,7,8
+  // /* Tutorial 2 */
+  // //step 2,6,7,8
   it('Add a new FMU entry from Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-    .$('mm-page').$$('panel')[1].$('.panel-heading').click().pause(5000)                   //Since there are 2 identical panels, this tests takes the first panel id, and therefore closes overview! 
+    .$('mm-page').$('#Configuration').click().pause(5000)                   
     .$('.btn.btn-default').click().pause(3000)
     .$('.btn.btn-default.btn-xs').click()
-    .$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid').getValue()
-      .then(function (text) {
-        assert.equal(text, 'FMU')
-      })
+    .$$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
+    .then(function(text){
+      assert.equal(text.length, 6)
+    })
   })
 
   //step 24
@@ -193,6 +193,19 @@ describe('Application launch', function () {
     .then(function (text){
       expect(text).contain("Exhaustive")
     })
+  })
+
+  it('Switching into editing mode from the top of the DSE configuration by clicking on Edit button ', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
+    .$('dse-configuration').$('.btn.btn-default').click()
+    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+    .selectByVisibleText('Experiment | lfr-non3d')
+    .$('.btn.btn-default').click().pause(2000)
+    .$('#btn-edit').click().pause(3000)
+    .$('#btn-save').getText()
+    .then(function (text){
+      assert.equal(text, "Save")
+     })
   })
 
   // //https://www.npmjs.com/package/mock-http-server/v/1.4.2

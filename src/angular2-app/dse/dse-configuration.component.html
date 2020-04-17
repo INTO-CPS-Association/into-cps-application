@@ -31,10 +31,10 @@
 
 
 <form *ngIf="mmSelected" class="form-horizontal" (ngSubmit)="onSubmit()">
-	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
+	<button *ngIf="!editing" class="btn btn-default" id="btn-edit" (click)="editing = true">
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
     </button>
-	<button *ngIf="editing" class="btn btn-default">
+	<button *ngIf="editing" class="btn btn-default" id="btn-save" >
         <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save
     </button>
 	
