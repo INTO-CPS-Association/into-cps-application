@@ -62,7 +62,6 @@
     "sql.js": "~0.3.2",
     "tree-kill": "^1.2.2",
     "tslib": "^1.9.0",
-    "typescript": "^3.2.4",
     "xml2js": "^0.4.23",
     "yauzl": "~2.6.0",
     "zone.js": "^0.8.29"
@@ -101,6 +100,7 @@
     "semver": "~5.3.0",
     "spectron": "^6.0.0",
     "terser-webpack-plugin": "^2.3.5",
+    "typescript": "^3.2.4",
     "uglify-save-license": "^0.4.1",
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11"
