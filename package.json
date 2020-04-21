@@ -42,7 +42,6 @@
     "es6-shim": "^0.35.5",
     "express": "^4.17.1",
     "fs-extra": "~0.30.0",
-    "fs-finder": "~1.8.1",
     "is-running": "~2.1.0",
     "jquery": "^3.4.0",
     "jsonschema": "~1.1.1",

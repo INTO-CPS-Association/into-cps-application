@@ -33,8 +33,8 @@ import childProcess = require("child_process");
 import { SettingKeys } from "../settings/SettingKeys";
 import { Project } from "../proj/Project"
 import { Daemon } from "../traceability/daemon"
-
-var fsFinder = require("fs-finder");
+/* 
+var fsFinder = require("fs-finder"); */
 var fs = require("fs");
 import Path = require("path");
 
@@ -50,12 +50,12 @@ class Neo4JHelper {
         }
 
         var found = false;
-        if (fs.existsSync(searchPath)) {
+        /* if (fs.existsSync(searchPath)) {
             var files: Array<string> = fsFinder.from(searchPath).findFiles(fileString);
             if (files.length > 0) {
                 return Path.normalize(Path.dirname(files[0]) + Path.sep + "..");
             }
-        }
+        } */
 
         return null;
     }
