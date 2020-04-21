@@ -51,11 +51,11 @@ import {COEModule} from "./coe/coe.module"
 /* import {HttpModule} from '@angular/http'; */
 import { HttpClientModule } from '@angular/common/http';
 import { SharedModule } from './shared/shared.module';
-import { TrModule } from './tr/tr.module';
+/* import { TrModule } from './tr/tr.module'; */
 
 @NgModule({
   imports: [/* HttpModule, */ BrowserModule, HttpClientModule, FormsModule,
-     MmModule, COEModule, ReactiveFormsModule, SharedModule, TrModule ], // module dependencies
+     MmModule, COEModule, ReactiveFormsModule, SharedModule/* , TrModule */ ], // module dependencies
   declarations: [AppComponent , DsePageComponent, DseConfigurationComponent/* , MmPageComponent,  CoePageComponent,TrPageComponent */], // components and directives
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService], // services
