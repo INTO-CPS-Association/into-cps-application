@@ -189,8 +189,9 @@ gulp.task("compile-ts", function () {
 // Compile Angular 2 application
 gulp.task("compile-ng2", function (callback) {
   webpack(require("./webpack.config.js"), function (err, stats) {
-    if (err) { guitl.log(err); }
-    if (stats) { gutil.log(stats); }
+    // uncomment for a stacktrace of the compilation:
+   /*  if (err) { guitl.log(err); }
+    if (stats) { gutil.log(stats); } */
     callback();
   });
 });

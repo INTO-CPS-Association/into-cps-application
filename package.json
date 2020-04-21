@@ -63,7 +63,6 @@
     "tree-kill": "^1.2.2",
     "tslib": "^1.9.0",
     "typescript": "^3.2.4",
-    "uuid": "~3.0.1",
     "xml2js": "^0.4.23",
     "yauzl": "~2.6.0",
     "zone.js": "^0.8.29"
@@ -73,7 +72,6 @@
     "@types/bluebird": "~3.0.37",
     "@types/bunyan": "0.0.35",
     "@types/node": "^12.12.29",
-    "@types/uuid": "~2.0.29",
     "@types/xml2js": "0.0.32",
     "chai": "^4.2.0",
     "del": "~2.2.0",
