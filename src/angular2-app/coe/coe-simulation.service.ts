@@ -44,7 +44,7 @@ import { storeResultCrc } from "../../intocps-configurations/ResultConfig";
 import * as http from "http"
 import * as fs from 'fs'
 import * as child_process from 'child_process'
-import { TraceMessager } from "../../traceability/trace-messenger"
+/* import { TraceMessager } from "../../traceability/trace-messenger" */
 import DialogHandler from "../../DialogHandler"
 import { Graph } from "../shared/graph"
 import { Deferred } from "../../deferred"
@@ -281,7 +281,7 @@ export class CoeSimulationService {
             response.on('end', () => {
 
                 // simulation completed + result
-                let message = TraceMessager.submitSimulationResultMessage(this.config.sourcePath, this.config.multiModel.sourcePath, [resultPath, coeConfigPath, mmConfigPath, logPath]);
+                /* let message = TraceMessager.submitSimulationResultMessage(this.config.sourcePath, this.config.multiModel.sourcePath, [resultPath, coeConfigPath, mmConfigPath, logPath]); */
                 let destroySessionUrl = `http://${this.url}/destroy/${this.sessionId}`;
                 http.get(destroySessionUrl, (response: any) => {
                     let statusCode = response.statusCode;

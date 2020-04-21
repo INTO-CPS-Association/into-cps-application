@@ -53,7 +53,7 @@ import * as Path from 'path';
 import { DseConfiguration } from "./intocps-configurations/dse-configuration"
 import * as ShowdownHelper  from "./showdownHelper";
 import {Overture} from "./overture";
-import {TraceMessager} from "./traceability/trace-messenger"
+/* import {TraceMessager} from "./traceability/trace-messenger" */
 import { StatusBarHandler, PreviewHandler } from "./bottom"
 import {FmuImploder} from "./intocps-configurations/fmuImploder"
 interface MyWindow extends Window {
@@ -67,7 +67,7 @@ declare var w2alert: any;
 
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
-import { TrViewController } from "./angular2-app/tr/TrViewController";
+/* import { TrViewController } from "./angular2-app/tr/TrViewController"; */
 import { DseViewController } from "./angular2-app/dse/DseViewController";
 import { enableProdMode } from '@angular/core';
 
@@ -253,9 +253,9 @@ menuHandler.openMultiModel = (path: string) => {
     openView(null, view => new MmViewController(view, path));
 };
 
-menuHandler.openTraceability = () => {
+/* menuHandler.openTraceability = () => {
     openView(null, view => new TrViewController(view));
-};
+}; */
 
 menuHandler.openDseView = (path: string) => {
     openView(null, view => new DseViewController(view, path));
@@ -341,7 +341,7 @@ menuHandler.createMultiModel = (path, msgTitle = 'New Multi-Model') => {
                 }
                 //Create the trace 
                 if (mmPath) {
-                    let message = TraceMessager.submitSysMLToMultiModelMessage(mmPath, path);
+                    /* let message = TraceMessager.submitSysMLToMultiModelMessage(mmPath, path); */
                     //console.log("RootMessage: " + JSON.stringify(message));    
                 }
             }
@@ -430,7 +430,7 @@ menuHandler.createCoSimConfiguration = (path) => {
                     menuHandler.openCoeView(coePath);
 
                     if (coePath) {
-                        let message = TraceMessager.submitCoeConfigMessage(path, coePath);
+                        /* let message = TraceMessager.submitCoeConfigMessage(path, coePath); */
                     }
                 } catch (error) {
                     return;

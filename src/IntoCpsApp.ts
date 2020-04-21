@@ -40,7 +40,7 @@ import { Project } from "./proj/Project";
 import { IntoCpsAppEvents } from "./IntoCpsAppEvents";
 import { SettingKeys } from "./settings//SettingKeys";
 /* import { EventEmitter } from "events"; */
-import { TrManager } from "./traceability/trManager";
+/* import { TrManager } from "./traceability/trManager"; */
 import { Utilities } from "./utilities";
 import { CoeProcess } from "./coe-server-status/CoeProcess";
 
@@ -54,7 +54,7 @@ let topBarNameId: string = "activeTabTitle";
     app: Electron.App;
     platform: String
     window: Electron.BrowserWindow;
-    trmanager:TrManager;
+   /*  trmanager:TrManager; */
     coeProcess: CoeProcess = null;
 
     settings: Settings;
@@ -97,7 +97,7 @@ let topBarNameId: string = "activeTabTitle";
 
         let enableTrace = this.settings.getValue(SettingKeys.ENABLE_TRACEABILITY);
         let daemonPort = this.settings.getValue(SettingKeys.TRACE_DAEMON_PORT)
-        this.trmanager = new TrManager(enableTrace,daemonPort);
+        /* this.trmanager = new TrManager(enableTrace,daemonPort); */
         
     }
 
@@ -128,9 +128,9 @@ let topBarNameId: string = "activeTabTitle";
         this.window = win;
     }
 
-    public recordTrace(jsonObj: Object){
+   /*  public recordTrace(jsonObj: Object){
         this.trmanager.recordTrace(jsonObj);
-    }
+    } */
 
 
     private createAppFolderRoot(app: Electron.App): string {
@@ -204,7 +204,7 @@ let topBarNameId: string = "activeTabTitle";
         let project = new Project(name, path, Path.normalize(path + "/.project.json"));
         project.save();
         this.setActiveProject(project);
-        this.trmanager.changeDataBase(Path.dirname(path), this.settings.getValue(SettingKeys.INSTALL_DIR), this.settings.getValue(SettingKeys.INSTALL_TMP_DIR));
+       /*  this.trmanager.changeDataBase(Path.dirname(path), this.settings.getValue(SettingKeys.INSTALL_DIR), this.settings.getValue(SettingKeys.INSTALL_TMP_DIR)); */
     }
 
     loadProject(path: string): IProject {
@@ -216,7 +216,7 @@ let topBarNameId: string = "activeTabTitle";
         project.configPath = path;
         project.rootPath = Path.dirname(path);
         project.save() // create all the project folders, in case they don't exist.
-        this.trmanager.changeDataBase(Path.dirname(path), this.settings.getValue(SettingKeys.INSTALL_DIR), this.settings.getValue(SettingKeys.INSTALL_TMP_DIR));
+       /*  this.trmanager.changeDataBase(Path.dirname(path), this.settings.getValue(SettingKeys.INSTALL_DIR), this.settings.getValue(SettingKeys.INSTALL_TMP_DIR)); */
         return project;
     }
 
