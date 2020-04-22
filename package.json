@@ -35,8 +35,6 @@
     "@types/ace": "0.0.42",
     "@types/jquery": "^2.0.54",
     "@types/w2ui": "~1.4.30",
-    "bluebird": "~3.4.7",
-    "body-parser": "^1.19.0",
     "electron-default-menu": "^1.0.1",
     "es6-shim": "^0.35.5",
     "fs-extra": "~0.30.0",
@@ -62,7 +60,6 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.901.0",
-    "@types/bluebird": "~3.0.37",
     "@types/bunyan": "0.0.35",
     "@types/node": "^12.12.29",
     "@types/xml2js": "0.0.32",

@@ -95,9 +95,10 @@ let topBarNameId: string = "activeTabTitle";
             this.settings.setValue(SettingKeys.EXAMPLE_REPO, this.settings.getValue(SettingKeys.DEV_EXAMPLE_REPO));
         }
 
-        let enableTrace = this.settings.getValue(SettingKeys.ENABLE_TRACEABILITY);
+        
+        /* let enableTrace = this.settings.getValue(SettingKeys.ENABLE_TRACEABILITY);
         let daemonPort = this.settings.getValue(SettingKeys.TRACE_DAEMON_PORT)
-        /* this.trmanager = new TrManager(enableTrace,daemonPort); */
+         this.trmanager = new TrManager(enableTrace,daemonPort); */
         
     }
 
