@@ -253,7 +253,7 @@
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-						<a data-toggle="collapse" data-parent="#accordion" href="#live-collapse">
+						<a data-toggle="collapse" data-parent="#accordion" href="#live-collapse" id="livecollapse"> 
 									Live Plotting</a>
 					</h4>
 				</div>
@@ -289,7 +289,7 @@
 					<hr>
 
 					<span style="padding-left:10px" class="input-group-btn">
-					<button type="button" *ngIf="editing" (click)="addLiveGraph()" class="btn btn-default">
+					<button type="button" *ngIf="editing" (click)="addLiveGraph()" class="btn btn-default" id="addLiveGraph">
 							<span class="glyphicon glyphicon-plus"></span> Add Graph
 					</button>
                     </span><br>

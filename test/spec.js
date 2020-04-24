@@ -190,6 +190,7 @@ describe('Application launch', function () {
   })
 
   //step 15,16,17,18,19
+    //checkbox assertion needed
   it('Add an instance of controller', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(2000)
@@ -242,6 +243,20 @@ describe('Application launch', function () {
       .then(function (value){
         assert.equal(value, "0.01")
       })
+  })
+
+   //step 26, 27
+   //checkbox assertion needed
+   it('Live plotting', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
+      .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
+      .$('#Ok').click().pause(3000)
+      .$('coe-page').$('.panel-heading').click().pause(2000)
+      .$('.btn.btn-default').click().pause(2000)
+      .$('#livecollapse').click().pause(2000)
+      .$('#addLiveGraph').click()
+      .$('#sensor1lf_1_sensor_reading').click()
+      .$('#sensor2lf_1_sensor_reading').click()
   })
 
   /* Tutorial 7 */
