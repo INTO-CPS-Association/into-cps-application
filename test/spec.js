@@ -60,12 +60,20 @@ describe('Application launch', function () {
   //Step 5. Click the + symbol next to Non-3D multimodel to expand it
   //Step 6. Double click to open Experiment1.
   it('Go to Non-3D > Experiment1 from sidebar', function () {
-    return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
-      .doubleClick('#node_ProjectBrowserItem_29')
-      .getText('#activeTabTitle')
+
+    Experiment1 = this.app.client.$('#node_ProjectBrowserItem_28')
+      .$('.w2ui-expand')
+      .click()
+      .doubleClick('#node_ProjectBrowserItem_29');
+
+    Experiment1.waitForVisible()
+      .then(() => {
+        return Experiment1.getText('#activeTabTitle')
       .then(function (title) {
         assert.equal(title, 'Non-3D > Experiment1')
-      })
+          });
+      }
+      );
   })
 
   it('Co-Simulation Engine offline', function () {
