@@ -229,6 +229,21 @@ describe('Application launch', function () {
       })
   })
 
+  //step 25
+  it('Edit Step Size to 0.01 under Basic Configuration', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
+      .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
+      .$('#Ok').click().pause(2000)
+      .$('coe-page').$('.panel-heading').click()
+      .$('.btn.btn-default').click()
+      .$('#stepsize').setValue('0.01')
+      .$('.btn.btn-default').click().pause(2000)
+      .$('#notediting').getText()
+      .then(function (value){
+        assert.equal(value, "0.01")
+      })
+  })
+
   /* Tutorial 7 */
   // step 2 Opening a DSE Configuration
   it('Select the Experiment/lfr-non3d multi model', function () {

@@ -69,8 +69,8 @@
 							<div class="form-group">
 								<label class="col-sm-5 col-md-4 control-label">Step size</label>
 								<div class="col-sm-7 col-md-8">
-									<p *ngIf="!editing" class="form-control-static">{{config.algorithm.size}}</p>
-									<input *ngIf="editing" name="size" [(ngModel)]="config.algorithm.size" class="form-control">
+									<p *ngIf="!editing" id="notediting" class="form-control-static">{{config.algorithm.size}}</p>
+									<input *ngIf="editing" name="size" [(ngModel)]="config.algorithm.size" class="form-control" id="stepsize">
 									<div *ngIf="form.find('algorithm').hasError('required', 'size')" class="alert alert-danger">This field is required.</div>
 									<div *ngIf="form.find('algorithm').hasError('invalidNumber', 'size')" class="alert alert-danger">Only numbers are allowed.</div>
 								</div>
