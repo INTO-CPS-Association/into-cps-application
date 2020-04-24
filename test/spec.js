@@ -8,7 +8,7 @@ const fakeMenu = require('spectron-fake-menu')
 
 describe('Application launch', function () {
   this.timeout(120000)
- 
+
   //const server = new ServerMock({ host: "localhost", port: 12345 });
 
   beforeEach(function () {
@@ -20,16 +20,16 @@ describe('Application launch', function () {
     fakeMenu.apply(this.app);
 
     //server.start(done);
-    
+
     return this.app.start()
   })
 
   afterEach(function () {
     if (this.app && this.app.isRunning()) {
       return this.app.stop()
-     }
+    }
 
-     //server.stop(done);
+    //server.stop(done);
   })
 
   it('shows an initial window', function () {
@@ -69,8 +69,8 @@ describe('Application launch', function () {
     Experiment1.waitForVisible()
       .then(() => {
         return Experiment1.getText('#activeTabTitle')
-      .then(function (title) {
-        assert.equal(title, 'Non-3D > Experiment1')
+          .then(function (title) {
+            assert.equal(title, 'Non-3D > Experiment1')
           });
       }
       );
@@ -95,160 +95,189 @@ describe('Application launch', function () {
         expect(text).contain('online')
       })
   })
-  
+
   //Step 8. Click simulate to run a co-simulation
-  it('Button shows Stop after clicking Simulate button', function(){
+  it('Button shows Stop after clicking Simulate button', function () {
     return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
-    .doubleClick('#node_ProjectBrowserItem_29')
-    .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-    .$('.btn.btn-default').click()
-    .$('.btn.btn-default').getText()
-    .then(function(text){
-      expect(text).contain('Stop')
-    })
+      .doubleClick('#node_ProjectBrowserItem_29')
+      .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
+      .$('.btn.btn-default').click()
+      .$('.btn.btn-default').getText()
+      .then(function (text) {
+        expect(text).contain('Stop')
+      })
   })
 
-  it('Click on COE Console', function(){
+  it('Click on COE Console', function () {
     return this.app.client.$('#coe-status-btn-status').doubleClick().pause(3000)
-    .$('.navbar-brand').getText()
-    .then(function(text){
-      expect(text).contain('COE Status')
-    })
+      .$('.navbar-brand').getText()
+      .then(function (text) {
+        expect(text).contain('COE Status')
+      })
   })
 
   //Step 10. Expand the configuration
-  it('Click Edit button to change the Co-Simulation parameters', function(){
+  it('Click Edit button to change the Co-Simulation parameters', function () {
     return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
-    .doubleClick('#node_ProjectBrowserItem_29')
-    .$('coe-page').$('.panel-heading').click()
-    .$('.btn.btn-default').click()
-    .$('.btn.btn-default').getText()
-    .then(function(text){
-      expect(text).contain('Save')
-    })
+      .doubleClick('#node_ProjectBrowserItem_29')
+      .$('coe-page').$('.panel-heading').click()
+      .$('.btn.btn-default').click()
+      .$('.btn.btn-default').getText()
+      .then(function (text) {
+        expect(text).contain('Save')
+      })
   })
 
   //Step 11. Click Edit Button, set Start time 
-  it('Change Start Time Co-Simulation parameter', function(){
+  it('Change Start Time Co-Simulation parameter', function () {
     return this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click()
-    .doubleClick('#node_ProjectBrowserItem_29')
-    .$('coe-page').$('.panel-heading').click()
-    .$('.btn.btn-default').click().pause(3000)
-    .$('.form-control.ng-untouched.ng-pristine.ng-valid').setValue('0')
-    .$('.form-control.ng-untouched.ng-pristine.ng-valid').getValue()
-    .then(function(text){
-      expect(text).contain('0')
-    })
+      .doubleClick('#node_ProjectBrowserItem_29')
+      .$('coe-page').$('.panel-heading').click()
+      .$('.btn.btn-default').click().pause(3000)
+      .$('.form-control.ng-untouched.ng-pristine.ng-valid').setValue('0')
+      .$('.form-control.ng-untouched.ng-pristine.ng-valid').getValue()
+      .then(function (text) {
+        expect(text).contain('0')
+      })
   })
 
   // /* Tutorial 2 */
   // //step 2,6,7,8
   it('Add a new FMU entry from Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-    .$('mm-page').$('#Configuration').click().pause(5000)                   
-    .$('.btn.btn-default').click().pause(3000)
-    .$('.btn.btn-default.btn-xs').click()
-    .$$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
-    .then(function(text){
-      assert.equal(text.length, 6)   //length should be 5, I already added controller in the SE lecture therefore 6
-    })
+      .$('mm-page').$('#Configuration').click().pause(5000)
+      .$('.btn.btn-default').click().pause(3000)
+      .$('.btn.btn-default.btn-xs').click()
+      .$$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
+      .then(function (text) {
+        assert.equal(text.length, 6)   //length should be 5, I already added controller in the SE lecture therefore 6
+      })
   })
 
   //step 9
   it('Rename the new enty to controller', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-    .$('mm-page').$('#Configuration').click().pause(5000)                   
-    .$('.btn.btn-default').click().pause(3000)
-    .$('.btn.btn-default.btn-xs').click().pause(3000)
-    .$('#fmu5').$('#fmu').setValue("controller-test")
-    .$('#fmu5').$('#fmu').getValue()
-    .then(function (text){
-      assert.equal(text, 'controller-test')
-    })
+      .$('mm-page').$('#Configuration').click().pause(5000)
+      .$('.btn.btn-default').click().pause(3000)
+      .$('.btn.btn-default.btn-xs').click().pause(3000)
+      .$('#fmu5').$('#fmu').setValue("controller-test")
+      .$('#fmu5').$('#fmu').getValue()
+      .then(function (text) {
+        assert.equal(text, 'controller-test')
+      })
   })
 
-    //step 10, 11
-    //you need to 'cancel' manually 
-    it('Click File Button', function () {
-      return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-      .$('mm-page').$('#Configuration').click().pause(5000)                   
+  //step 10, 11
+  //you need to 'cancel' manually 
+  it('Click File Button', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+      .$('mm-page').$('#Configuration').click().pause(5000)
       .$('.btn.btn-default').click().pause(3000)
       .$('#fmu4').$('#file').click()
-    })
+  })
 
-   //step 14
-   it('Add an instance of controller', function () {
+  //step 14
+  it('Add an instance of controller', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-    .$('mm-page').$('#Configuration').click().pause(2000)                   
-    .$('.btn.btn-default').click().pause(2000)
-    .$('#controller').click()
-    .$('#fmu_instance').click()
-    .$('#instance_fmu').getValue()
-    .then(function (text){
-       assert.equal(text, 'controllerInstance')
+      .$('mm-page').$('#Configuration').click().pause(2000)
+      .$('.btn.btn-default').click().pause(2000)
+      .$('#controller').click()
+      .$('#fmu_instance').click()
+      .$('#instance_fmu').getValue()
+      .then(function (text) {
+        assert.equal(text, 'controllerInstance')
+      })
+  })
+
+  //step 15,16,17,18,19
+  it('Add an instance of controller', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+      .$('mm-page').$('#Configuration').click().pause(2000)
+      .$('.btn.btn-default').click().pause(2000)
+      .$('#outputinstancecontrollerInstance').click().pause(2000)
+      .$('#variableservoLeftVal').click().pause(2000)
+      .$('#inputinstanceb').click().pause(2000)
+      .$('#inputvariableservo_left_input').click().pause(2000)
+  })
+
+  //step 20,21,22,23
+  it('Add an instance of controller', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+      .$('mm-page').$('#Configuration').click().pause(2000)
+      .$('.btn.btn-default').click().pause(2000)
+      .$('#initialvalcontrollerInstance').click()
+      .$('#addParameters').click().pause(2000)
+      .$('#backwardRotate').setValue('0.1')
+      .$('#addParameters').click().pause(2000)
+      .$('#forwardRotate').setValue('0.5')
+      .$('#addParameters').click().pause(2000)
+      .$('#forwardSpeed').setValue('0.4')
+      .$('#forwardSpeed').getValue()
+      .then(function (value) {
+        assert.equal(value, "0.4");
       })
   })
 
   //step 24
   it('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
-    .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
-    .$('#Ok').click().pause(2000)
-    .getText('#activeTabTitle')
-    .then(function (title) {
-      expect(title).contain('3DRobot')
-    })
+      .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
+      .$('#Ok').click().pause(2000)
+      .getText('#activeTabTitle')
+      .then(function (title) {
+        expect(title).contain('3DRobot')
+      })
   })
 
   /* Tutorial 7 */
   // step 2 Opening a DSE Configuration
   it('Select the Experiment/lfr-non3d multi model', function () {
     return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
-    .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
-    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
-    .selectByVisibleText('Experiment | lfr-non3d').pause(3000)
-    .getText('option:checked')
-    .then(function(text){
-      expect(text).contain("lfr-non3d")
-    })
+      .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
+      .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+      .selectByVisibleText('Experiment | lfr-non3d').pause(3000)
+      .getText('option:checked')
+      .then(function (text) {
+        expect(text).contain("lfr-non3d")
+      })
   })
 
   it('Select the Experiment/lfr-non3d multi model and click save', function () {
     return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
-    .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
-    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
-    .selectByVisibleText('Experiment | lfr-non3d').pause(2000)
-    .$('.btn.btn-default').click().pause(2000)
-    .$('.form-control-static').getText()
-    .then(function (text){
-      expect(text).contain("lfr-non3d | Multi-models")
-    })
+      .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
+      .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+      .selectByVisibleText('Experiment | lfr-non3d').pause(2000)
+      .$('.btn.btn-default').click().pause(2000)
+      .$('.form-control-static').getText()
+      .then(function (text) {
+        expect(text).contain("lfr-non3d | Multi-models")
+      })
   })
 
   it('algorithm choice Exhaustive showing after multi-model is set ', function () {
     return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
-    .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
-    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
-    .selectByVisibleText('Experiment | lfr-non3d').pause(2000)
-    .$('.btn.btn-default').click().pause(2000)
-    .$('.col-sm-7.col-md-8')
-    .$('.form-control-static').getText()
-    .then(function (text){
-      expect(text).contain("Exhaustive")
-    })
+      .$('dse-configuration').$('.btn.btn-default').click().pause(3000)
+      .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+      .selectByVisibleText('Experiment | lfr-non3d').pause(2000)
+      .$('.btn.btn-default').click().pause(2000)
+      .$('.col-sm-7.col-md-8')
+      .$('.form-control-static').getText()
+      .then(function (text) {
+        expect(text).contain("Exhaustive")
+      })
   })
 
   it('Switching into editing mode from the top of the DSE configuration by clicking on Edit button ', function () {
     return this.app.client.$('#node_ProjectBrowserItem_4').doubleClick()
-    .$('dse-configuration').$('.btn.btn-default').click()
-    .$('.form-control.ng-untouched.ng-pristine.ng-valid')
-    .selectByVisibleText('Experiment | lfr-non3d')
-    .$('.btn.btn-default').click().pause(2000)
-    .$('#btn-edit').click().pause(3000)
-    .$('#btn-save').getText()
-    .then(function (text){
-      assert.equal(text, "Save")
-     })
+      .$('dse-configuration').$('.btn.btn-default').click()
+      .$('.form-control.ng-untouched.ng-pristine.ng-valid')
+      .selectByVisibleText('Experiment | lfr-non3d')
+      .$('.btn.btn-default').click().pause(2000)
+      .$('#btn-edit').click().pause(3000)
+      .$('#btn-save').getText()
+      .then(function (text) {
+        assert.equal(text, "Save")
+      })
   })
 
   // //https://www.npmjs.com/package/mock-http-server/v/1.4.2
