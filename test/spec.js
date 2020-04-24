@@ -133,8 +133,8 @@ describe('Application launch', function () {
     })
   })
 
-  /* Tutorial 2 */
-  //step 2,6,7,8
+  // /* Tutorial 2 */
+  // //step 2,6,7,8
   it('Add a new FMU entry from Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
     .$('mm-page').$('#Configuration').click().pause(5000)                   
@@ -151,13 +151,22 @@ describe('Application launch', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
     .$('mm-page').$('#Configuration').click().pause(5000)                   
     .$('.btn.btn-default').click().pause(3000)
-    .$('.btn.btn-default.btn-xs').click()
-    .$('#FMU').setValue("controller-test").pause(3000)
-    .$('#controller-test').getValue()
+    .$('.btn.btn-default.btn-xs').click().pause(3000)
+    .$('#fmu5').$('#fmu').setValue("controller-test")
+    .$('#fmu5').$('#fmu').getValue()
     .then(function (text){
       assert.equal(text, 'controller-test')
     })
   })
+
+    //step 10, 11
+    //you need to 'cancel' manually 
+    it('Click File Button', function () {
+      return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+      .$('mm-page').$('#Configuration').click().pause(5000)                   
+      .$('.btn.btn-default').click().pause(3000)
+      .$('#fmu4').$('#file').click()
+    })
 
   //step 24
   it('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {

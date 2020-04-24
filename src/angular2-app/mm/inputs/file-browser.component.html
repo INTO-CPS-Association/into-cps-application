@@ -2,7 +2,7 @@
     <input [ngModel]="path" (ngModelChange)="onChange($event)" type="text" class="form-control input-sm">
 
     <span *ngIf="platform != 'darwin'" class="input-group-btn">
-        <button type="button" (click)="browseFile()" class="btn btn-default btn-sm">
+        <button type="button" id="file" (click)="browseFile()" class="btn btn-default btn-sm">
             <span class="glyphicon glyphicon-file"></span> File
         </button>
         <button type="button" (click)="browseDirectory()" class="btn btn-default btn-sm">
