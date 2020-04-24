@@ -176,6 +176,19 @@ describe('Application launch', function () {
       .$('#fmu4').$('#file').click()
     })
 
+   //step 14
+   it('Add an instance of controller', function () {
+    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+    .$('mm-page').$('#Configuration').click().pause(2000)                   
+    .$('.btn.btn-default').click().pause(2000)
+    .$('#controller').click()
+    .$('#fmu_instance').click()
+    .$('#instance_fmu').getValue()
+    .then(function (text){
+       assert.equal(text, 'controllerInstance')
+      })
+  })
+
   //step 24
   it('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
