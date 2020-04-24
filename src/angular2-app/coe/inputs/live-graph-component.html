@@ -35,7 +35,7 @@
                                         <input type="checkbox"
                                                 [disabled]="!editing"
                                                 [checked]="isLivestreamChecked(instance, output)"
-                                                (change)="onLivestreamChange($event.target.checked, instance, output)">
+                                                (change)="onLivestreamChange($event.target.checked, instance, output)" id="{{instance.name}}{{output.name}}">
                                 
                                                 <span *ngIf="isLocal(output)" class="text-warning" style="color:#f0ad4e!important" title="Name: {{output.name}}, Causality: {{output.causality}}, Type: {{getScalarVariableTypeName(output.type)}}">{{output.name}}</span>
                                                 <span *ngIf="!isLocal(output)" title="Name: {{output.name}}, Causality: {{output.causality}}, Type: {{getScalarVariableTypeName(output.type)}}">{{output.name}}</span>
