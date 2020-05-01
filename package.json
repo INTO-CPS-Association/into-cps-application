@@ -37,7 +37,6 @@
     "@types/sql.js": "~0.0.28",
     "@types/w2ui": "~1.4.30",
     "bluebird": "~3.4.7",
-    "body-parser": "^1.19.0",
     "electron-default-menu": "^1.0.1",
     "es6-shim": "^0.35.5",
     "fs-extra": "~0.30.0",
