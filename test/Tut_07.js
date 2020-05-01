@@ -31,9 +31,9 @@ describe.skip('In Tutorial 7', function () {
 
       await this.app.client.waitUntilWindowLoaded();
 
-      await this.app.client.waitForVisible('#dse-configuration', 20000);
+      await this.app.client.waitForVisible('dse-page', 20000);
 
-      await this.app.client.$('#dse-configuration').click()
+      await this.app.client.$('.panel-heading').click()
 
       await this.app.client.waitForVisible('.btn.btn-default', 20000);
 
