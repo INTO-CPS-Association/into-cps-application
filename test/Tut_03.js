@@ -23,7 +23,7 @@ describe('In Tutorial 3', function () {
     await this.app.start();
     await this.app.client.waitUntilWindowLoaded();
 
-    if (this.currentTest.title === 'Open mm-3DRobot configuration and click on File button next to c') {
+    if (this.currentTest.title === 'Open mm-3DRobot configuration and click on File button next to c' || this.currentTest.title == 'Defining the sensor positions') {
 
       await this.app.client.$('#node_ProjectBrowserItem_21').doubleClick();
 
@@ -98,5 +98,23 @@ describe('In Tutorial 3', function () {
     .waitForVisible('#fmu0')
     .waitForVisible('#file')
     .$('#fmu0').$('#file').click();
+  })
+
+  //Step 31
+  // TODO: Need to repeat this 
+  it('Defining the sensor positions', function(){
+    return this.app.client
+    .waitForVisible('#initialvalsensor1')
+    .$('#initialvalsensor1').click()
+
+    .waitForVisible('#lf_position_y')
+    .$('#lf_position_y').setValue('0.065')
+
+    .waitForVisible('#lf_position_x')
+    .$('#lf_position_x').setValue('0.001').pause(2000)
+    .$('#lf_position_x').getValue()
+      .then(function (text) {
+        assert.equal(text, '0.001')
+      })
   })
 })
