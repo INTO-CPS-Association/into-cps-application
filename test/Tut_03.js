@@ -23,9 +23,19 @@ describe('In Tutorial 3', function () {
     await this.app.start();
     await this.app.client.waitUntilWindowLoaded();
 
-    if (!(this.currentTest.title === 'File->Open Project Menu Click')) {
+    if (this.currentTest.title === 'Open mm-3DRobot configuration and click on File button next to c') {
 
+      await this.app.client.$('#node_ProjectBrowserItem_21').doubleClick();
 
+      await this.app.client.waitUntilWindowLoaded();
+
+      await this.app.client.waitForVisible('#Configuration');
+
+      await this.app.client.$('mm-page').$('#Configuration').click();
+
+      await this.app.client.waitForVisible('.btn.btn-default');
+
+      await this.app.client.$('.btn.btn-default').click(); //until step 27 where Edit Button is clicked
     }
 
 
@@ -56,12 +66,37 @@ describe('In Tutorial 3', function () {
     return this.app.client.waitUntilWindowLoaded()
       .getMainProcessLogs().then(function (logs) {
         // For test debugging processes uncomment the following line
-        // console.log(logs)
-        expect(logs[25]).contain('tutorial_7/.project.json');
+        console.log(logs)
+        expect(logs[25]).contain('tutorial_3/.project.json');
       })
   })
 
- 
+  // //Step 24, 25
+  it('Create mm through the 3DRobot icon', function(){
+    return this.app.client
+    .waitForVisible('#node_ProjectBrowserItem_24')
+    .waitForVisible('.w2ui-expand')
+    .$('#node_ProjectBrowserItem_24').$('.w2ui-expand').click()
 
+    .waitForVisible('#node_ProjectBrowserItem_26')
+    .waitForVisible('.w2ui-expand')
+    .$('#node_ProjectBrowserItem_26').$('.w2ui-expand').click()
+    .$('#node_ProjectBrowserItem_30').rightClick()
+    .$('#w2ui-overlay').click().pause(2000)
+    .$('#Ok').click().pause(2000)
+    .$('#node_ProjectBrowserItem_21').getText()
+    .then(function(text){
+      assert.equal(text, 'mm-3DRobot')
+    })
+  })
 
+  //Step 25, 26, 27, 28, 29
+  //Manually cancel or select the fmu file
+  // TODO: Need to repeat this 
+  it('Open mm-3DRobot configuration and click on File button next to c', function(){
+    return this.app.client
+    .waitForVisible('#fmu0')
+    .waitForVisible('#file')
+    .$('#fmu0').$('#file').click();
+  })
 })

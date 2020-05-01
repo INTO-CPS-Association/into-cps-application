@@ -66,6 +66,7 @@ describe.skip('In Tutorial 2', function () {
   //Step 2. To open a project, select File > Open Project
   it('File->Open Project Menu Click', function () {
     fakeMenu.clickMenu('File', 'Open Project');
+    return this.app;
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
