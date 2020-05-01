@@ -48,15 +48,13 @@ import { DseConfigurationComponent } from './dse/dse-configuration.component';
 import {DsePageComponent} from "./dse/dse-page.component";
 import {MmModule} from "./mm/mm.module"
 import {COEModule} from "./coe/coe.module"
-/* import {HttpModule} from '@angular/http'; */
 import { HttpClientModule } from '@angular/common/http';
 import { SharedModule } from './shared/shared.module';
-/* import { TrModule } from './tr/tr.module'; */
 
 @NgModule({
-  imports: [/* HttpModule, */ BrowserModule, HttpClientModule, FormsModule,
-     MmModule, COEModule, ReactiveFormsModule, SharedModule/* , TrModule */ ], // module dependencies
-  declarations: [AppComponent , DsePageComponent, DseConfigurationComponent/* , MmPageComponent,  CoePageComponent,TrPageComponent */], // components and directives
+  imports: [ BrowserModule, HttpClientModule, FormsModule,
+     MmModule, COEModule, ReactiveFormsModule, SharedModule], // module dependencies
+  declarations: [AppComponent , DsePageComponent, DseConfigurationComponent], // components and directives
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService], // services
   exports: []
