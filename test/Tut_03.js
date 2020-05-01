@@ -56,7 +56,7 @@ describe('In Tutorial 3', function () {
   })
 
   //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click', function () {
+ it('File->Open Project Menu Click', function () {
     fakeMenu.clickMenu('File', 'Open Project');
     return this.app;
   })
@@ -117,4 +117,26 @@ describe('In Tutorial 3', function () {
         assert.equal(text, '0.001')
       })
   })
+
+  //Step 34,35
+  it('Right-click on the mm and select Create Co-Simulation Configuration', function(){
+    return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
+    .waitForVisible('#td1')
+    .$('#td1').click()
+    .$('#Ok').click()
+    .waitUntilWindowLoaded()
+
+    .$('.panel-heading').click()
+
+    .waitForVisible('.btn.btn-default')
+    .$('.btn.btn-default').click()
+
+    .waitForVisible('#stepsize')
+    .$('#stepsize').setValue('0.01').pause(2000)
+    .$('#stepsize').getValue()
+    .then(function(value){
+      assert.equal(value, '0.01')
+    })
+  })
+
 })
