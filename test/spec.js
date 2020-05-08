@@ -6,7 +6,7 @@ const path = require('path')
 const fakeMenu = require('spectron-fake-menu')
 //const ServerMock = require('mock-http-server')
 
-describe('Generic tests', function () {
+describe.skip('Generic tests', function () {
   this.timeout(100000)
 
 
