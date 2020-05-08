@@ -44,9 +44,9 @@
 			<label class="col-sm-5 col-md-4 control-label">Search Algorithm</label>
 			<div class="col-sm-7 col-md-8">
 				<p *ngIf="!editing" class="form-control-static">{{config.searchAlgorithm.getName()}}</p>
-				<select *ngIf="editing" [ngModel]="config.searchAlgorithm.getName()" (ngModelChange)="onAlgorithmChange($event)" [ngModelOptions]="{standalone:true}"
+				<select id="selectalg" *ngIf="editing" [ngModel]="config.searchAlgorithm.getName()" (ngModelChange)="onAlgorithmChange($event)" [ngModelOptions]="{standalone:true}"
 						class="form-control">
-					<option *ngFor="let algorithm of algorithms" [ngValue]="algorithm">{{algorithm.name}}</option>
+					<option id="{{algorithm.name}}" *ngFor="let algorithm of algorithms" [ngValue]="algorithm">{{algorithm.name}}</option>
 				</select>
 			</div>
 		</div>
@@ -170,11 +170,11 @@
 		<hr>
 
 
-		<h4>Parameter Constraints <button *ngIf="editing" type="button" (click)="addParameterConstraint()" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span>Add Constraint</button></h4>
-		<div class="row" *ngFor="let p of config.paramConst">
+		<h4>Parameter Constraints <button id="AddConstraints" *ngIf="editing" type="button" (click)="addParameterConstraint()" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span>Add Constraint</button></h4>
+		<div class="row" *ngFor="let p of config.paramConst; let i = index;" >
 			<div class ="col-md-6">
 				<p *ngIf="!editing" class="form-control-static">{{getParameterConstraint(p)}}</p>
-				<input *ngIf="editing" [ngModel]="getParameterConstraint(p)" (ngModelChange)="setParameterConstraint(p, $event)" [ngModelOptions]="{standalone:true}"
+				<input id="conparameter{{i}}" *ngIf="editing" [ngModel]="getParameterConstraint(p)" (ngModelChange)="setParameterConstraint(p, $event)" [ngModelOptions]="{standalone:true}"
 					class="form-control input-fixed-size">
 			</div>
 			<div class="col-md-1">
@@ -334,10 +334,10 @@
 		<hr>
 		
 		<h4>Scenario<button *ngIf="editing" type="button" (click)="addScenario()" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button></h4>
-		<div class="row" *ngFor="let s of config.scenarios">
+		<div class="row" *ngFor="let s of config.scenarios; let i = index;">
 			<div class="col-md-9">
 				<p *ngIf="!editing" class="form-control-static">{{getScenario(s)}}</p>
-				<input *ngIf="editing" [ngModel]="getScenario(s)" (ngModelChange)="setScenario(s, $event)" [ngModelOptions]="{standalone:true}"
+				<input  id="scenarios{{i}}" *ngIf="editing" [ngModel]="getScenario(s)" (ngModelChange)="setScenario(s, $event)" [ngModelOptions]="{standalone:true}"
 					class="form-control input-fixed-size input-sm">
 				<button *ngIf="editing" type="button" (click)="removeScenario(s)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span></button>
 			</div>

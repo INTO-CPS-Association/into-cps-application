@@ -6,7 +6,7 @@ const path = require('path')
 const fakeMenu = require('spectron-fake-menu')
 
 
-describe('In Tutorial 3', function () {
+describe.skip('In Tutorial 3', function () {
   this.timeout(120000)
 
 

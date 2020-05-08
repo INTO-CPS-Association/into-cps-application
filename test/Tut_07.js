@@ -101,11 +101,9 @@ describe.skip('In Tutorial 7', function () {
 
   it('algorithm choice Exhaustive showing after multi-model is set ', function () {
     return this.app.client
-      .$('.btn.btn-default').click()
-      .waitForVisible('.col-sm-7.col-md-8')
-      .$('.col-sm-7.col-md-8')
-      .waitForVisible('.form-control-static')
-      .$('.form-control-static').getText()
+      .waitForVisible('.col-sm-7.col-md-8', 2000)
+      .waitForVisible('.form-control-static', 2000)
+      .$('.col-sm-7.col-md-8').$('.form-control-static').getText()
       .then(function (text) {
         expect(text).contain("Exhaustive")
       })
@@ -120,5 +118,28 @@ describe.skip('In Tutorial 7', function () {
       })
   })
 
+  //Page 9 and Page 11
+  it('Adding two constraints and studentMap in the scenarios text box.', function () {
+    return this.app.client
+      .$('#btn-edit').click()
+      .waitForVisible('#selectalg', 20000)
+      .$('#selectalg').click()
+      .waitForVisible('#Exhaustive', 20000)
+      .$('#Exhaustive').click()
+
+      .$('#AddConstraints').click()
+      .$('#AddConstraints').click().pause(3000)
+
+      .waitForVisible('#conparameter0')
+      .waitForVisible('#conparameter1')
+      .$('#conparameter0').setValue('{sensor1}.sensor1.lf_position_y == {sensor2FMU}.sensor2.lf_position_y')
+      .$('#conparameter1').setValue('{sensor1}.sensor1.lf_position_x == - {sensor2FMU}.sensor2.lf_position_x')
+
+      .waitForVisible('#scenarios0')
+      .$('#scenarios0').getValue()
+      .then(function(value){
+        assert.equal(value, 'studentMap')
+      })
+  })
 
 })
