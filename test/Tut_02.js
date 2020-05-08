@@ -15,6 +15,7 @@ describe.skip('In Tutorial 2', function () {
 
     this.app = new Application({
       path: electronPath,
+      env: { RUNNING_IN_SPECTRON: '1' },
       args: [path.join(__dirname, '..')]
     })
 
@@ -72,10 +73,9 @@ describe.skip('In Tutorial 2', function () {
   // This should be done before as soon as we solve the programmatic project load problem
   it('Should have tutorial 2 loaded', function () {
     return this.app.client.waitUntilWindowLoaded()
-      .getMainProcessLogs().then(function (logs) {
-        // For test debugging processes uncomment the following line
-        // console.log(logs)
-        expect(logs[25]).contain('tutorial_2/.project.json');
+      .then(function () {
+        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_2'); })
+
       })
   })
 
@@ -95,9 +95,9 @@ describe.skip('In Tutorial 2', function () {
   xit('Rename the new entry to controller', function () {
 
     return this.app.client
-       .waitForVisible('#fmu5')
+      .waitForVisible('#fmu5')
       .$('#fmu5')
-       .waitForVisible('#fmu')
+      .waitForVisible('#fmu')
       .$('#fmu').setValue("controller-test").pause(10000)
       .$('#fmu5').$('#fmu').getValue()
       .then(function (text) {

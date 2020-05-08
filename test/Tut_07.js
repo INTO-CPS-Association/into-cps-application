@@ -15,6 +15,7 @@ describe.skip('In Tutorial 7', function () {
 
     this.app = new Application({
       path: electronPath,
+      env: { RUNNING_IN_SPECTRON: '1' },
       args: [path.join(__dirname, '..')]
     })
 
@@ -66,20 +67,18 @@ describe.skip('In Tutorial 7', function () {
   //Step 2. To open a project, select File > Open Project
   it('File->Open Project Menu Click', function () {
     fakeMenu.clickMenu('File', 'Open Project');
-	return this.app;
+    return this.app;
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
   it('Should have tutorial 7 loaded', function () {
     return this.app.client.waitUntilWindowLoaded()
-      .getMainProcessLogs().then(function (logs) {
-        // For test debugging processes uncomment the following line
-        // console.log(logs)
-        expect(logs[25]).contain('tutorial_7/.project.json');
+      .then(function () {
+        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('Tutorial_7'); })
+
       })
   })
 
-  /* Tutorial 7 */
   // step 2 Opening a DSE Configuration
   it('Select the Experiment/lfr-non3d multi model', function () {
     return this.app.client
@@ -137,7 +136,7 @@ describe.skip('In Tutorial 7', function () {
 
       .waitForVisible('#scenarios0')
       .$('#scenarios0').getValue()
-      .then(function(value){
+      .then(function (value) {
         assert.equal(value, 'studentMap')
       })
   })
