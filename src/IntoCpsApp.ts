@@ -39,8 +39,6 @@ import { IProject } from "./proj/IProject";
 import { Project } from "./proj/Project";
 import { IntoCpsAppEvents } from "./IntoCpsAppEvents";
 import { SettingKeys } from "./settings//SettingKeys";
-/* import { EventEmitter } from "events"; */
-import { TrManager } from "./traceability/trManager";
 import { Utilities } from "./utilities";
 import { CoeProcess } from "./coe-server-status/CoeProcess";
 
@@ -48,13 +46,11 @@ import { CoeProcess } from "./coe-server-status/CoeProcess";
 let topBarNameId: string = "activeTabTitle";
 
  const globalAny:any = global;
-/* export default class IntoCpsApp extends EventEmitter { */
     export default class IntoCpsApp { 
 
     app: Electron.App;
     platform: String
     window: Electron.BrowserWindow;
-    trmanager:TrManager;
     coeProcess: CoeProcess = null;
 
     settings: Settings;
@@ -94,11 +90,6 @@ let topBarNameId: string = "activeTabTitle";
             this.settings.setValue(SettingKeys.UPDATE_SITE, this.settings.getValue(SettingKeys.DEV_UPDATE_SITE));
             this.settings.setValue(SettingKeys.EXAMPLE_REPO, this.settings.getValue(SettingKeys.DEV_EXAMPLE_REPO));
         }
-
-        let enableTrace = this.settings.getValue(SettingKeys.ENABLE_TRACEABILITY);
-        let daemonPort = this.settings.getValue(SettingKeys.TRACE_DAEMON_PORT)
-        this.trmanager = new TrManager(enableTrace,daemonPort);
-        
     }
 
     public loadPreviousActiveProject(){
@@ -128,9 +119,7 @@ let topBarNameId: string = "activeTabTitle";
         this.window = win;
     }
 
-    public recordTrace(jsonObj: Object){
-        this.trmanager.recordTrace(jsonObj);
-    }
+
 
 
     private createAppFolderRoot(app: Electron.App): string {
@@ -191,11 +180,7 @@ let topBarNameId: string = "activeTabTitle";
             this.window.reload();
             console.info("fire event: " + event);
         }
-     /*    try {
-            this.emit(IntoCpsAppEvents.PROJECT_CHANGED);
-        } catch (error) {
-
-        } */
+  
 
     }
 
@@ -204,8 +189,7 @@ let topBarNameId: string = "activeTabTitle";
         let project = new Project(name, path, Path.normalize(path + "/.project.json"));
         project.save();
         this.setActiveProject(project);
-        this.trmanager.changeDataBase(Path.dirname(path), this.settings.getValue(SettingKeys.INSTALL_DIR), this.settings.getValue(SettingKeys.INSTALL_TMP_DIR));
-    }
+     }
 
     loadProject(path: string): IProject {
         console.info("Loading project from: " + path); 
@@ -216,8 +200,7 @@ let topBarNameId: string = "activeTabTitle";
         project.configPath = path;
         project.rootPath = Path.dirname(path);
         project.save() // create all the project folders, in case they don't exist.
-        this.trmanager.changeDataBase(Path.dirname(path), this.settings.getValue(SettingKeys.INSTALL_DIR), this.settings.getValue(SettingKeys.INSTALL_TMP_DIR));
-        return project;
+         return project;
     }
 
     //get the global instance

@@ -90,17 +90,7 @@ function createWindow() {
     })); */
     BrowserWindow.getAllWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
 
-    if (intoCpsApp.trmanager.running) {
-      ev.preventDefault();
-
-      console.info("Waiting for trmanager to stop...");
-      intoCpsApp.trmanager.stop().then(() => {
-        console.info("trmanager stopped.");
-        mainWindow.close()
-      }).catch((err) => {
-        console.info(err); mainWindow.close();
-      });
-    }
+ 
   });
 
   // Emitted when the window is closed.
