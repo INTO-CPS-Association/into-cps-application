@@ -30,14 +30,6 @@
  */
 import * as child_process from "child_process";
 
-/* export class dependency { */
-  /* private remote = require("electron").remote;
-  private dialog: any;
-
-  constructor() {
-    this.dialog = this.remote.dialog;
-  } */
-
   // check if java is running and which version no working
   export function dependencyCheckJava() {
     var spawn = child_process.spawn("java", ["-version"]);
@@ -60,20 +52,68 @@ import * as child_process from "child_process";
 /* }
  */
 
-// check if java is running and which version no working
-/* export function dependencyCheckJava() {
-  var spawn = child_process.spawn("java", ["-version"]);
+// check if python is running and which version no working
+
+export function dependencyCheckPythonVersion() {
+  var spawn = child_process.spawn("python", ["--version"]);
   spawn.on("error", err => {
     console.error(err);
     return false;
   });
-  spawn.on("close", (code, signal) => {
-    if (code != 0) {
+  spawn.stderr.on("data", function(data) {
+    data = data.toString("utf8").split("\n")[0];
+    // the pythonVersion is false if the output from the spawn do not follow the stardard of: "Python *.*.*"
+    var pythonVersion = data.split(" ")[1] ? data.split(" ")[1] : false;
+    if (pythonVersion != false) {
+      // this converts a string of "*.*.*"" into a number *.*
+      var pythonversion = parseFloat(pythonVersion);
+    } else if (pythonVersion === false) {
+      console.log(data);
+      // should find a better way than this to display dialogs
+      let remote = require('electron').remote;
+      let dialog = remote.dialog;
       dialog.showMessageBox(
-        {title: "error", buttons: ["OK"], message: "Java wasn´t detected on your system \n" +
-        "JRE is needed to run the COE"}
+        {
+          type: "error",
+          buttons: ["OK"],
+          message:
+            "INTO-CPS found Python on your system. \n" +
+            "But was unable to assess your version of Python. \n" +
+            "Your python version needs to be 2.7 or newer."
+        },
+        function(button: any) {}
+      );
+    } else if (pythonversion < 2.6 || pythonversion >= 3.0) {
+      console.log(pythonversion);
+      let remote = require('electron').remote;
+      let dialog = remote.dialog;
+      dialog.showMessageBox(
+        {
+          type: "error",
+          buttons: ["OK"],
+          message:
+            "INTO-CPS has assest your python version to be older than 2.7.  \n" +
+            "Your python version needs to be 2.7 or newer"
+        },
+        function(button: any) {}
       );
     }
-    console.log("the java dependency check subprocess has been closed");
   });
-} */
+  spawn.on("close", (code, signal) => {
+    // the shell returns != 0 if it fails to run python.
+    if (code != 0) {
+      let remote = require('electron').remote;
+      let dialog = remote.dialog;
+      dialog.showMessageBox(
+        {
+          type: "error",
+          buttons: ["OK"],
+          message: "Python wasn't found on your system"
+        },
+        function(button: any) {}
+      );
+    }
+    
+    console.log("the python dependency check subprocess has been closed");
+  });
+}
