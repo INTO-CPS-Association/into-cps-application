@@ -42,41 +42,23 @@ describe.skip('In Tutorial 11', function () {
 
   //Step 33
   //Manually select the line follower robot case study
-  xit('File->Import example project Menu Click', function () {                    //Not working
+  it('File->Import example project Menu Click', function () {                   
     fakeMenu.clickMenu('File', 'Import Example Project')
-    return this.app;
+    return this.app.client.pause(20000);
   })
 
-  xit('File->Import example project Menu Click', async function () {              //Not working
-    await this.app.client.waitUntilWindowLoaded();
-
-    await this.app.client.execute(() => {
-      var menu = this.electron.remote.Menu.getApplicationMenu();
-      menu.getItemByNames('File', 'Import Example Project').click();
-    });
-
-})
-
-xit('File->Import example project Menu Click', function () {                      //Not working
-  return this.app.client.waitUntilWindowLoaded()
-      .then(function () {
-        return this.electron.remote.Menu.getApplicationMenu().then(r => {  r.getItemByNames('File', 'Import Example Project').click(); })
-
-      })
-})
-
   // This should be done before as soon as we solve the programmatic project load problem
-  xit('Should have line follower robot loaded', function () {
+  it('Should have line follower robot loaded', function () {
     return this.app.client.waitUntilWindowLoaded()
       .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_9'); })
+        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('example-line_follower_robot'); })
 
       })
   })
 
   //Step 35
   //Manually cancel or select the fmu file
-  xit('Add the new FMU instead of the overture FMU', function(){
+  it('Add the new FMU instead of the overture FMU', function(){
       return this.app.client
       .waitForVisible('#node_ProjectBrowserItem_76')
       .$('#node_ProjectBrowserItem_76').doubleClick()
