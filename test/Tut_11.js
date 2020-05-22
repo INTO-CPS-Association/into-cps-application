@@ -1,5 +1,4 @@
 const Application = require('spectron').Application
-const assert = require('assert')
 const expect = require('chai').expect;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
 const path = require('path')
@@ -41,8 +40,8 @@ describe.skip('In Tutorial 11', function () {
   })
 
   //Step 33
-  //Manually select the line follower robot case study
-  it('File->Import example project Menu Click', function () {                   
+  //Manually select the line follower robot case study 
+  it('File->Import example project Menu Click', function () {
     fakeMenu.clickMenu('File', 'Import Example Project')
     return this.app.client.pause(20000);
   })
@@ -58,8 +57,8 @@ describe.skip('In Tutorial 11', function () {
 
   //Step 35
   //Manually cancel or select the fmu file
-  it('Add the new FMU instead of the overture FMU', function(){
-      return this.app.client
+  it('Add the new FMU instead of the overture FMU', function () {
+    return this.app.client
       .waitForVisible('#node_ProjectBrowserItem_76')
       .$('#node_ProjectBrowserItem_76').doubleClick()
 

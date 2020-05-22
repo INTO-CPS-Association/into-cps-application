@@ -140,5 +140,4 @@ describe.skip('In Tutorial 7', function () {
         assert.equal(value, 'studentMap')
       })
   })
-
 })

@@ -3,24 +3,16 @@ const assert = require('assert')
 const expect = require('chai').expect;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
 const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
-//const ServerMock = require('mock-http-server')
 
 describe.skip('Generic tests', function () {
   this.timeout(100000)
 
-
-  //const server = new ServerMock({ host: "localhost", port: 12345 });
 
   beforeEach(function () {
     this.app = new Application({
       path: electronPath,
       args: [path.join(__dirname, '..')]
     })
-
-    //fakeMenu.apply(this.app);
-
-    //server.start(done);
 
     return this.app.start()
   })
@@ -30,7 +22,6 @@ describe.skip('Generic tests', function () {
       return this.app.stop()
     }
 
-    //server.stop(done);
   })
 
   it('shows an initial window', function () {
@@ -56,7 +47,4 @@ describe.skip('Generic tests', function () {
       })
   })
 })
-
-
-
 

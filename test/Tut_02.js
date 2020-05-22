@@ -128,7 +128,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 15,16,17,18,19
-  it('Add an instance of controller', function () {
+  it('Connect controller outputs to the body input', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(2000)
       .$('.btn.btn-default').click().pause(2000)
@@ -143,7 +143,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 20,21,22,23
-  it('Add an instance of controller', function () {
+  it('Set the initial values of parameters of the controller', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(2000)
       .$('.btn.btn-default').click().pause(2000)

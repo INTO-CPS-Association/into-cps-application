@@ -56,57 +56,57 @@ describe.skip('In Tutorial 9', function () {
   })
 
   //Step 10
-  it('co-simulate with the lfr-3d multi-model', function(){
+  it('co-simulate with the lfr-3d multi-model', function () {
     return this.app.client
-    .waitForVisible('#node_ProjectBrowserItem_44')
-    .waitForVisible('.w2ui-expand')
-    .$('#node_ProjectBrowserItem_44').$('.w2ui-expand').click()
+      .waitForVisible('#node_ProjectBrowserItem_44')
+      .waitForVisible('.w2ui-expand')
+      .$('#node_ProjectBrowserItem_44').$('.w2ui-expand').click()
 
-    .waitForVisible('#node_ProjectBrowserItem_45')
-    .$('#node_ProjectBrowserItem_45').doubleClick()
+      .waitForVisible('#node_ProjectBrowserItem_45')
+      .$('#node_ProjectBrowserItem_45').doubleClick()
 
-    .waitForVisible('#Simulation')
-    .$('#Simulation').click()
-    .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-    .$('.alert.alert-success').click().pause(3000)
-    .$('.alert.alert-success').getText()
-    .then(function (text) {
-      expect(text).contain('online')
-     })
+      .waitForVisible('#Simulation')
+      .$('#Simulation').click()
+      .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
+      .$('.alert.alert-success').click().pause(3000)
+      .$('.alert.alert-success').getText()
+      .then(function (text) {
+        expect(text).contain('online')
+      })
   })
 
 
   //Step 15 and Step 20
-  it('setting the sensor noise value to 4 and ambient light to 25', function(){
+  it('setting the sensor noise value to 4 and ambient light to 25', function () {
     return this.app.client
-    .waitForVisible('#node_ProjectBrowserItem_47')
-    .$('#node_ProjectBrowserItem_47').doubleClick()
-    .$('mm-page').$('#Configuration').click().pause(3000)
+      .waitForVisible('#node_ProjectBrowserItem_47')
+      .$('#node_ProjectBrowserItem_47').doubleClick()
+      .$('mm-page').$('#Configuration').click().pause(3000)
 
-    .waitForVisible('.btn.btn-default')
-    .$('.btn.btn-default').click().pause(3000)
+      .waitForVisible('.btn.btn-default')
+      .$('.btn.btn-default').click().pause(3000)
 
-    .waitForVisible('#initialvalsensor1')
-    .$('#initialvalsensor1').click().pause(2000)
-    .$('#ambient_light').addValue(25)
- 
-    .waitForVisible('#initialvalsensor2')
-    .$('#initialvalsensor2').click().pause(2000)
-    .$('#ambient_light').addValue(25)
+      .waitForVisible('#initialvalsensor1')
+      .$('#initialvalsensor1').click().pause(2000)
+      .$('#ambient_light').addValue(25)
 
-    .waitForVisible('#initialvalsensor1')
-    .$('#initialvalsensor1').click().pause(2000)
-    .$('#noise_level').addValue(4)
+      .waitForVisible('#initialvalsensor2')
+      .$('#initialvalsensor2').click().pause(2000)
+      .$('#ambient_light').addValue(25)
 
-    .waitForVisible('#initialvalsensor2')
-    .$('#initialvalsensor2').click().pause(2000)
-    .$('#noise_level').addValue(4)
+      .waitForVisible('#initialvalsensor1')
+      .$('#initialvalsensor1').click().pause(2000)
+      .$('#noise_level').addValue(4)
 
-    
-    .$('.btn.btn-default').click()
-    .$('.btn.btn-default').getText()
-    .then(function(ButtonText){
-      assert.equal(ButtonText, "Edit")
-    })
+      .waitForVisible('#initialvalsensor2')
+      .$('#initialvalsensor2').click().pause(2000)
+      .$('#noise_level').addValue(4)
+
+
+      .$('.btn.btn-default').click()
+      .$('.btn.btn-default').getText()
+      .then(function (ButtonText) {
+        assert.equal(ButtonText, "Edit")
+      })
   })
 })
