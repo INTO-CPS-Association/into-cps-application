@@ -77,9 +77,8 @@ export default class Settings implements ISettingsValues {
     });
   }
 
-  unload() {
+  deleteSettings() {
     try {
-      this.intoCpsDataObject = {};
       if(fs.existsSync(this.settingsFile)) {
       fs.unlink(this.settingsFile, (err) => {
         if(err) throw err;
@@ -116,16 +115,13 @@ export default class Settings implements ISettingsValues {
 
     } catch (e) {
       console.log("Failed to read settings from file: " + this.settingsFile + ".");
-      this.counter++;
-      this.unload();
-      // tries to fix it. if this fails the function should still throw an exception
-      if(this.counter < 2)
-       {
-        this.load();
-       } else { 
-        console.log('failed to reset settingsfile');
+      if(e instanceof SyntaxError) {
+        this.intoCpsDataObject = {};
+        this.deleteSettings();
+      } else {
+        console.log('error occured: ' + e);
         throw e;
-       }
+      }
     }
     
     console.info(this.intoCpsDataObject);

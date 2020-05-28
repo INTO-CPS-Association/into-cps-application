@@ -111,6 +111,14 @@ let topBarNameId: string = "activeTabTitle";
 
     }
 
+    public unloadProject() {
+        this.fireEvent(IntoCpsAppEvents.PROJECT_CHANGED);
+
+
+        this.settings.setSetting(SettingKeys.ACTIVE_PROJECT, null);
+        this.settings.save();
+    }
+
     public getCoeProcess(): CoeProcess {
         return this.coeProcess;
     }

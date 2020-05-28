@@ -128,9 +128,10 @@ app.on('window-all-closed', function () {
   //the app is not build to handle this since windows are created
   //from render processes
   //if (process.platform !== 'darwin') {
-    
+
   // for testing purposes this should be uncommented
-  // intoCpsApp.getSettings().unload();
+  // intoCpsApp.getSettings().deleteSettings();
+  intoCpsApp.unloadProject();
   app.quit();
   //}
 });
