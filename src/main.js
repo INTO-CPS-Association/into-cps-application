@@ -131,7 +131,6 @@ app.on('window-all-closed', function () {
 
   // for testing purposes this should be uncommented
   // intoCpsApp.getSettings().deleteSettings();
-  intoCpsApp.unloadProject();
   app.quit();
   //}
 });
