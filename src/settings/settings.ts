@@ -105,7 +105,6 @@ export default class Settings implements ISettingsValues {
 
       if (initial) { // no settings file created yet, just use DOM
         this.intoCpsDataObject = {};
-        console.log('when here');
         return;
       }
 
@@ -119,8 +118,14 @@ export default class Settings implements ISettingsValues {
       console.log("Failed to read settings from file: " + this.settingsFile + ".");
       this.counter++;
       this.unload();
-      this.storeSettings();
-      if(this.counter < 3) { this.load(); } else { throw e; }
+      // tries to fix it. if this fails the function should still throw an exception
+      if(this.counter < 2)
+       {
+        this.load();
+       } else { 
+        console.log('failed to reset settingsfile');
+        throw e;
+       }
     }
     
     console.info(this.intoCpsDataObject);
