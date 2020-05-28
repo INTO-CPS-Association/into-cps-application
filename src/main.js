@@ -90,6 +90,26 @@ function createWindow() {
     })); */
     BrowserWindow.getAllWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
 
+
+    if(true) {
+      ev.preventdefault();
+
+      let remote = electron.remote;
+        let dialog = remote.dialog;
+        let res = dialog.showMessageBox(
+          {type: "question", title: "Unload project", buttons: ["No", "Yes"], message: "Do you wish to unload your current project?\n" +
+            "No will let you continue next time you open Into-CPS.\n" + "Yes will let you open a blank app next time you open Into-CPS."}
+        );
+        if(res == 0) {
+          mainWindow.close();
+          console.log('closed without unloading');
+        } else {
+          console.log('unloading');
+          intoCpsApp.getSettings().unload();
+          mainWindow.close();
+        }
+
+    }
  
   });
 

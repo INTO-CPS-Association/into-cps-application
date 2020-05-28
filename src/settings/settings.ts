@@ -52,6 +52,11 @@ export default class Settings implements ISettingsValues {
   }
 
   storeSettings() {
+    // this file existingscheck might not be nessarsary.
+    let filebool = fs.existsSync(this.settingsFile);
+    if(!filebool) {
+      console.log('file dosn´t exists');
+    };
     fs.open(this.settingsFile, "w", (err, fd) => {
       if (err) {
         "The error: " + err + " happened when attempting to open the file: " + this.settingsFile + " for writing.";
@@ -73,6 +78,19 @@ export default class Settings implements ISettingsValues {
         });
       }
     });
+  }
+
+  unload() {
+    try {
+      this.intoCpsDataObject = {};
+      fs.unlink(this.settingsFile, (err) => {
+        if(err) throw err;
+        console.log(this.settingsFile + ' was deleted');
+      });
+      console.log('dataobject empty:' + this.intoCpsDataObject);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   load() {
