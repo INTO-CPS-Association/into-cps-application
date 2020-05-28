@@ -92,6 +92,7 @@ function createWindow() {
 
 
     if(true) {
+      console.log('settingsfile is not null');
       ev.preventdefault();
 
       let remote = electron.remote;
@@ -101,8 +102,9 @@ function createWindow() {
             "No will let you continue next time you open Into-CPS.\n" + "Yes will let you open a blank app next time you open Into-CPS."}
         );
         if(res == 0) {
-          mainWindow.close();
           console.log('closed without unloading');
+          mainWindow.close();
+         
         } else {
           console.log('unloading');
           intoCpsApp.getSettings().unload();
