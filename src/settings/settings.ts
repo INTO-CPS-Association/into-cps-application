@@ -80,10 +80,12 @@ export default class Settings implements ISettingsValues {
   unload() {
     try {
       this.intoCpsDataObject = {};
+      if(fs.existsSync(this.settingsFile)) {
       fs.unlink(this.settingsFile, (err) => {
         if(err) throw err;
         console.log(this.settingsFile + ' was deleted');
       });
+    }
     } catch (e) {
       console.log(e);
     }
@@ -103,6 +105,7 @@ export default class Settings implements ISettingsValues {
 
       if (initial) { // no settings file created yet, just use DOM
         this.intoCpsDataObject = {};
+        console.log('when here');
         return;
       }
 
