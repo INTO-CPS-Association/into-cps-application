@@ -39,12 +39,14 @@ export default class Settings implements ISettingsValues {
   userDataPath: string;
   intoCpsAppFolder: string;
   settingsFile: string;
+  counter: number;
   intoCpsDataObject: any = { "into-cps-settings-version": "0.0.1" };
 
   constructor(app: Electron.App, intoCpsAppFolder: string) {
     this.app = app;
     this.intoCpsAppFolder = intoCpsAppFolder;
     this.settingsFile = path.normalize(this.intoCpsAppFolder + "/settings.json");
+    this.counter = 0;
   }
 
   public save() {
@@ -75,6 +77,19 @@ export default class Settings implements ISettingsValues {
     });
   }
 
+  deleteSettings() {
+    try {
+      if(fs.existsSync(this.settingsFile)) {
+      fs.unlink(this.settingsFile, (err) => {
+        if(err) throw err;
+        console.log(this.settingsFile + ' was deleted');
+      });
+    }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   load() {
     try {
 
@@ -100,8 +115,15 @@ export default class Settings implements ISettingsValues {
 
     } catch (e) {
       console.log("Failed to read settings from file: " + this.settingsFile + ".");
-      throw e;
+      if(e instanceof SyntaxError) {
+        this.intoCpsDataObject = {};
+        this.deleteSettings();
+      } else {
+        console.log('error occured: ' + e);
+        throw e;
+      }
     }
+    
     console.info(this.intoCpsDataObject);
     console.log("Finished loading settings.");
     /* fs.readFile(this.settingsFile, (err, data) => {

@@ -88,9 +88,9 @@ function createWindow() {
         bw.close();
       }
     })); */
+
     BrowserWindow.getAllWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
 
- 
   });
 
   // Emitted when the window is closed.
@@ -128,6 +128,9 @@ app.on('window-all-closed', function () {
   //the app is not build to handle this since windows are created
   //from render processes
   //if (process.platform !== 'darwin') {
+
+  // for testing purposes this should be uncommented
+  // intoCpsApp.getSettings().deleteSettings();
   app.quit();
   //}
 });
