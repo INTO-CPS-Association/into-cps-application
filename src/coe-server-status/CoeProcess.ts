@@ -177,7 +177,8 @@ export class CoeProcess {
   //start or restart the COE process
   public start() {
     if (!this.checkCoeAvaliablity()) {
-      const { dialog } = require("electron");
+      const electron = require("electron");
+      var dialog = electron.dialog;
       dialog.showMessageBox(
         {
           type: "error",

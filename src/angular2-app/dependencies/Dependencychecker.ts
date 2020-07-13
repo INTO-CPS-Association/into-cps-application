@@ -70,7 +70,7 @@ export function dependencyCheckPythonVersion() {
     } else if (pythonVersion === false) {
       console.log(data);
       // should find a better way than this to display dialogs
-      let remote = require('electron').remote;
+      let remote = require('electron');
       let dialog = remote.dialog;
       dialog.showMessageBox(
         {
@@ -85,7 +85,7 @@ export function dependencyCheckPythonVersion() {
       );
     } else if (pythonversion < 2.6 || pythonversion >= 3.0) {
       console.log(pythonversion);
-      let remote = require('electron').remote;
+      let remote = require('electron');
       let dialog = remote.dialog;
       dialog.showMessageBox(
         {
