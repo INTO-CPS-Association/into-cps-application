@@ -40,6 +40,7 @@ import {
 } from "../angular2-app/coe/models/Fmu";
 import {WarningMessage, ErrorMessage} from "./Messages";
 import { MultiModelConfig } from "./MultiModelConfig"
+import { reject } from 'bluebird';
 
 export class DseConfiguration implements ISerializable {
     
@@ -104,7 +105,7 @@ export class DseConfiguration implements ISerializable {
                     parser.parseExtScrObjectives(data, configuration);
                     parser.parseIntFuncsObjectives(data, configuration);
                     parser.parseRanking(data,configuration);
-                    resolve(configuration)
+                    resolve(configuration);
                 }).catch(error => reject(error));
             })
     }

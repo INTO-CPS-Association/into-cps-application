@@ -87,13 +87,14 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     algorithmFormGroups = new Map<IDseAlgorithm, FormGroup>();
     editing: boolean = false;
     editingMM: boolean = false;
+    isInValidDSEConfig: boolean = false;
     warnings: WarningMessage[] = [];
     parseError: string = null;
 
-    mmSelected:boolean = false;
+    mmSelected:boolean = true;
     mmPath:string = '';
-    
-    config : DseConfiguration;
+
+    config = new DseConfiguration();
     cosimConfig:string[] = [];
     mmOutputs:string[] = [];
     objNames:string[] = [];
@@ -166,6 +167,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                     });
                 });
            }, error => this.zone.run(() => {this.parseError = error})).catch(error => console.error(`Error during parsing of config: ${error}`));
+           
     }
 
     onNavigate(): boolean {
@@ -225,14 +227,15 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     /*
      * Method to state that the multi-model has been chosen for the DSE config
      */
-    onMMSubmit() {
+    /* onMMSubmit() {
         if (!this.editingMM) return;
         this.editingMM = false;
         if (this.mmPath !='')
         {
             this.mmSelected = true;
         }
-    }
+    } */
+
     
 
     getFiles(path: string): string [] {
@@ -267,28 +270,36 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     }
 
     onConfigChange(config:string) {
+        this.parseError = null;
         this.coeconfig = config;
         let mmPath = Path.join(this.coeconfig, "..", "..", "mm.json");
-
-        if (!fs.existsSync(mmPath)) {
-            console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...")
-            //no we have the old style
-            fs.readdirSync(Path.join(this.coeconfig, "..", "..")).forEach(file => {
-                if (file.endsWith("mm.json")) {
-                    mmPath = Path.join(this.coeconfig, "..", "..", file);
-                    console.debug("Found old style mm at: " + mmPath);
-                    return;
-                }
-            });
+        try {
+            if(Path.isAbsolute(mmPath)) {
+                /* console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...") */
+                //no we have the old style
+                fs.readdirSync(Path.join(this.coeconfig, "..", "..")).forEach(file => {
+                    if (file.endsWith("mm.json")) {
+                        mmPath = Path.join(this.coeconfig, "..", "..", file);
+                        console.log("Found mm at: " + mmPath);
+                        /* console.debug("Found old style mm at: " + mmPath); */
+                        return;
+                    }
+                });
+            }
+            this.mmPath=mmPath;
+            this.parseConfig(mmPath);
+        } catch (error) {
+            console.error("Path was not a correct path.. " + mmPath + " error: " + error);
         }
-        this.mmPath=mmPath;
-        this.parseConfig(mmPath);
+      
+        
     }
 
     /*
      * Method for updating the DSE algorithm
      */
     onAlgorithmChange(algorithm: IDseAlgorithm) {
+        this.parseError = null;
         this.config.searchAlgorithm = algorithm;
 
         this.form.removeControl('algorithm');
