@@ -52,14 +52,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      */
     canRun() {
         return this.online
-            /* && this.coeconfig != ""
-            && this.dseWarnings.length === 0
-            && this.coeWarnings.length === 0
-            //&& this.config.dseSearchParameters.length > 1 
-            && this.config
-            && this.config.extScrObjectives
-            && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2; */
-            //&& (<ParetoRanking> this.config.ranking).dimensions.length == 2;
     }
 
     /*
