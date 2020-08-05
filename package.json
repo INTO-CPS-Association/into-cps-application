@@ -98,7 +98,8 @@
     "spectron-fake-menu": "0.0.1",
     "spectron-menu-addon": "^0.4.1",
     "terser-webpack-plugin": "^2.3.5",
-    "typescript": "^3.2.4",
+    "ts-loader": "^8.0.2",
+    "typescript": "^3.9.7",
     "uglify-save-license": "^0.4.1",
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11"
