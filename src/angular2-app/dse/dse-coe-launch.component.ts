@@ -1,10 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CoeSimulationService } from '../coe/coe-simulation.service';
 import { SettingsService, SettingKeys } from '../shared/settings.service';
 import IntoCpsApp from "../../IntoCpsApp";
 import { HttpClient } from '@angular/common/http';
 import { timeout, map } from 'rxjs/operators';
+import {Project} from "../../proj/Project";
+import * as fs from 'fs';
 import * as Path from 'path';
+import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
 
 @Component({
     selector: "dse-coe-launch",
@@ -18,6 +21,22 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     
     private onlineInterval:number;
     private _path:string;
+    @Input()
+    set path(path:string) {
+        this._path = path;
+
+        if (path){
+            let app: IntoCpsApp = IntoCpsApp.getInstance();
+            let p: string = app.getActiveProject().getRootFilePath();
+            this.cosimConfig = this.loadCosimConfigs(Path.join(p, Project.PATH_MULTI_MODELS));
+
+            if(this.coeSimulation)
+                this.coeSimulation.reset();
+        }
+    }
+    get path():string {
+        return this._path;
+    }
     editing: boolean = false;
     editingMM: boolean = false;
     parseError: string = null;
@@ -28,6 +47,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     cosimConfig:string[] = [];
     mmOutputs:string[] = [];
     objNames:string[] = [];
+    
+    @Input()
     coeconfig:string = '';
 
     online:boolean = false;
@@ -37,7 +58,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         private settings:SettingsService) {    }
 
     ngOnInit() {
-        this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8082";
+        this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8083";
         this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
         this.isCoeOnline();
     }
@@ -46,6 +67,27 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         clearInterval(this.onlineInterval);
     }
 
+    getFiles(path: string): string [] {
+        var fileList: string[] = [];
+        var files = fs.readdirSync(path);
+        for(var i in files){
+            var name = Path.join(path, files[i]);
+            if (fs.statSync(name).isDirectory()){
+                fileList = fileList.concat(this.getFiles(name));
+            } else {
+                fileList.push(name);
+            }
+        }
+    
+        return fileList;
+    }
+
+    
+
+    loadCosimConfigs(path: string): string[] {
+        var files: string[] = this.getFiles(path);
+        return  files.filter(f => f.endsWith("coe.json"));
+    }
     /*
      * Method to check if can run a DSE. Will check if the COE is online, if there are any warnings
      * and also some DSE-specific elements
@@ -67,7 +109,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
         let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
         // check if python is installed.
-        /* dependencyCheckPythonVersion(); */
+        dependencyCheckPythonVersion();
 
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.

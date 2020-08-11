@@ -9,35 +9,35 @@
 
 
 <form  class="form-horizontal" (ngSubmit)="onSubmit()"> <!-- *ngIf="mmSelected" -->
-
-	<h3>Experiment Multi-model</h3>
-	<div class="form-group">
-   		<label style="text-align: left;" class="col-md-2 control-label">Co-simulation experiment</label>
-    	<div class="col-md-9">
-			<p *ngIf="!editingMM" class="form-control-static">{{getMultiModelName()}}</p>
-			<select *ngIf="editingMM"  [ngModel]="cosimConfig" (ngModelChange)="onConfigChange($event)"  [ngModelOptions]="{standalone:true}" class="form-control">
-				<option *ngFor="let con of cosimConfig" [ngValue]="con">{{experimentName(con)}}</option>
-			</select>
-
-			<button *ngIf="!editingMM" class="btn btn-default" (click)="editingMM = true">
-				<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Set multi-model
-			</button>
-			<button *ngIf="editingMM" class="btn btn-default" (click)="editingMM = false"> <!-- (click)="onMMSubmit()" -->
-				<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span>Save multi-model choice
-			</button>
-			
-		
-		</div>
-	</div>
 	<button *ngIf="!editing" class="btn btn-default" id="btn-edit" (click)="editing = true">
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
     </button>
-	<button *ngIf="editing" class="btn btn-default" id="btn-save" style="margin-right: 10px;">
+	<button *ngIf="editing" class="btn btn-default" id="btn-save" style="margin-right: 10px;" >
         <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save
 	</button>
 	<!-- <button *ngIf="editing" class="btn btn-default" tyoe="button" (click)="editing = false" >
         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel
     </button> -->
+	<h3>Experiment Multi-model</h3>
+	<div class="form-group">
+   		<label style="text-align: left;" class="col-md-2 control-label">Co-simulation experiment</label>
+    	<div class="col-md-9">
+			<p *ngIf="!editing" class="form-control-static">{{getMultiModelName()}}</p>
+			<select *ngIf="editing"  [ngModel]="cosimConfig" (ngModelChange)="onConfigChange($event)"  [ngModelOptions]="{standalone:true}" class="form-control">
+				<option *ngFor="let con of cosimConfig" [ngValue]="con">{{experimentName(con)}}</option>
+			</select>
+
+			<!-- <button *ngIf="!editingMM" class="btn btn-default" (click)="editingMM = true">
+				<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Set multi-model
+			</button>
+			<button *ngIf="editingMM" class="btn btn-default" (click)="editingMM = false"> 
+				<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span>Save multi-model choice
+			</button> -->
+			
+		
+		</div>
+	</div>
+	
 	
 	
 		<h3>DSE Configuration Setup</h3>
@@ -360,3 +360,4 @@
         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel
     </button> -->
 </form>
+

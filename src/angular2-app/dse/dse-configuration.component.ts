@@ -49,7 +49,7 @@ import { FormGroup, FormArray, FormControl } from "@angular/forms";
 import {Project} from "../../proj/Project";
 import * as Path from 'path';
 import * as fs from 'fs';
-/* import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker"; */
+
 
 
 @Component({
@@ -61,7 +61,6 @@ import * as fs from 'fs';
 })
 export class DseConfigurationComponent implements OnInit, OnDestroy {
     private _path:string;
-
     @Input()
     set path(path:string) {
         this._path = path;
@@ -81,6 +80,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     @Output()
     change = new EventEmitter<string>();
+
+    @Output()
+    coeChange = new EventEmitter<string>();
 
     form: FormGroup;
     algorithms: IDseAlgorithm[] = [];
@@ -135,7 +137,6 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     parseConfig(mmPath : string) {
        let project = IntoCpsApp.getInstance().getActiveProject();
-       
        DseConfiguration
            .parse(this.path, project.getRootFilePath(), project.getFmusPath(), mmPath)
            .then(config => {
@@ -219,9 +220,10 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         }
 
         this.config.save()
-                .then(() => this.change.emit(this.path));
+                .then(() => this.change.emit(this.path)).then(() => this.coeChange.emit(this.coeconfig));
        
         this.editing = false;
+        
     }
 
     /*
