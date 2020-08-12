@@ -35,12 +35,10 @@ import * as fs from "fs"
 import { DseParser } from "./dse-parser"
 import {Serializer} from "./Parser";
 import {
-    Fmu, Instance, ScalarVariableType, isTypeCompatipleWithValue,
-    isTypeCompatiple, InstanceScalarPair, ScalarVariable
+    Fmu, Instance, ScalarVariableType, ScalarVariable
 } from "../angular2-app/coe/models/Fmu";
-import {WarningMessage, ErrorMessage} from "./Messages";
+import {WarningMessage } from "./Messages";
 import { MultiModelConfig } from "./MultiModelConfig"
-import { reject } from 'bluebird';
 
 export class DseConfiguration implements ISerializable {
     
@@ -93,9 +91,8 @@ export class DseConfiguration implements ISerializable {
                     let parser = new DseParser();
                     let configuration = new DseConfiguration();
                     configuration.sourcePath = path;
-
+                    
                     configuration.fmuRootPath = fmuRootPath;
-
                     configuration.multiModel = multiModel;
                     parser.parseSearchAlgorithm(data, configuration);
                     parser.parseScenarios(data, configuration);

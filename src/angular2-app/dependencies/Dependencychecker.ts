@@ -93,6 +93,7 @@ export function dependencyCheckPythonVersion() {
     var pythonVersion = data.split(" ")[1] ? data.split(" ")[1] : false;
     var pythonversion = parseFloat(pythonVersion);
     if (pythonversion < 2.6 /* || pythonversion >= 3.0 */) {
+
       console.log(pythonversion);
       let remote = require('electron').remote;
       let dialog = remote.dialog;

@@ -39,7 +39,14 @@ import {Component, Input} from "@angular/core";
 export class DsePageComponent {
     @Input()
     path:string;
+    coeconfig:string = '';
+
     constructor() {
         console.log("DSEPAGECOMPONENT");
+        console.log(this.path);
       }
+
+      coeChangeEvent(config: string) {
+        this.coeconfig = config;
+    }
 }
