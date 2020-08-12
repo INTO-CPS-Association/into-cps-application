@@ -820,6 +820,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
      * config being saved to json format correctly.
      */
     runDse() {
+        console.log('running from config');
         var spawn = require('child_process').spawn;
         let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR);
 

@@ -358,5 +358,23 @@
 	
 	<!-- <button *ngIf="editing" class="btn btn-default" tyoe="button" (click)="editing = false" >
         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel
-    </button> -->
+	</button> -->
+	
+
+	<h3>DSE Co-simulation</h3>
+
+<div *ngIf="!online" class="alert alert-danger">
+    Co-Simulation Engine offline. No connection at {{url}}.
+    <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()"><span class="glyphicon glyphicon-link"></span> Launch</button>
+</div>
+<div *ngIf="online" class="alert alert-success">
+    Co-Simulation Engine, version {{version}}, online at {{url}}.
+</div>
+
+
+<div class="form-group">
+    <button type="button" [disabled]="!canRun()" (click)="runDse()" class="btn btn-default">
+        <span class="glyphicon glyphicon-play"></span> Simulate
+    </button>
+</div>
 </form>

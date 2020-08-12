@@ -67,6 +67,7 @@ export function dependencyCheckPythonVersion() {
     if (pythonVersion != false) {
       // this converts a string of "*.*.*"" into a number *.*
       var pythonversion = parseFloat(pythonVersion);
+      
     } else if (pythonVersion === false) {
       console.log(data);
       // should find a better way than this to display dialogs
@@ -83,9 +84,17 @@ export function dependencyCheckPythonVersion() {
         },
         function(button: any) {}
       );
-    } else if (pythonversion < 2.6 || pythonversion >= 3.0) {
+
+    }
+   
+  });
+  spawn.stdout.on('data', function(data) {
+    data = data.toString("utf8").split("\n")[0];
+    var pythonVersion = data.split(" ")[1] ? data.split(" ")[1] : false;
+    var pythonversion = parseFloat(pythonVersion);
+    if (pythonversion < 2.6 /* || pythonversion >= 3.0 */) {
       console.log(pythonversion);
-      let remote = require('electron');
+      let remote = require('electron').remote;
       let dialog = remote.dialog;
       dialog.showMessageBox(
         {
@@ -97,8 +106,22 @@ export function dependencyCheckPythonVersion() {
         },
         function(button: any) {}
       );
+    } else if (pythonversion > 3.0) {
+      console.log(pythonversion);
+      let remote = require('electron').remote;
+      let dialog = remote.dialog;
+      dialog.showMessageBox(
+        {
+          type: "error",
+          buttons: ["OK"],
+          message:
+            "INTO-CPS has assest your python version to be newer than 2.9.  \n" +
+            "Your python version needs to be 2.7 or newer, but can´t be 3.0 or newer"
+        },
+        function(button: any) {}
+      );
     }
-  });
+  })
   spawn.on("close", (code, signal) => {
     // the shell returns != 0 if it fails to run python.
     if (code != 0) {

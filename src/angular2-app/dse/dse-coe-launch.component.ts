@@ -60,6 +60,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      * config being saved to json format correctly.
      */
     runDse() {
+        console.log(this.coeconfig);
         var spawn = require('child_process').spawn;
         let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR);
 
