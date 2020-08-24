@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
 import { CoeSimulationService } from '../coe/coe-simulation.service';
 import { SettingsService, SettingKeys } from '../shared/settings.service';
 import IntoCpsApp from "../../IntoCpsApp";
@@ -55,7 +55,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     url:string = '';
     version:string = '';
     constructor(private coeSimulation:CoeSimulationService, private http:HttpClient,
-        private settings:SettingsService) {    }
+        private settings:SettingsService, private zone:NgZone) {    }
 
     ngOnInit() {
         this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8083";
@@ -82,6 +82,11 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         return fileList;
     }
 
+    resetParseError() {
+        this.zone.run(() => {
+            this.parseError = null;
+        });
+    }
     
 
     loadCosimConfigs(path: string): string[] {
@@ -94,6 +99,13 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      */
     canRun() {
         return this.online
+        && this.coeconfig != ""
+        /* && this.dseWarnings.length === 0
+        && this.coeWarnings.length === 0 */
+        //&& this.config.dseSearchParameters.length > 1 
+      /*   && this.config
+        && this.config.extScrObjectives
+        && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2; */
     }
 
     /*
@@ -103,6 +115,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      */
     runDse() {
         console.log(this.coeconfig);
+        var stdoutChunks: any[] = [];
+        var stderrChunks: any[] = [];
         var spawn = require('child_process').spawn;
         let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR);
 
@@ -116,17 +130,33 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
         let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 
         var child = spawn("python", [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName], {
-            detached: true,
+            /* detached: true, */
             shell: false,
             // cwd: childCwd
         });
         child.unref();
 
         child.stdout.on('data', function (data: any) {
-            console.log('dse/stdout: ' + data);
+            stdoutChunks = stdoutChunks.concat(data);
+        });
+        child.stdout.on('end', () => {
+            var stdoutContent = Buffer.concat(stdoutChunks).toString();
+            console.log('stdout chars:', stdoutContent.length);
+            console.log(stdoutContent);
         });
         child.stderr.on('data', function (data: any) {
-            console.log('dse/stderr: ' + data);
+            stderrChunks = stderrChunks.concat(data);
+        });
+        child.stderr.on('end', () => {
+            var stderrContent = Buffer.concat(stderrChunks).toString();
+            console.log('stderr chars:', stderrContent.length);
+            console.log(stderrContent);
+            if(stderrContent.length > 0) {
+                this.parseError = stderrContent;
+                /* setTimeout(() => {
+                    
+                }, 15000); */
+            }
         });
     }
 

@@ -82,7 +82,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     change = new EventEmitter<string>();
 
     @Output()
-    coeChange = new EventEmitter<string>();
+    coechange = new EventEmitter<string>();
 
     form: FormGroup;
     algorithms: IDseAlgorithm[] = [];
@@ -220,7 +220,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         }
 
         this.config.save()
-                .then(() => this.change.emit(this.path)).then(() => this.coeChange.emit(this.coeconfig));
+                .then(() => this.change.emit(this.path)).then(() => this.coechange.emit(this.coeconfig));
        
         this.editing = false;
         
@@ -275,15 +275,16 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         this.parseError = null;
         this.coeconfig = config;
         let mmPath = Path.join(this.coeconfig, "..", "..", "mm.json");
+        /* let coePath = Path.join(this.coeconfig, "..", "..", "coe.json"); */
         try {
             if(Path.isAbsolute(mmPath)) {
-                /* console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...") */
+                // console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...")
                 //no we have the old style
                 fs.readdirSync(Path.join(this.coeconfig, "..", "..")).forEach(file => {
                     if (file.endsWith("mm.json")) {
                         mmPath = Path.join(this.coeconfig, "..", "..", file);
                         console.log("Found mm at: " + mmPath);
-                        /* console.debug("Found old style mm at: " + mmPath); */
+                       //  console.debug("Found old style mm at: " + mmPath);
                         return;
                     }
                 });

@@ -1,5 +1,15 @@
 <h3>DSE Co-simulation</h3>
 
+<div *ngIf="parseError">
+	<div class="alert alert-danger alert-big">
+        <button (click)="resetParseError()" type="button" style="float: right; border-radius: 50%; border: none; background-color: white;"><span class="glyphicon glyphicon-remove"></span></button>
+		<p>Error: Could not run config.</p>
+		<p>Message: {{parseError}}</p>
+        <p>Path: {{path}}</p>
+	</div>
+</div>
+
+
 <div *ngIf="!online" class="alert alert-danger">
     Co-Simulation Engine offline. No connection at {{url}}.
     <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()"><span class="glyphicon glyphicon-link"></span> Launch</button>
