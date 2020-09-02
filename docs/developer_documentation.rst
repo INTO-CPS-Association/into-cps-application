@@ -1,10 +1,11 @@
 Developer Documentation
 =======================
 
-This section contains documentation meant for developers of the application.
+This section of the documentation provides relevant information to maintainers and contributers of the project.
 
-.. toctree::
-   	:maxdepth: 2
-   	:caption: Contents:
+Overview
+--------
 
-	dependency_checker
+.. image:: images/INTO_CPS_modules.svg
+
+test
