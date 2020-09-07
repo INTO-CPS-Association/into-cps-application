@@ -17,12 +17,12 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "INTO-CPS Application"
+project = "INTO-CPS Desktop Application"
 copyright = "2020, INTO-CPS Association"
 author = "INTO-CPS Association"
 
 # The full version, including alpha/beta/rc tags
-release = "3.4.9"
+release = "4.0.0"
 
 master_doc = "index"
 
@@ -31,7 +31,11 @@ master_doc = "index"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["recommonmark", "sphinx_rtd_theme"]
+extensions = [
+    "recommonmark",
+    "sphinx_rtd_theme",
+    "sphinx.ext.imgconverter",
+]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,4 +69,4 @@ html_static_path = ["_static"]
 
 # We do not wish to process "GitHub" README.MD in the source tree
 
-html_logo = "images/logo.svg"
+# html_logo = "images/logo.svg"
