@@ -29,18 +29,18 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 import * as child_process from "child_process";
+import { shell } from 'electron';
+const { dialog } = require('electron');
 
   // check if java is running and which version no working
   export function dependencyCheckJava() {
-    var spawn = child_process.spawn("java", ["-version"]);
+    var spawn = child_process.spawn("java", ["-version"],{shell : true});
     spawn.on("error", err => {
       console.error(err);
       return false;
     });
     spawn.on("close", (code, signal) => {
       if (code != 0) {
-        let remote = require('electron').remote;
-        let dialog = remote.dialog;
         dialog.showMessageBox(
           {title: "error", buttons: ["OK"], message: "Java wasn´t detected on your system \n" +
           "JRE is needed to run the COE"}
