@@ -39,6 +39,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     }
     editing: boolean = false;
     editingMM: boolean = false;
+    simsuccess: boolean = false;
+    simfailed: boolean = false;
     parseError: string = null;
 
     mmSelected:boolean = true;
@@ -142,7 +144,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         child.stdout.on('end', () => {
             var stdoutContent = Buffer.concat(stdoutChunks).toString();
             console.log('stdout chars:', stdoutContent.length);
-            console.log(stdoutContent);
+            // see the output uncomment this line
+            // console.log(stdoutContent);
         });
         child.stderr.on('data', function (data: any) {
             stderrChunks = stderrChunks.concat(data);
@@ -150,12 +153,16 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         child.stderr.on('end', () => {
             var stderrContent = Buffer.concat(stderrChunks).toString();
             console.log('stderr chars:', stderrContent.length);
+            
             console.log(stderrContent);
             if(stderrContent.length > 0) {
                 this.parseError = stderrContent;
+                this.simfailed = true;
                 /* setTimeout(() => {
                     
                 }, 15000); */
+            } else {
+                this.simsuccess = true;
             }
         });
     }

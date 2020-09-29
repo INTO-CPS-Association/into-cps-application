@@ -20,7 +20,9 @@
 
 
 <div class="form-group">
-    <button type="button" [disabled]="!canRun()" (click)="runDse()" class="btn btn-default">
+    <button type="button" [disabled]="!canRun()" (click)="runDse()" class="col-sm-3 col-md-1 btn btn-default">
         <span class="glyphicon glyphicon-play"></span> Simulate
     </button>
+    <span class="col-sm-5 col-md-2 succeslabel" *ngIf="simsuccess"> Simulation successful</span>
+    <span class="col-sm-5 col-md-2 failedlabel" *ngIf="simfailed">Simulation failed</span>
 </div>

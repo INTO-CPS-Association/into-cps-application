@@ -162,10 +162,12 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                     this.form = new FormGroup({
                         searchAlgorithm :  this.algorithmFormGroups.get(this.config.searchAlgorithm),
                         paramConstraints : new FormArray(this.config.paramConst.map(c => new FormControl(c))),
+                        
                         objConstraints : new FormArray(this.config.objConst.map(c => new FormControl(c))),
                         extscr : new FormArray(this.config.extScrObjectives.map(s => new FormControl(s))),
                         scenarios : new FormArray(this.config.scenarios.map(s => new FormControl(s)))
                     });
+                    console.log(this.config);
                 });
            }, error => this.zone.run(() => {this.parseError = error})).catch(error => console.error(`Error during parsing of config: ${error}`));
            
@@ -388,7 +390,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
      * parameter of choice is recorded in the DSE config.
      */ 
     setDSEParameter(instance: Instance, variableName:string, newValue: any) {
-        if (!newValue.includes(",")){
+
+        // this will not work with the python scripts as it will try to run on an array, this will be commented out for now and removed in an up-coming commit
+        /* if (!newValue.includes(",")){
             if (instance.fmu.getScalarVariable(variableName).type === ScalarVariableType.Real)
                 newValue = parseFloat(newValue);
             else if (instance.fmu.getScalarVariable(variableName).type === ScalarVariableType.Int)
@@ -398,7 +402,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         }
         else{
             newValue = this.parseArray(instance.fmu.getScalarVariable(variableName).type, newValue);
-        }
+        } */
+
+        newValue = this.parseArray(instance.fmu.getScalarVariable(variableName).type, newValue);
 
         let varExistsInDSE = false
         let instanceExistsInDSE = false
