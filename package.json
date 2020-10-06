@@ -69,7 +69,7 @@
     "@types/xml2js": "0.0.32",
     "chai": "^4.2.0",
     "del": "~2.2.0",
-    "electron": "^4.0.0",
+    "electron": "^7.2.4",
     "electron-packager": "^14.2.1",
     "gulp": "~4.0.2",
     "gulp-bower": "0.0.15",
