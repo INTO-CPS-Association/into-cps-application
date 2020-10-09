@@ -112,16 +112,16 @@ class SettingsView {
         this.settings.save();
         let remote = require("electron").remote;
         let dialog = remote.dialog;
-        dialog.showMessageBox({ type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." }, function (button: any) {
+        /* dialog.showMessageBox({ type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." }, function (button: any) {
             if (button == 0) {
                 remote.app.relaunch();
                 remote.app.exit();
             } else {
                 window.top.close();
             }
-        });
-        // for electron v8
-       /*  let save = dialog.showMessageBox(null, { type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." });
+        }); */
+        // for electron v10
+        let save = dialog.showMessageBox(null, { type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." });
         save.catch((error) => {
             console.error(error);
             return;
@@ -134,7 +134,7 @@ class SettingsView {
             } else {
                 window.top.close();
             }
-        }); */
+        });
 
         return false;
     }

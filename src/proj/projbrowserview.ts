@@ -39,7 +39,7 @@ import { isResultValid } from "../intocps-configurations/ResultConfig";
 import * as fs from 'fs';
 import Path = require("path");
 const rimraf = require("rimraf");
-const { BrowserWindow } = require('electron').remote
+const { BrowserWindow } = require('electron');
 import { RTTester } from "../rttester/RTTester";
 import { IntoCpsAppMenuHandler } from "../IntoCpsAppMenuHandler";
 import { Utilities } from "../utilities";
@@ -421,7 +421,7 @@ export class BrowserController {
 			parent.opensInMainWindow = false;
 			let url = "file://"+path;
 			parent.dblClickHandler = function (item:ProjectBrowserItem){
-				let authWindow = new BrowserWindow({width:800,height:600,webPreferences:{nodeIntegration: false}});
+				let authWindow = new BrowserWindow({width:800,height:600,webPreferences:{nodeIntegration: false, enableRemoteModule: true}});
 				
 				authWindow.loadURL(url);
 				authWindow.show;

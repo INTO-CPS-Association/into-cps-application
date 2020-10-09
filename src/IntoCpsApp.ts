@@ -125,6 +125,7 @@ let topBarNameId: string = "activeTabTitle";
 
     public setWindow(win: Electron.BrowserWindow) {
         this.window = win;
+        
     }
 
 
@@ -214,8 +215,9 @@ let topBarNameId: string = "activeTabTitle";
     //get the global instance
     public static getInstance(): IntoCpsApp {
         let intoApp:IntoCpsApp = null;
-        let remote = require("electron").remote;
+        const {remote} = require("electron");
         if (remote){
+            
             intoApp = remote.getGlobal("intoCpsApp");
         }else{
             intoApp = global.intoCpsApp;

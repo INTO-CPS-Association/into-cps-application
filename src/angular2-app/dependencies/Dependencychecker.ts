@@ -81,8 +81,7 @@ export function dependencyCheckPythonVersion() {
             "INTO-CPS found Python on your system. \n" +
             "But was unable to assess your version of Python. \n" +
             "Your python version needs to be 2.7 or newer."
-        },
-        function(button: any) {}
+        }
       );
 
     }
@@ -104,8 +103,7 @@ export function dependencyCheckPythonVersion() {
           message:
             "INTO-CPS has assest your python version to be older than 2.7.  \n" +
             "Your python version needs to be 2.7 or newer"
-        },
-        function(button: any) {}
+        }
       );
     } else if (pythonversion > 3.0) {
       console.log(pythonversion);
@@ -118,23 +116,21 @@ export function dependencyCheckPythonVersion() {
           message:
             "INTO-CPS has assest your python version to be newer than 2.9.  \n" +
             "Your python version needs to be 2.7 or newer, but can´t be 3.0 or newer"
-        },
-        function(button: any) {}
+        }
       );
     }
   })
   spawn.on("close", (code, signal) => {
     // the shell returns != 0 if it fails to run python.
     if (code != 0) {
-      let remote = require('electron').remote;
-      let dialog = remote.dialog;
+      const electron = require('electron');
+      var dialog = electron.dialog;
       dialog.showMessageBox(
         {
           type: "error",
           buttons: ["OK"],
           message: "Python wasn't found on your system"
-        },
-        function(button: any) {}
+        }
       );
     }
     

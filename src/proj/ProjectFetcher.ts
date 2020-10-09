@@ -50,22 +50,22 @@ import fs = require('fs');
 function launchProjectExplorer() {
     let remote = require("electron").remote;
     let dialog = remote.dialog;
-    let dialogResult: string[] = dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
+    /* let dialogResult: string[] = dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
     if (dialogResult != undefined) {
 
         var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
         p.value = dialogResult[0];
         //       this.app.createProject("my project",this.projectRootPath.value);
-    }
-   // for electron v8
-    /*  dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
+    } */
+   // for electron v10
+     dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
         console.log(res);
         if(!res.canceled)
         {
             var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
             p.value = res.filePaths[0];
         }
-    }).catch((error) => {console.error(error); return;}); */
+    }).catch((error) => {console.error(error); return;});
 }
 
 
