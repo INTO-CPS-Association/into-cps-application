@@ -79,8 +79,8 @@ export default class DialogHandler {
         let self = this;
        /*  this.win = new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow }); */
        this.win = (BrowserWindow 
-        ? new BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true} }) 
-        : new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true} }));
+        ? new BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true} }) 
+        : new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true} }));
         if(!IntoCpsApp.getInstance().getSettings().getSetting(SettingKeys.DEVELOPMENT_MODE) && this.win.setMenu)
             this.win.setMenu(null);
 

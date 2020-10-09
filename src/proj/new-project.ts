@@ -35,7 +35,7 @@
 
 
 import {IntoCpsApp} from  "../IntoCpsApp";
-import {remote} from "electron";
+const { dialog } = require('electron').remote
 
 function launchProjectExplorer() {
     /* let dialogResult: string[] = remote.dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
@@ -46,7 +46,7 @@ function launchProjectExplorer() {
         //       this.app.createProject("my project",this.projectRootPath.value);
     } */
     // for electron v8
-     remote.dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
+     dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] }).then((res) => {
         console.log(res);
         if(res.filePaths != undefined) {
             var p: HTMLInputElement = <HTMLInputElement>document.getElementById("projectRootPathText");
