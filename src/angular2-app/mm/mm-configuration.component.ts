@@ -136,7 +136,6 @@ export class MmConfigurationComponent {
         if (this.warnings.length > 0) return;
         this.config.save()
             .then(() => {
-                this.parseConfig();
                 this.selectOutputInstance(null);
                 this.selectParameterInstance(null);
                 this.change.emit(this.path);
