@@ -36,6 +36,7 @@ import { RTTester } from "../rttester/RTTester";
 import * as RTesterModalCommandWindow from "./GenericModalCommand";
 import Path = require("path");
 import { IntoCpsAppMenuHandler } from "../IntoCpsAppMenuHandler";
+const dialog = require("electron").remote.dialog;
 
 class FMUAssignment {
     assignments: FMUAssignments;
@@ -86,16 +87,6 @@ class FMUAssignments {
         this.hSUTList = <HTMLDivElement>document.getElementById("sutList");
         this.hAddFMUButton = <HTMLButtonElement>document.getElementById("addFMUButton");
         this.hAddFMUButton.addEventListener("click", () => {
-            let remote = require("electron").remote;
-            let dialog = remote.dialog;
-            /* let dialogResult: string[] = dialog.showOpenDialog({
-                filters: [{ name: "FMU-Files", extensions: ["fmu"] }],
-                defaultPath: RTTester.getProjectOfFile(controller.testCase)
-            });
-            if (dialogResult != undefined) {
-                let fmu = new FMUAssignment(this, dialogResult[0]);
-            } */
-            // for electron v10
              dialog.showOpenDialog({
                 filters: [{ name: "FMU-Files", extensions: ["fmu"] }],
                 defaultPath: RTTester.getProjectOfFile(controller.testCase)

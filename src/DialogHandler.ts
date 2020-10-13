@@ -31,7 +31,7 @@
 
 import IntoCpsApp from  "./IntoCpsApp";
 import {SettingKeys} from "./settings/SettingKeys"
-import {remote, BrowserWindow} from "electron"
+const {remote, BrowserWindow} = require("electron");
 export default class DialogHandler {
 
     doAction: (arg: any) => void;
@@ -77,7 +77,6 @@ export default class DialogHandler {
 
     public openWindow(data:string = '', showWindow:boolean = true) : Electron.BrowserWindow {
         let self = this;
-       /*  this.win = new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow }); */
        this.win = (BrowserWindow 
         ? new BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true} }) 
         : new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true} }));

@@ -167,7 +167,6 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                         extscr : new FormArray(this.config.extScrObjectives.map(s => new FormControl(s))),
                         scenarios : new FormArray(this.config.scenarios.map(s => new FormControl(s)))
                     });
-                    console.log(this.config);
                 });
            }, error => this.zone.run(() => {this.parseError = error})).catch(error => console.error(`Error during parsing of config: ${error}`));
            

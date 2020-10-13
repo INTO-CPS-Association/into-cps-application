@@ -38,6 +38,8 @@ import fs = require('fs');
 
 import downloader = require("../downloader/Downloader");
 
+const dialog = require("electron").remote.dialog;
+
 function scrollIntoView(eleID: any) {
     var e = document.getElementById(eleID);
     if (!!e && e.scrollIntoView) {
@@ -66,8 +68,6 @@ function getTempDir(): string {
     let tempDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_TMP_DIR);
     if (tempDir == null || tempDir == undefined) {
         if (IntoCpsApp.getInstance().getActiveProject() == null) {
-            let remote = require("electron").remote;
-            let dialog = remote.dialog;
             dialog.showErrorBox("No active project", "No Active project loaded, please load and try again.");
             return;
         }
@@ -240,59 +240,7 @@ function showVersion(version: string, data: any) {
         }
 
         btn.onclick = function (e) {
-            let {remote} = require("electron");
-            let dialog = remote.dialog;
             let buttons: string[] = ["No", "Yes"];
-            /* dialog.showMessageBox(  { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }, function (button: any) {
-                if (button == 1)//yes
-                {
-                    $("<div>").load("./progress-bar-component.html", function (event: JQueryEventObject) {
-                        let progressBarComponent = <HTMLDivElement>(<HTMLDivElement>this).firstElementChild;
-                        //Prepend the child
-                        if (progressDiv.hasChildNodes) {
-                            progressDiv.insertBefore(progressBarComponent, progressDiv.firstChild)
-                        }
-                        else { progressDiv.appendChild(progressBarComponent); }
-
-                        //Get the filling div
-                        let component = <HTMLDivElement>(<HTMLDivElement>progressBarComponent).querySelector("#coe-progress");
-                        component.scrollIntoView();
-                        //Start the download
-                        downloader.downloadTool(tool, getTempDir(), progressFunction(tool.name, component)).then(function (filePath) {
-                            console.log("Download complete: " + filePath);
-                            const { shell } = require('electron');
-
-                            if (downloader.checkToolAction(tool, downloader.DownloadAction.UNPACK)) {
-                                let installDirectory = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR)
-                                downloader.unpackTool(filePath, installDirectory)
-                                    .then(value => {
-                                        console.log("Unpacked zip...\n" + value);
-                                        shell.showItemInFolder(installDirectory);
-                                    })
-                                    .catch(error => {
-                                        console.log("Failed to unpack zip");
-                                        dialog.showErrorBox("Error", "Failed to unpack: " + filePath);
-                                    });
-                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.LAUNCH)) {
-                                dialog.showMessageBox({ type: 'question', buttons: buttons, message: "Accept launch of installer: " + Path.basename(filePath) + " downloaded for: " + tool.name + " (" + tool.version + ")" }, function (buttonInstall: any) {
-                                    if (buttonInstall == 1)//yes
-                                    {
-                                        shell.openExternal(filePath);
-                                    }
-                                });
-
-                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.SHOW)) {
-                                shell.showItemInFolder(filePath);
-                            } else if (downloader.checkToolAction(tool, downloader.DownloadAction.NONE)) {
-                                //do nothing
-                            } else {
-                                dialog.showMessageBox({ type: 'info', buttons: ["OK"], message: "Download completed: " + filePath });
-                            }
-                        }, function (error) { dialog.showErrorBox("Invalid Checksum", error); });
-                    });
-                }
-            }); */
-            // for electron v8
             dialog.showMessageBox(IntoCpsApp.getInstance().window, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }).then(function(button: any) {
                 if(button == 1)// yes
                 {

@@ -30,6 +30,7 @@
  */
 import * as child_process from "child_process";
 import { shell } from 'electron';
+// dialog from main thread
 const { dialog } = require('electron');
 
   // check if java is running and which version no working
@@ -71,8 +72,6 @@ export function dependencyCheckPythonVersion() {
     } else if (pythonVersion === false) {
       console.log(data);
       // should find a better way than this to display dialogs
-      let remote = require('electron');
-      let dialog = remote.dialog;
       dialog.showMessageBox(
         {
           type: "error",
@@ -94,8 +93,6 @@ export function dependencyCheckPythonVersion() {
     if (pythonversion < 2.6 /* || pythonversion >= 3.0 */) {
 
       console.log(pythonversion);
-      let remote = require('electron').remote;
-      let dialog = remote.dialog;
       dialog.showMessageBox(
         {
           type: "error",
@@ -107,8 +104,6 @@ export function dependencyCheckPythonVersion() {
       );
     } else if (pythonversion > 3.0) {
       console.log(pythonversion);
-      let remote = require('electron').remote;
-      let dialog = remote.dialog;
       dialog.showMessageBox(
         {
           type: "error",
@@ -123,8 +118,6 @@ export function dependencyCheckPythonVersion() {
   spawn.on("close", (code, signal) => {
     // the shell returns != 0 if it fails to run python.
     if (code != 0) {
-      const electron = require('electron');
-      var dialog = electron.dialog;
       dialog.showMessageBox(
         {
           type: "error",

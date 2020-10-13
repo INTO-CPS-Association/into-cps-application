@@ -116,7 +116,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      * config being saved to json format correctly.
      */
     runDse() {
-        console.log(this.coeconfig);
         var stdoutChunks: any[] = [];
         var stderrChunks: any[] = [];
         var spawn = require('child_process').spawn;

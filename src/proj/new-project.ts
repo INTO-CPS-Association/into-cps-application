@@ -35,7 +35,7 @@
 
 
 import {IntoCpsApp} from  "../IntoCpsApp";
-const { dialog } = require('electron').remote
+const dialog = require('electron').remote.dialog;
 
 function launchProjectExplorer() {
     /* let dialogResult: string[] = remote.dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });

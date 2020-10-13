@@ -37,6 +37,7 @@ import {RTTester} from "../rttester/RTTester";
 import * as RTesterModalCommandWindow from "./GenericModalCommand";
 import {IntoCpsAppMenuHandler} from "../IntoCpsAppMenuHandler";
 
+const dialog = require("electron").remote.dialog;
 
 export class CreateTDGProjectController extends ViewController {
 
@@ -51,16 +52,6 @@ export class CreateTDGProjectController extends ViewController {
     };
 
     xmiModelBrowser() {
-        let remote = require("electron").remote;
-        let dialog = remote.dialog;
-        /* let dialogResult: string[] = dialog.showOpenDialog({
-            filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
-        });
-        if (dialogResult != undefined) {
-            let hText: HTMLInputElement = <HTMLInputElement>document.getElementById("XMIModelPathText");
-            hText.value = dialogResult[0];
-        } */
-        // for electron v8
          dialog.showOpenDialog({
             filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
         }).then((res) => {

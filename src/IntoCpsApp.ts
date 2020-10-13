@@ -42,6 +42,8 @@ import { SettingKeys } from "./settings//SettingKeys";
 import { Utilities } from "./utilities";
 import { CoeProcess } from "./coe-server-status/CoeProcess";
 
+const {remote} = require("electron");
+
 // constants
 let topBarNameId: string = "activeTabTitle";
 
@@ -215,7 +217,7 @@ let topBarNameId: string = "activeTabTitle";
     //get the global instance
     public static getInstance(): IntoCpsApp {
         let intoApp:IntoCpsApp = null;
-        const {remote} = require("electron");
+        
         if (remote){
             
             intoApp = remote.getGlobal("intoCpsApp");
