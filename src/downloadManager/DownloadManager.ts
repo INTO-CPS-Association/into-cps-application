@@ -242,7 +242,7 @@ function showVersion(version: string, data: any) {
         btn.onclick = function (e) {
             let buttons: string[] = ["No", "Yes"];
             dialog.showMessageBox(IntoCpsApp.getInstance().window, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }).then(function(button: any) {
-                if(button == 1)// yes
+                if(button.response == 1)// yes
                 {
                     // console.log(res.response);
                     $("<div>").load("./progress-bar-component.html", function (event: JQueryEventObject) {
