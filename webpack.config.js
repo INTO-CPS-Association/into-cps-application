@@ -43,6 +43,7 @@ module.exports = {
             'zone.js'
         ],
         'common': ['es6-shim'],
+        'src' : './src/main.js',
     },
 
     output: {
@@ -77,25 +78,28 @@ module.exports = {
       },
 
     module: {
-        rules: [{
+      rules: [
+          {
             test: /\.ts$/,
-            loader: 'ts-loader?',
+            loader: 'ts-loader',
             options: { transpileOnly: true},
-            exclude: [/node_modules/, /dist/]
+            include: /src/
         },
         {
             test: /\.json$/,
-            loader: 'json-loader'
+            loader: 'json-loader',
+            include: /src/
         },
         {
             test: /\.(css|html)$/,
-            loader: 'raw-loader'
-
+            loader: 'raw-loader',
+            include: /src/
         },
         {
             test: /\.(png|jpg)$/,
             loader: 'url-loader',
-            options: { limit: 10000 }
+            options: { limit: 10000 },
+            include: /src/
         }
         ]},
     plugins: [

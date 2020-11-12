@@ -43,6 +43,8 @@ import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage } from "../../intocps-configurations/Messages";
 import { bind } from "bluebird";
 
+const dialog = require("electron").remote.dialog;
+
 @Component({
     selector: "coe-configuration",
     templateUrl: "./angular2-app/coe/coe-configuration.component.html"
@@ -186,21 +188,9 @@ export class CoeConfigurationComponent {
 
         if (this.warnings.length > 0) {
 
-            let remote = require("electron").remote;
-            let dialog = remote.dialog;
-            let res = dialog.showMessageBox({type: "question",
-            message: "Validation failed",
-            detail: "Do you want to save anyway?",
-            buttons: ["No", "Yes"] });
+          
 
-            if (res == 0) {
-                return;
-            } else {
-                override = true;
-                this.warnings = [];
-            }
-            // for electron v8
-            /* let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
             res.catch(() => {
                 return
             });
@@ -211,7 +201,7 @@ export class CoeConfigurationComponent {
                     override = true;
                     this.warnings = [];
                 }
-            }) */
+            })
         }
 
         if (override) {

@@ -1,0 +1,184 @@
+import { Component, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
+import { CoeSimulationService } from '../coe/coe-simulation.service';
+import { SettingsService, SettingKeys } from '../shared/settings.service';
+import IntoCpsApp from "../../IntoCpsApp";
+import { HttpClient } from '@angular/common/http';
+import { timeout, map } from 'rxjs/operators';
+import {Project} from "../../proj/Project";
+import * as fs from 'fs';
+import * as Path from 'path';
+import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
+
+@Component({
+    selector: "dse-coe-launch",
+    providers: [
+        CoeSimulationService
+    ],
+    templateUrl: "./angular2-app/dse/dse-coe-launch.component.html"  
+})
+export class DseCoeLaunchComponent implements OnInit, OnDestroy {
+
+    
+    private onlineInterval:number;
+    private _path:string;
+    @Input()
+    set path(path:string) {
+        this._path = path;
+
+        if (path){
+            let app: IntoCpsApp = IntoCpsApp.getInstance();
+            let p: string = app.getActiveProject().getRootFilePath();
+            this.cosimConfig = this.loadCosimConfigs(Path.join(p, Project.PATH_MULTI_MODELS));
+
+            if(this.coeSimulation)
+                this.coeSimulation.reset();
+        }
+    }
+    get path():string {
+        return this._path;
+    }
+    editing: boolean = false;
+    editingMM: boolean = false;
+    simsuccess: boolean = false;
+    simfailed: boolean = false;
+    parseError: string = null;
+
+    mmSelected:boolean = true;
+    mmPath:string = '';
+
+    cosimConfig:string[] = [];
+    mmOutputs:string[] = [];
+    objNames:string[] = [];
+    
+    @Input()
+    coeconfig:string = '';
+
+    online:boolean = false;
+    url:string = '';
+    version:string = '';
+    constructor(private coeSimulation:CoeSimulationService, private http:HttpClient,
+        private settings:SettingsService, private zone:NgZone) {    }
+
+    ngOnInit() {
+        this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8083";
+        this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
+        this.isCoeOnline();
+    }
+
+    ngOnDestroy() {
+        clearInterval(this.onlineInterval);
+    }
+
+    getFiles(path: string): string [] {
+        var fileList: string[] = [];
+        var files = fs.readdirSync(path);
+        for(var i in files){
+            var name = Path.join(path, files[i]);
+            if (fs.statSync(name).isDirectory()){
+                fileList = fileList.concat(this.getFiles(name));
+            } else {
+                fileList.push(name);
+            }
+        }
+    
+        return fileList;
+    }
+
+    resetParseError() {
+        this.zone.run(() => {
+            this.parseError = null;
+        });
+    }
+    
+
+    loadCosimConfigs(path: string): string[] {
+        var files: string[] = this.getFiles(path);
+        return  files.filter(f => f.endsWith("coe.json"));
+    }
+    /*
+     * Method to check if can run a DSE. Will check if the COE is online, if there are any warnings
+     * and also some DSE-specific elements
+     */
+    canRun() {
+        return this.online
+        && this.coeconfig != ""
+        /* && this.dseWarnings.length === 0
+        && this.coeWarnings.length === 0 */
+        //&& this.config.dseSearchParameters.length > 1 
+      /*   && this.config
+        && this.config.extScrObjectives
+        && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2; */
+    }
+
+    /*
+     * Method to run a DSE with the current DSE configuration. Assumes that the DSE can be run. 
+     * The method does not need to send the DSEConfiguration object, simply the correct paths. It relies upon the
+     * config being saved to json format correctly.
+     */
+    runDse() {
+        var stdoutChunks: any[] = [];
+        var stderrChunks: any[] = [];
+        var spawn = require('child_process').spawn;
+        let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR);
+
+        let absoluteProjectPath = IntoCpsApp.getInstance().getActiveProject().getRootFilePath();
+        let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
+        let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
+        // check if python is installed.
+        dependencyCheckPythonVersion();
+
+
+        //Using algorithm selector script allows any algortithm to be used in a DSE config.
+        let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 
+        var child = spawn("python", [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName], {
+            /* detached: true, */
+            shell: false,
+            // cwd: childCwd
+        });
+        child.unref();
+
+        child.stdout.on('data', function (data: any) {
+            stdoutChunks = stdoutChunks.concat(data);
+        });
+        child.stdout.on('end', () => {
+            var stdoutContent = Buffer.concat(stdoutChunks).toString();
+            console.log('stdout chars:', stdoutContent.length);
+            // see the output uncomment this line
+            // console.log(stdoutContent);
+        });
+        child.stderr.on('data', function (data: any) {
+            stderrChunks = stderrChunks.concat(data);
+        });
+        child.stderr.on('end', () => {
+            var stderrContent = Buffer.concat(stderrChunks).toString();
+            console.log('stderr chars:', stderrContent.length);
+            
+            console.log(stderrContent);
+            if(stderrContent.length > 0) {
+                this.parseError = stderrContent;
+                this.simfailed = true;
+                /* setTimeout(() => {
+                    
+                }, 15000); */
+            } else {
+                this.simsuccess = true;
+            }
+        });
+    }
+
+    isCoeOnline() {
+        this.http
+            .get(`http://${this.url}/version`).pipe(
+            timeout(2000),
+            map(response => response),)
+            .subscribe((data:any) => {
+                this.online = true;
+                this.version = data.version;
+            }, () => this.online = false);
+    }
+
+    onCoeLaunchClick() {
+        this.coeSimulation.
+    openCOEServerStatusWindow("autolaunch", false);
+    }
+}

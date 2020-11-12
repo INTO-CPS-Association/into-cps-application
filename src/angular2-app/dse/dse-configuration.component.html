@@ -6,42 +6,44 @@
 	</div>
 </div>
 
-<form class="form-horizontal" (ngSubmit)="onMMSubmit()">
+
+
+<form  class="form-horizontal" (ngSubmit)="onSubmit()"> <!-- *ngIf="mmSelected" -->
+	<button *ngIf="!editing" class="btn btn-default" id="btn-edit" (click)="editing = true">
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+    </button>
+	<button *ngIf="editing" class="btn btn-default" id="btn-save" style="margin-right: 10px;" >
+        <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save
+	</button>
+	<!-- <button *ngIf="editing" class="btn btn-default" tyoe="button" (click)="editing = false" >
+        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel
+    </button> -->
 	<h3>Experiment Multi-model</h3>
 	<div class="form-group">
-   		<label class="col-md-3 control-label">Co-simulation experiment</label>
+   		<label style="text-align: left;" class="col-md-2 control-label">Co-simulation experiment</label>
     	<div class="col-md-9">
-			<p *ngIf="!editingMM" class="form-control-static">{{getMultiModelName()}}</p>
-			<select *ngIf="editingMM"  [ngModel]="cosimConfig" (ngModelChange)="onConfigChange($event)"  [ngModelOptions]="{standalone:true}" class="form-control">
+			<p *ngIf="!editing" class="form-control-static">{{getMultiModelName()}}</p>
+			<select *ngIf="editing"  [ngModel]="cosimConfig" (ngModelChange)="onConfigChange($event)"  [ngModelOptions]="{standalone:true}" class="form-control">
 				<option *ngFor="let con of cosimConfig" [ngValue]="con">{{experimentName(con)}}</option>
 			</select>
 
-			<button *ngIf="!editingMM" class="btn btn-default" (click)="editingMM = true">
+			<!-- <button *ngIf="!editingMM" class="btn btn-default" (click)="editingMM = true">
 				<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Set multi-model
 			</button>
-			<button *ngIf="editingMM" class="btn btn-default">
-				<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save multi-model choice
-			</button>
+			<button *ngIf="editingMM" class="btn btn-default" (click)="editingMM = false"> 
+				<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span>Save multi-model choice
+			</button> -->
+			
+		
 		</div>
 	</div>
-</form>
-
-<hr>
-<hr>
-
-
-<form *ngIf="mmSelected" class="form-horizontal" (ngSubmit)="onSubmit()">
-	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
-        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
-    </button>
-	<button *ngIf="editing" class="btn btn-default">
-        <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save
-    </button>
+	
+	
 	
 		<h3>DSE Configuration Setup</h3>
 		<h4>DSE Search Algorithms</h4>
 		<div class="form-group">
-			<label class="col-sm-5 col-md-4 control-label">Search Algorithm</label>
+			<label  style="text-align: left;" class="col-sm-5 col-md-2 control-label">Search Algorithm</label>
 			<div class="col-sm-7 col-md-8">
 				<p *ngIf="!editing" class="form-control-static">{{config.searchAlgorithm.getName()}}</p>
 				<select *ngIf="editing" [ngModel]="config.searchAlgorithm.getName()" (ngModelChange)="onAlgorithmChange($event)" [ngModelOptions]="{standalone:true}"
@@ -350,14 +352,16 @@
 	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
     </button>
-	<button *ngIf="editing" class="btn btn-default">
+	<button *ngIf="editing" class="btn btn-default" style="margin-right: 10px;">
         <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save
-    </button>
-</form>
+	</button>
+	
+	<!-- <button *ngIf="editing" class="btn btn-default" tyoe="button" (click)="editing = false" >
+        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel
+	</button> -->
+	
 
-<hr>
-
-<h3>DSE Co-simulation</h3>
+<!-- 	<h3>DSE Co-simulation</h3>
 
 <div *ngIf="!online" class="alert alert-danger">
     Co-Simulation Engine offline. No connection at {{url}}.
@@ -372,4 +376,6 @@
     <button type="button" [disabled]="!canRun()" (click)="runDse()" class="btn btn-default">
         <span class="glyphicon glyphicon-play"></span> Simulate
     </button>
-</div>
+</div> -->
+</form>
+

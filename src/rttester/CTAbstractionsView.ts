@@ -36,6 +36,7 @@ import { Abstractions, Interface, Input, Component, Abstraction } from "../rttes
 import { SignalMap, SignalMapEntry } from "./SignalMap";
 import Path = require("path");
 import { RTTester } from "../rttester/RTTester";
+const dialog = require("electron").remote.dialog;
 
 
 let makeAbstractionTreeID = (function () {
@@ -109,18 +110,7 @@ export class CTAbstractionsView extends ViewController {
                 self.currentInput.abstraction.simulationBased.maxValueRange = +this.hSimulationMaxValueRange.value;
             };
             document.getElementById("simulationFileBrowse").onclick = (ev: MouseEvent) => {
-                let remote = require("electron").remote;
-                let dialog = remote.dialog;
-                let dialogResult: string[] = dialog.showOpenDialog({
-                    filters: [{ name: "Signal Log-Files (*.json)", extensions: ["json"] }]
-                });
-                if (dialogResult != undefined) {
-                    self.currentInput.abstraction.simulationBased.fileName
-                        = this.hSimulationFile.value
-                        = dialogResult[0];
-                }
-                // for electron v8
-                /* dialog.showOpenDialog({
+                dialog.showOpenDialog({
                     filters: [{ name: "Signal Log-Files (*.json)", extensions: ["json"] }]
                 }).then((res) => {
                     if(res.filePaths != undefined) {
@@ -131,7 +121,7 @@ export class CTAbstractionsView extends ViewController {
                 }).catch((error) => {
                     console.error(error);
                     return;
-                }); */
+                });
             };
         });
     }

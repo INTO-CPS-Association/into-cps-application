@@ -38,6 +38,8 @@ import * as Path from 'path';
 import { SettingKeys } from "./settings/SettingKeys";
 import * as child_process from "child_process";
 
+const dialog = require('electron').remote.dialog;
+
 export namespace Overture {
 
     function processStdOutData(data: any, div: HTMLDivElement, isErrorStream: boolean = false) {
@@ -57,7 +59,6 @@ export namespace Overture {
     }
 
     export function exportOvertureFmu(type: string, path: string) {
-        const { dialog } = require('electron').remote
         console.log("Exporting Overture FMU from path: " + path)
         let toolName = "overture-fmu-cli.jar";
         var jar = Path.join(IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR), toolName);
@@ -106,7 +107,7 @@ export namespace Overture {
 
             }); // content loaded from the server
         } else {
-            dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Please install: " + "Overture FMU Import / Exporter CLI - Overture FMI Support" + " first." }, function (button: any) { });
+            dialog.showMessageBox({ type: 'error', buttons: ["OK"], message: "Please install: " + "Overture FMU Import / Exporter CLI - Overture FMI Support" + " first." });
             // for electron v8
             // might not dismiss the dialog box this should be tested.
            /*  dialog.showMessageBox(null, { type: 'error', buttons: ["OK"], message: "Please install: " + "Overture FMU Import / Exporter CLI - Overture FMI Support" + " first." }); */

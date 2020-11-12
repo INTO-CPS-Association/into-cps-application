@@ -109,7 +109,7 @@ export class CoeProcess {
     let installDir = this.settings.getValue(SettingKeys.INSTALL_TMP_DIR);
     let childCwd = Path.join(installDir, "coe-working-dir");
     if (!fs.existsSync(childCwd)) {
-      fs.mkdirSync(childCwd);
+      fs.mkdirSync(childCwd,{recursive: true});
     }
     return childCwd;
   }
@@ -177,7 +177,8 @@ export class CoeProcess {
   //start or restart the COE process
   public start() {
     if (!this.checkCoeAvaliablity()) {
-      const { dialog } = require("electron");
+      const electron = require("electron");
+      var dialog = electron.dialog;
       dialog.showMessageBox(
         {
           type: "error",

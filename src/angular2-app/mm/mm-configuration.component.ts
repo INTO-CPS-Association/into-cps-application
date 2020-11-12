@@ -43,8 +43,6 @@ import { FormGroup, FormArray, FormControl, Validators} from "@angular/forms";
 import { uniqueControlValidator } from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage, ErrorMessage } from "../../intocps-configurations/Messages";
-import * as GitConn from "./../../traceability/git-connection"
-import { TraceMessager } from "./../../traceability/trace-messenger"
 
 import * as Path from 'path';
 
@@ -136,12 +134,8 @@ export class MmConfigurationComponent {
         this.warnings = this.config.validate();
 
         if (this.warnings.length > 0) return;
-        //Get hash of previous file
-        let prevHash: string = GitConn.GitCommands.getHashOfFile(this.config.sourcePath);
         this.config.save()
             .then(() => {
-                let traceMessage = TraceMessager.submitEditMultiModelMessage(this.config, prevHash);
-                //console.log(`Edit MM: [${JSON.stringify(traceMessage)}]`);
                 this.parseConfig();
                 this.selectOutputInstance(null);
                 this.selectParameterInstance(null);

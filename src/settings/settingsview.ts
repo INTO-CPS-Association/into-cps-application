@@ -34,6 +34,8 @@ import { SettingKeys } from "./SettingKeys";
 import { TextInputNonLoad, TextInputIds } from "../components/text-input-non-load";
 import { Settings } from "./settings";
 import { Component } from "../components/component";
+const remote = require("electron").remote;
+/* const dialog = require("electron").remote.dialog; */
 
 class SettingsView {
     private keys: { [key: string]: any };
@@ -110,18 +112,7 @@ class SettingsView {
 
     public save() {
         this.settings.save();
-        let remote = require("electron").remote;
-        let dialog = remote.dialog;
-        dialog.showMessageBox({ type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." }, function (button: any) {
-            if (button == 0) {
-                remote.app.relaunch();
-                remote.app.exit();
-            } else {
-                window.top.close();
-            }
-        });
-        // for electron v8
-       /*  let save = dialog.showMessageBox(null, { type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." });
+        let save = remote.dialog.showMessageBox(null, { type: 'warning', buttons: ["ok", "cancel"], message: "Application restart required for all settings to take effect." });
         save.catch((error) => {
             console.error(error);
             return;
@@ -134,7 +125,7 @@ class SettingsView {
             } else {
                 window.top.close();
             }
-        }); */
+        });
 
         return false;
     }

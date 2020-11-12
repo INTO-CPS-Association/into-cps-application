@@ -85,7 +85,8 @@ function getPackageJson() {
 var knownOptions = {
   string: "vt",
   boolean: "rel",
-  default: { vt: "patch", rel: false }
+  boolean: "verbose",
+  default: { vt: "patch", rel: false, verbose: false, }
 };
 
 var options = minimist(process.argv.slice(2), knownOptions);
@@ -189,8 +190,10 @@ gulp.task("compile-ts", function () {
 // Compile Angular 2 application
 gulp.task("compile-ng2", function (callback) {
   webpack(require("./webpack.config.js"), function (err, stats) {
-    if (err) { guitl.log(err); }
+    if(options.verbose) {
+      if (err) { guitl.log(err); }
     if (stats) { gutil.log(stats); }
+    }
     callback();
   });
 });

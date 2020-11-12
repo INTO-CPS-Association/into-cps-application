@@ -40,6 +40,8 @@ import { Utilities } from "../utilities";
 import { IntoCpsAppMenuHandler } from "../IntoCpsAppMenuHandler";
 import * as ModalCommand from "./GenericModalCommand";
 
+const dialog = require("electron").remote.dialog; 
+
 
 export class CreateMCProjectController extends ViewController {
 
@@ -63,16 +65,7 @@ export class CreateMCProjectController extends ViewController {
 
 
     xmiModelBrowser() {
-        let remote = require("electron").remote;
-        let dialog = remote.dialog;
-        let dialogResult: string[] = dialog.showOpenDialog({
-            filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
-        });
-        if (dialogResult != undefined) {
-            this.hPath.value = dialogResult[0];
-        }
-        // for electron v8
-        /*  dialog.showOpenDialog({
+         dialog.showOpenDialog({
             filters: [{ name: "XMI-Files", extensions: ["xmi", "xml"] }]
         }).then((res) => {
             if(res.filePaths != undefined) {
@@ -81,7 +74,7 @@ export class CreateMCProjectController extends ViewController {
         }).catch((error) => {
             console.error(error);
             return;
-        }); */
+        });
     }
 
     createDefaultAbstractionsPromise(c: ModalCommand.GenericModalCommand, xmiFileName: string, targetDir: string) {

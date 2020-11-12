@@ -31,7 +31,7 @@
 
 import { IntoCpsApp } from "../IntoCpsApp";
 import { SettingKeys } from "../settings/SettingKeys";
-import { remote, ipcRenderer } from "electron";
+const { remote, ipcRenderer } = require("electron");
 import * as Path from 'path';
 import * as child_process from 'child_process'
 import fs = require('fs');
@@ -185,86 +185,6 @@ function stopCoe() {
         coe.stop();
     }
 }
-
-/*
-function launchCoe() {
-    var spawn = child_process.spawn;
-
-    let installDir = intoCpsAppIns.getSettings().getValue(SettingKeys.INSTALL_TMP_DIR);
-    var coePath = Path.join(installDir, "coe.jar");
-    let overrideCoePath = intoCpsAppIns.getSettings().getValue(SettingKeys.COE_JAR_PATH);
-    if (fs.existsSync(overrideCoePath)) {
-        coePath = overrideCoePath;
-    }
-    let childCwd = Path.join(installDir, "coe-working-dir");
-    let env: any = process.env;
-
-    var mkdirp = require('mkdirp');
-    mkdirp.sync(childCwd);
-
-    var child = spawn('java', ['-jar', coePath], {
-        detached: true,
-        shell: false,
-        cwd: childCwd,
-        env: env
-    });
-    child.unref();
-    globalChild = child;
-
-    let root = document.getElementById("coe-console")
-    while (root.hasChildNodes()) {
-        root.removeChild(root.firstChild);
-    }
-
-    let div = document.createElement("div");
-    div.id = "coe-console-output";
-    let panel = createPanel("Console", div);
-    root.appendChild(panel);
-    let mLaunch = document.createElement("span");
-    mLaunch.innerHTML = "Terminal args: java -jar " + coePath + "<br/>";
-    div.appendChild(mLaunch);
-
-    child.stdout.on('data', function (data: any) {
-        // console.log('stdout: ' + data);
-        //Here is where the output goes
-        let dd = (data + "").split("\n");
-
-        dd.forEach(line => {
-            if (line.trim().length != 0) {
-                let m = document.createElement("span");
-                m.innerHTML = line + "<br/>";
-                if (line.indexOf("ERROR") > -1)
-                    m.style.color = "rgb(255, 0, 0)";
-                if (line.indexOf("WARN") > -1)
-                    m.style.color = "rgb(255, 165, 0)";
-                if (line.indexOf("DEBUG") > -1)
-                    m.style.color = "rgb(0, 0, 255)";
-                if (line.indexOf("TRACE") > -1)
-                    m.style.color = "rgb(128,128,128)";
-
-                div.appendChild(m);
-            }
-        });
-
-
-        if (div.childElementCount > 600)
-            while (div.childElementCount > 5000 && div.hasChildNodes()) {
-                div.removeChild(div.firstChild);
-            }
-        window.scrollTo(0, document.body.scrollHeight);
-    });
-
-    child.stderr.on('data', function (data: any) {
-        console.log('stderr: ' + data);
-        //Here is where the error output goes
-        let m = document.createElement("span");
-        // m.style.color="#d9534f";
-        m.className = "text-danger";
-        m.innerText = data + "";
-        div.appendChild(m);
-    });
-}
-*/
 
 function createPanel(title: string, content: HTMLElement): HTMLElement {
     var divPanel = document.createElement("div");

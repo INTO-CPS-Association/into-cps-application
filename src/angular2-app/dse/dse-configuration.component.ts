@@ -49,7 +49,8 @@ import { FormGroup, FormArray, FormControl } from "@angular/forms";
 import {Project} from "../../proj/Project";
 import * as Path from 'path';
 import * as fs from 'fs';
-/* import {coeServerStatusHandler} from "../../menus"; */
+
+
 
 @Component({
     selector: "dse-configuration",
@@ -60,7 +61,6 @@ import * as fs from 'fs';
 })
 export class DseConfigurationComponent implements OnInit, OnDestroy {
     private _path:string;
-
     @Input()
     set path(path:string) {
         this._path = path;
@@ -81,18 +81,22 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     @Output()
     change = new EventEmitter<string>();
 
+    @Output()
+    coechange = new EventEmitter<string>();
+
     form: FormGroup;
     algorithms: IDseAlgorithm[] = [];
     algorithmFormGroups = new Map<IDseAlgorithm, FormGroup>();
     editing: boolean = false;
     editingMM: boolean = false;
+    isInValidDSEConfig: boolean = false;
     warnings: WarningMessage[] = [];
     parseError: string = null;
 
-    mmSelected:boolean = false;
+    mmSelected:boolean = true;
     mmPath:string = '';
-    
-    config : DseConfiguration;
+
+    config = new DseConfiguration();
     cosimConfig:string[] = [];
     mmOutputs:string[] = [];
     objNames:string[] = [];
@@ -133,7 +137,6 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
     parseConfig(mmPath : string) {
        let project = IntoCpsApp.getInstance().getActiveProject();
-       
        DseConfiguration
            .parse(this.path, project.getRootFilePath(), project.getFmusPath(), mmPath)
            .then(config => {
@@ -159,12 +162,14 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                     this.form = new FormGroup({
                         searchAlgorithm :  this.algorithmFormGroups.get(this.config.searchAlgorithm),
                         paramConstraints : new FormArray(this.config.paramConst.map(c => new FormControl(c))),
+                        
                         objConstraints : new FormArray(this.config.objConst.map(c => new FormControl(c))),
                         extscr : new FormArray(this.config.extScrObjectives.map(s => new FormControl(s))),
                         scenarios : new FormArray(this.config.scenarios.map(s => new FormControl(s)))
                     });
                 });
            }, error => this.zone.run(() => {this.parseError = error})).catch(error => console.error(`Error during parsing of config: ${error}`));
+           
     }
 
     onNavigate(): boolean {
@@ -190,18 +195,18 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
 
         if (this.warnings.length > 0) {
 
-            let remote = require("electron").remote;
-            let dialog = remote.dialog;
-            let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            const electron = require("electron");
+            let dialog = electron.dialog;
+            /* let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
 
             if (res == 0) {
                 return;
             } else {
                 override = true;
                 this.warnings = [];
-            }
-            // for electron v8
-           /*  let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
+            } */
+            // for electron v10
+            let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
             res.catch(() => {
                 return
             });
@@ -212,26 +217,28 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
                     override = true;
                     this.warnings = [];
                 }
-            }) */
+            })
         }
 
         this.config.save()
-                .then(() => this.change.emit(this.path));
+                .then(() => this.change.emit(this.path)).then(() => this.coechange.emit(this.coeconfig));
        
         this.editing = false;
+        
     }
 
     /*
      * Method to state that the multi-model has been chosen for the DSE config
      */
-    onMMSubmit() {
+    /* onMMSubmit() {
         if (!this.editingMM) return;
         this.editingMM = false;
         if (this.mmPath !='')
         {
             this.mmSelected = true;
         }
-    }
+    } */
+
     
 
     getFiles(path: string): string [] {
@@ -266,28 +273,37 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     }
 
     onConfigChange(config:string) {
+        this.parseError = null;
         this.coeconfig = config;
         let mmPath = Path.join(this.coeconfig, "..", "..", "mm.json");
-
-        if (!fs.existsSync(mmPath)) {
-            console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...")
-            //no we have the old style
-            fs.readdirSync(Path.join(this.coeconfig, "..", "..")).forEach(file => {
-                if (file.endsWith("mm.json")) {
-                    mmPath = Path.join(this.coeconfig, "..", "..", file);
-                    console.debug("Found old style mm at: " + mmPath);
-                    return;
-                }
-            });
+        /* let coePath = Path.join(this.coeconfig, "..", "..", "coe.json"); */
+        try {
+            if(Path.isAbsolute(mmPath)) {
+                // console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...")
+                //no we have the old style
+                fs.readdirSync(Path.join(this.coeconfig, "..", "..")).forEach(file => {
+                    if (file.endsWith("mm.json")) {
+                        mmPath = Path.join(this.coeconfig, "..", "..", file);
+                        console.log("Found mm at: " + mmPath);
+                       //  console.debug("Found old style mm at: " + mmPath);
+                        return;
+                    }
+                });
+            }
+            this.mmPath=mmPath;
+            this.parseConfig(mmPath);
+        } catch (error) {
+            console.error("Path was not a correct path.. " + mmPath + " error: " + error);
         }
-        this.mmPath=mmPath;
-        this.parseConfig(mmPath);
+      
+        
     }
 
     /*
      * Method for updating the DSE algorithm
      */
     onAlgorithmChange(algorithm: IDseAlgorithm) {
+        this.parseError = null;
         this.config.searchAlgorithm = algorithm;
 
         this.form.removeControl('algorithm');
@@ -373,7 +389,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
      * parameter of choice is recorded in the DSE config.
      */ 
     setDSEParameter(instance: Instance, variableName:string, newValue: any) {
-        if (!newValue.includes(",")){
+
+        // this will not work with the python scripts as it will try to run on an array, this will be commented out for now and removed in an up-coming commit
+        /* if (!newValue.includes(",")){
             if (instance.fmu.getScalarVariable(variableName).type === ScalarVariableType.Real)
                 newValue = parseFloat(newValue);
             else if (instance.fmu.getScalarVariable(variableName).type === ScalarVariableType.Int)
@@ -383,7 +401,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         }
         else{
             newValue = this.parseArray(instance.fmu.getScalarVariable(variableName).type, newValue);
-        }
+        } */
+
+        newValue = this.parseArray(instance.fmu.getScalarVariable(variableName).type, newValue);
 
         let varExistsInDSE = false
         let instanceExistsInDSE = false
@@ -808,12 +828,16 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
      * config being saved to json format correctly.
      */
     runDse() {
+        console.log('running from config');
         var spawn = require('child_process').spawn;
         let installDir = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.INSTALL_DIR);
 
         let absoluteProjectPath = IntoCpsApp.getInstance().getActiveProject().getRootFilePath();
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
         let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
+        // check if python is installed.
+        /* dependencyCheckPythonVersion(); */
+
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
         let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 

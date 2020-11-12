@@ -59,7 +59,7 @@ function createWindow() {
   //First load the last active project, but not until app is ready
   intoCpsApp.loadPreviousActiveProject();
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 800, height: 600, webPreferences: {  nodeIntegration: true}});
+  mainWindow = new BrowserWindow({ width: 800, height: 600, webPreferences: {  nodeIntegration: true, enableRemoteModule: true}});
 
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html');
@@ -88,19 +88,9 @@ function createWindow() {
         bw.close();
       }
     })); */
+
     BrowserWindow.getAllWindows().forEach(bw => recursivelyCloseBrowserWindows(bw));
 
-    if (intoCpsApp.trmanager.running) {
-      ev.preventDefault();
-
-      console.info("Waiting for trmanager to stop...");
-      intoCpsApp.trmanager.stop().then(() => {
-        console.info("trmanager stopped.");
-        mainWindow.close()
-      }).catch((err) => {
-        console.info(err); mainWindow.close();
-      });
-    }
   });
 
   // Emitted when the window is closed.
@@ -138,6 +128,9 @@ app.on('window-all-closed', function () {
   //the app is not build to handle this since windows are created
   //from render processes
   //if (process.platform !== 'darwin') {
+
+  // for testing purposes this should be uncommented
+  // intoCpsApp.getSettings().deleteSettings();
   app.quit();
   //}
 });

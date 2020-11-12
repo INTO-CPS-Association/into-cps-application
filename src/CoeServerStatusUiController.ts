@@ -31,7 +31,10 @@
 
 import { IntoCpsApp } from "./IntoCpsApp";
 import { CoeProcess } from "./coe-server-status/CoeProcess"
-import {remote} from "electron";
+// typescript:
+/* import {remote} from "electron"; */
+// javascript:
+const {remote} =  require("electron");
 
 export enum UICrtlType {Console, Log};
 

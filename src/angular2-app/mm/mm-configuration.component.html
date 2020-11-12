@@ -30,10 +30,10 @@
 		</div>
 	</div>
 
-	<div class="row" *ngFor="let fmu of config.fmus; let i=index">
+	<div id="fmu{{i}}" class="row" *ngFor="let fmu of config.fmus; let i=index">
 		<div class="col-md-3 form-group">
 			<p *ngIf="!editing" class="form-control-static">{{getFmuName(fmu)}}</p>
-			<input *ngIf="editing" [formControl]="form.get('fmus').at(i)" [ngModel]="getFmuName(fmu)" (ngModelChange)="setFmuName(fmu, $event)"
+			<input id="fmu" *ngIf="editing" [formControl]="form.get('fmus').at(i)" [ngModel]="getFmuName(fmu)" (ngModelChange)="setFmuName(fmu, $event)"
 			 class="form-control input-fixed-size input-sm">
 			<div *ngIf="form.get('fmus').at(i).hasError('required')" class="alert alert-danger">This field is required.</div>
 			<div *ngIf="form.get('fmus').at(i).hasError('pattern')" class="alert alert-danger">{{'{' }} and {{'}' }} are not allowed.</div>
@@ -63,12 +63,12 @@
 			<label>FMU</label>
 
 			<ul class="list-group">
-				<a *ngFor="let fmu of config.fmus" (click)="selectInstanceFmu(fmu)" [class.active]="selectedInstanceFmu === fmu" class="list-group-item">{{fmu.name}}</a>
+				<a *ngFor="let fmu of config.fmus" (click)="selectInstanceFmu(fmu)" [class.active]="selectedInstanceFmu === fmu" id="{{getFmuName(fmu)}}" class="list-group-item">{{fmu.name}}</a>
 			</ul>
 		</div>
 		<div class="col-md-6">
 			<label>Instances
-				<button *ngIf="editing" type="button" [disabled]="!selectedInstanceFmu" (click)="addInstance(selectedInstanceFmu)"
+				<button id="fmu_instance" *ngIf="editing" type="button" [disabled]="!selectedInstanceFmu" (click)="addInstance(selectedInstanceFmu)"
 				 class="btn btn-default btn-xs">
 					<span class="glyphicon glyphicon-plus"></span>
 				</button>
@@ -78,7 +78,7 @@
 				<div *ngFor="let instance of getInstances(selectedInstanceFmu); let i=index">
 					<p *ngIf="!editing" class="form-control-static">{{instance.name}}</p>
 					<div *ngIf="editing" class="input-group">
-						<input [formControl]="getInstanceFormControl(selectedInstanceFmu, i)" [(ngModel)]="instance.name" class="form-control input-sm">
+						<input id="instance_fmu" [formControl]="getInstanceFormControl(selectedInstanceFmu, i)" [(ngModel)]="instance.name" class="form-control input-sm">
 						<span class="input-group-btn">
 							<button type="button" (click)="removeInstance(instance)" class="btn btn-default btn-sm">
 								<span class="glyphicon glyphicon-remove"></span>
@@ -106,7 +106,7 @@
 
 			<ul class="list-group">
 				<a *ngFor="let instance of config.fmuInstances" (click)="selectOutputInstance(instance)" [class.active]="selectedOutputInstance === instance"
-				 class="list-group-item">{{instance.fmu.name}}.{{instance.name}}</a>
+				 class="list-group-item" id="outputinstance{{instance.name}}">{{instance.fmu.name}}.{{instance.name}}</a>
 			</ul>
 		</div>
 
@@ -116,7 +116,7 @@
 			</h5>
 
 			<ul *ngIf="selectedOutputInstance" class="list-group">
-				<a *ngFor="let output of getOutputs()" (click)="selectOutput(output)" [class.active]="selectedOutput === output" class="list-group-item">
+				<a *ngFor="let output of getOutputs()" (click)="selectOutput(output)" [class.active]="selectedOutput === output" class="list-group-item" id="variable{{output.name}}">
 					<span *ngIf="!output.isConfirmed" class="glyphicon glyphicon-info-sign pull-right" style="color: red" title="Variable is unconfirmed"></span> {{output.name}}
 				</a>
 			</ul>
@@ -129,7 +129,7 @@
 
 			<ul *ngIf="selectedOutput" class="list-group">
 				<a *ngFor="let instance of config.fmuInstances" (click)="selectInputInstance(instance)" [class.active]="selectedInputInstance === instance"
-				 class="list-group-item">{{instance.fmu.name}}.{{instance.name}}</a>
+				 class="list-group-item" id="inputinstance{{instance.name}}">{{instance.fmu.name}}.{{instance.name}}</a>
 			</ul>
 		</div>
 
@@ -141,7 +141,7 @@
 			<ul *ngIf="selectedInputInstance" class="list-group">
 				<label *ngFor="let input of getInputs()" class="list-group-item">
 					<span *ngIf="!input.isConfirmed" class="glyphicon glyphicon-info-sign pull-right" style="color: red" title="Variable is unconfirmed"></span>
-					<input type="checkbox" [disabled]="!editing" [checked]="isInputConnected(input)" (change)="onConnectionChange($event.target.checked, input)"> {{input.name}}
+					<input type="checkbox" [disabled]="!editing" [checked]="isInputConnected(input)" (change)="onConnectionChange($event.target.checked, input)" id="inputvariable{{input.name}}"> {{input.name}}
 				</label>
 			</ul>
 		</div>
@@ -159,7 +159,7 @@
 
 			<ul class="list-group">
 				<a *ngFor="let instance of config.fmuInstances" (click)="selectParameterInstance(instance)" [class.active]="selectedParameterInstance === instance"
-				 class="list-group-item">{{instance.fmu.name}}.{{instance.name}}</a>
+				 class="list-group-item" id="initialval{{instance.name}}">{{instance.fmu.name}}.{{instance.name}}</a>
 			</ul>
 		</div>
 		<div class="col-md-9">
@@ -175,7 +175,7 @@
 							<option *ngFor="let parameter of getParameters(); let i=index" [ngValue]="parameter">{{parameter.name}}</option>
 						</select>
 						<span class="input-group-btn">
-							<button type="button" (click)="addParameter()" class="btn btn-default btn-sm">
+							<button type="button" (click)="addParameter()" class="btn btn-default btn-sm" id="addParameters">
 								<span class="glyphicon glyphicon-plus"></span> Add
 							</button>
 						</span>
@@ -197,7 +197,7 @@
 						<div *ngIf="editing" class="input-group">
 
 							<input *ngIf="!isTypeBool(initialValue.scalarVariable.type)" [value]="initialValue.value" (change)="setParameter(initialValue.scalarVariable, $event.target.value)"
-							 class="form-control input-sm">
+							 class="form-control input-sm" id="{{initialValue.scalarVariable.name}}">
 
 							<input type="checkbox" *ngIf="isTypeBool(initialValue.scalarVariable.type)" [checked]="initialValue.value" (change)="setParameter(initialValue.scalarVariable, $event.target.checked)">
 

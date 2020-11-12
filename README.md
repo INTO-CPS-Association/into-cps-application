@@ -26,8 +26,6 @@ After checking out the repo:
 4. To run it: `npm start`
 5. To run the tests: `npm test`
 
-For working with multiple versino of Node, the node package `n` can be of help.
-
 
 Development
 ---
