@@ -109,7 +109,7 @@ export class CoeProcess {
     let installDir = this.settings.getValue(SettingKeys.INSTALL_TMP_DIR);
     let childCwd = Path.join(installDir, "coe-working-dir");
     if (!fs.existsSync(childCwd)) {
-      fs.mkdirSync(childCwd);
+      fs.mkdirSync(childCwd,{recursive: true});
     }
     return childCwd;
   }
