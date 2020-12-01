@@ -133,27 +133,31 @@ class InitializationController {
 
             let divReadme = (<HTMLDivElement>document.getElementById("mainReadmeView"));
 
-            let readmePath1 = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), "Readme.md");
-            let readmePath2 = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), "readme.md");
-            let readmePath3 = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), "README.MD");
-            let readmePath4 = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), "README.md");
+            let proj = IntoCpsApp.getInstance().getActiveProject();
 
-            let theHtml1 = ShowdownHelper.getHtml(readmePath1);
-            let theHtml2 = ShowdownHelper.getHtml(readmePath2);
-            let theHtml3 = ShowdownHelper.getHtml(readmePath3);
-            let theHtml4 = ShowdownHelper.getHtml(readmePath4);
+            if (proj != null) {
+                let readmePath1 = Path.join(proj.getRootFilePath(), "Readme.md");
+                let readmePath2 = Path.join(proj.getRootFilePath(), "readme.md");
+                let readmePath3 = Path.join(proj.getRootFilePath(), "README.MD");
+                let readmePath4 = Path.join(proj.getRootFilePath(), "README.md");
 
-            if (theHtml1 != null) {
-                divReadme.innerHTML = theHtml1;
-            }
-            else if (theHtml2 != null) {
-                divReadme.innerHTML = theHtml2;
-            }
-            else if (theHtml3 != null) {
-                divReadme.innerHTML = theHtml3;
-            }
-            else if (theHtml4 != null) {
-                divReadme.innerHTML = theHtml4;
+                let theHtml1 = ShowdownHelper.getHtml(readmePath1);
+                let theHtml2 = ShowdownHelper.getHtml(readmePath2);
+                let theHtml3 = ShowdownHelper.getHtml(readmePath3);
+                let theHtml4 = ShowdownHelper.getHtml(readmePath4);
+
+                if (theHtml1 != null) {
+                    divReadme.innerHTML = theHtml1;
+                }
+                else if (theHtml2 != null) {
+                    divReadme.innerHTML = theHtml2;
+                }
+                else if (theHtml3 != null) {
+                    divReadme.innerHTML = theHtml3;
+                }
+                else if (theHtml4 != null) {
+                    divReadme.innerHTML = theHtml4;
+                }
             }
 
             let devMode = IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.DEVELOPMENT_MODE);
