@@ -42,6 +42,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     simsuccess: boolean = false;
     simfailed: boolean = false;
     parseError: string = null;
+    simulation: boolean = false;
 
     mmSelected:boolean = true;
     mmPath:string = '';
@@ -102,6 +103,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     canRun() {
         return this.online
         && this.coeconfig != ""
+        && !this.simulation
         /* && this.dseWarnings.length === 0
         && this.coeWarnings.length === 0 */
         //&& this.config.dseSearchParameters.length > 1 
@@ -116,6 +118,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      * config being saved to json format correctly.
      */
     runDse() {
+        this.simulation = true;
         var stdoutChunks: any[] = [];
         var stderrChunks: any[] = [];
         var spawn = require('child_process').spawn;
@@ -157,11 +160,13 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             if(stderrContent.length > 0) {
                 this.parseError = stderrContent;
                 this.simfailed = true;
+                this.simulation = false;
                 /* setTimeout(() => {
                     
                 }, 15000); */
             } else {
                 this.simsuccess = true;
+                this.simulation = false;
             }
         });
     }
