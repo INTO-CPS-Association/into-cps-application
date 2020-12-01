@@ -281,6 +281,9 @@ export function openProjectViaDirectoryDialog() {
     // for electron v8
      dialog.showOpenDialog({ defaultPath: defaultPath, properties: ["openDirectory"] }).then((res) => {
         try {
+            if(res.canceled) {
+                console.log("cancelled btn pressed");
+            } else {
             let path = Path.join(res.filePaths[0], ".project.json");
             if (fs.accessSync(path, fs.constants.R_OK) === null) {
                 console.info("Cannot open project: "+ path);
@@ -296,6 +299,7 @@ export function openProjectViaDirectoryDialog() {
                     return;
                 }
             }
+        }
         } catch (e) {
             dialog.showErrorBox("Cannot open project", "Unable to find project at path: " + res.filePaths[0] + " Error: " + e);
         }
