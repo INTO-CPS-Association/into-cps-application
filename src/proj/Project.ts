@@ -282,7 +282,7 @@ export function openProjectViaDirectoryDialog() {
      dialog.showOpenDialog({ defaultPath: defaultPath, properties: ["openDirectory"] }).then((res) => {
         try {
             if(res.canceled) {
-                console.log("cancelled btn pressed");
+                // catches cancel button pressed event - which handles null path error
             } else {
             let path = Path.join(res.filePaths[0], ".project.json");
             if (fs.accessSync(path, fs.constants.R_OK) === null) {

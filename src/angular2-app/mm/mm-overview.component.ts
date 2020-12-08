@@ -66,7 +66,7 @@ export class MmOverviewComponent {
 
         MultiModelConfig
             .parse(this.path, project.getFmusPath())
-            .then(config => this.zone.run(() => { this.config = config; this.warnings = this.config.validate(); }));
+            .then(config => this.zone.run(() => { this.config = config; this.warnings = this.config.validate(); })).catch(err => console.log(err));
     }
 
     getOutputs() {

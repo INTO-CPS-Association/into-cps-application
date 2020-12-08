@@ -230,6 +230,7 @@ export class Parser {
                 var instance = this.getInstance(multiModel, id);
                 instance.initialValues.set(instance.fmu.getScalarVariable(scalarVariableName), value);
             });
+            parameters = parameterData;
         }
 
         return parameters;

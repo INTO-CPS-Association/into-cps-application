@@ -116,12 +116,12 @@ export class MultiModelConfig implements ISerializable {
     static parse(path: string, fmuRootPath: string): Promise<MultiModelConfig> {
         return new Promise<Buffer>((resolve, reject) => {
             fs.readFile(path, (error, data) => {
-                if (error)
-                    reject(error);
+                if (error) 
+                reject(error);
                 else
-                    resolve(data);
+                resolve(data);
             });
-        }).then(content => this.create(path, fmuRootPath, JSON.parse(content.toString())));
+        }).then(content => this.create(path, fmuRootPath, JSON.parse(content.toString()))).catch(err => {console.log(err); return new MultiModelConfig()});
     }
 
     public addFmu() {

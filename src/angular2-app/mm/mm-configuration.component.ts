@@ -109,9 +109,9 @@ export class MmConfigurationComponent {
                                     Validators.pattern("[^\.]*")])), uniqueControlValidator)))
                     });
                     this.warnings = this.config.validate();
-              /*   }); */
+               /*  }); */
                 
-            }, error => this.parseError = error); /*  this.zone.run(() => */
+            }, error => this.parseError = error).catch(err => console.log(err)); /*  this.zone.run(() => */
     }
 
     onNavigate(): boolean {
