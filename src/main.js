@@ -41,6 +41,9 @@ var Menus = require("./menus");
 const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
+// to ensure that the reading of files using fs is not blocked by the restart function from electron.
+app.allowRendererProcessReuse = false;
+
 let intoCpsApp = new IntoCpsApp(app, process.platform);
 
 global.intoCpsApp = intoCpsApp;
