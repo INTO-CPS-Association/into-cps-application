@@ -15,6 +15,7 @@ describe.skip('In Tutorial 1', function () {
 
     this.app = new Application({
       path: electronPath,
+      env: { RUNNING_IN_SPECTRON: '1' },
       args: [path.join(__dirname, '..')]
     })
 
@@ -55,15 +56,15 @@ describe.skip('In Tutorial 1', function () {
   //Step 2. To open a project, select File > Open Project
   it('File->Open Project Menu Click', function () {
     fakeMenu.clickMenu('File', 'Open Project');
+    return this.app;
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
   it('Should have tutorial 1 loaded', function () {
     return this.app.client.waitUntilWindowLoaded()
-      .getMainProcessLogs().then(function (logs) {
-        // For test debugging processes uncomment the following line
-        // console.log(logs)
-        expect(logs[25]).contain('tutorial_1/.project.json');
+      .then(function () {
+        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_1'); })
+
       })
   })
 
@@ -172,5 +173,4 @@ describe.skip('In Tutorial 1', function () {
           })
       })
   })
-
 })
