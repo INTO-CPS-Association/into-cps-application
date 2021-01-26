@@ -177,7 +177,7 @@
 			<div class ="col-md-6">
 				<p *ngIf="!editing" class="form-control-static">{{getParameterConstraint(p)}}</p>
 				<input id="conparameter{{i}}" *ngIf="editing" [ngModel]="getParameterConstraint(p)" (ngModelChange)="setParameterConstraint(p, $event)" [ngModelOptions]="{standalone:true}"
-					class="form-control input-fixed-size">
+					class="form-control" style="width: 80%;">
 			</div>
 			<div class="col-md-1">
 				<button *ngIf="editing" type="button" (click)="removeParameterConstraint(p)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span>Remove Constraint</button>
@@ -199,25 +199,25 @@
 			<div class = "col-md-2">
 				<p *ngIf="!editing" class="form-control-static">{{getExternalScriptName(e)}}</p>
 				<input *ngIf="editing" [ngModel]="getExternalScriptName(e)" (ngModelChange)="setExternalScriptName(e, $event)" [ngModelOptions]="{standalone:true}"
-					class="form-control input-fixed-size input-sm">
+					class="form-control input-fixed-size input-sm" style="width: 100%;">
 				<button *ngIf="editing" type="button" (click)="removeExternalScript(e)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span>Remove External Script</button>
 			</div>
 			<div class = "col-md-2">
 				<p *ngIf="!editing" class="form-control-static">{{getExternalScriptFilename(e)}}</p>
 				<input *ngIf="editing" [ngModel]="getExternalScriptFilename(e)" (ngModelChange)="setExternalScriptFileName(e, $event)" [ngModelOptions]="{standalone:true}"
-					class="form-control input-fixed-size input-sm">
+					class="form-control input-fixed-size input-sm" style="width: 100%;">
 			</div>
 			<div class = "col-md-8">
 				<div class="row" *ngFor="let p of getExternalScriptParameters(e)">
 					<div class = "col-md-1">
 						<p *ngIf="!editing" class="form-control-static">{{p.id}}</p>
 						<input *ngIf="editing" [ngModel]="p.id" (ngModelChange)="setExternalScriptParameterId(e, p, $event)" [ngModelOptions]="{standalone:true}"
-							class="form-control input-fixed-size input-sm">
+							class="form-control input-fixed-size input-sm" style="width: 40px;">
 					</div>
 					<div class = "col-md-3">
 						<p *ngIf="!editing" class="form-control-static">{{p.type}}</p>
 						<select *ngIf="editing" [ngModel]="p.type" (ngModelChange)="setExternalScriptParameterType(e, p, $event)" [ngModelOptions]="{standalone:true}"
-							class="form-control">
+							class="form-control input-sm" style="width: 100%;">
 							<option *ngFor="let paramTp of externalScriptParamTp" [ngValue]="paramTp">{{paramTp}}</option>
 						</select>
 					</div>
@@ -262,7 +262,7 @@
 			<div class = "col-md-3">
 				<p *ngIf="!editing" class="form-control-static">{{getExternalScriptName(i)}}</p>
 				<input *ngIf="editing" [ngModel]="getExternalScriptName(i)" (ngModelChange)="setExternalScriptName(i, $event)" [ngModelOptions]="{standalone:true}"
-					class="form-control input-fixed-size input-sm">
+					class="form-control input-fixed-size input-sm" style="width: 100%;">
 				<button *ngIf="editing" type="button" (click)="removeInternalFunction(i)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span>Remove Internal Function Objective</button>
 			</div>
 			<div class = "col-md-4">
@@ -289,7 +289,7 @@
 			<div class="col-md-6">
 				<p *ngIf="!editing" class="form-control-static">{{getObjectiveConstraint(o)}}</p>
 				<input *ngIf="editing" [ngModel]="getObjectiveConstraint(o)" (ngModelChange)="setObjectiveConstraint(o, $event)" [ngModelOptions]="{standalone:true}"
-					class="form-control input-fixed-size input-sm">
+					class="form-control input-fixed-size input-sm" style="width: 80%;">
 			</div>
 			<div class="col-md-1">
 				<button *ngIf="editing" type="button" (click)="removeObjectiveConstraint(o)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span>Remove Constraint</button>
@@ -336,11 +336,11 @@
 		<hr>
 		
 		<h4>Scenario<button *ngIf="editing" type="button" (click)="addScenario()" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span></button></h4>
-		<div class="row" *ngFor="let s of config.scenarios; let i = index;">
-			<div class="col-md-9">
+		<div class="form-group row" style="display: flex;" *ngFor="let s of config.scenarios; let i = index;">
+			<div class="col-md-4">
 				<p *ngIf="!editing" class="form-control-static">{{getScenario(s)}}</p>
 				<input  id="scenarios{{i}}" *ngIf="editing" [ngModel]="getScenario(s)" (ngModelChange)="setScenario(s, $event)" [ngModelOptions]="{standalone:true}"
-					class="form-control input-fixed-size input-sm">
+					class="form-control input-fixed-size input-sm" style="width: 80%">
 				<button *ngIf="editing" type="button" (click)="removeScenario(s)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span></button>
 			</div>
 		</div>
