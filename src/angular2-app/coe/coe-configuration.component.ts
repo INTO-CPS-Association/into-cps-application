@@ -201,15 +201,15 @@ export class CoeConfigurationComponent {
                     override = true;
                     this.warnings = [];
                 }
-            })
+            }).catch(error => console.error("An error occured after user input: " + error));
         }
 
         if (override) {
             this.config.saveOverride()
-                .then(() => this.change.emit(this.path));
+                .then(() => this.change.emit(this.path)).catch(error => console.error("error when overriding save: " + error));
         } else {
             this.config.save()
-                .then(() => this.change.emit(this.path));
+                .then(() => this.change.emit(this.path)).catch(error => console.error("error when saving: " + error));
         }
 
 

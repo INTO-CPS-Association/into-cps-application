@@ -171,7 +171,7 @@ function fetchList() {
 
         panel.appendChild(createPanel("Releases", divVersions));
         //return downloader.fetchVersion(data[versions[0]]);
-    });
+    }).catch(error => console.error("Error in fetching version list: " + error));
 
 }
 
@@ -289,7 +289,7 @@ function showVersion(version: string, data: any) {
                     });
                 } 
                 // console.log(res.response);
-            });
+            }).catch(err => console.error("Error in handling download manager dialog: " + err));
             // dialog end
 
         };

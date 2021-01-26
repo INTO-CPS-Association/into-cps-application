@@ -77,7 +77,7 @@ window.onload = function () {
             };
             ul.appendChild(exDiv);
         });
-    });
+    }).catch(err => console.error("Error in Window onload: " + err));
 };
 
 function fetchExamples(url: string) {
@@ -130,5 +130,5 @@ function examples_open() {
 
         progress.innerHTML = output.split("\n").pop();
     })
-        .then(code => window.top.close());
+        .then(code => window.top.close()).catch(err => console.error("Error in closing: " + err));
 }

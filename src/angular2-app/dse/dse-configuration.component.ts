@@ -221,7 +221,9 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         }
 
         this.config.save()
-                .then(() => this.change.emit(this.path)).then(() => this.coechange.emit(this.coeconfig));
+                .then(() => this.change.emit(this.path))
+                .then(() => this.coechange.emit(this.coeconfig))
+                .catch(error => console.error("error when saving dse config: " + error));
        
         this.editing = false;
         

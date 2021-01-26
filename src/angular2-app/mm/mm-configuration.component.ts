@@ -139,7 +139,7 @@ export class MmConfigurationComponent {
                 this.selectOutputInstance(null);
                 this.selectParameterInstance(null);
                 this.change.emit(this.path);
-            });
+            }).catch(error => console.error("Error when submitting changes to mm: " + error));
 
         this.editing = false;
     }
@@ -184,7 +184,7 @@ export class MmConfigurationComponent {
     setFmuPath(fmu: Fmu, path: string) {
         fmu
             .updatePath(path)
-            .then(() => this.zone.run(() => { }));
+            .then(() => this.zone.run(() => { })).catch(error => console.error("Error in setting FMUpath: " + error));
 
         this.selectOutputInstance(null);
     }
