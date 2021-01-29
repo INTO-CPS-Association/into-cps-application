@@ -8,8 +8,8 @@ import {Project} from "../../proj/Project";
 import * as fs from 'fs';
 import * as Path from 'path';
 import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
-// dialog from main thread
-const { dialog } = require('electron');
+// https://www.electronjs.org/docs/api/dialog dialog from main thread. If you want to use the dialog object from a renderer process, remember to access it using the remote: 
+const { dialog } = require('electron').remote;
 
 @Component({
     selector: "dse-coe-launch",
@@ -129,8 +129,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         let absoluteProjectPath = IntoCpsApp.getInstance().getActiveProject().getRootFilePath();
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
         let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
-        // check if python is installed.
-        /* dependencyCheckPythonVersion(); */
 
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
@@ -155,6 +153,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
                     err.message
                 }
               );
+              this.simfailed = true;
+              this.simulation = false;
           });
 
         child.on('close', (code: any) => {
