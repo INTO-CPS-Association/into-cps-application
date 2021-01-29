@@ -8,6 +8,8 @@ import {Project} from "../../proj/Project";
 import * as fs from 'fs';
 import * as Path from 'path';
 import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
+// dialog from main thread
+const { dialog } = require('electron');
 
 @Component({
     selector: "dse-coe-launch",
@@ -128,7 +130,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         let experimentConfigName = this._path.slice(absoluteProjectPath.length + 1, this._path.length);
         let multiModelConfigName = this.coeconfig.slice(absoluteProjectPath.length + 1, this.coeconfig.length); 
         // check if python is installed.
-        dependencyCheckPythonVersion();
+        /* dependencyCheckPythonVersion(); */
 
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
@@ -139,6 +141,29 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             // cwd: childCwd
         });
         child.unref();
+
+        child.on('error', (err: any) => {
+            // When the python was not found in your system
+            console.error('Failed to start subprocess.'+ err.message);
+            dialog.showMessageBox(
+                {
+                  type: "error",
+                  buttons: ["OK"],
+                  message:
+                    "Python spawn failed \n" +
+                    "Check if Python is install and available in the path \n" +
+                    err.message
+                }
+              );
+          });
+
+        child.on('close', (code: any) => {
+            console.log(`child process close all stdio with code ${code}`);
+        });
+          
+        child.on('end', (code: any) => {
+            console.log(`child process exited with code ${code}`);
+        });
 
         child.stdout.on('data', function (data: any) {
             stdoutChunks = stdoutChunks.concat(data);
@@ -159,11 +184,19 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             console.log(stderrContent);
             if(stderrContent.length > 0) {
                 this.parseError = stderrContent;
+                console.warn(this.parseError);
                 this.simfailed = true;
                 this.simulation = false;
-                /* setTimeout(() => {
-                    
-                }, 15000); */
+                dialog.showMessageBox(
+                    {
+                      type: "Error",
+                      buttons: ["OK"],
+                      message:
+                        "Running DSE failed. \n" +
+                        this.parseError.toString().substr(0,25) +
+                        "See full error description in devtools. \n"
+                    }
+                  );
             } else {
                 this.simsuccess = true;
                 this.simulation = false;
