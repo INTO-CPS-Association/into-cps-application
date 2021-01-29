@@ -189,7 +189,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
                 this.simulation = false;
                 dialog.showMessageBox(
                     {
-                      type: "Error",
+                      type: "error",
                       buttons: ["OK"],
                       message:
                         "Running DSE failed. \n" +
