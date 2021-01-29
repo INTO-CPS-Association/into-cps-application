@@ -158,17 +158,26 @@ export class CoSimulationConfig implements ISerializable {
         return messages;
     }
 
+    /*
+    * Tries to find mm.json two levels above @path, 
+    *  because path points to the co-simulation experiment results location:
+    *  Proj/Multi-models/Name/Experiment/Result/
+    *  
+    *  That is the new approach. To maintain compatibility with the old naming
+    *  we still allow projects using Name.mm.json
+    */
     static create(path: string, projectRoot: string, fmuRootPath: string, data: any): Promise<CoSimulationConfig> {
         return new Promise<CoSimulationConfig>((resolve, reject) => {
             let parser: Parser = new Parser();
             var mmPath: string = Path.join(path, "..", "..", "mm.json");
             if (!fs.existsSync(mmPath)) {
-                console.warn("Could not find mm at: " + mmPath + " initiating search or possible alternatives...")
+                console.warn("Could not find mm.json at: " + mmPath + " Searching for old style...")
                 //no we have the old style
                 fs.readdirSync(Path.join(path, "..", "..")).forEach(file => {
                     if (file.endsWith("mm.json")) {
                         mmPath = Path.join(path, "..", "..", file);
-                        console.debug("Found old style mm at: " + mmPath);
+                        console.warn("Found deprecated style mm at: " + mmPath);
+                        console.warn("Consider renaming:" + file + " to: mm.json");
                         return;
                     }
                 });
