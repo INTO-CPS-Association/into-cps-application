@@ -121,6 +121,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      */
     runDse() {
         this.simulation = true;
+        this.simfailed = false;
+        this.simsuccess = false;
         var stdoutChunks: any[] = [];
         var stderrChunks: any[] = [];
         var spawn = require('child_process').spawn;
