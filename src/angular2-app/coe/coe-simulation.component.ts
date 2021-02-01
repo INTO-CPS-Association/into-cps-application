@@ -117,7 +117,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
         this.parsing = false;
       })
-    );
+    ).catch(error => console.error("error when parsing co-sim-config: " + error));
   }
 
   canRun() {

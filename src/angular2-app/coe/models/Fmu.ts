@@ -118,8 +118,8 @@ export class Fmu {
         return checkFileExists.then(() => {
             return fileReadPromise.then(data => {
                 self.populateFromModelDescription(data.toString('UTF-8', 0, data.length));
-            });;
-        });
+            });
+        }).catch(error => console.error("Error when popilating from model description: " + error));
     }
     private convertToPlatform(platform: string): string {
         let pl = platform.toLowerCase();

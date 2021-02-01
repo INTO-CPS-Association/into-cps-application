@@ -268,7 +268,7 @@ export class CoeSimulationService {
                     this.progress = 100;
                     storeResultCrc(resultPath, this.config);
                     this.executePostProcessingScript(resultPath);
-                });
+                }).catch(error => console.error("Error when writing results: " + error));
             });
 
 

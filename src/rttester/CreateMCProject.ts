@@ -233,7 +233,7 @@ export class CreateMCProjectController extends ViewController {
                             },
                             () => c.displayTermination(false)),
                         () => c.displayTermination(false)),
-                    () => c.displayTermination(false));
+                    () => c.displayTermination(false)).catch(err => console.error("Error in creating project: " + err));
             });
     }
 

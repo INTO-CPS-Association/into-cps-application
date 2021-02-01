@@ -196,7 +196,7 @@ export class FmuImploder {
             fmuFullPaths.forEach((fmu: string) => {
                 fs.createReadStream(fmu).pipe(fs.createWriteStream(path.join(resourcesFolder, path.basename(fmu))));
             });
-        });
+        }).catch(err => console.error("Error in co-sim FMU imploder: " + err));
     }
 
     private static createMDCoe(unconInputs: Array<InstanceScalars>, outputs: Array<InstanceScalars>) {
