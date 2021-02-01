@@ -20,16 +20,15 @@ jobs:
         with: 
           ref: master
 
-      - name: Get App Version
-        id: get_version
-        run: echo ::set-output name=VERSION::$(git fetch -t; git describe --tags `git rev-list --tags --max-count=1` | cut -c2-)
-        shell: bash
-
-
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: '11.x'
+          node-version: '14.x'
+  
+      - name: Get App Version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(node -p -e "require('./package.json').version")
+        shell: bash
   
       - name: Install Dependencies
         run: npm install  
