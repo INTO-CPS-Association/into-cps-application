@@ -3,7 +3,7 @@ name: Package
 on: 
    push:
      branches: 
-       - master
+       - development
 
 jobs:
   package:
@@ -18,7 +18,7 @@ jobs:
       - name: Checkout master branch
         uses: actions/checkout@v2
         with: 
-          ref: master
+          ref: development
 
       - name: Setup Node
         uses: actions/setup-node@v1
@@ -40,31 +40,37 @@ jobs:
       - name: Initialize gulp
         run: gulp init 
 
-      - name: Build and Package
-        run: gulp package
+      - name: Build
+        run: gulp prep-pkg
+
+      - name: Package
+        run: npm run dist
 
       - name: Upload Linux Version
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
-          path: ./zipped/pkg/into-cps-app-${{ steps.get_version.outputs.VERSION }}-linux-x64.zip
-          name: linux-archive.zip
+          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.AppImage
+          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.AppImage
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Upload Windows Version
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
-          path: ./zipped/pkg/into-cps-app-${{ steps.get_version.outputs.VERSION }}-win32-x64.zip
-          name: windows-archive.zip
+          path: ./release/INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
+          name: INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
         if: startsWith(matrix.os, 'windows')
 
-      - name: Zip Darwin Version
-        run: cd pkg ; zip into-cps-app-${{ steps.get_version.outputs.VERSION }}-darwin-x64.zip . -rq
+      - name: Upload Dmg
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.dmg
+          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.dmg
         if: startsWith(matrix.os, 'mac')
 
-      - name: Upload Darwin Version
-        uses: actions/upload-artifact@v1
+      - name: Upload Darwin Zip
+        uses: actions/upload-artifact@v2
         with:
-          path: ./pkg/into-cps-app-${{ steps.get_version.outputs.VERSION }}-darwin-x64.zip
-          name: darwin-archive.zip
+          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}-mac.zip
+          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}-mac.zip
         if: startsWith(matrix.os, 'mac')
 

@@ -11,13 +11,40 @@
   "main": "dist/main.js",
   "author": {
     "name": "INTO-CPS Project",
-    "email": "",
+    "email": "null@void.org",
     "url": "http://into-cps.au.dk/"
   },
   "electronVersion": "10.1.3",
   "scripts": {
     "start": "electron dist/main.js",
-    "test": "mocha"
+    "test": "mocha",
+    "dist": "electron-builder --x64 -p never",
+    "dist-linux": "electron-builder -l --x64 -p never",
+    "dist-win": "electron-builder -w --x64 -p never",
+    "dist-mac": "electron-builder -m --x64"
+
+  },
+  "build": {
+    "appId": "org.into-cps-association.into-cps-app",
+    "copyright": "Copyright © 2021 INTO-CPS Association",
+    "productName": "INTO-CPS-Application",
+    "electronVersion": "10.1.2",
+    "files": ["**/*", "dist/**/*"],
+    "directories": {
+      "output": "release",
+      "buildResources": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "icon" : "src/resources/into-cps/appicon/into-cps-logo.png.ico"
+    },
+    "linux": {
+    "target": [
+        "AppImage"
+      ]
+    }
   },
   "dependencies": {
     "@angular/animations": "^7.2.16",
@@ -70,6 +97,7 @@
     "chai": "^4.2.0",
     "del": "~2.2.0",
     "electron": "^10.2.0",
+    "electron-builder": "^22.9.1",
     "electron-packager": "^14.2.1",
     "gulp": "~4.0.2",
     "gulp-bower": "0.0.15",

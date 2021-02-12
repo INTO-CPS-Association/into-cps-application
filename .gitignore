@@ -21,6 +21,9 @@ jspm_packages
 # Build folder
 dist/
 
+# Release folder
+release/
+
 # Vim auxiliary files
 .*.un~
 .*.swp
