@@ -18,7 +18,7 @@ jobs:
       - name: Checkout master branch
         uses: actions/checkout@v2
         with: 
-          ref: development
+          ref: master
 
       - name: Setup Node
         uses: actions/setup-node@v1
