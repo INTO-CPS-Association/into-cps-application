@@ -157,8 +157,6 @@ function fetchList() {
             divStatus.className = "alert alert-info";
 
             divStatus.innerHTML = version;/// +" - "data[version];
-            console.log('here: ');
-            console.log(data[version]);
             divStatus.onclick = function (e) {
                 downloader.fetchVersion(url + data[version]).then(dataVersion => {
                     
