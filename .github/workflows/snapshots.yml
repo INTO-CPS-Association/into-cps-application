@@ -1,9 +1,9 @@
-name: Build Release Artifacts
+name: Build Snapshot
 
 on: 
    push:
      branches: 
-       - master
+       - development
 
 jobs:
   package:
