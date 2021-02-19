@@ -18,30 +18,30 @@
   "scripts": {
     "start": "electron dist/main.js",
     "test": "mocha",
-    "dist": "electron-builder --x64 -p never",
-    "dist-linux": "electron-builder -l --x64 -p never",
-    "dist-win": "electron-builder -w --x64 -p never",
-    "dist-mac": "electron-builder -m --x64"
-
+    "dist": "electron-builder --x64 -p never"
   },
   "build": {
     "appId": "org.into-cps-association.into-cps-app",
     "copyright": "Copyright © 2021 INTO-CPS Association",
     "productName": "INTO-CPS-Application",
     "electronVersion": "10.1.2",
-    "files": ["**/*", "dist/**/*"],
+    "files": [
+      "**/*",
+      "dist/**/*"
+    ],
     "directories": {
       "output": "release",
       "buildResources": "dist"
     },
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.icns"
     },
     "win": {
-      "icon" : "src/resources/into-cps/appicon/into-cps-logo.png.ico"
+      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico"
     },
     "linux": {
-    "target": [
+      "target": [
         "AppImage"
       ]
     }
