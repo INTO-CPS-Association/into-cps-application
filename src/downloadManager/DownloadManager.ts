@@ -111,7 +111,6 @@ function fetchList() {
     let settings = IntoCpsApp.getInstance().getSettings();
     console.log(settings);
     var url = settings.getValue(SettingKeys.UPDATE_SITE);
-
     if (url == null || url == undefined) {
         url = "https://raw.githubusercontent.com/into-cps/release-site/master/download/";
         settings.setValue(SettingKeys.UPDATE_SITE, url);
@@ -158,8 +157,11 @@ function fetchList() {
             divStatus.className = "alert alert-info";
 
             divStatus.innerHTML = version;/// +" - "data[version];
+            console.log('here: ');
+            console.log(data[version]);
             divStatus.onclick = function (e) {
                 downloader.fetchVersion(url + data[version]).then(dataVersion => {
+                    
                     showVersion(version, dataVersion);
                 });
             };
