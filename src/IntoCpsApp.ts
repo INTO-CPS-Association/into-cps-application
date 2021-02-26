@@ -202,6 +202,7 @@ let topBarNameId: string = "activeTabTitle";
         this.setActiveProject(project);
      }
 
+     // need to fire this to load the projects for the test
     loadProject(path: string): IProject {
         console.info("Loading project from: " + path); 
         let config = Path.normalize(path);

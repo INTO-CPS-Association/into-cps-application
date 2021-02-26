@@ -1,50 +1,53 @@
-const Application = require('spectron').Application
-const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+const expect = chai.expect;
 
-describe.skip('Generic tests', function () {
-  this.timeout(100000)
+const appVersion = require('../package.json').version;
+const app = require("./TestHelpers").app();
 
+const IntoCpsApp = require("../dist/IntoCpsApp").IntoCpsApp;
 
-  beforeEach(function () {
-    this.app = new Application({
-      path: electronPath,
-      args: [path.join(__dirname, '..')]
-    })
+describe('Generic tests', function () {
 
-    return this.app.start()
+  before(async function () {
+    this.timeout(20000);
+    return await app.start();
   })
 
-  afterEach(function () {
-    if (this.app && this.app.isRunning()) {
-      return this.app.stop()
-    }
-
+  after(function () {
+    if (app && app.isRunning())
+      return app.stop();
   })
 
-  it('shows an initial window', function () {
-    return this.app.client.getWindowCount().then(function (count) {
-      assert.equal(count, 1)
-      // Please note that getWindowCount() will return 2 if `dev tools` are opened.
-      // assert.equal(count, 2)
-    })
+  it('Shows a window', function () {
+    return app.client.waitUntilWindowLoaded().getWindowCount().should.eventually.be.at.least(1);
   })
 
-  it('initial window title is INTO-CPS App', function () {
-    return this.app.client.getTitle().then(function (title) {
-      assert.equal(title, 'INTO-CPS App')
-    })
+  it('Shows a window with the correct title', function () {
+    return app.client.getTitle().should.eventually.equal('INTO-CPS App')
   })
 
-  it('displays Welcome in mainView', function () {
-    return this.app.client
-      .waitUntilWindowLoaded()
-      .waitForVisible('#mainView')
-      .getText('#mainView').then(function (title) {
-        expect(title).contain('Welcome to the INTO-CPS Application version ' + process.env.npm_package_version)
-      })
+  it('Displays the expected message in the window', function () {
+    return app.client
+        .getText('#mainView')
+        .should.eventually.contain('Welcome to the INTO-CPS Application version ' + appVersion);
+  })
+
+  it("Test Global is 1", function() {
+    return app.electron.remote.getGlobal("test").should.eventually.equal(1)
+  })
+
+  it("App was created", function () {
+    app.client.waitUntilWindowLoaded().then(async function (){
+      console.log(IntoCpsApp)
+      console.log(IntoCpsApp.getInstance())
+      console.log(await app.electron.remote.getGlobal("test"))
+      console.log(await app.electron.remote.getGlobal("intoCpsApp"))
+
+      IntoCpsApp.default.getInstance().loadProject("some/project/path")
+    });
   })
 })
-

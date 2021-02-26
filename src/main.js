@@ -47,6 +47,7 @@ app.allowRendererProcessReuse = false;
 let intoCpsApp = new IntoCpsApp(app, process.platform);
 
 global.intoCpsApp = intoCpsApp;
+global.test = 1;
 let devMode = intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.DEVELOPMENT_MODE);
 console.info("Running in development mode: " + devMode);
 

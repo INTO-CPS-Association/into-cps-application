@@ -1,76 +1,54 @@
-const Application = require('spectron').Application
+const chai = require('chai');
+const expect = chai.expect;
+const chaiAsPromised = require('chai-as-promised');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+
 const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
+const app = require("./TestHelpers").app();
 
 
-describe.skip('In Tutorial 1', function () {
-  this.timeout(120000)
+describe('In Tutorial 1', function () {
 
+  before(async function () {
+    this.timeout(20000);
 
+    await app.start();
+    await app.client.waitUntilWindowLoaded();
 
-  beforeEach(async function () {
-
-    this.app = new Application({
-      path: electronPath,
-      env: { RUNNING_IN_SPECTRON: '1' },
-      args: [path.join(__dirname, '..')]
-    })
-
-    fakeMenu.apply(this.app);
-
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
-
-    if (!(this.currentTest.title === 'File->Open Project Menu Click')) {
-      await this.app.client.waitForVisible('#node_ProjectBrowserItem_28', 20000);
-
-      await this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click();
-
-      await this.app.client.waitForVisible('#node_ProjectBrowserItem_29');
-
-      await this.app.client.doubleClick('#node_ProjectBrowserItem_29');
-
-      await this.app.client.waitUntilWindowLoaded();
-    }
-
-
-    return this.app;
+    return app;
 
   })
 
-  afterEach(function () {
-
-    if (this.app && this.app.isRunning()) {
-
-      return this.app.stop()
-        .then(() => {
-          if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 1 loaded')
-            throw Error("Tutorial 1 project is not loaded!")
-        })
-    }
+  after(function () {
+    if (app && app.isRunning())
+      return app.stop()
   })
 
   //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click', function () {
-    fakeMenu.clickMenu('File', 'Open Project');
-    return this.app;
+  xit('File->Open Project Menu Click', async function () {
+    // fakeMenu.clickMenu('File', 'Open Project');
+    //   this.intoCpsApp = await app.electron.remote.getGlobal("intCpsApp");
+      // console.log(this.intoCpsApp)
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
-  it('Should have tutorial 1 loaded', function () {
+  xit('Should have tutorial 1 loaded', function () {
     return this.app.client.waitUntilWindowLoaded()
       .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_1'); })
+        return this.electron.remote.app.getActiveProject().then(
+            function(r)
+            {
+              expect(r).is.not.null.and.equal('tutorial_1');
+            })
 
       })
   })
 
   //Step 5. Click the + symbol next to Non-3D multimodel to expand it
   //Step 6. Double click to open Experiment1.
-  it('Go to Non-3D > Experiment1 from sidebar', function () {
+  xit('Go to Non-3D > Experiment1 from sidebar', function () {
 
     this.app.client.$('#activeTabTitle').waitForVisible().then(() => {
 
@@ -82,7 +60,7 @@ describe.skip('In Tutorial 1', function () {
 
   })
 
-  it('Co-Simulation Engine offline', function () {
+  xit('Co-Simulation Engine offline', function () {
 
     this.app.client.$('coe-simulation').waitForVisible()
       .then(() => {
@@ -98,7 +76,7 @@ describe.skip('In Tutorial 1', function () {
 
 
   //Step 7. Click Launch
-  it('Co-Simulation Engine online', function () {
+  xit('Co-Simulation Engine online', function () {
 
     this.app.client.$('coe-simulation').waitForVisible().then(() => {
 
@@ -112,7 +90,7 @@ describe.skip('In Tutorial 1', function () {
   })
 
   //Step 8. Click simulate to run a co-simulation
-  it('Button shows Stop after clicking Simulate button', function () {
+  xit('Button shows Stop after clicking Simulate button', function () {
 
     this.app.client.$('coe-simulation').waitForVisible().then(() => {
 
@@ -126,7 +104,7 @@ describe.skip('In Tutorial 1', function () {
     })
   })
 
-  it('Click on COE Console', function () {
+  xit('Click on COE Console', function () {
 
     this.app.client.$('#coe-status-btn-status').waitForExist()
       .then(() => {
@@ -142,7 +120,7 @@ describe.skip('In Tutorial 1', function () {
   })
 
   //Step 10. Expand the configuration
-  it('Click Edit button to change the Co-Simulation parameters', function () {
+  xit('Click Edit button to change the Co-Simulation parameters', function () {
 
     this.app.client.$('coe-page').waitForVisible()
       .then(() => {
@@ -158,7 +136,7 @@ describe.skip('In Tutorial 1', function () {
   })
 
   //Step 11. Click Edit Button, set Start time 
-  it('Change Start Time Co-Simulation parameter', function () {
+  xit('Change Start Time Co-Simulation parameter', function () {
 
     this.app.client.$('coe-page').waitForVisible()
       .then(() => {

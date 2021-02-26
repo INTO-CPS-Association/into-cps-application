@@ -71,7 +71,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
-  it('Should have tutorial 2 loaded', function () {
+  it.skip('Should have tutorial 2 loaded', function () {
     return this.app.client.waitUntilWindowLoaded()
       .then(function () {
         return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_2'); })
@@ -81,7 +81,7 @@ describe.skip('In Tutorial 2', function () {
 
   // /* Tutorial 2 */
   // //step 2,6,7,8
-  it('Add a new FMU entry from Configuration', function () {
+  it.skip('Add a new FMU entry from Configuration', function () {
     return this.app.client
       .waitForVisible('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
       .$$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
@@ -92,7 +92,7 @@ describe.skip('In Tutorial 2', function () {
 
   //step 9
   //TODO: Broken at merge form.get form.find
-  xit('Rename the new entry to controller', function () {
+  it.skip('Rename the new entry to controller', function () {
 
     return this.app.client
       .waitForVisible('#fmu5')
@@ -107,7 +107,7 @@ describe.skip('In Tutorial 2', function () {
 
   //step 10, 11
   //you need to 'cancel' manually 
-  it('Click File Button', function () {
+  it.skip('Click File Button', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(5000)
       .$('.btn.btn-default').click().pause(3000)
@@ -115,7 +115,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 14
-  it('Add an instance of controller', function () {
+  it.skip('Add an instance of controller', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(2000)
       .$('.btn.btn-default').click().pause(2000)
@@ -128,7 +128,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 15,16,17,18,19
-  it('Connect controller outputs to the body input', function () {
+  it.skip('Connect controller outputs to the body input', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(2000)
       .$('.btn.btn-default').click().pause(2000)
@@ -143,7 +143,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 20,21,22,23
-  it('Set the initial values of parameters of the controller', function () {
+  it.skip('Set the initial values of parameters of the controller', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
       .$('mm-page').$('#Configuration').click().pause(2000)
       .$('.btn.btn-default').click().pause(2000)
@@ -161,7 +161,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 24
-  it('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
+  it.skip('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
       .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
       .$('#Ok').click().pause(2000)
@@ -172,7 +172,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 25
-  it('Edit Step Size to 0.01 under Basic Configuration', function () {
+  it.skip('Edit Step Size to 0.01 under Basic Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
       .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
       .$('#Ok').click().pause(2000)
@@ -187,7 +187,7 @@ describe.skip('In Tutorial 2', function () {
   })
 
   //step 26, 27
-  it('Live plotting', function () {
+  it.skip('Live plotting', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
       .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
       .$('#Ok').click().pause(3000)
