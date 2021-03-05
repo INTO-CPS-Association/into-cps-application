@@ -111,6 +111,8 @@ export class CoeConfigurationComponent {
             .parse(this.path, project.getRootFilePath(), project.getFmusPath())
             .then(config => {
                     this.config = config;
+                    
+                    this.warnings = this.config.validate();
 
                     this.parseError = null;
 
@@ -188,20 +190,11 @@ export class CoeConfigurationComponent {
 
         if (this.warnings.length > 0) {
 
-          
-
-            let res = dialog.showMessageBox({ title: 'Validation failed', message: 'Do you want to save anyway?', buttons: ["No", "Yes"] });
-            res.catch(() => {
-                return
-            });
-            res.then(function(res) {
-                if (res.response == 0) {
-                    return;
-                } else {
-                    override = true;
-                    this.warnings = [];
-                }
-            }).catch(error => console.error("An error occured after user input: " + error));
+            let res = dialog.showMessageBoxSync({ title: 'The multi-model for this configuration has changed!', message: 'Do you want to override it?', buttons: ["No", "Yes"] });
+            if (res == 1) {
+                override = true;
+                this.warnings = [];
+            }
         }
 
         if (override) {

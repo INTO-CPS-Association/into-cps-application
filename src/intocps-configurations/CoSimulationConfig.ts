@@ -152,7 +152,7 @@ export class CoSimulationConfig implements ISerializable {
 
         let multiModelCrcMatch = this.multiModelCrc == undefined || this.multiModelCrc === checksum(fs.readFileSync(this.multiModel.sourcePath).toString(), "md5", "hex");
         if (!multiModelCrcMatch) {
-            return [new ErrorMessage("Multimodel crc check failed. Multimodel has changed.")];
+            return [new ErrorMessage("It looks like the multi-model was changed. Press Edit and Save in this screen to accept this change.")];
         }
 
         return messages;
