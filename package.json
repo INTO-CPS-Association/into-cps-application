@@ -34,7 +34,8 @@
       "buildResources": "dist"
     },
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
     },
     "win": {
       "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico"
