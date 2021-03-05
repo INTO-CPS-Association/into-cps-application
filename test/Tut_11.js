@@ -2,7 +2,6 @@ const Application = require('spectron').Application
 const expect = require('chai').expect;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
 const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
 
 
 describe.skip('In Tutorial 11', function () {
@@ -18,7 +17,6 @@ describe.skip('In Tutorial 11', function () {
       args: [path.join(__dirname, '..')]
     })
 
-    fakeMenu.apply(this.app);
 
     await this.app.start();
     await this.app.client.waitUntilWindowLoaded();
@@ -41,9 +39,9 @@ describe.skip('In Tutorial 11', function () {
 
   //Step 33
   //Manually select the line follower robot case study 
-  it('File->Import example project Menu Click', function () {
-    fakeMenu.clickMenu('File', 'Import Example Project')
-    return this.app.client.pause(20000);
+  it('File->Import example project Menu Click', async function () {
+    // TODO remove the multiple hardcoding
+    await app.electron.remote.app.loadProject('/home/hdm/workspaces/into-cps-projects/tutorials/tutorial_11/.project.json');  
   })
 
   // This should be done before as soon as we solve the programmatic project load problem

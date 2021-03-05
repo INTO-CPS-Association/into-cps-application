@@ -2,7 +2,6 @@ const Application = require('spectron').Application
 const expect = require('chai').expect;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
 const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
 
 
 describe.skip('In Tutorial 6', function () {
@@ -18,7 +17,6 @@ describe.skip('In Tutorial 6', function () {
 			args: [path.join(__dirname, '..')]
 		})
 
-		await fakeMenu.apply(this.app);
 
 		await this.app.start();
 		await this.app.client.waitUntilWindowLoaded();
@@ -40,10 +38,10 @@ describe.skip('In Tutorial 6', function () {
 	})
 
 	//To open a project, select File > Open Project
-	it('File->Open Project Menu Click', function () {
-		fakeMenu.clickMenu('File', 'Open Project');
-		return this.app;
-	})
+	it('File->Open Project Menu Click', async function () {
+		// TODO remove the multiple hardcoding
+		await app.electron.remote.app.loadProject('/home/hdm/workspaces/into-cps-projects/tutorials/tutorial_6/.project.json');  
+	  })
 
 	// This should be done before as soon as we solve the programmatic project load problem
 	it('Should have tutorial 6 loaded', function () {

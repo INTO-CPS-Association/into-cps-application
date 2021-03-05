@@ -149,7 +149,12 @@ app.on('activate', function () {
 
 if(process.env.RUNNING_IN_SPECTRON) {
   app.getActiveProject = () => { 
-    return intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.ACTIVE_PROJECT)};
+    return intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.ACTIVE_PROJECT)
+  };
+  app.loadProject = (path) => { 
+      let project = intoCpsApp.loadProject(path);
+      return IntoCpsApp.getInstance().setActiveProject(project);
+  };
 }
 
 

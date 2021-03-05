@@ -10,9 +10,9 @@ const app = require("./TestHelpers").app();
 
 
 describe('In Tutorial 1', function () {
+  this.timeout(120000)
 
   before(async function () {
-    this.timeout(20000);
 
     await app.start();
     await app.client.waitUntilWindowLoaded();
@@ -27,17 +27,16 @@ describe('In Tutorial 1', function () {
   })
 
   //Step 2. To open a project, select File > Open Project
-  xit('File->Open Project Menu Click', async function () {
-    // fakeMenu.clickMenu('File', 'Open Project');
-    //   this.intoCpsApp = await app.electron.remote.getGlobal("intCpsApp");
-      // console.log(this.intoCpsApp)
+  it('File->Open Project Menu Click', async function () {
+    // TODO remove the multiple hardcoding
+    await app.electron.remote.app.loadProject('/home/hdm/workspaces/into-cps-projects/tutorials/tutorial_1/.project.json');  
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
-  xit('Should have tutorial 1 loaded', function () {
-    return this.app.client.waitUntilWindowLoaded()
+  it('Should have tutorial 1 loaded', function () {
+    return app.client.waitUntilWindowLoaded()
       .then(function () {
-        return this.electron.remote.app.getActiveProject().then(
+        return app.electron.remote.app.getActiveProject().then(
             function(r)
             {
               expect(r).is.not.null.and.equal('tutorial_1');
