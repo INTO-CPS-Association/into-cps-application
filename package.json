@@ -59,6 +59,7 @@
     "@angular/platform-server": "^7.2.16",
     "@angular/router": "^7.2.16",
     "@types/ace": "0.0.42",
+    "@types/fs-extra": "9.0.7",
     "@types/jquery": "^2.0.54",
     "@types/sql.js": "~0.0.28",
     "@types/w2ui": "~1.4.30",
