@@ -42,7 +42,8 @@
     "linux": {
       "target": [
         "AppImage"
-      ]
+      ],
+      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
     }
   },
   "dependencies": {
