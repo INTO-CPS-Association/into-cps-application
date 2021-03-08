@@ -1,5 +1,4 @@
 const chai = require('chai');
-const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
 const chaiWaitFor = require('chai-wait-for');
 // needed so we can use as promised
@@ -12,7 +11,6 @@ const waitFor = chaiWaitFor.bindWaitFor({
     retryInterval: 100
 });
 
-const assert = require('assert')
 const app = require("./TestHelpers").app();
 const path = require("path");
 const projectPath = path.resolve("test/TestData/tutorial_1/.project.json");
