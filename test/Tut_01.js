@@ -1,9 +1,16 @@
 const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
 // needed so we can use as promised
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
+
+const waitFor = chaiWaitFor.bindWaitFor({
+    timeout: 5000,
+    retryInterval: 100
+});
 
 const assert = require('assert')
 const app = require("./TestHelpers").app();
@@ -25,6 +32,7 @@ describe('In Tutorial 1', function () {
     })
 
     after(function () {
+        return;
         if (app && app.isRunning())
             return app.stop()
     })
@@ -89,34 +97,40 @@ describe('In Tutorial 1', function () {
             .contain("Co-Simulation Engine offline");
     })
 
+    it("Simulation button says launch", function(){
+        return app.client.$("coe-simulation")
+            .then(n => n.$(".btn.btn-sm.btn-default"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Launch");
+    })
 
     //Step 7. Click Launch
-    xit('Co-Simulation Engine online', function () {
+    it('Co-Simulation Engine online', function () {
 
-        this.app.client.$('coe-simulation').waitForVisible().then(() => {
-
-            return this.app.client
-                .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-                .$('.alert.alert-success').getText()
-                .then(function (text) {
-                    expect(text).contain('online')
-                })
-        })
+        return app.client.$("coe-simulation")
+            .then(n => n.$(".btn.btn-sm.btn-default"))
+            .then(n => n.click())
+            .then(() => {
+                return app.client.$("coe-simulation")
+                    .then(n => n.$(".alert.alert-success"))
+                    .then(async n => {
+                        return waitFor(await n.getText())
+                            .to
+                            .match(/Co-Simulation Engine, .+, online at .+\./);
+                    });
+            });
     })
 
     //Step 8. Click simulate to run a co-simulation
     xit('Button shows Stop after clicking Simulate button', function () {
-
-        this.app.client.$('coe-simulation').waitForVisible().then(() => {
-
-            return this.app.client
-                .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-                .$('.btn.btn-default').click()
-                .$('.btn.btn-default').getText()
-                .then(function (text) {
-                    expect(text).contain('Stop')
-                })
-        })
+        return app.client.$("coe-simulation")
+            .then(n => n.$(".btn.btn-sm.btn-default"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Stop");
     })
 
     xit('Click on COE Console', function () {

@@ -96,6 +96,7 @@
     "@types/xml2js": "0.0.32",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "chai-wait-for": "^1.0.4",
     "del": "~2.2.0",
     "electron": "^10.2.0",
     "electron-builder": "^22.9.1",
