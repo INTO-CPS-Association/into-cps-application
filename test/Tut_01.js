@@ -56,54 +56,59 @@ describe('In Tutorial 1', function () {
     })
 
     it("Open Multi-Model from sidebar", async function () {
-        let a = await app.client.$("#node_ProjectBrowserItem_27");
-        await a.doubleClick();
-
-        return (await app.client.$("#activeTabTitle"))
-            .getText()
-            .should
-            .eventually
-            .equal("Non-3D")
+        return app.client.$("#node_ProjectBrowserItem_27")
+            .then(n => n.doubleClick())
+            .then(() =>
+            {
+                return app.client.$("#activeTabTitle")
+                    .then(n => n.getText())
+                    .should
+                    .eventually
+                    .equal("Non-3D");
+            });
     })
 
     //Step 5. Click the + symbol next to Non-3D multimodel to expand it
-    it("Click on +", async function () {
-        // "#node_ProjectBrowserItem_27" is "Non-3D" mutli model
+    it("Click on +", function () {
+        // "#node_ProjectBrowserItem_27" is "Non-3D" multi-model
         // .w2ui-node-dots is the class on the "+" button
-        await app.client.$("#node_ProjectBrowserItem_27")
+        return app.client.$("#node_ProjectBrowserItem_27")
             .then(n => n.$(".w2ui-node-dots"))
-            .then(n => n.click());
-
-        // #node_ProjectBrowserItem_27_sub is the "Experiment1
-        return app.client.$("#node_ProjectBrowserItem_27_sub")
-            .then(n => n.getAttribute(("style")))
-            .should
-            .eventually
-            .not
-            .contain("display: hidden;");
+            .then(n => n.click())
+            .then(() => {
+                // #node_ProjectBrowserItem_27_sub is the "Experiment1
+                return app.client.$("#node_ProjectBrowserItem_27_sub")
+                    .then(n => n.getAttribute(("style")))
+                    .should
+                    .eventually
+                    .not
+                    .contain("display: hidden;");
+            });
     })
 
     //Step 6. Double click to open Experiment1.
-    it('Go to Non-3D > Experiment1 from sidebar', async function () {
+    it('Go to Non-3D > Experiment1 from sidebar', function () {
         // #node_ProjectBrowserItem_27_sub is "Experiment1" in the sidebar
-        await app.client.$("#node_ProjectBrowserItem_27_sub")
+        return app.client.$("#node_ProjectBrowserItem_27_sub")
             .then(n => n.doubleClick())
-
-        return app.client.$("#activeTabTitle")
-            .then(n => n.getText())
-            .should.eventually.equal("Non-3D > Experiment1");
+            .then(() => {
+                return app.client.$("#activeTabTitle")
+                    .then(n => n.getText())
+                    .should.eventually.equal("Non-3D > Experiment1");
+            });
     })
 
-    it('Co-Simulation Engine offline', async function () {
+    it('Co-Simulation Engine offline', function () {
 
-        await app.client.$("#Simulation")
-            .then(n => n.click());
-
-        return app.client.$("coe-simulation")
-            .then(n => n.getText())
-            .should
-            .eventually
-            .contain("Co-Simulation Engine offline");
+        return app.client.$("#Simulation")
+            .then(n => n.click())
+            .then(() => {
+                return app.client.$("coe-simulation")
+                    .then(n => n.getText())
+                    .should
+                    .eventually
+                    .contain("Co-Simulation Engine offline");
+            });
     })
 
     it("Launch button says Launch", function(){
@@ -161,17 +166,18 @@ describe('In Tutorial 1', function () {
     })
 
     //Step 8. Click simulate to run a co-simulation
-    it('Simulate shows Stop after clicking', async function () {
-        await  app.client.$("coe-simulation")
+    it('Simulate shows Stop after clicking', function () {
+        return  app.client.$("coe-simulation")
             .then(n => n.$("div>div>.btn.btn-default"))
-            .then(n => n.click());
-
-        return app.client.$("coe-simulation")
-            .then(n => n.$("div>div>.btn.btn-default"))
-            .then(n => n.getText())
-            .should
-            .eventually
-            .equal("Stop");
+            .then(n => n.click())
+            .then(() => {
+                return app.client.$("coe-simulation")
+                    .then(n => n.$("div>div>.btn.btn-default"))
+                    .then(n => n.getText())
+                    .should
+                    .eventually
+                    .equal("Stop");
+            });
     })
 
     //Step 10. Expand the configuration
