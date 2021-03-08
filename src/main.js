@@ -51,9 +51,6 @@ global.test = 1;
 let devMode = intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.DEVELOPMENT_MODE);
 console.info("Running in development mode: " + devMode);
 
-
-
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -150,6 +147,9 @@ app.on('activate', function () {
 if(process.env.RUNNING_IN_SPECTRON) {
   app.getActiveProject = () => { 
     return intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.ACTIVE_PROJECT)
+  };
+  app.getIProject = () => {
+    return intoCpsApp.getActiveProject();
   };
   app.loadProject = (path) => { 
       let project = intoCpsApp.loadProject(path);
