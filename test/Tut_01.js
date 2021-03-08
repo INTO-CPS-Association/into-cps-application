@@ -68,7 +68,7 @@ describe('In Tutorial 1', function () {
 
     //Step 6. Double click to open Experiment1.
     it('Go to Non-3D > Experiment1 from sidebar', async function () {
-
+        // #node_ProjectBrowserItem_27_sub is "Experiment1" in the sidebar
         await app.client.$("#node_ProjectBrowserItem_27_sub")
             .then(n => n.doubleClick())
 
@@ -77,18 +77,16 @@ describe('In Tutorial 1', function () {
             .should.eventually.equal("Non-3D > Experiment1");
     })
 
-    xit('Co-Simulation Engine offline', function () {
+    it('Co-Simulation Engine offline', async function () {
 
-        this.app.client.$('coe-simulation').waitForVisible()
-            .then(() => {
+        await app.client.$("#Simulation")
+            .then(n => n.click());
 
-                return this.app.client.$('coe-simulation')
-                    .$('.alert.alert-danger')
-                    .getText()
-                    .then(function (text) {
-                        expect(text).contain('Co-Simulation Engine offline')
-                    })
-            })
+        return app.client.$("coe-simulation")
+            .then(n => n.getText())
+            .should
+            .eventually
+            .contain("Co-Simulation Engine offline");
     })
 
 
