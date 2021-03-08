@@ -17,7 +17,6 @@ const app = require("./TestHelpers").app();
 const path = require("path");
 const projectPath = path.resolve("test/TestData/tutorial_1/.project.json");
 
-
 describe('In Tutorial 1', function () {
     this.timeout(120000)
 
@@ -32,9 +31,11 @@ describe('In Tutorial 1', function () {
     })
 
     after(function () {
-        return;
-        if (app && app.isRunning())
+        if (app && app.isRunning()) {
+            app.electron.remote.app.stopCoe();
+            return;
             return app.stop()
+        }
     })
 
     // This should be done before as soon as we solve the programmatic project load problem
@@ -97,7 +98,7 @@ describe('In Tutorial 1', function () {
             .contain("Co-Simulation Engine offline");
     })
 
-    it("Simulation button says launch", function(){
+    it("Launch button says Launch", function(){
         return app.client.$("coe-simulation")
             .then(n => n.$(".btn.btn-sm.btn-default"))
             .then(n => n.getText())
@@ -106,9 +107,18 @@ describe('In Tutorial 1', function () {
             .equal("Launch");
     })
 
+    it("Simulate button is disabled", function () {
+        return app.client.$("coe-simulation")
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.isEnabled())
+            .should
+            .eventually
+            .be
+            .false;
+    })
+
     //Step 7. Click Launch
     it('Co-Simulation Engine online', function () {
-
         return app.client.$("coe-simulation")
             .then(n => n.$(".btn.btn-sm.btn-default"))
             .then(n => n.click())
@@ -123,45 +133,55 @@ describe('In Tutorial 1', function () {
             });
     })
 
-    //Step 8. Click simulate to run a co-simulation
-    xit('Button shows Stop after clicking Simulate button', function () {
+    it("Simulate button is enabled", function () {
         return app.client.$("coe-simulation")
-            .then(n => n.$(".btn.btn-sm.btn-default"))
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.isEnabled())
+            .should
+            .eventually
+            .be
+            .true;
+    })
+
+    it('Simulate button shows simulate', function () {
+        return app.client.$("coe-simulation")
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Simulate");
+    })
+
+    //Step 8. Click simulate to run a co-simulation
+    it('Simulate shows Stop after clicking', async function () {
+        await  app.client.$("coe-simulation")
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.click());
+
+        return app.client.$("coe-simulation")
+            .then(n => n.$("div>div>.btn.btn-default"))
             .then(n => n.getText())
             .should
             .eventually
             .equal("Stop");
     })
 
-    xit('Click on COE Console', function () {
-
-        this.app.client.$('#coe-status-btn-status').waitForExist()
-            .then(() => {
-
-                this.app.client.$('#coe-status-btn-status').doubleClick()
-                    .$('.navbar-brand').waitForExist().then(() => {
-                    return NavBar.$('.navbar-brand').getText()
-                        .then(function (text) {
-                            expect(text).contain('COE Status')
-                        })
-                });
-            });
-    })
-
     //Step 10. Expand the configuration
-    xit('Click Edit button to change the Co-Simulation parameters', function () {
-
-        this.app.client.$('coe-page').waitForVisible()
+    it('Click Edit button to change the Co-Simulation parameters', function () {
+        return app.client.$("#Configuration") // open the config panel
+            .then(n => n.click())
             .then(() => {
-
-                return this.app.client
-                    .$('coe-page').$('.panel-heading').click()
-                    .$('.btn.btn-default').click()
-                    .$('.btn.btn-default').getText()
-                    .then(function (text) {
-                        expect(text).contain('Save')
-                    })
-            })
+                return app.client.$(".btn.btn-default") // click on the edit button
+                    .then(n => n.click())
+                    .then(() =>
+                    {
+                        return app.client.$(".btn.btn-default") /// check the button now says save
+                            .then(n => n.getText())
+                            .should
+                            .eventually
+                            .equal("Save");
+                    });
+            });
     })
 
     //Step 11. Click Edit Button, set Start time
