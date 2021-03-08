@@ -218,9 +218,7 @@ let topBarNameId: string = "activeTabTitle";
     //get the global instance
     public static getInstance(): IntoCpsApp {
         let intoApp:IntoCpsApp = null;
-        
         if (remote){
-            
             intoApp = remote.getGlobal("intoCpsApp");
         }else{
             intoApp = global.intoCpsApp;
