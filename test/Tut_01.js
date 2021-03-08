@@ -33,18 +33,26 @@ describe('In Tutorial 1', function () {
     after(function () {
         if (app && app.isRunning()) {
             app.electron.remote.app.stopCoe();
-            return;
             return app.stop()
         }
     })
 
     // This should be done before as soon as we solve the programmatic project load problem
     it('Should have tutorial 1 loaded', function () {
-        return app.electron.remote.app.getActiveProject().should.eventually.equal(projectPath);
+        return app.electron.remote.app.getActiveProject()
+            .should
+            .eventually
+            .equal(projectPath);
     })
 
-    it("Should have name Three Tank", async function () {
-        return (await app.electron.remote.app.getIProject()).name.should.equal("Three Tank");
+    it("Should have name Three Tank", function () {
+        return app.electron.remote.app.getIProject()
+            .then((n) => {
+                return n
+                    .name
+                    .should
+                    .equal("Three Tank")
+            });
     })
 
     it("Open Multi-Model from sidebar", async function () {
@@ -185,19 +193,17 @@ describe('In Tutorial 1', function () {
     })
 
     //Step 11. Click Edit Button, set Start time
-    xit('Change Start Time Co-Simulation parameter', function () {
-
-        this.app.client.$('coe-page').waitForVisible()
+    it('Change Start Time Co-Simulation parameter', async function () {
+        // find the start time form input
+        let startInput = await app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid");
+        return startInput
+            .setValue("7")
             .then(() => {
-
-                return this.app.client
-                    .$('coe-page').$('.panel-heading').click()
-                    .$('.btn.btn-default').click().pause(3000)
-                    .$('.form-control.ng-untouched.ng-pristine.ng-valid').setValue('0')
-                    .$('.form-control.ng-untouched.ng-pristine.ng-valid').getValue()
-                    .then(function (text) {
-                        expect(text).contain('0')
-                    })
-            })
+                return startInput
+                    .getValue()
+                    .should
+                    .eventually
+                    .equal("7");
+            });
     })
 })
