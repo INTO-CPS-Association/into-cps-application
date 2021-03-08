@@ -25,7 +25,6 @@ describe('In Tutorial 1', function () {
     })
 
     after(function () {
-        return;
         if (app && app.isRunning())
             return app.stop()
     })
@@ -39,25 +38,43 @@ describe('In Tutorial 1', function () {
         return (await app.electron.remote.app.getIProject()).name.should.equal("Three Tank");
     })
 
-    //Step 5. Click the + symbol next to Non-3D multimodel to expand it
-    //Step 6. Double click to open Experiment1.
-    xit('Go to Non-3D > Experiment1 from sidebar', async function () {
+    it("Open Multi-Model from sidebar", async function () {
+        let a = await app.client.$("#node_ProjectBrowserItem_27");
+        await a.doubleClick();
 
         return (await app.client.$("#activeTabTitle"))
             .getText()
             .should
             .eventually
-            .equal("Non-3D > Experiment1")
+            .equal("Non-3D")
+    })
 
-        // app.client.$('#activeTabTitle').waitForVisible().then(() => {
-        //
-        //   return app.client.getText('#activeTabTitle')
-        //     .then(function (title) {
-        //       assert.equal(title, 'Non-3D > Experiment1')
-        //     });
-        // })sni
+    //Step 5. Click the + symbol next to Non-3D multimodel to expand it
+    it("Click on +", async function () {
+        // "#node_ProjectBrowserItem_27" is "Non-3D" mutli model
+        // .w2ui-node-dots is the class on the "+" button
+        await app.client.$("#node_ProjectBrowserItem_27")
+            .then(n => n.$(".w2ui-node-dots"))
+            .then(n => n.click());
 
+        // #node_ProjectBrowserItem_27_sub is the "Experiment1
+        return app.client.$("#node_ProjectBrowserItem_27_sub")
+            .then(n => n.getAttribute(("style")))
+            .should
+            .eventually
+            .not
+            .contain("display: hidden;");
+    })
 
+    //Step 6. Double click to open Experiment1.
+    it('Go to Non-3D > Experiment1 from sidebar', async function () {
+
+        await app.client.$("#node_ProjectBrowserItem_27_sub")
+            .then(n => n.doubleClick())
+
+        return app.client.$("#activeTabTitle")
+            .then(n => n.getText())
+            .should.eventually.equal("Non-3D > Experiment1");
     })
 
     xit('Co-Simulation Engine offline', function () {
