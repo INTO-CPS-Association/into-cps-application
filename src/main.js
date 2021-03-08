@@ -155,6 +155,13 @@ if(process.env.RUNNING_IN_SPECTRON) {
       let project = intoCpsApp.loadProject(path);
       return IntoCpsApp.getInstance().setActiveProject(project);
   };
+  app.stopCoe = () =>
+  {
+    const coe = IntoCpsApp.getInstance().getCoeProcess();
+    if (coe.isRunning()) {
+      coe.stop();
+    }
+  }
 }
 
 
