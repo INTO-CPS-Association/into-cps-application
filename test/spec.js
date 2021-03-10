@@ -15,8 +15,7 @@ describe('Generic tests', function () {
   })
 
   after(function () {
-    if (app && app.isRunning())
-      return app.stop();
+    return require("./TestHelpers").commonShutdownTasks(app);
   })
 
   it('Shows a window', function () {

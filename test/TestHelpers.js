@@ -1,6 +1,7 @@
 const path = require("path");
 const Application = require("spectron").Application;
 const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
+const fs = require("fs");
 
 module.exports.app = function()
 {
@@ -16,11 +17,20 @@ module.exports.app = function()
     })
 }
 
-
+module.exports.commonShutdownTasks = function(app, testDataPath){
+    if(app && app.isRunning())
+    {
+        app.electron.remote.app.stopCoe();
+        return app.stop()
+            .finally(() => {
+                if(testDataPath)
+                    fs.rmdirSync(testDataPath, {recursive: true });
+            });
+    }
+}
 
 module.exports.downloadTestData = async function(dataUrl){
     const request = require("request");
-    const fs = require("fs");
     const admZip = require("adm-zip");
     const path = require("path");
     const dataPath = path.resolve("test/TestData/");
