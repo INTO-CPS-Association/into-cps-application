@@ -12,8 +12,9 @@ const waitFor = chaiWaitFor.bindWaitFor({
 });
 
 const app = require("./TestHelpers").app();
-const path = require("path");
-const projectPath = path.resolve("test/TestData/tutorial_1/.project.json");
+const data = require("./TestHelpers").downloadTestData;
+let projectPath = "";
+const fs = require("fs");
 
 describe('In Tutorial 1', function () {
     this.timeout(120000)
@@ -23,7 +24,8 @@ describe('In Tutorial 1', function () {
         await app.start();
         await app.client.waitUntilWindowLoaded();
 
-        await app.electron.remote.app.loadProject(projectPath);
+        projectPath = await data("https://github.com/INTO-CPS-Association/example-three_tank_watertank/archive/master.zip");
+        await app.electron.remote.app.loadProject(projectPath + ".project.json");
 
         return app;
     })
@@ -32,6 +34,7 @@ describe('In Tutorial 1', function () {
         if (app && app.isRunning()) {
             app.electron.remote.app.stopCoe();
             return app.stop()
+                .finally(() => fs.rmdirSync(projectPath, {recursive: true} ));
         }
     })
 
@@ -40,7 +43,7 @@ describe('In Tutorial 1', function () {
         return app.electron.remote.app.getActiveProject()
             .should
             .eventually
-            .equal(projectPath);
+            .equal(projectPath + ".project.json");
     })
 
     it("Should have name Three Tank", function () {
