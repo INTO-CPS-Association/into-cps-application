@@ -12,9 +12,9 @@ const waitFor = chaiWaitFor.bindWaitFor({
 });
 
 const app = require("./TestHelpers").app();
-const data = require("./TestHelpers").downloadTestData;
+const downloadTestData = require("./TestHelpers").downloadTestData;
 let projectPath = "";
-const fs = require("fs");
+const path = require("path");
 
 describe('In Tutorial 1', function () {
     this.timeout(120000)
@@ -24,18 +24,16 @@ describe('In Tutorial 1', function () {
         await app.start();
         await app.client.waitUntilWindowLoaded();
 
-        projectPath = await data("https://github.com/INTO-CPS-Association/example-three_tank_watertank/archive/master.zip");
+        // projectPath = await downloadTestData("https://github.com/INTO-CPS-Association/example-three_tank_watertank/archive/master.zip");
+        projectPath = path.resolve("test/TestData/tutorial_1/") + "/";
         await app.electron.remote.app.loadProject(projectPath + ".project.json");
 
         return app;
     })
 
     after(function () {
-        if (app && app.isRunning()) {
-            app.electron.remote.app.stopCoe();
-            return app.stop()
-                .finally(() => fs.rmdirSync(projectPath, {recursive: true} ));
-        }
+        return require("./TestHelpers").commonShutdownTasks(app);
+        // return require("./TestHelpers").commonShutdownTasks(app, projectPath);
     })
 
     // This should be done before as soon as we solve the programmatic project load problem
