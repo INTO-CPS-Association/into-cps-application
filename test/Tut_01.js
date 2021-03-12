@@ -12,9 +12,9 @@ const waitFor = chaiWaitFor.bindWaitFor({
 });
 
 const app = require("./TestHelpers").app();
-const downloadTestData = require("./TestHelpers").downloadTestData;
-let projectPath = "";
 const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test1_data.zip");
+const testDataPath = path.resolve("test/TestData/test1_data");
 
 describe('In Tutorial 1', function () {
     this.timeout(120000)
@@ -23,17 +23,14 @@ describe('In Tutorial 1', function () {
 
         await app.start();
         await app.client.waitUntilWindowLoaded();
-
-        // projectPath = await downloadTestData("https://github.com/INTO-CPS-Association/example-three_tank_watertank/archive/master.zip");
-        projectPath = path.resolve("test/TestData/tutorial_1/") + "/";
-        await app.electron.remote.app.loadProject(projectPath + ".project.json");
+        require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
+        await app.electron.remote.app.loadProject(testDataPath + "/.project.json");
 
         return app;
     })
 
     after(function () {
-        return require("./TestHelpers").commonShutdownTasks(app);
-        // return require("./TestHelpers").commonShutdownTasks(app, projectPath);
+        return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
     })
 
     // This should be done before as soon as we solve the programmatic project load problem
@@ -41,7 +38,7 @@ describe('In Tutorial 1', function () {
         return app.electron.remote.app.getActiveProject()
             .should
             .eventually
-            .equal(projectPath + ".project.json");
+            .equal(testDataPath + "/.project.json");
     })
 
     it("Should have name Three Tank", function () {
@@ -55,7 +52,8 @@ describe('In Tutorial 1', function () {
     })
 
     it("Open Multi-Model from sidebar", async function () {
-        return app.client.$("#node_ProjectBrowserItem_27")
+        // multi model button
+        return app.client.$("#node_ProjectBrowserItem_11")
             .then(n => n.doubleClick())
             .then(() =>
             {
@@ -71,12 +69,12 @@ describe('In Tutorial 1', function () {
     it("Click on +", function () {
         // "#node_ProjectBrowserItem_27" is "Non-3D" multi-model
         // .w2ui-node-dots is the class on the "+" button
-        return app.client.$("#node_ProjectBrowserItem_27")
+        return app.client.$("#node_ProjectBrowserItem_11")
             .then(n => n.$(".w2ui-node-dots"))
             .then(n => n.click())
             .then(() => {
                 // #node_ProjectBrowserItem_27_sub is the "Experiment1
-                return app.client.$("#node_ProjectBrowserItem_27_sub")
+                return app.client.$("#node_ProjectBrowserItem_11_sub")
                     .then(n => n.getAttribute(("style")))
                     .should
                     .eventually
@@ -88,7 +86,7 @@ describe('In Tutorial 1', function () {
     //Step 6. Double click to open Experiment1.
     it('Go to Non-3D > Experiment1 from sidebar', function () {
         // #node_ProjectBrowserItem_27_sub is "Experiment1" in the sidebar
-        return app.client.$("#node_ProjectBrowserItem_27_sub")
+        return app.client.$("#node_ProjectBrowserItem_11_sub")
             .then(n => n.doubleClick())
             .then(() => {
                 return app.client.$("#activeTabTitle")
