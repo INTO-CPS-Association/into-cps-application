@@ -55,3 +55,8 @@ module.exports.downloadTestData = async function(dataUrl){
             });
     });
 }
+
+module.exports.unZipTestData = function (zipPath, extractPath) {
+    const zip = new require("adm-zip")(zipPath);
+    zip.extractAllTo(extractPath, true);
+}
