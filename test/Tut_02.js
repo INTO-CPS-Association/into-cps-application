@@ -1,128 +1,170 @@
-const Application = require('spectron').Application
-const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
+// const Application = require('spectron').Application
+// const assert = require('assert')
+// const expect = require('chai').expect;
+// const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
+// const path = require('path')
+const chai = require('chai');
+const expect = chai.expect;
+const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
 
+const waitFor = chaiWaitFor.bindWaitFor({
+  timeout: 5000,
+  retryInterval: 100
+});
 
-describe.skip('In Tutorial 2', function () {
+const app = require("./TestHelpers").app();
+const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test2_data.zip");
+const testDataPath = path.resolve("test/TestData/test2_data");
+
+describe('In Tutorial 2', function () {
   this.timeout(120000)
 
+  before(async function () {
 
+    await app.start();
+    await app.client.waitUntilWindowLoaded();
 
-  beforeEach(async function () {
+    await app.electron.remote.app.loadProject(testDataPath + "/.project.json");
 
-    this.app = new Application({
-      path: electronPath,
-      env: { RUNNING_IN_SPECTRON: '1' },
-      args: [path.join(__dirname, '..')]
-    })
-
-
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
-
-    if (!(this.currentTest.title === 'File->Open Project Menu Click')) {
-
-      await this.app.client.waitForVisible('#node_ProjectBrowserItem_21');
-
-      await this.app.client.$('#node_ProjectBrowserItem_21').doubleClick();
-
-      await this.app.client.waitUntilWindowLoaded();
-
-      await this.app.client.waitForVisible('mm-page');
-
-      await this.app.client.waitForVisible('#Configuration');
-
-      await this.app.client.$('mm-page').$('#Configuration').click();
-
-      await this.app.client.waitForVisible('.btn.btn-default');
-
-      await this.app.client.$('.btn.btn-default').click();
-
-      await this.app.client.waitForVisible('.btn.btn-default.btn-xs');
-
-      await this.app.client.$('.btn.btn-default.btn-xs').click();
-    }
-
-
-    return this.app;
-
+    return app;
   })
 
-  afterEach(function () {
-
-    if (this.app && this.app.isRunning()) {
-
-      return this.app.stop()
-        .then(() => {
-          if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 2 loaded')
-            throw Error("Tutorial 2 project is not loaded!")
-        })
-    }
-  })
-
-  //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click',  async function () {
-    // TODO remove the multiple hardcoding
-    await app.electron.remote.app.loadProject('/home/hdm/workspaces/into-cps-projects/tutorials/tutorial_2/.project.json');  
+  after(function () {
+    // return require("./TestHelpers").commonShutdownTasks(app);
+    // return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
   })
 
   // This should be done before as soon as we solve the programmatic project load problem
-  it.skip('Should have tutorial 2 loaded', function () {
-    return this.app.client.waitUntilWindowLoaded()
-      .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_2'); })
+  it('Should have tutorial 2 loaded', function () {
+    return app.electron.remote.app.getActiveProject()
+        .should
+        .eventually
+        .equal(testDataPath + "/.project.json");
+  })
 
-      })
+  it("Should have the correct name", function() {
+    return app.electron.remote.app.getIProject()
+        .then(n => {
+          return n
+              .name
+              .should
+              .equal("INTO-CPS_Tutorial");
+        });
   })
 
   // /* Tutorial 2 */
-  // //step 2,6,7,8
-  it.skip('Add a new FMU entry from Configuration', function () {
-    return this.app.client
-      .waitForVisible('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
-      .$$('.form-control.input-fixed-size.input-sm.ng-untouched.ng-pristine.ng-valid')
-      .then(function (text) {
-        assert.equal(text.length, 6)   //length should be 5, I already added controller in the SE lecture therefore 6
-      })
+  it("Should be able to open MM", function() {
+    return app.client.$('#node_ProjectBrowserItem_21')
+        .then(n => n.doubleClick())
+        .then(() => {
+          return app.client.$("#activeTabTitle")
+              .then(n => n.getText())
+              .should
+              .eventually
+              .equal("mm-3DRobot");
+        });
+  });
+
+  it("Should be able to open the Configuration pane", function() {
+    return app.client.$("#Configuration")
+        .then(n => n.click())
+        .then(() => {
+          return app.client.$("mm-configuration")
+              .then(n => n.elementId
+                  .should
+                  .contain("-"));
+        });
   })
 
-  //step 9
-  //TODO: Broken at merge form.get form.find
-  it.skip('Rename the new entry to controller', function () {
-
-    return this.app.client
-      .waitForVisible('#fmu5')
-      .$('#fmu5')
-      .waitForVisible('#fmu')
-      .$('#fmu').setValue("controller-test").pause(10000)
-      .$('#fmu5').$('#fmu').getValue()
-      .then(function (text) {
-        assert.equal(text, 'controller-test')
-      })
+  it("Should be able to click edit button", function() {
+    return app.client.$('button.btn.btn-default')
+        .then(n => n.click())
+        .then(() => {
+          return app.client.$('button.btn.btn-default')
+              .then(n => n.getText())
+              .should
+              .eventually
+              .contain("Save");
+        });
   })
 
-  //step 10, 11
-  //you need to 'cancel' manually 
-  it.skip('Click File Button', function () {
-    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-      .$('mm-page').$('#Configuration').click().pause(5000)
-      .$('.btn.btn-default').click().pause(3000)
-      .$('#fmu4').$('#file').click()
+  it("Should be able to add a new FMU", function() {
+    return app.client.$("#fmu5")
+        .then(n => n.elementId)
+        .then(n => expect(n).to.equal(undefined))
+        .then(() => {
+          return app.client.$('button.btn.btn-default.btn-xs') // the + button in the config section
+              .then(n => n.click())
+              .then(() => {
+                return app.client.$("#fmu5")
+                    .then(n => n.elementId)
+                    .then(n => expect(n).to.contain("-"))
+              });
+        });
   })
+
+  it('Add a new FMU entry from Configuration', function () {
+    return app.client.$("#fmu5 #fmu")
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .equal("FMU");
+  })
+
+  it('Rename the new entry to controller', function () {
+    return app.client.$("#fmu5 #fmu")
+        .then(n => n.setValue("controller-test"))
+        .then(() => {
+          return app.client.$("#fmu5 #fmu")
+              .then(n => n.getValue())
+              .should
+              .eventually
+              .equal("controller-test");
+        })
+  })
+
+  it('Remove Test FMU', function () {
+      return app.client.$("#fmu5 .col-md-1 button")
+          .then(n => n.click())
+          .then(() => {
+              return app.client.$("#fmu5")
+                  .then(() => {
+                      return app.client.$("#fmu5")
+                          .then(n => n.elementId)
+                          .then(n => expect(n).to.equal(undefined));
+                  });
+          });
+  });
+
+  it("Can click on FMU instances", function() {
+      return app.client.$("#controller")
+          .then(n => n.click())
+          .then(() => {
+              return app.client.$("#instance_fmu")
+                  .then(n => n.getValue())
+                  .should
+                  .eventually
+                  .contain("controllerInstance");
+          });
+  });
 
   //step 14
   it.skip('Add an instance of controller', function () {
-    return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
-      .$('mm-page').$('#Configuration').click().pause(2000)
-      .$('.btn.btn-default').click().pause(2000)
-      .$('#controller').click()
-      .$('#fmu_instance').click()
-      .$('#instance_fmu').getValue()
-      .then(function (text) {
-        assert.equal(text, 'controllerInstance')
-      })
+    // return this.app.client.$('#node_ProjectBrowserItem_21').doubleClick().pause(3000)
+    //   .$('mm-page').$('#Configuration').click().pause(2000)
+    //   .$('.btn.btn-default').click().pause(2000)
+    //   .$('#controller').click()
+    //   .$('#fmu_instance').click()
+    //   .$('#instance_fmu').getValue()
+    //   .then(function (text) {
+    //     assert.equal(text, 'controllerInstance')
+    //   })
   })
 
   //step 15,16,17,18,19
@@ -200,4 +242,4 @@ describe.skip('In Tutorial 2', function () {
         assert.equal(element, true)
       })
   })
-})
+});
