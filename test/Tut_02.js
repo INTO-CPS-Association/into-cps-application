@@ -37,7 +37,6 @@ describe('In Tutorial 2', function () {
     });
 
     after(function () {
-        // return require("./TestHelpers").commonShutdownTasks(app);
         return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
     });
 
@@ -317,45 +316,46 @@ describe('In Tutorial 2', function () {
     });
 
     //step 24
-    it.skip('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
-        return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
-            .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
-            .$('#Ok').click().pause(2000)
-            .getText('#activeTabTitle')
-            .then(function (title) {
-                expect(title).contain('3DRobot')
-            })
-    })
+    xit('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
+        // TODO: Currently to my knownalge spectron does not support right clicks so we cant make a new co-sim directly from the tests
+    });
 
-    //step 25
-    it.skip('Edit Step Size to 0.01 under Basic Configuration', function () {
-        return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
-            .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
-            .$('#Ok').click().pause(2000)
-            .$('coe-page').$('.panel-heading').click()
-            .$('.btn.btn-default').click()
-            .$('#stepsize').setValue('0.01')
-            .$('.btn.btn-default').click().pause(2000)
-            .$('#notediting').getText()
-            .then(function (value) {
-                assert.equal(value, "0.01")
-            })
-    })
+    it("Should Open Co-Sim", function() {
+        return app.client.$('#node_ProjectBrowserItem_21')
+            .then(n => n.$(".w2ui-node-dots"))
+            .then(n => n.click())
+            .then(() => app.client.$('#node_ProjectBrowserItem_22'))
+            .then(n => n.doubleClick())
+            .then(() => app.client.$("#activeTabTitle"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("mm-3DRobot > co-sim");
+    });
 
-    //step 26, 27
-    it.skip('Live plotting', function () {
-        return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
-            .$('.w2ui-icon.glyphicon.glyphicon-copyright-mark').click().pause(3000)
-            .$('#Ok').click().pause(3000)
-            .$('coe-page').$('.panel-heading').click().pause(2000)
-            .$('.btn.btn-default').click().pause(2000)
-            .$('#livecollapse').click().pause(2000)
-            .$('#addLiveGraph').click()
-            .$('#sensor1lf_1_sensor_reading').click()
-            .$('#sensor2lf_1_sensor_reading').click()
-            .$('#sensor1lf_1_sensor_reading').isSelected()
-            .then(function (element) {
-                assert.equal(element, true)
-            })
-    })
+    it('Edit Step Size to 0.01 under Basic Configuration', function () {
+        return app.client.$("#Configuration")
+            .then(n => n.click())
+            .then(() => app.client.$("coe-configuration button.btn.btn-default"))
+            .then(n => n.click())
+            .then(() => app.client.$("#stepsize"))
+            .then(n => n.setValue("0.01"))
+            .then(() => app.client.$("#stepsize"))
+            .then(n => n.getValue())
+            .should
+            .eventually
+            .equal("0.01");
+    });
+
+    it("Enable sensor1 in live plotting", function() {
+        return app.client.$$(".panel-heading h4>a")
+            .then(n => n[3].click())
+            .then(() => app.client.$("#sensor1lf_1_sensor_reading"))
+            .then(n => n.click())
+            .then(() => app.client.$("#sensor1lf_1_sensor_reading"))
+            .then(n => n.isSelected())
+            .should
+            .eventually
+            .equal(true);
+    });
 });
