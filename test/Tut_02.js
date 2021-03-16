@@ -266,22 +266,27 @@ describe('In Tutorial 2', function () {
             .equal(expectedData);
     });
 
-    //step 24
-    xit('Right-click on the multi-model configuration and create Co-simulation Configuration', function () {
-        // TODO: Currently to my knownalge spectron does not support right clicks so we cant make a new co-sim directly from the tests
+    it('Right-click on the multi-model configuration should open popup', function () {
+        return app.client.$('#node_ProjectBrowserItem_21')
+            .then(n => n.click({button: "right"}))
+            .then(() => app.client.$("#w2ui-overlay tbody"))
+            .then(n => n.$$("tr"))
+            .then(n => n[1].click())
+            .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .contain("New Co-Simulation Configuration");
     });
 
-    it("Should Open Co-Sim", function() {
-        return app.client.$('#node_ProjectBrowserItem_21')
-            .then(n => n.$(".w2ui-node-dots"))
+    it("Should click Ok button to create new Co-Sim and then open new Co-Sim", function () {
+        return app.client.$("#w2ui-popup #Ok")
             .then(n => n.click())
-            .then(() => app.client.$('#node_ProjectBrowserItem_22'))
-            .then(n => n.doubleClick())
             .then(() => app.client.$("#activeTabTitle"))
             .then(n => n.getText())
             .should
             .eventually
-            .equal("mm-3DRobot > co-sim");
+            .equal("mm-3DRobot > co-sim");;
     });
 
     it('Edit Step Size to 0.01 under Basic Configuration', function () {
@@ -298,10 +303,20 @@ describe('In Tutorial 2', function () {
             .equal("0.01");
     });
 
-    it("Enable sensor1 in live plotting", function() {
+    it("Should add a new live plot", function() {
         return app.client.$$(".panel-heading h4>a")
             .then(n => n[3].click())
-            .then(() => app.client.$("#sensor1lf_1_sensor_reading"))
+            .then(() => app.client.$("#live-collapse button"))
+            .then(n => n.click())
+            .then(() => app.client.$("#live-collapse .constraint-container div.panel-heading"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Graph Variables");
+    });
+
+    it("Enable sensor1 in live plotting", function() {
+        return app.client.$("#sensor1lf_1_sensor_reading")
             .then(n => n.click())
             .then(() => app.client.$("#sensor1lf_1_sensor_reading"))
             .then(n => n.isSelected())
