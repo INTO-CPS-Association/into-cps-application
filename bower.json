@@ -14,10 +14,7 @@
     "url": "http://into-cps.au.dk/"
   },
   "dependencies": {
-    "bootstrap": "^3.3.6",
-    "jquery": "^2.2.3",
-    "plotly.js": "plotly/plotly.js#^1.13.0",
-    "ace-builds": "^1.2.3"
+    "bootstrap": "^3.3.6"
   },
   "overrides": {
     "ace-builds": {

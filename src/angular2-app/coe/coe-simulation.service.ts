@@ -65,7 +65,7 @@ export class CoeSimulationService {
     private resultDir: string;
     private config: CoSimulationConfig;
     private graphMaxDataPoints: number = 100;
-    public graph: Graph = new Graph();;
+    public graph: Graph = new Graph();
     public externalGraphs: Array<DialogHandler> = new Array<DialogHandler>();
 
     constructor(private http: HttpClient,
