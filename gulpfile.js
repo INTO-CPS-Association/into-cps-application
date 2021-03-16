@@ -36,26 +36,22 @@ var outputPath = "dist/",
   htmlSrcs = ["src/**/*.html"],
   jsSrcs = "src/**/*.js",
   tsSrcs = ["src/**/*.ts"],
-  bowerFolder = "bower_components",
   resourcesFolder = "src/resources",
   cssSrcs = [
     "src/styles.css",
-    bowerFolder + "/bootstrap/dist/css/bootstrap.css",
+    "src/contents/bootstrap_3_4_1_dist/css/bootstrap.css",
     resourcesFolder + "/w2ui-1.5/w2ui.min.css"
   ],
-  bowerSrcs = "",
   customResources = [resourcesFolder + "/into-cps/**/*"],
-  configJsons = ["./bower.json", "./package.json"];
+  configJsons = ["./package.json"];
 // Gulp plugins
 var gulp = require("gulp"),
   ts = require("gulp-typescript"),
   sourcemap = require("gulp-sourcemaps"),
   tsProject = ts.createProject("tsconfig.json"),
   del = require("del"),
-  mainBowerFiles = require("main-bower-files"),
   filter = require("gulp-filter"),
   debug = require("gulp-debug"),
-  bower = require("gulp-bower"),
   merge = require("merge-stream"),
   packager = require("electron-packager"),
   packageJSON = require("./package.json"),
@@ -119,7 +115,7 @@ gulp.task("bump-dev", function () {
 
 gulp.task("commit-changes", function () {
   return gulp
-    .src(["./bower.json", "./package.json"])
+    .src(["./package.json"])
     .pipe(git.add())
     .pipe(git.commit("[GULP] Bump version number"));
 });
@@ -155,11 +151,6 @@ gulp.task("prep-new-dev",
     "push-changes"
   )
 );
-
-// Install bower components
-gulp.task("install-bower-components", function () {
-  return bower();
-});
 
 // Clean everything!
 gulp.task("clean", function () {
@@ -198,23 +189,10 @@ gulp.task("compile-ng2", function (callback) {
   });
 });
 
-// Copy important bower files to destination
-// mainBowerFiles does not take jquery-ui and jquery-layout
-gulp.task("copy-bower", function () {
-  // solved from issue #26
-  var path1 = gulp
-    .src(mainBowerFiles())
-    .pipe(filter("**/*.js"))
-    .pipe(gulp.dest(outputPath + bowerFolder));
-  // var path2 = gulp.src(bowerSrcs).pipe(gulp.dest(outputPath + bowerFolder));
-  return path1;
-  // return merge(path1, path2);
-});
-
 // Copy bootstrap fonts to destination
 gulp.task("copy-fonts", function () {
   return gulp
-    .src(bowerFolder + "/bootstrap/fonts/**/*")
+    .src("contents/bootstrap/fonts/**/*")
     .pipe(gulp.dest(outputPath + "fonts"));
 });
 
@@ -227,7 +205,6 @@ gulp.task("copy-custom", function () {
 
 // Copy css to app folder
 gulp.task("copy-css", function () {
-  // solved from issue #26
   return gulp
     .src(cssSrcs)
     .pipe(cleancss())
@@ -236,7 +213,6 @@ gulp.task("copy-css", function () {
 
 // Copy html to app folder
 gulp.task("copy-html", function () {
-  // solved from issue #26
   return gulp
     .src(htmlSrcs)
     .pipe(
@@ -268,7 +244,6 @@ gulp.task("copy-html", function () {
 
 // Copy js to app folder
 gulp.task("copy-js", function () {
-  // solved from issue #26
   return (
     gulp
       .src(jsSrcs)
@@ -276,9 +251,6 @@ gulp.task("copy-js", function () {
       .pipe(gulp.dest(outputPath))
   );
 });
-
-// Grab non-npm dependencies
-gulp.task("init", gulp.series("install-bower-components"));
 
 //Build App for debugging
 gulp.task(
@@ -289,7 +261,6 @@ gulp.task(
     "copy-js",
     "copy-html",
     "copy-css",
-    "copy-bower",
     "copy-fonts",
     "copy-custom"
   )
@@ -304,7 +275,6 @@ gulp.task(
     "copy-js",
     "copy-html",
     "copy-css",
-    "copy-bower",
     "copy-fonts",
     "copy-custom"
   )
