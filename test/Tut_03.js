@@ -1,106 +1,115 @@
-const Application = require('spectron').Application
-const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
+// const Application = require('spectron').Application
+// const assert = require('assert')
+// const expect = require('chai').expect;
+// const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
+// const path = require('path')
+const chai = require('chai');
+const expect = chai.expect;
+const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
 
+const app = require("./TestHelpers").app();
+const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test3_data.zip");
+const testDataPath = path.resolve("test/TestData/test3_data");
 
-describe.skip('In Tutorial 3', function () {
+describe('In Tutorial 3', function () {
+  // beforeEach(async function () {
+  //   if (this.currentTest.title === 'Open mm-3DRobot configuration and click on File button next to c' || this.currentTest.title == 'Defining the sensor positions') {
+  //
+  //     await this.app.client.$('#node_ProjectBrowserItem_21').doubleClick();
+  //
+  //     await this.app.client.waitUntilWindowLoaded();
+  //
+  //     await this.app.client.waitForVisible('#Configuration');
+  //
+  //     await this.app.client.$('mm-page').$('#Configuration').click();
+  //
+  //     await this.app.client.waitForVisible('.btn.btn-default');
+  //
+  //     await this.app.client.$('.btn.btn-default').click(); //until step 27 where Edit Button is clicked
+  //   }
+  // })
+
   this.timeout(120000)
 
+  before(async function () {
 
+    await app.start();
+    await app.client.waitUntilWindowLoaded();
 
-  beforeEach(async function () {
+    await require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
+    await app.electron.remote.app.loadProject(testDataPath + "/testdata/.project.json");
 
-    this.app = new Application({
-      path: electronPath,
-      env: { RUNNING_IN_SPECTRON: '1' },
-      args: [path.join(__dirname, '..')]
-    })
+    return app;
+  });
 
+  after(function () {
+    // return require("./TestHelpers").commonShutdownTasks(app);
+    return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
+  });
 
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
-
-    if (this.currentTest.title === 'Open mm-3DRobot configuration and click on File button next to c' || this.currentTest.title == 'Defining the sensor positions') {
-
-      await this.app.client.$('#node_ProjectBrowserItem_21').doubleClick();
-
-      await this.app.client.waitUntilWindowLoaded();
-
-      await this.app.client.waitForVisible('#Configuration');
-
-      await this.app.client.$('mm-page').$('#Configuration').click();
-
-      await this.app.client.waitForVisible('.btn.btn-default');
-
-      await this.app.client.$('.btn.btn-default').click(); //until step 27 where Edit Button is clicked
-    }
-
-
-    return this.app;
-
-  })
-
-  afterEach(function () {
-
-    if (this.app && this.app.isRunning()) {
-
-      return this.app.stop()
-        .then(() => {
-          if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 3 loaded')
-            throw Error("Tutorial 3 project is not loaded!")
-        })
-    }
-  })
-
-  //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click', async function () {
-    // TODO remove the multiple hardcoding
-    await app.electron.remote.app.loadProject('/home/hdm/workspaces/into-cps-projects/tutorials/tutorial_3/.project.json');  
-  })
-
-  // This should be done before as soon as we solve the programmatic project load problem
   it('Should have tutorial 3 loaded', function () {
-    return this.app.client.waitUntilWindowLoaded()
-      .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_3'); })
+    return app.electron.remote.app.getActiveProject()
+        .should
+        .eventually
+        .equal(testDataPath + "/testdata/.project.json");
+  });
 
-      })
-  })
+  it("Should have the correct name", function () {
+    return app.electron.remote.app.getIProject()
+        .then(n => { return n
+            .name
+            .should
+            .equal("INTO-CPS_Tutorial");
+        });
+  });
 
-  // //Step 24, 25
-  it('Create mm through the 3DRobot icon', function () {
-    return this.app.client
-      .waitForVisible('#node_ProjectBrowserItem_24')
-      .waitForVisible('.w2ui-expand')
-      .$('#node_ProjectBrowserItem_24').$('.w2ui-expand').click()
+  it("Right click on 3D Robot", function () {
+    return app.client.$("#node_ProjectBrowserItem_22 .w2ui-expand")
+        .then(n => n.click())
+        .then(() => app.client.$("#node_ProjectBrowserItem_24 .w2ui-expand"))
+        .then(n => n.click())
+        .then(() => app.client.$("#node_ProjectBrowserItem_28"))
+        .then(n => n.click({button: "right"}))
+        .then(() => app.client.$("#w2ui-overlay tbody"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("Create Multi-Model");
+  });
 
-      .waitForVisible('#node_ProjectBrowserItem_26')
-      .waitForVisible('.w2ui-expand')
-      .$('#node_ProjectBrowserItem_26').$('.w2ui-expand').click()
-      .$('#node_ProjectBrowserItem_30').rightClick()
-      .$('#w2ui-overlay').click().pause(2000)
-      .$('#Ok').click().pause(2000)
-      .$('#node_ProjectBrowserItem_21').getText()
-      .then(function (text) {
-        assert.equal(text, 'mm-3DRobot')
-      })
-  })
+  it("Should be able to open MM creation popup from right click", function () {
+    return app.client.$("#w2ui-overlay tbody")
+        .then(n => n.$$("tr"))
+        .then(n => n[0].click())
+        .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("New Multi-Model")
+  });
 
-  //Step 25, 26, 27, 28, 29
-  //Manually cancel or select the fmu file
-  // TODO: Need to repeat this 
-  it('Open mm-3DRobot configuration and click on File button next to c', function () {
-    return this.app.client
-      .waitForVisible('#fmu0')
-      .waitForVisible('#file')
-      .$('#fmu0').$('#file').click();
-  })
+  it('Create MM through popup with name mm-3DRobot', function () {
+    return app.client.$("#w2prompt")
+        .then(n => n.setValue("mm-3DRobot"))
+        .then(() => app.client.$("#w2ui-popup #Ok"))
+        .then(n => n.click())
+        .then(() => app.client.$("#activeTabTitle"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("mm-3DRobot");
+  });
+
 
   //Step 31
   // TODO: Need to repeat this 
-  it('Defining the sensor positions', function () {
+  xit('Defining the sensor positions', function () {
     return this.app.client
       .waitForVisible('#initialvalsensor1')
       .$('#initialvalsensor1').click()
@@ -117,7 +126,7 @@ describe.skip('In Tutorial 3', function () {
   })
 
   //Step 34,35
-  it('Right-click on the mm and select Create Co-Simulation Configuration', function () {
+  xit('Right-click on the mm and select Create Co-Simulation Configuration', function () {
     return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
       .waitForVisible('#td1')
       .$('#td1').click()
@@ -136,4 +145,4 @@ describe.skip('In Tutorial 3', function () {
         assert.equal(value, '0.01')
       })
   })
-})
+});
