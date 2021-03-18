@@ -1,21 +1,9 @@
-// const Application = require('spectron').Application
-// const assert = require('assert')
-// const expect = require('chai').expect;
-// const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-// const path = require('path')
 const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
-const chaiWaitFor = require('chai-wait-for');
 // needed so we can use as promised
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(chaiWaitFor);
-
-const waitFor = chaiWaitFor.bindWaitFor({
-  timeout: 5000,
-  retryInterval: 100
-});
 
 const app = require("./TestHelpers").app();
 const path = require("path");
@@ -23,23 +11,6 @@ const testDataZipPath = path.resolve("test/TestData/test3_data.zip");
 const testDataPath = path.resolve("test/TestData/test3_data");
 
 describe('In Tutorial 3', function () {
-  // beforeEach(async function () {
-  //   if (this.currentTest.title === 'Open mm-3DRobot configuration and click on File button next to c' || this.currentTest.title == 'Defining the sensor positions') {
-  //
-  //     await this.app.client.$('#node_ProjectBrowserItem_21').doubleClick();
-  //
-  //     await this.app.client.waitUntilWindowLoaded();
-  //
-  //     await this.app.client.waitForVisible('#Configuration');
-  //
-  //     await this.app.client.$('mm-page').$('#Configuration').click();
-  //
-  //     await this.app.client.waitForVisible('.btn.btn-default');
-  //
-  //     await this.app.client.$('.btn.btn-default').click(); //until step 27 where Edit Button is clicked
-  //   }
-  // })
-
   this.timeout(120000)
 
   before(async function () {
@@ -48,13 +19,12 @@ describe('In Tutorial 3', function () {
     await app.client.waitUntilWindowLoaded();
 
     await require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
-    await app.electron.remote.app.loadProject(testDataPath + "/testdata/.project.json");
+    await app.electron.remote.app.loadProject(testDataPath + "/project/.project.json");
 
     return app;
   });
 
   after(function () {
-    // return require("./TestHelpers").commonShutdownTasks(app);
     return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
   });
 
@@ -62,7 +32,7 @@ describe('In Tutorial 3', function () {
     return app.electron.remote.app.getActiveProject()
         .should
         .eventually
-        .equal(testDataPath + "/testdata/.project.json");
+        .equal(testDataPath + "/project/.project.json");
   });
 
   it("Should have the correct name", function () {
@@ -208,16 +178,6 @@ describe('In Tutorial 3', function () {
         .equal("00.065");
   });
 
-  it("Set sensor1 x position", function() {
-    return () => app.client.$("#lf_position_x")
-        .then(n => n.addValue(0.001)) // setValue for some reason does not work in this context
-        .then(() => app.client.$("#lf_position_x"))
-        .then(n => n.getValue())
-        .should
-        .eventually
-        .equal("00.001");
-  });
-
   it("Should save with no errors", function() {
     return app.client.$('button.btn.btn-default')
         .then(n => n.click())
@@ -228,24 +188,18 @@ describe('In Tutorial 3', function () {
         .null;
   });
 
-  //Step 34,35
-  xit('Right-click on the mm and select Create Co-Simulation Configuration', function () {
-    return this.app.client.$('#node_ProjectBrowserItem_21').rightClick()
-      .waitForVisible('#td1')
-      .$('#td1').click()
-      .$('#Ok').click()
-      .waitUntilWindowLoaded()
-
-      .$('.panel-heading').click()
-
-      .waitForVisible('.btn.btn-default')
-      .$('.btn.btn-default').click()
-
-      .waitForVisible('#stepsize')
-      .$('#stepsize').setValue('0.01').pause(2000)
-      .$('#stepsize').getValue()
-      .then(function (value) {
-        assert.equal(value, '0.01')
-      })
-  })
+  it("Creat a a Co-Sim from the MM", function () {
+    return app.client.$("#node_ProjectBrowserItem_35")
+        .then(n => n.click({button: "right"}))
+        .then(() => app.client.$("#w2ui-overlay tbody"))
+        .then(n => n.$$("tr"))
+        .then(n => n[1].click())
+        .then(() => app.client.$("#w2ui-popup #Ok"))
+        .then(n => n.click())
+        .then(() => app.client.$("#activeTabTitle"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .equal("mm-3DRobot > co-sim");
+  });
 });

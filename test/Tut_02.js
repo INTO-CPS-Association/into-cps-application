@@ -1,11 +1,9 @@
 const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
-const chaiWaitFor = require('chai-wait-for');
 // needed so we can use as promised
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(chaiWaitFor);
 
 const app = require("./TestHelpers").app();
 const path = require("path");
@@ -266,6 +264,8 @@ describe('In Tutorial 2', function () {
             .then(() => app.client.$("#w2ui-overlay tbody"))
             .then(n => n.$$("tr"))
             .then(n => n[1].click())
+            .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
+            .then(async n => await n.waitForExist(3000))
             .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
             .then(n => n.getText())
             .should
