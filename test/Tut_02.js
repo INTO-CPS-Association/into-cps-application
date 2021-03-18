@@ -1,8 +1,3 @@
-// const Application = require('spectron').Application
-// const assert = require('assert')
-// const expect = require('chai').expect;
-// const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-// const path = require('path')
 const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
@@ -11,11 +6,6 @@ const chaiWaitFor = require('chai-wait-for');
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(chaiWaitFor);
-
-const waitFor = chaiWaitFor.bindWaitFor({
-  timeout: 5000,
-  retryInterval: 100
-});
 
 const app = require("./TestHelpers").app();
 const path = require("path");
@@ -40,7 +30,6 @@ describe('In Tutorial 2', function () {
         return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
     });
 
-    // This should be done before as soon as we solve the programmatic project load problem
     it('Should have tutorial 2 loaded', function () {
         return app.electron.remote.app.getActiveProject()
             .should
@@ -72,9 +61,10 @@ describe('In Tutorial 2', function () {
         return app.client.$("#Configuration")
             .then(n => n.click())
             .then(() => app.client.$("mm-configuration"))
-            .then(n => n.elementId
-                .should
-                .contain("-"));
+            .should
+            .eventually
+            .have
+            .property("elementId");
     });
 
     it("Should be able to click edit button", function () {
@@ -94,8 +84,10 @@ describe('In Tutorial 2', function () {
             .then(() => app.client.$('button.btn.btn-default.btn-xs')) // the + button in the config section
             .then(n => n.click())
             .then(() => app.client.$("#fmu4"))
-            .then(n => n.elementId)
-            .then(n => expect(n).to.contain("-"));
+            .should
+            .eventually
+            .have
+            .property("elementId");
     });
 
     it('Add a new FMU entry from Configuration', function () {
@@ -123,8 +115,10 @@ describe('In Tutorial 2', function () {
 
     it("FMU instances contains controller", function () {
         return app.client.$("#controller")
-            .then(n => n.elementId)
-            .then(n => expect(n).to.contain("-"))
+            .should
+            .eventually
+            .have
+            .property("elementId"); // $ does not return this property if the element is not found
     });
 
     it('Add an instance of controller', async function () {
@@ -286,7 +280,7 @@ describe('In Tutorial 2', function () {
             .then(n => n.getText())
             .should
             .eventually
-            .equal("mm-3DRobot > co-sim");;
+            .equal("mm-3DRobot > co-sim");
     });
 
     it('Edit Step Size to 0.01 under Basic Configuration', function () {
