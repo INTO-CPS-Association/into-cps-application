@@ -72,7 +72,7 @@ describe('In Tutorial 4', function () {
 		return app.client.$("#w2ui-overlay tbody")
 			.then(n => n.$$("tr"))
 			.then(n => n[0].click())
-			.then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
+			.then(() => app.client.$(".w2ui-popup-title"))
 			.then(async n => {
 				return waitFor(await n.getText())
 					.to
@@ -205,7 +205,7 @@ describe('In Tutorial 4', function () {
 			.contain("Edit");
 	});
 
-	it("Creat a a Co-Sim from the MM", function () {
+	it("Create a Co-Sim from the MM", function () {
 		return app.client.$("#node_ProjectBrowserItem_24")
 			.then(n => n.click({button: "right"}))
 			.then(() => app.client.$("#w2ui-overlay tbody"))

@@ -265,24 +265,13 @@ describe('In Tutorial 2', function () {
             .equal(expectedData);
     });
 
-    it('Right-click on the multi-model configuration should open popup', function () {
-        return app.client.$('#node_ProjectBrowserItem_21')
+    it("Create a Co-Sim from the MM", function () {
+        return app.client.$("#node_ProjectBrowserItem_21")
             .then(n => n.click({button: "right"}))
             .then(() => app.client.$("#w2ui-overlay tbody"))
             .then(n => n.$$("tr"))
             .then(n => n[1].click())
-            .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
-            .then(async n => await n.waitForExist(3000))
-            .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
-            .then(async n => {
-                return waitFor(await n.getText())
-                    .to
-                    .contain("New Co-Simulation Configuration");
-            });
-    });
-
-    it("Should click Ok button to create new Co-Sim and then open new Co-Sim", function () {
-        return app.client.$("#w2ui-popup #Ok")
+            .then(() => app.client.$("#w2ui-popup #Ok"))
             .then(n => n.click())
             .then(() => app.client.$("#activeTabTitle"))
             .then(n => n.getText())
