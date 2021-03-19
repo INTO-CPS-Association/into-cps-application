@@ -39,7 +39,7 @@ var outputPath = "dist/",
   resourcesFolder = "src/resources",
   cssSrcs = [
     "src/styles.css",
-    "src/contents/bootstrap_3_4_1_dist/css/bootstrap.css",
+    "src/resources/bootstrap/css/bootstrap.css",
     resourcesFolder + "/w2ui-1.5/w2ui.min.css"
   ],
   customResources = [resourcesFolder + "/into-cps/**/*"],
@@ -192,7 +192,7 @@ gulp.task("compile-ng2", function (callback) {
 // Copy bootstrap fonts to destination
 gulp.task("copy-fonts", function () {
   return gulp
-    .src("src/contents/bootstrap_3_4_1_dist/fonts/**/*")
+    .src("src/resources/bootstrap/fonts/**/*")
     .pipe(gulp.dest(outputPath + "fonts"));
 });
 
