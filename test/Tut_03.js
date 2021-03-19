@@ -1,9 +1,15 @@
 const chai = require('chai');
-const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
 // needed so we can use as promised
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
+
+const waitFor = chaiWaitFor.bindWaitFor({
+  timeout: 5000,
+  retryInterval: 100
+});
 
 const app = require("./TestHelpers").app();
 const path = require("path");
@@ -37,19 +43,22 @@ describe('In Tutorial 3', function () {
 
   it("Should have the correct name", function () {
     return app.electron.remote.app.getIProject()
-        .then(n => { return n
-            .name
-            .should
-            .equal("INTO-CPS_Tutorial");
+        .then(n => {
+          return n
+              .name
+              .should
+              .equal("INTO-CPS_Tutorial");
         });
   });
 
   it("Right click on 3D Robot", function () {
-    return app.client.$("#node_ProjectBrowserItem_22 .w2ui-expand")
+    return app.client.$("#node_ProjectBrowserItem_13 .w2ui-expand")
         .then(n => n.click())
-        .then(() => app.client.$("#node_ProjectBrowserItem_24 .w2ui-expand"))
+        .then(() => app.client.$("#node_ProjectBrowserItem_14 .w2ui-expand"))
         .then(n => n.click())
-        .then(() => app.client.$("#node_ProjectBrowserItem_28"))
+        .then(() => app.client.$("#node_ProjectBrowserItem_17"))
+        .then(n => n.doubleClick())
+        .then(() => app.client.$("#node_ProjectBrowserItem_17"))
         .then(n => n.click({button: "right"}))
         .then(() => app.client.$("#w2ui-overlay tbody"))
         .then(n => n.getText())
@@ -63,12 +72,13 @@ describe('In Tutorial 3', function () {
         .then(n => n.$$("tr"))
         .then(n => n[0].click())
         .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
-        .then(async n => await n.waitForExist(3000))
+        .then(n => n.waitForExist(3000))
         .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
-        .then(n => n.getText())
-        .should
-        .eventually
-        .contain("New Multi-Model")
+        .then(async n => {
+          return waitFor(await n.getText())
+              .to
+              .contain("New Multi-Model");
+        });
   });
 
   it('Create MM through popup with name mm-3DRobot', function () {
@@ -164,7 +174,7 @@ describe('In Tutorial 3', function () {
         .contain("Edit");
   });
 
-  it("Set sensor1 y position", function() {
+  it("Set sensor1 y position", function () {
     return app.client.$('button.btn.btn-default')
         .then(n => n.click())
         .then(() => app.client.$("#initialvalsensor1"))
@@ -178,7 +188,7 @@ describe('In Tutorial 3', function () {
         .equal("00.065");
   });
 
-  it("Should save with no errors", function() {
+  it("Should save with no errors", function () {
     return app.client.$('button.btn.btn-default')
         .then(n => n.click())
         .then(app.client.$$(".alert.alert-warning.alert-big"))
@@ -188,8 +198,16 @@ describe('In Tutorial 3', function () {
         .null;
   });
 
-  it("Creat a a Co-Sim from the MM", function () {
-    return app.client.$("#node_ProjectBrowserItem_35")
+  it("The button should say Edit", function () {
+    return app.client.$('button.btn.btn-default')
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("Edit");
+  });
+
+  it("Create a Co-Sim from the MM", function () {
+    return app.client.$("#node_ProjectBrowserItem_24")
         .then(n => n.click({button: "right"}))
         .then(() => app.client.$("#w2ui-overlay tbody"))
         .then(n => n.$$("tr"))

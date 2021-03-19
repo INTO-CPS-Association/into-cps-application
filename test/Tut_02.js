@@ -1,9 +1,16 @@
 const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
 // needed so we can use as promised
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
+
+const waitFor = chaiWaitFor.bindWaitFor({
+    timeout: 5000,
+    retryInterval: 100
+});
 
 const app = require("./TestHelpers").app();
 const path = require("path");
@@ -38,9 +45,9 @@ describe('In Tutorial 2', function () {
     it("Should have the correct name", function () {
         return app.electron.remote.app.getIProject()
             .then(n => { return n
-                    .name
-                    .should
-                    .equal("INTO-CPS_Tutorial");
+                .name
+                .should
+                .equal("INTO-CPS_Tutorial");
             });
     });
 
@@ -267,10 +274,11 @@ describe('In Tutorial 2', function () {
             .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
             .then(async n => await n.waitForExist(3000))
             .then(() => app.client.$("#w2ui-popup div.w2ui-popup-title"))
-            .then(n => n.getText())
-            .should
-            .eventually
-            .contain("New Co-Simulation Configuration");
+            .then(async n => {
+                return waitFor(await n.getText())
+                    .to
+                    .contain("New Co-Simulation Configuration");
+            });
     });
 
     it("Should click Ok button to create new Co-Sim and then open new Co-Sim", function () {
