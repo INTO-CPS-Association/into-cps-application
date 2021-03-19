@@ -192,7 +192,7 @@ gulp.task("compile-ng2", function (callback) {
 // Copy bootstrap fonts to destination
 gulp.task("copy-fonts", function () {
   return gulp
-    .src("contents/bootstrap/fonts/**/*")
+    .src("src/contents/bootstrap_3_4_1_dist/fonts/**/*")
     .pipe(gulp.dest(outputPath + "fonts"));
 });
 
