@@ -21,10 +21,9 @@ can be upgraded with `npm install npm@latest -g`. We use Gulp to manage tasks. I
 After checking out the repo:
 
 1. To install node dependencies: `npm install`
-2. To install other resources: `gulp init`
-3. To build the UI: `gulp`
-4. To run it: `npm start`
-5. To run the tests: `npm test`
+2. To build the UI: `gulp`
+3. To run it: `npm start`
+4. To run the tests: `npm test`
 
 
 Development
