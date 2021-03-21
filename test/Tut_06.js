@@ -1,76 +1,64 @@
-const Application = require('spectron').Application
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+
+const app = require("./TestHelpers").app();
+const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test6_data.zip");
+const testDataPath = path.resolve("test/TestData/test6_data");
 
 
-describe.skip('In Tutorial 6', function () {
+describe('In Tutorial 6', function () {
 	this.timeout(120000)
 
+	before(async function () {
+		await app.start();
+		await app.client.waitUntilWindowLoaded();
+		require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
+		await app.electron.remote.app.loadProject(testDataPath + "/project/.project.json");
 
+		return app;
+	});
 
-	beforeEach(async function () {
-
-		this.app = new Application({
-			path: electronPath,
-			env: { RUNNING_IN_SPECTRON: '1' },
-			args: [path.join(__dirname, '..')]
-		})
-
-
-		await this.app.start();
-		await this.app.client.waitUntilWindowLoaded();
-
-		return this.app;
-
-	})
-
-	afterEach(function () {
-
-		if (this.app && this.app.isRunning()) {
-
-			return this.app.stop()
-				.then(() => {
-					if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 6 loaded')
-						throw Error("Tutorial 6 project is not loaded!")
-				})
-		}
-	})
-
-	//To open a project, select File > Open Project
-	it('File->Open Project Menu Click', async function () {
-		// TODO remove the multiple hardcoding
-		await app.electron.remote.app.loadProject('/home/hdm/workspaces/into-cps-projects/tutorials/tutorial_6/.project.json');  
-	  })
+	after(function () {
+		return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
+	});
 
 	// This should be done before as soon as we solve the programmatic project load problem
 	it('Should have tutorial 6 loaded', function () {
-		return this.app.client.waitUntilWindowLoaded()
-			.then(function () {
-				return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('Tutorial_6'); })
-
-			})
+		return app.electron.remote.app.getActiveProject()
+			.should
+			.eventually
+			.equal(testDataPath + "/project/.project.json");
 	})
+
+	it("Should have the correct name", function () {
+		return app.electron.remote.app.getIProject()
+			.then(n => n.name)
+			.should
+			.eventually
+			.equal("")
+	});
+
 	//Step 46
 	it('Right click on the configuration file and create DSE configuration', function () {
-		return this.app.client
-			.waitForVisible('#node_ProjectBrowserItem_85')
-			.waitForVisible('.w2ui-expand')
-			.$('#node_ProjectBrowserItem_85').$('.w2ui-expand').click()
-
-			.waitForVisible('#node_ProjectBrowserItem_87')
-			.waitForVisible('.w2ui-expand')
-			.$('#node_ProjectBrowserItem_87').$('.w2ui-expand').click()
-
-			.waitForVisible('#node_ProjectBrowserItem_110')
-			.$('#node_ProjectBrowserItem_110').rightClick()
-
-			.waitForVisible('#td0')
-			.$('#td0').click()
-			.waitForVisible('#activeTabTitle')
-			.$('#activeTabTitle').getText()
-			.then(function (title) {
-				expect(title).contain('DSE')
-			})
-	})
-})
+		return app.client.$("#node_ProjectBrowserItem_8 .w2ui-expand")
+			.then(n => n.click())
+			.then(() => app.client.$("#node_ProjectBrowserItem_9 .w2ui-expand"))
+			.then(n => n.click())
+			.then(() => app.client.$("#node_ProjectBrowserItem_12"))
+			.then(n => n.doubleClick(3000)) // prevents right clicking on the wrong thing
+			.then(() => app.client.$("#node_ProjectBrowserItem_12"))
+			.then(n => n.click({button: "right"}))
+			.then(() => app.client.$("#w2ui-overlay tbody"))
+			.then(n => n.$$("tr"))
+			.then(n => n[0].click())
+			.then(() => app.client.$("#activeTabTitle"))
+			.then(n => n.getText())
+			.should
+			.eventually
+			.match(/dse-DSE_Example/);
+	});
+});
