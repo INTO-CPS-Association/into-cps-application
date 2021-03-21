@@ -206,7 +206,7 @@ describe('In Tutorial 4', function () {
 	});
 
 	it("Create a Co-Sim from the MM", function () {
-		return app.client.$("#node_ProjectBrowserItem_24")
+		return app.client.$("#node_ProjectBrowserItem_21")
 			.then(n => n.click({button: "right"}))
 			.then(() => app.client.$("#w2ui-overlay tbody"))
 			.then(n => n.$$("tr"))
