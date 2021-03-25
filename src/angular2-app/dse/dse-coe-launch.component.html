@@ -24,18 +24,28 @@
 
 <div class="form-group">
     <div class="row">
-
         <div class="col">
-    <label>Max threads for DSE</label>
+            <label>Max threads for DSE</label>
         </div>
         <div class="col">
-            <input type="range" min="1" max="25" value="1" #dsethreadsslider class="form-control" style="display: inline-block"
+            <input type="range" min="1" max="25" value="1" #dsethreadsslider class="form-control"
+                   style="display: inline-block"
                    (input)="updateSlider(dsethreadsslider.value)">
         </div>
         <div class="col">
             <input class="form-control" type="text" placeholder="{{threadCount}}" readonly>
         </div>
     </div>
+</div>
+
+<div class="form-group">
+    <label>Generate HTML output</label>
+    <input type="checkbox" (click)="setGenerateHTMLOutput()" checked class="form-control">
+</div>
+
+<div class="form-group">
+    <label>Generate CSV output</label>
+    <input type="checkbox" (click)="setGenerateCSVOutput()" checked class="form-control">
 </div>
 
 <div class="form-group">
