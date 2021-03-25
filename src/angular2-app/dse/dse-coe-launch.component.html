@@ -1,23 +1,42 @@
 <h3>DSE Co-simulation</h3>
 
 <div *ngIf="parseError">
-	<div class="alert alert-danger alert-big">
-        <button (click)="resetParseError()" type="button" style="float: right; border-radius: 50%; border: none; background-color: white;"><span class="glyphicon glyphicon-remove"></span></button>
-		<p>Error: Could not run config.</p>
-		<p>Message: {{parseError}}</p>
+    <div class="alert alert-danger alert-big">
+        <button (click)="resetParseError()" type="button"
+                style="float: right; border-radius: 50%; border: none; background-color: white;"><span
+                class="glyphicon glyphicon-remove"></span></button>
+        <p>Error: Could not run config.</p>
+        <p>Message: {{parseError}}</p>
         <p>Path: {{path}}</p>
-	</div>
+    </div>
 </div>
 
 
 <div *ngIf="!online" class="alert alert-danger">
     Co-Simulation Engine offline. No connection at {{url}}.
-    <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()"><span class="glyphicon glyphicon-link"></span> Launch</button>
+    <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()"><span
+            class="glyphicon glyphicon-link"></span> Launch
+    </button>
 </div>
 <div *ngIf="online" class="alert alert-success">
     Co-Simulation Engine, version {{version}}, online at {{url}}.
 </div>
 
+<div class="form-group">
+    <div class="row">
+
+        <div class="col">
+    <label>Max threads for DSE</label>
+        </div>
+        <div class="col">
+            <input type="range" min="1" max="25" value="1" #dsethreadsslider class="form-control" style="display: inline-block"
+                   (input)="updateSlider(dsethreadsslider.value)">
+        </div>
+        <div class="col">
+            <input class="form-control" type="text" placeholder="{{threadCount}}" readonly>
+        </div>
+    </div>
+</div>
 
 <div class="form-group">
     <button type="button" [disabled]="!canRun()" (click)="runDse()" class="col-sm-3 col-md-2 btn btn-default">
