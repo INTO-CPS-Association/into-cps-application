@@ -24,16 +24,12 @@
 
 <div class="form-group">
     <div class="row">
-
-        <div class="col">
-    <label>Max threads for DSE</label>
-        </div>
-        <div class="col">
-            <input type="range" min="1" max="25" value="1" #dsethreadsslider class="form-control" style="display: inline-block"
-                   (input)="updateSlider(dsethreadsslider.value)">
-        </div>
-        <div class="col">
-            <input class="form-control" type="text" placeholder="{{threadCount}}" readonly>
+        <div class="col" style="display: flex; align-items: center; justify-content: flex-start; margin-left: 1.5em;">
+            <label for="dseThreadSlider" style="margin: 0;">Max threads for DSE:</label>
+            <input id="dseThreadSlider" type="range" min="1" max="25" value="1" step="1" #dsethreadsslider
+                   class="form-control" style="display: inline-block; width: 50%; margin: 0 0.5em; padding: 0;"
+                   (input)="updateThreadCount(dsethreadsslider.value)">
+            <p style="margin: 0;">{{threadCount}}</p>
         </div>
     </div>
 </div>

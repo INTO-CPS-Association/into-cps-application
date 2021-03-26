@@ -207,7 +207,10 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         });
     }
 
-    updateSlider(value: number) {
+    updateThreadCount(value: number) {
+        if(value <= 0)
+            throw new Error(`Thread count should be greater than or equal to 1 given: ${value}`);
+
         this.threadCount = value;
     }
 
