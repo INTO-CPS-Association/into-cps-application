@@ -138,8 +138,14 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
 
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
-        let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 
-        var child = spawn("python", [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName, this.generateHTMLOutput ? "" : "-noHTML", this.generateCSVOutput ? "" : "-noCSV"], {
+        let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py");
+        var dseScriptOptions = [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName];
+        if(!this.generateHTMLOutput)
+            dseScriptOptions.push("-noHTML");
+        if(!this.generateCSVOutput)
+            dseScriptOptions.push("-noCSV");
+
+        var child = spawn("python", dseScriptOptions, {
             /* detached: true, */
             shell: false,
             // cwd: childCwd
