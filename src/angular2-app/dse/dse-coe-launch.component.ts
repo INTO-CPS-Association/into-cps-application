@@ -39,7 +39,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     get path():string {
         return this._path;
     }
-    threadCount: number = 1;
 
     generateHTMLOutput: boolean = true;
     generateCSVOutput: boolean = true;
@@ -140,7 +139,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
         let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 
-        var child = spawn("python", [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName, `-t ${this.threadCount}`, this.generateHTMLOutput ? "" : "-noHTML", this.generateCSVOutput ? "" : "-noCSV"], {
+        var child = spawn("python", [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName, this.generateHTMLOutput ? "" : "-noHTML", this.generateCSVOutput ? "" : "-noCSV"], {
             /* detached: true, */
             shell: false,
             // cwd: childCwd
@@ -209,10 +208,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
                 this.simulation = false;
             }
         });
-    }
-
-    updateSlider(value: number) {
-        this.threadCount = value;
     }
 
     setGenerateHTMLOutput() {
