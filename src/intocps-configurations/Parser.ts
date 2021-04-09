@@ -112,7 +112,7 @@ export class Parser {
             }
 
             Promise.all(populates.map(p => p.catch(e => e)))
-                .then(results => resolve(fmus))
+                .then(() => resolve(fmus))
                 .catch(e => reject(e));
         });
     }

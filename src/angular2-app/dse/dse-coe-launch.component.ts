@@ -7,6 +7,8 @@ import { timeout, map } from 'rxjs/operators';
 import {Project} from "../../proj/Project";
 import * as fs from 'fs';
 import * as Path from 'path';
+
+import {DomSanitizer} from '@angular/platform-browser';
 import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
 // https://www.electronjs.org/docs/api/dialog dialog from main thread. If you want to use the dialog object from a renderer process, remember to access it using the remote: 
 const { dialog } = require('electron').remote;
@@ -23,6 +25,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     
     private onlineInterval:number;
     private _path:string;
+    private resultdir: string;
     @Input()
     set path(path:string) {
         this._path = path;
@@ -45,6 +48,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     simfailed: boolean = false;
     parseError: string = null;
     simulation: boolean = false;
+    resultshtml: any = null;
+    resultpath: any = null;
 
     mmSelected:boolean = true;
     mmPath:string = '';
@@ -60,12 +65,14 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     url:string = '';
     version:string = '';
     constructor(private coeSimulation:CoeSimulationService, private http:HttpClient,
-        private settings:SettingsService, private zone:NgZone) {    }
+        private settings:SettingsService, private zone:NgZone,
+        private sanitizer:DomSanitizer) {    }
 
     ngOnInit() {
         this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8083";
         this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
         this.isCoeOnline();
+        console.log(this.path);
     }
 
     ngOnDestroy() {
@@ -114,12 +121,40 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2; */
     }
 
+    resultWatch() {
+        var dir = Path.dirname(this._path);
+        fs.watch(dir, (eventType, filename) => {
+            /* console.log(`event type is: ${eventType}`); */
+            if (filename) {
+                if(eventType == 'rename') {
+                     this.resultdir = Path.normalize(`${filename}/results.html`);
+                }
+              /* console.log(`filename provided: ${filename}`); */
+            } else {
+              console.log('filename not provided');
+            }
+          });
+          console.log(this.resultdir);
+    }
+
     /*
      * Method to run a DSE with the current DSE configuration. Assumes that the DSE can be run. 
      * The method does not need to send the DSEConfiguration object, simply the correct paths. It relies upon the
      * config being saved to json format correctly.
      */
     runDse() {
+        var dir = Path.dirname(this._path);
+        fs.watch(dir, (eventType, filename) => {
+            console.log(`event type is: ${eventType}`);
+            if (filename) {
+                if(eventType == 'rename') {
+                    this.resultdir = Path.join(dir,filename);
+                }
+              console.log(`filename provided: ${filename}`);
+            } else {
+              console.log('filename not provided');
+            }
+          });
         this.simulation = true;
         this.simfailed = false;
         this.simsuccess = false;
@@ -202,6 +237,13 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             } else {
                 this.simsuccess = true;
                 this.simulation = false;
+                console.log("end DSE sim");
+                console.log(this.resultdir);
+                this.resultpath = Path.normalize(`${this.resultdir}/results.html`);
+ 		        this.http.get(this.resultpath,{responseType:'text'}).subscribe(res=>{
+                this.resultshtml = this.sanitizer.bypassSecurityTrustHtml(res);
+                });
+                console.log(this.resultpath);
             }
         });
     }
