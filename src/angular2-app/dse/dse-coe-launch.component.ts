@@ -39,7 +39,10 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     get path():string {
         return this._path;
     }
-    threadCount: number = 1;
+
+    generateHTMLOutput: boolean = true;
+    generateCSVOutput: boolean = true;
+
     editing: boolean = false;
     editingMM: boolean = false;
     simsuccess: boolean = false;
@@ -137,6 +140,12 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
         let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py");
         var dseScriptOptions = [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName, `-t ${this.threadCount}`];
+      
+        if(!this.generateHTMLOutput)
+            dseScriptOptions.push("-noHTML");
+        if(!this.generateCSVOutput)
+            dseScriptOptions.push("-noCSV");
+
         var child = spawn("python", dseScriptOptions, {
             /* detached: true, */
             shell: false,
@@ -213,6 +222,14 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             throw new Error(`Thread count should be greater than or equal to 1 given: ${value}`);
 
         this.threadCount = value;
+    }
+  
+    setGenerateHTMLOutput() {
+        this.generateHTMLOutput = !this.generateHTMLOutput;
+    }
+
+    setGenerateCSVOutput() {
+        this.generateCSVOutput = !this.generateCSVOutput;
     }
 
     isCoeOnline() {
