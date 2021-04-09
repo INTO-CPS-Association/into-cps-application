@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
+import { Component, ViewEncapsulation, ViewChild, ElementRef, PipeTransform, Pipe, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
 import { CoeSimulationService } from '../coe/coe-simulation.service';
 import { SettingsService, SettingKeys } from '../shared/settings.service';
 import IntoCpsApp from "../../IntoCpsApp";
@@ -12,6 +12,14 @@ import {DomSanitizer} from '@angular/platform-browser';
 import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
 // https://www.electronjs.org/docs/api/dialog dialog from main thread. If you want to use the dialog object from a renderer process, remember to access it using the remote: 
 const { dialog } = require('electron').remote;
+
+@Pipe({ name: 'safe' })
+export class SafePipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) { }
+  transform(url: string) {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+}
 
 @Component({
     selector: "dse-coe-launch",
@@ -47,8 +55,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     simsuccess: boolean = false;
     simfailed: boolean = false;
     parseError: string = null;
-    simulation: boolean = false;
-    resultshtml: any = null;
+    simulation: boolean = false;/* 
+    resultshtml: any = null; */
     resultpath: any = null;
 
     mmSelected:boolean = true;
@@ -238,12 +246,12 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
                 this.simsuccess = true;
                 this.simulation = false;
                 console.log("end DSE sim");
-                console.log(this.resultdir);
                 this.resultpath = Path.normalize(`${this.resultdir}/results.html`);
+                /* console.log(this.resultpath);
  		        this.http.get(this.resultpath,{responseType:'text'}).subscribe(res=>{
                 this.resultshtml = this.sanitizer.bypassSecurityTrustHtml(res);
                 });
-                console.log(this.resultpath);
+                console.log(this.resultshtml); */
             }
         });
     }
