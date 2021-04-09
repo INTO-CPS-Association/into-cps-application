@@ -22,12 +22,24 @@
     Co-Simulation Engine, version {{version}}, online at {{url}}.
 </div>
 
-<div class="form-group" style="margin: 0; display: flex; align-items: center;">
-    <label style="margin: 0">Generate HTML output: <input style="margin: 0 0 0 0.5em; height: 1em;" type="checkbox" (click)="setGenerateHTMLOutput()" checked class="form-control"></label>
-</div>
+<div class="form-group">
+    <div class="row">
+        <div class="col" style="display: flex; align-items: center; justify-content: flex-start; margin-left: 1.5em;">
+            <label for="dseThreadSlider" style="margin: 0;">Max threads for DSE:</label>
+            <input id="dseThreadSlider" type="range" min="1" max="25" value="1" step="1" #dsethreadsslider
+                   class="form-control" style="display: inline-block; width: 50%; margin: 0 0.5em; padding: 0;"
+                   (input)="updateThreadCount(dsethreadsslider.value)">
+            <p style="margin: 0;">{{threadCount}}</p>
+        </div>
+    </div>
 
-<div class="form-group" style="margin: 0; display: flex; align-items: center;">
+  <div class="form-group" style="margin: 0; display: flex; align-items: center;">
+      <label style="margin: 0">Generate HTML output: <input style="margin: 0 0 0 0.5em; height: 1em;" type="checkbox" (click)="setGenerateHTMLOutput()" checked class="form-control"></label>
+  </div>
+
+  <div class="form-group" style="margin: 0; display: flex; align-items: center;">
     <label style="margin: 0">Generate CSV output: <input style="margin: 0 0 0 1.2em; height: 1em;" type="checkbox" (click)="setGenerateCSVOutput()" checked class="form-control"></label>
+  </div>
 </div>
 
 <br />

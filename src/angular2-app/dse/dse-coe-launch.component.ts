@@ -139,7 +139,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
         let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py");
-        var dseScriptOptions = [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName];
+        var dseScriptOptions = [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName, `-t ${this.threadCount}`];
+      
         if(!this.generateHTMLOutput)
             dseScriptOptions.push("-noHTML");
         if(!this.generateCSVOutput)
@@ -216,6 +217,13 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         });
     }
 
+    updateThreadCount(value: number) {
+        if(value <= 0)
+            throw new Error(`Thread count should be greater than or equal to 1 given: ${value}`);
+
+        this.threadCount = value;
+    }
+  
     setGenerateHTMLOutput() {
         this.generateHTMLOutput = !this.generateHTMLOutput;
     }
