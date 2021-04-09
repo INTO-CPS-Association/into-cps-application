@@ -39,6 +39,10 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     get path():string {
         return this._path;
     }
+
+    generateHTMLOutput: boolean = true;
+    generateCSVOutput: boolean = true;
+
     editing: boolean = false;
     editingMM: boolean = false;
     simsuccess: boolean = false;
@@ -134,8 +138,14 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
 
 
         //Using algorithm selector script allows any algortithm to be used in a DSE config.
-        let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py"); 
-        var child = spawn("python", [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName], {
+        let scriptFile = Path.join(installDir, "dse", "Algorithm_selector.py");
+        var dseScriptOptions = [scriptFile, absoluteProjectPath, experimentConfigName, multiModelConfigName];
+        if(!this.generateHTMLOutput)
+            dseScriptOptions.push("-noHTML");
+        if(!this.generateCSVOutput)
+            dseScriptOptions.push("-noCSV");
+
+        var child = spawn("python", dseScriptOptions, {
             /* detached: true, */
             shell: false,
             // cwd: childCwd
@@ -204,6 +214,14 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
                 this.simulation = false;
             }
         });
+    }
+
+    setGenerateHTMLOutput() {
+        this.generateHTMLOutput = !this.generateHTMLOutput;
+    }
+
+    setGenerateCSVOutput() {
+        this.generateCSVOutput = !this.generateCSVOutput;
     }
 
     isCoeOnline() {
