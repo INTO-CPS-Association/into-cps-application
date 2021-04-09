@@ -42,6 +42,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
 
     generateHTMLOutput: boolean = true;
     generateCSVOutput: boolean = true;
+    threadCount : number = 1;
 
     editing: boolean = false;
     editingMM: boolean = false;
