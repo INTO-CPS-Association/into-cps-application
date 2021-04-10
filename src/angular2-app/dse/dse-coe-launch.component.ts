@@ -129,22 +129,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
         && (this.config.extScrObjectives.length + this.config.intFunctObjectives.length) >= 2; */
     }
 
-    resultWatch() {
-        var dir = Path.dirname(this._path);
-        fs.watch(dir, (eventType, filename) => {
-            /* console.log(`event type is: ${eventType}`); */
-            if (filename) {
-                if(eventType == 'rename') {
-                     this.resultdir = Path.normalize(`${filename}/results.html`);
-                }
-              /* console.log(`filename provided: ${filename}`); */
-            } else {
-              console.log('filename not provided');
-            }
-          });
-          console.log(this.resultdir);
-    }
-
     /*
      * Method to run a DSE with the current DSE configuration. Assumes that the DSE can be run. 
      * The method does not need to send the DSEConfiguration object, simply the correct paths. It relies upon the
@@ -153,12 +137,10 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     runDse() {
         var dir = Path.dirname(this._path);
         fs.watch(dir, (eventType, filename) => {
-            console.log(`event type is: ${eventType}`);
             if (filename) {
                 if(eventType == 'rename') {
                     this.resultdir = Path.join(dir,filename);
                 }
-              console.log(`filename provided: ${filename}`);
             } else {
               console.log('filename not provided');
             }
@@ -247,11 +229,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
                 this.simulation = false;
                 console.log("end DSE sim");
                 this.resultpath = Path.normalize(`${this.resultdir}/results.html`);
-                /* console.log(this.resultpath);
- 		        this.http.get(this.resultpath,{responseType:'text'}).subscribe(res=>{
-                this.resultshtml = this.sanitizer.bypassSecurityTrustHtml(res);
-                });
-                console.log(this.resultshtml); */
             }
         });
     }

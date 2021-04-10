@@ -1,6 +1,6 @@
-<div class="container">
+<div class="container" style="margin-left: 0;">
     <h3>DSE Co-simulation</h3>
-<div class="row justify-content-start">
+<div class="row ">
     <div *ngIf="parseError">
         <div class="alert alert-danger alert-big">
             <button (click)="resetParseError()" type="button" style="float: right; border-radius: 50%; border: none; background-color: white;"><span class="glyphicon glyphicon-remove"></span></button>
@@ -12,7 +12,7 @@
 </div>
   
     
-  <div class="row justify-content-start">
+  <div class="row ">
     <div *ngIf="!online" class="alert alert-danger">
         Co-Simulation Engine offline. No connection at {{url}}.
         <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()"><span class="glyphicon glyphicon-link"></span> Launch</button>
@@ -23,7 +23,7 @@
   </div>  
   
     
-    <div class="row justify-content-start">
+    <div class="row ">
         <div class="form-group">
             <button type="button" [disabled]="!canRun()" (click)="runDse()" class="col-sm-3 col-md-2 btn btn-default">
                 <span class="glyphicon glyphicon-play"></span> Simulate
@@ -34,9 +34,7 @@
     </div>
     
     
-    <div class="row justify-content-start" *ngIf="resultpath != null">
-        <iframe [src]="resultpath | safe" title="test" width="100%" height="500" style="border:none;"></iframe>
-        
-        <!-- <div [innerHTML]="resultshtml"></div> -->
+    <div class="row " *ngIf="resultpath != null">
+        <iframe [src]="resultpath | safe" title="DSE Results" width="100%" height="500" style="border:none;"></iframe>
     </div>
 </div>
