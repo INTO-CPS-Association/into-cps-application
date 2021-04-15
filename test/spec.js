@@ -30,7 +30,7 @@ describe('Generic tests', function () {
 
   // Maybe related to https://github.com/electron-userland/spectron/issues/815npm 
   it('Displays the expected message in the window', async function () {
-    return (await app.client.$("#mainView"))
+    return app.client.$("#mainView")
         .getText()
         .should
         .eventually

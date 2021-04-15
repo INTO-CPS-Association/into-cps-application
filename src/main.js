@@ -161,7 +161,11 @@ if(process.env.RUNNING_IN_SPECTRON) {
     if (coe.isRunning()) {
       coe.stop();
     }
-  }
+  };
+  app.getCOEDownloadPath = () =>
+  {
+    return intoCpsApp.getSettings().getSetting(SettingKeys.SettingKeys.INSTALL_TMP_DIR);
+  };
 }
 
 

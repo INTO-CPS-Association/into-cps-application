@@ -17,7 +17,44 @@ module.exports.app = function()
     })
 }
 
-module.exports.commonShutdownTasks = function(app, testDataPath){
+let wasDownloaded = false;
+
+module.exports.downloadCOE = async function(app) {
+    const request = require("request");
+    // const coeDownloadURL = "https://github.com/INTO-CPS-Association/maestro/releases/download/Release%2F1.0.10/webapi-1.0.10.jar";
+    const coeDownloadURL = "https://github.com/INTO-CPS-Association/maestro/releases/download/Release%2F2.1.4/maestro-webapi-2.1.4.jar";
+
+    let p = await app.electron.remote.app.getCOEDownloadPath()
+
+    if(!fs.existsSync(p + "/"))
+        fs.mkdirSync(p + "/");
+
+    let coePath = p + "/coe.jar";
+
+    if (fs.existsSync(coePath)) {
+        wasDownloaded = true;
+        return;
+    }
+
+    await request.get(coeDownloadURL)
+        .on("error", error => console.log("Failed to download COE: " + error))
+        .pipe(fs.createWriteStream(coePath))
+        .on("finish", () =>
+            console.log("finished download"));
+}
+
+module.exports.deleteCOE = function(app) {
+    if(wasDownloaded)
+    {
+        wasDownloaded = false;
+        return;
+    }
+
+    app.electron.remote.app.getCOEDownloadPath()
+        .then(p => fs.unlinkSync(p + "/coe.jar"));
+}
+
+module.exports.commonShutdownTasks = async function(app, testDataPath){
     if(app && app.isRunning())
     {
         app.electron.remote.app.stopCoe();
