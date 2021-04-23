@@ -290,6 +290,7 @@ export class CoeProcess {
     this.coeLogPrinter.printRemaining();
     this.coeConsolePrinter.printRemaining();
   }
+  
   public prepareSimulation() {
     fs.truncateSync(this.getLogFilePath());
     this.cbPrepSimCBs.forEach(val => {

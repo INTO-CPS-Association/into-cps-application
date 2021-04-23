@@ -52,3 +52,8 @@
     <span class="col-sm-5 col-md-2 succeslabel" *ngIf="simsuccess"> Simulation successful</span>
     <span class="col-sm-5 col-md-2 failedlabel" *ngIf="simfailed">Simulation failed</span>
 </div>
+
+<div class="DSEGraph" *ngIf="resultpath != null">
+    <iframe [src]="resultpath | safe" title="DSE Results" width="100%" height="500" style="border:none;"></iframe>
+</div>
+

@@ -37,6 +37,9 @@ import {SettingsService} from "./shared/settings.service";
 import {CoeSimulationService} from "./coe/coe-simulation.service";
 import {NavigationService} from "./shared/navigation.service";
 
+
+
+
 interface MyWindow extends Window {
     ng2app: AppComponent;
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
+import { Component, ViewEncapsulation, ViewChild, ElementRef, PipeTransform, Pipe, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
 import { CoeSimulationService } from '../coe/coe-simulation.service';
 import { SettingsService, SettingKeys } from '../shared/settings.service';
 import IntoCpsApp from "../../IntoCpsApp";
@@ -7,9 +7,19 @@ import { timeout, map } from 'rxjs/operators';
 import {Project} from "../../proj/Project";
 import * as fs from 'fs';
 import * as Path from 'path';
+
+import {DomSanitizer} from '@angular/platform-browser';
 import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
 // https://www.electronjs.org/docs/api/dialog dialog from main thread. If you want to use the dialog object from a renderer process, remember to access it using the remote: 
 const { dialog } = require('electron').remote;
+
+@Pipe({ name: 'safe' })
+export class SafePipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) { }
+  transform(url: string) {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+}
 
 @Component({
     selector: "dse-coe-launch",
@@ -23,6 +33,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     
     private onlineInterval:number;
     private _path:string;
+    private resultdir: string;
     @Input()
     set path(path:string) {
         this._path = path;
@@ -49,7 +60,9 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     simsuccess: boolean = false;
     simfailed: boolean = false;
     parseError: string = null;
-    simulation: boolean = false;
+    simulation: boolean = false;/* 
+    resultshtml: any = null; */
+    resultpath: any = null;
 
     mmSelected:boolean = true;
     mmPath:string = '';
@@ -65,12 +78,14 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     url:string = '';
     version:string = '';
     constructor(private coeSimulation:CoeSimulationService, private http:HttpClient,
-        private settings:SettingsService, private zone:NgZone) {    }
+        private settings:SettingsService, private zone:NgZone,
+        private sanitizer:DomSanitizer) {    }
 
     ngOnInit() {
         this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8083";
         this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
         this.isCoeOnline();
+        console.log(this.path);
     }
 
     ngOnDestroy() {
@@ -125,6 +140,16 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
      * config being saved to json format correctly.
      */
     runDse() {
+        var dir = Path.dirname(this._path);
+        fs.watch(dir, (eventType, filename) => {
+            if (filename) {
+                if(eventType == 'rename') {
+                    this.resultdir = Path.join(dir,filename);
+                }
+            } else {
+              console.log('filename not provided');
+            }
+          });
         this.simulation = true;
         this.simfailed = false;
         this.simsuccess = false;
@@ -214,6 +239,8 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             } else {
                 this.simsuccess = true;
                 this.simulation = false;
+                console.log("end DSE sim");
+                this.resultpath = Path.normalize(`${this.resultdir}/results.html`);
             }
         });
     }
