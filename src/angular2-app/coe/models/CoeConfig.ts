@@ -50,7 +50,7 @@ export class CoeConfig {
             }
             else
             {
-                fmuPath = "file://" + fmu.path
+                fmuPath = "file:///" + fmu.path
             }
             fmus[fmu.name] = fmuPath.replace(/\\/g, "/").replace(/ /g, "%20");
         });
