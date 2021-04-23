@@ -37,9 +37,6 @@ jobs:
         run: npm install -g gulp 
         if: startsWith(matrix.os, 'mac')
 
-      - name: Initialize gulp
-        run: gulp init 
-
       - name: Build
         run: gulp prep-pkg
 
