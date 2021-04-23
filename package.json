@@ -40,6 +40,10 @@
     "win": {
       "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico"
     },
+    "nsis": {
+      "oneClick" : false,
+      "allowToChangeInstallationDirectory" : true
+    },
     "linux": {
       "target": [
         "AppImage"
