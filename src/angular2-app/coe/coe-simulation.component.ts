@@ -39,7 +39,7 @@ import { HttpClient } from '@angular/common/http';
 /* import { Http } from "@angular/http"; */
 import { SettingsService, SettingKeys } from "../shared/settings.service";
 import IntoCpsApp from "../../IntoCpsApp";
-import { WarningMessage } from "../../intocps-configurations/Messages";
+import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 // needs an alternativ!!
 /* import { openCOEServerStatusWindow } from "../../menus"; */
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
@@ -75,6 +75,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
   config: CoSimulationConfig;
   mmWarnings: WarningMessage[] = [];
   coeWarnings: WarningMessage[] = [];
+  simWarnings: WarningMessage[] = [];
   hasPostScriptOutput = false;
   hasPostScriptOutputError = false;
   postScriptOutput = "";
@@ -141,9 +142,9 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
     this.coeSimulation.run(
       this.config,
-      (e, m) => {
+      (e, m, w, s) => {
         this.zone.run(() => {
-          this.errorHandler(e, m);
+          this.errorHandler(e, m, w, s);
         });
       },
       () => {
@@ -166,7 +167,23 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
     this.coeSimulation.stop();
   }
 
-  errorHandler(hasError: boolean, message: string) {
+  errorHandler(hasError: boolean, message: string, hasWarning: boolean = false, stopped?: boolean) {
+    if(stopped) {
+      var warning = new Message("Co-simulation stopped. COE status OK");
+      this.simWarnings.push(warning);
+      setTimeout(()=>{
+        this.simWarnings.pop();
+      }, 5000);
+      this.simulating = false;
+    } else if(!stopped && hasWarning) {
+      var warning = new Message("Unknown error, see the console for more info.");
+      this.simWarnings.push(warning);
+      console.warn(message);
+      setTimeout(()=>{
+        this.simWarnings.pop();
+        }, 5000);
+      this.simulating = false;
+    }
     this.hasHttpError = hasError;
     this.httpErrorMessage = message;
     if (hasError) this.simulating = false;

@@ -53,7 +53,7 @@ import { IntoCpsApp } from "../../IntoCpsApp";
 @Injectable()
 export class CoeSimulationService {
     progress: number = 0;
-    errorReport: (hasError: boolean, message: string) => void = function () { };
+    errorReport: (hasError: boolean, message: string, hasWarning?: boolean, stopped?: boolean) => void = function () { };
     simulationCompletedHandler: () => void = function () { };
     postProcessingOutputReport: (hasError: boolean, message: string) => void = function () { };
 
@@ -93,7 +93,7 @@ export class CoeSimulationService {
         if (!this.coe.isRunning()) IntoCpsApp.getInstance().getCoeProcess().start();
       }
 
-    run(config: CoSimulationConfig, errorReport: (hasError: boolean, message: string) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
+    run(config: CoSimulationConfig, errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
         this.coe = IntoCpsApp.getInstance().getCoeProcess();
         this.errorReport = errorReport;
         this.simulationCompletedHandler = simCompleted;
@@ -128,7 +128,7 @@ export class CoeSimulationService {
 
     stop() {
         this.http.get(`http://${this.url}/stopsimulation/${this.sessionId}`)
-            .subscribe((response: Response) => { }, (err: Response) => this.errorHandler(err));
+            .subscribe((response: Response) => { }, (err: Response) => this.errorHandler(err, true));
     }
 
     private createSession() {
@@ -228,10 +228,19 @@ export class CoeSimulationService {
 
     }
 
-    errorHandler(err: Response) {
+    errorHandler(err: Response, stopped?: boolean) {
         console.warn(err);
-        this.progress = 0;
-        this.errorReport(true, "Error: " + err.statusText);
+        if(stopped) {
+            this.progress = 0;
+            this.errorReport(false, "Error: " + err.statusText, true, true)
+        } else if(!stopped && err.status == 200) {
+            this.progress = 0;
+            this.errorReport(false, "Error: " + err.statusText, true)
+        } else {
+            this.progress = 0;
+            this.errorReport(true, "Error: " + err.statusText);
+        }
+       
 
     }
 

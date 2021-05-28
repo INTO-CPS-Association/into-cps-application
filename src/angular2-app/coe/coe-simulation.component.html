@@ -29,6 +29,15 @@
   </div>
 </div>
 
+<div *ngIf="simWarnings.length > 0">
+  <strong
+    >The co-simulation responed with a warning or Error:</strong
+  >
+  <div *ngFor="let warning of simWarnings" class="alert alert-warning">
+    {{ warning.message }}
+  </div>
+</div>
+
 <div class="form-group">
   <div *ngIf="!simulating">
     <button
