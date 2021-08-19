@@ -44,6 +44,7 @@ export class Graph {
     private progressCallback: (n: number) => void;
     finished : boolean ;
 
+    public webSocketOnOpenCallback: () => void;
 
     public setFinished()
     {
@@ -129,6 +130,7 @@ export class Graph {
         console.log("launching websocket: " + webSocket);
         this.counter = 0;
         this.webSocket = new WebSocket(webSocket);
+        this.webSocket.onopen = this.webSocketOnOpenCallback
 
         this.webSocket.addEventListener("error", event => console.error(event));
         this.webSocket.addEventListener("message", event => this.onMessage(event));
