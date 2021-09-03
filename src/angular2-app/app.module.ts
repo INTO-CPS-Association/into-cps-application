@@ -51,11 +51,12 @@ import {COEModule} from "./coe/coe.module"
 import { HttpClientModule } from '@angular/common/http';
 import { SharedModule } from './shared/shared.module';
 import { DseCoeLaunchComponent, SafePipe } from './dse/dse-coe-launch.component';
+import {SvPageComponent} from "./sv/sv-page.component";
 
 @NgModule({
   imports: [ BrowserModule, HttpClientModule, FormsModule,
      MmModule, COEModule, ReactiveFormsModule, SharedModule], // module dependencies
-  declarations: [AppComponent , SafePipe,  DsePageComponent, DseConfigurationComponent, DseCoeLaunchComponent], // components and directives
+  declarations: [AppComponent , SafePipe,  DsePageComponent, DseConfigurationComponent, DseCoeLaunchComponent,], // components and directives
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService], // services
   exports: []

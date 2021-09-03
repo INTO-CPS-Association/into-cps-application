@@ -57,6 +57,7 @@ export class Project implements IProject {
     PATH_MODELS: string = "Models";
     static PATH_MULTI_MODELS: string = "Multi-models";
     static PATH_DSE: string = "DSEs";
+    static PATH_SV: string = "Sv";
     //PATH_CONNECTIONS: String = "SysML Connections";
     static PATH_SYSML: string = "SysML";
     static PATH_TEST_DATA_GENERATION: string = "Test-Data-Generation";
@@ -89,7 +90,7 @@ export class Project implements IProject {
     public save() {
 
         let folders = [Project.PATH_SYSML, Project.PATH_DSE, this.PATH_FMUS, this.PATH_MODELS, Project.PATH_MULTI_MODELS,
-        Project.PATH_TEST_DATA_GENERATION, Project.PATH_MODEL_CHECKING, Project.PATH_TRACEABILITY];
+        Project.PATH_TEST_DATA_GENERATION, Project.PATH_MODEL_CHECKING, Project.PATH_TRACEABILITY, Project.PATH_SV];
 
         for (var i = 0; folders.length > i; i++) {
             try {
@@ -164,6 +165,18 @@ export class Project implements IProject {
         let fullpath = Path.normalize(path + "/" + name + ".dse.json");
 
         fs.writeFileSync(fullpath, jsonContent == null ? "{}" : jsonContent, "UTF-8");
+
+        return fullpath;
+    }
+
+    public createSv(name: String, jsonContent: String): String {
+        let path = Path.normalize(this.rootPath + "/" + Project.PATH_SV + "/" + name);
+
+        fs.mkdirSync(path);
+
+        let fullpath = Path.normalize(path + "/" + name + ".dse.json");
+
+        fs.writeFileSync(fullpath, jsonContent, "UTF-8");
 
         return fullpath;
     }
