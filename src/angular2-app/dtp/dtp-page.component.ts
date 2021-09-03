@@ -29,27 +29,15 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
- 
- // See the CONTRIBUTORS file for author and contributor information. 
+import {Component} from "@angular/core";
 
-import {ProjectSettings} from "./ProjectSettings"
 
-export interface IProject {
-    getName(): string;
-    getRootFilePath(): string;
-    getProjectConfigFilePath(): string;
-    getFmusPath(): string;
-    getSysMlFolderName(): String;
-    save():void;
-
-    createMultiModel(name: String, jsonContent: String): String;
-    createDse(name: String, jsonContent: String): String;
-    createDtp(name: String, jsonContent: String): String;
-    createSysMLDSEConfig(name: String, jsonContent: String): String;
-    createCoSimConfig(multimodelConfigPath: string, name: String, jsonContent: String): string;
-
-    getSettings(): ProjectSettings;
-
-    freshMultiModelName(name : String): String;
-    freshFilename(path: string, name: string) : string
+@Component({
+    selector: "dtp-page",
+    templateUrl: "./angular2-app/dtp/dtp-page.component.html"
+})
+export class DtpPageComponent {
+    constructor() {
+        console.log("DTPPAGECOMPONENT");
+      }
 }

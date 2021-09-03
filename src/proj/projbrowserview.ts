@@ -682,7 +682,15 @@ export class BrowserController {
                         self.menuHandler.createDsePlain(item.path);
                     });
                 result.menuEntries = [menuEntryCreate];
-            } else if (Path.basename(path) == Project.PATH_TRACEABILITY) {
+            }
+            else if (Path.basename(path) == Project.PATH_DTP) {
+                let menuEntryCreate = menuEntry("DESCRIPTION HERE", "glyphicon glyphicon-asterisk",
+                    function (item: ProjectBrowserItem) {
+                        self.menuHandler.createDtpPlain(item.path);
+                    });
+                result.menuEntries = [menuEntryCreate];
+            } 
+            else if (Path.basename(path) == Project.PATH_TRACEABILITY) {
                 let menuGraph = menuEntry("View Traceability Graph", "glyphicon glyphicon-asterisk",
                     function (item: ProjectBrowserItem) {
                         self.menuHandler.showTraceView();

@@ -54,7 +54,8 @@ declare let window: MyWindow;
     template: `
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
          <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
-         <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>`
+         <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
+         <dtp-page *ngIf="page === 'dtp'"></dse-page>`
 })
 export class AppComponent implements OnInit {
     private page:string;
@@ -105,6 +106,14 @@ export class AppComponent implements OnInit {
             this.page = "dse";
         });
     }
+
+    openDTP(path: string):void {
+        this.zone.run(() => {
+            this.path = path;
+            this.page = "dtp";
+        });
+    }
+
 
     closeAll():void {
       /*   this.zone.run(() => { */

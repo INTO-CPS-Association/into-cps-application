@@ -67,6 +67,7 @@ declare var w2alert: any;
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { DseViewController } from "./angular2-app/dse/DseViewController";
+import { DtpViewController } from "./angular2-app/dtp/DtpViewController";
 import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
@@ -255,6 +256,9 @@ menuHandler.openMultiModel = (path: string) => {
     openView(null, view => new MmViewController(view, path));
 };
 
+menuHandler.openDtpView = (path: string) => {
+    openView(null, view => new DtpViewController(view, path));
+};
 
 menuHandler.openDseView = (path: string) => {
     openView(null, view => new DseViewController(view, path));
@@ -365,6 +369,13 @@ menuHandler.createDsePlain = () => {
         let dseJson = JSON.stringify(dseObject);
         let dsePath = <string>project.createDse("dse-" + name + "-(" + Math.floor(Math.random() * 100) + ")", dseJson);
         menuHandler.openDseView(dsePath);
+    }
+}
+
+menuHandler.createDtpPlain = (path: String) => {
+    let project = IntoCpsApp.getInstance().getActiveProject();
+    if (project) {
+        menuHandler.openDtpView(path);
     }
 }
 

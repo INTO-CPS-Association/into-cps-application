@@ -29,27 +29,34 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
- 
- // See the CONTRIBUTORS file for author and contributor information. 
+import {ViewController} from "../../iViewController";
+import IntoCpsApp from "../../IntoCpsApp";
+import {AppComponent} from "../app.component";
+import * as Path from 'path';
 
-import {ProjectSettings} from "./ProjectSettings"
+interface MyWindow extends Window {
+    ng2app: AppComponent;
+}
 
-export interface IProject {
-    getName(): string;
-    getRootFilePath(): string;
-    getProjectConfigFilePath(): string;
-    getFmusPath(): string;
-    getSysMlFolderName(): String;
-    save():void;
+declare var window: MyWindow;
 
-    createMultiModel(name: String, jsonContent: String): String;
-    createDse(name: String, jsonContent: String): String;
-    createDtp(name: String, jsonContent: String): String;
-    createSysMLDSEConfig(name: String, jsonContent: String): String;
-    createCoSimConfig(multimodelConfigPath: string, name: String, jsonContent: String): string;
+export class DtpViewController extends ViewController {
+    constructor(private view: HTMLDivElement, private path:string) {
+        super(view);
+    }
 
-    getSettings(): ProjectSettings;
-
-    freshMultiModelName(name : String): String;
-    freshFilename(path: string, name: string) : string
+    initialize() {
+        $(this.view).css('height',0);
+        IntoCpsApp.setTopName(Path.basename(Path.join(this.path,"../")));
+        window.ng2app.openDTP(this.path);
+    }
+    
+    deInitialize() {
+        if (window.ng2app.navigationService.canNavigate()) {
+            window.ng2app.closeAll();
+            $(this.view).css('height',"calc(100% - 80px)");
+            return true;
+        }
+        return false;
+    }
 }
