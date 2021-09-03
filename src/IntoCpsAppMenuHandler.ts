@@ -47,7 +47,6 @@ export class IntoCpsAppMenuHandler {
     
     createDse: (path: string) => void;
     createDsePlain: (path: string) => void;
-    createDtp: (path: String) => void;
     createDtpPlain: (path: String) => void;
     createSysMLDSEConfig: (path: string) => void;
     createMultiModel: (path: string, titleMsg? : string) => void;

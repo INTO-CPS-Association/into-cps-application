@@ -169,18 +169,6 @@ export class Project implements IProject {
         return fullpath;
     }
 
-    public createDtp(name: String, jsonContent: String): String {
-        let path = Path.normalize(this.rootPath + "/" + Project.PATH_DTP + "/" + name);
-
-        fs.mkdirSync(path);
-
-        let fullpath = Path.normalize(path + "/" + name + "dtp.json");
-
-        fs.writeFileSync(fullpath, jsonContent, "UTF-8");
-
-        return fullpath;
-    }
-
     public createDse(name: String, jsonContent: String): String {
         let path = Path.normalize(this.rootPath + "/" + Project.PATH_DSE + "/" + name);
 
