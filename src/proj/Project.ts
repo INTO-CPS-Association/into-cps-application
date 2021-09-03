@@ -174,7 +174,7 @@ export class Project implements IProject {
 
         fs.mkdirSync(path);
 
-        let fullpath = Path.normalize(path + "/" + name + ".dse.json");
+        let fullpath = Path.normalize(path + "/" + name + "masterModel.json");
 
         fs.writeFileSync(fullpath, jsonContent, "UTF-8");
 

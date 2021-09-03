@@ -380,6 +380,16 @@ export class BrowserController {
                     return null;
                 }
             }
+            else if (path.endsWith("masterModel.json")) {
+                parent.img = "into-cps-icon-projbrowser-dse";
+                parent.opensInMainWindow = true;
+                parent.dblClickHandler = function (item: ProjectBrowserItem) {
+                    self.menuHandler.openSvView(path);
+                };
+                parent.menuEntries = [menuEntryDelete];
+                parent.refresh();
+                return null;
+            }
             else if (path.endsWith(".dse.json")) {
                 // merge DSE and folder
                 parent.img = "into-cps-icon-projbrowser-dse";

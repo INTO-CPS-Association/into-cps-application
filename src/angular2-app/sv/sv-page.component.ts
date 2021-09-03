@@ -37,8 +37,6 @@ import {Component, Input} from "@angular/core";
     templateUrl: "./angular2-app/sv/sv-page.component.html"
 })
 export class SvPageComponent {
-    // @Input()
-    // path:string;
     constructor() {
         console.log("SVPAGECOMPONENT");
     }
