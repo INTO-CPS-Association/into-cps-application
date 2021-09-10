@@ -29,15 +29,51 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {Component, Input} from "@angular/core";
-
+import {Component, Input, AfterViewInit, OnInit} from "@angular/core";
+import { SvConfiguration } from "../../intocps-configurations/sv-configuration";
+import * as fs from 'fs';
 
 @Component({
     selector: "sv-page",
     templateUrl: "./angular2-app/sv/sv-page.component.html"
 })
-export class SvPageComponent {
-    constructor() {
-        console.log("SVPAGECOMPONENT");
+export class SvPageComponent{
+    @Input()
+    private _path: string;
+    svconfiguration: SvConfiguration;
+    isNewConfiguration: boolean = true;
+
+    @Input()
+    set path(path:string) {
+        this._path = path;
+
+        let file = fs.readFileSync(this._path);
+
+        if (file == undefined){
+            console.error(`Unable to read configuration file: ${this._path}`)
+        }
+        else{
+            try{
+                this.svconfiguration = SvConfiguration.createFromJsonString(file.toString());
+                this.isNewConfiguration = this.svconfiguration.experimentPath == "";
+            }
+            catch(Ex){
+                console.error(`Unable parse the SV configuration: ${Ex}`)
+            }
+        }
+    }
+    get path():string {
+        return this._path;
+    }
+
+    onConfigurationChanged(config: SvConfiguration) {
+        this.svconfiguration = config;
+
+        // Save the configuration
+        fs.writeFile(this.path, this.svconfiguration.serializeToJsonString(), error => {
+            if (error){
+                console.error(`Unable to write configuration to file: ${error}`)
+            }
+        });
     }
 }

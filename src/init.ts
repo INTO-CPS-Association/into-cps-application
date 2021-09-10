@@ -72,6 +72,7 @@ import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
 import { AppModule } from "./angular2-app/app.module";
+import { SvConfiguration } from "./intocps-configurations/sv-configuration";
 
 
 class InitializationController {
@@ -372,15 +373,30 @@ menuHandler.createDsePlain = () => {
     }
 }
 
-menuHandler.createSvPlain = () => {
+menuHandler.createSvPlain = (msgTitle: string = 'Create New SV Configuration') => {
     let project = IntoCpsApp.getInstance().getActiveProject();
     if (project) {
-        let name = "new";
-        let dseConfig = new DseConfiguration()
-        let dseObject = dseConfig.toObject();
-        let dseJson = JSON.stringify(dseObject);
-        let dsePath = <string>project.createSv("dse-" + name + "-(" + Math.floor(Math.random() * 100) + ")", dseJson);
-        menuHandler.openSvView(dsePath);
+        let name = "";
+        w2prompt({
+            label: 'Name',
+            value: name,
+            attrs: 'style="width: 500px"',
+            title: msgTitle,
+            ok_text: 'Ok',
+            cancel_text: 'Cancel',
+            width: 500,
+            height: 200,
+            callBack: function (value: String) {
+                let content = (new SvConfiguration).serializeToJsonString();
+                try {
+                    if (!value) { return; }
+                    menuHandler.openSvView(<string>project.createSv(value, content));
+                } catch (error) {
+                    menuHandler.createSvPlain('SV Configuration "' + value + '" already exists! Choose a different name.')
+                    return;
+                }
+            }
+        });
     }
 }
 
@@ -458,7 +474,7 @@ menuHandler.deletePath = (path) => {
            //  IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
-    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json")) {
+    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith(".svConfiguration.json")) {
         let dir = Path.dirname(path);
         console.info("Deleting " + dir);
         CustomFs.getCustomFs().removeRecursive(dir, function (err: any, v: any) {

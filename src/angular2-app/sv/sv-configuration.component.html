@@ -1,0 +1,95 @@
+<form class="form-horizontal" (ngSubmit)="onSubmit()">
+    <button *ngIf="!editing" class="btn btn-default" id="btn-edit" (click)="editing = true">
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+    </button>
+	<button *ngIf="editing" class="btn btn-default" id="btn-save" style="margin-right: 10px;" >
+        <span class="glyphicon glyphicon-floppy-saved" aria-hidden="true"></span> Save
+	</button>
+
+    <h3>Multi-model</h3>
+	<div class="form-group">
+		<div class="container-fluid">
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">Co-simulation experiment: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{getNameOfSelectedExperiment()}}</span></p>
+				<select *ngIf="editing" [(ngModel)]="experimentPath" (ngModelChange)="onExperimentPathChanged($event)"  [ngModelOptions]="{standalone:true}" class="form-control">
+					<option *ngFor="let path of experimentsPaths" [ngValue]="path">{{experimentNameFromPath(path, '2')}}</option>
+				</select>
+			</div>
+
+			<div class="col-md-9 row">
+				<label style="text-align: left;" class="control-label"><input [disabled]="!editing" type="checkbox" style="float:right; margin-left: 10px;" [checked]="usePriorExperiment" (change)="usePriorExperiment = !usePriorExperiment"><span>Use prior experiment: </span></label>
+			</div>
+			<div class="col-md-9 row">
+				<p *ngIf="editing && !canLocatePriorExperiment" style="font-size:85%; color:red;" class="form-control-static"><span>Unable to locate {{experimentNameFromPath(priorExperimentPath, '3')}}</span></p>
+				<select *ngIf="usePriorExperiment && editing" [(ngModel)]="priorExperimentPath" (ngModelChange)="onPriorExperimentPathChanged($event)" [ngModelOptions]="{standalone:true}" class="form-control">
+					<option *ngFor="let path of priorExperimentsPaths" [ngValue]="path">{{experimentNameFromPath(path, '1')}}</option>
+				</select>
+			</div>
+		</div>
+	</div>
+
+	<h3>Input Port Reactivity</h3>
+	<div class="form-group">
+		<div class="container-fluid">
+			<div class="col-md-9 row">
+				<div class="column" style="margin-right: 15px; float: left;">
+					<label class="control-label" style="margin-bottom: 5px;">Port</label>
+	
+					<div *ngFor="let portWithReact of portsToReactivity"> 
+						<p class="form-control-static" style="margin-bottom: 5px;">{{portWithReact.port}}</p>
+					</div>
+				</div>
+				<div class="column" style="float: left;">
+					<label class="control-label" style="margin-bottom: 5px;">Reactivity</label>
+	
+					<div *ngFor="let portWithReact of portsToReactivity"> 
+						<select *ngIf="editing" [ngModel]="portWithReact.reactivity" (ngModelChange)="onReactivityChanged(portWithReact, $event)" [ngModelOptions]="{standalone:true}" class="form-control" style="margin-bottom: 5px;">
+							<option *ngFor="let reactivity of reactivityKeys" [ngValue]="reactivity">{{reactivity}}</option>
+						</select>
+						<p *ngIf="!editing" class="form-control-static" style="margin-bottom: 5px;">{{portWithReact.reactivity}}</p>
+					</div>
+				</div>
+			</div>				
+		</div>
+	</div>
+
+	<h3>Simulation Environment Parameters</h3>
+	<div class="form-group">
+		<div class="container-fluid">
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">Start time: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{simEnvParams.startTime}}</span></p>
+				<input *ngIf="editing" step="0.01" min="0" type="number" [ngModelOptions]="{standalone:true}" [(ngModel)]="simEnvParams.startTime">
+			</div>
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">End time: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{simEnvParams.endTime}}</span></p>
+				<input *ngIf="editing" step="0.01" min="0" type="number" [ngModelOptions]="{standalone:true}" [(ngModel)]="simEnvParams.endTime">
+			</div>
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">Step size: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{simEnvParams.stepSize}}</span></p>
+				<input *ngIf="editing" step="0.01" min="0" type="number" [ngModelOptions]="{standalone:true}" [(ngModel)]="simEnvParams.stepSize">
+			</div>
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">Absolute convergence tolerance: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{simEnvParams.convergenceAbsoluteTolerance}}</span></p>
+				<input *ngIf="editing" step="0.01" min="0" type="number" [ngModelOptions]="{standalone:true}" [(ngModel)]="simEnvParams.convergenceAbsoluteTolerance">
+			</div>
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">Relative convergence tolerance: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{simEnvParams.convergenceRelativeTolerance}}</span></p>
+				<input *ngIf="editing" step="0.01" min="0" type="number" [ngModelOptions]="{standalone:true}" [(ngModel)]="simEnvParams.convergenceRelativeTolerance">
+			</div>
+			<div class="col-md-9 row">
+				<label style="margin-right: 10px; text-align: left;" class="control-label">Convergence attempts: </label>
+				<p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{simEnvParams.convergenceAttempts}}</span></p>
+				<input *ngIf="editing" step="0.01" min="0" type="number" [ngModelOptions]="{standalone:true}" [(ngModel)]="simEnvParams.convergenceAttempts">
+			</div>
+			<div class="col-md-9 row">
+				<label style="text-align: left;" class="control-label"><input [disabled]="!editing" type="checkbox" style="float:right; margin-left: 5px;" [checked]="verifyAlgorithm" (change)="verifyAlgorithm = !verifyAlgorithm"><span>Verify algorithm before simulation: </span></label>
+			</div>
+		</div>
+	</div>
+</form>

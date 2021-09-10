@@ -1,5 +1,6 @@
-<panel [title]="'Name 1'">
+<panel [title]="'SV Configuration'" [open]="isNewConfiguration">
+    <sv-configuration [svconfiguration]="svconfiguration" (configurationchanged)="onConfigurationChanged($event)"></sv-configuration>
 </panel>
-<panel [title]="'Name 2'" [open]="true" >
-    <sv-subpage></sv-subpage>
+<panel [title]="'Coe interaction'" [open]="!isNewConfiguration">
+    <sv-coe-interaction [svconfiguration]="svconfiguration"></sv-coe-interaction>
 </panel>

@@ -172,9 +172,11 @@ export class Project implements IProject {
     public createSv(name: String, jsonContent: String): String {
         let path = Path.normalize(this.rootPath + "/" + Project.PATH_SV + "/" + name);
 
+        if (fs.existsSync(path)) throw new Error('SV Configuration ' + name + ' already exists!');
+
         fs.mkdirSync(path);
 
-        let fullpath = Path.normalize(path + "/" + name + "masterModel.json");
+        let fullpath = Path.normalize(path + "/" + name + ".svConfiguration.json");
 
         fs.writeFileSync(fullpath, jsonContent, "UTF-8");
 

@@ -380,13 +380,13 @@ export class BrowserController {
                     return null;
                 }
             }
-            else if (path.endsWith("masterModel.json")) {
-                parent.img = "into-cps-icon-projbrowser-dse";
+            else if (path.endsWith(".svConfiguration.json")) {
+                parent.img = "glyphicon glyphicon-file";
                 parent.opensInMainWindow = true;
                 parent.dblClickHandler = function (item: ProjectBrowserItem) {
                     self.menuHandler.openSvView(path);
                 };
-                parent.menuEntries = [menuEntryDelete];
+                parent.menuEntries = [menuEntryDelete, menuRename, menuReveal];
                 parent.refresh();
                 return null;
             }
@@ -694,7 +694,7 @@ export class BrowserController {
                 result.menuEntries = [menuEntryCreate];
             } 
             else if (Path.basename(path) == Project.PATH_SV){
-                let menuEntryCreate = menuEntry("Create Scenario-verifier configuration", "glyphicon glyphicon-asterisk",
+                let menuEntryCreate = menuEntry("Create new SV configuration", "glyphicon glyphicon-asterisk",
                     function (item: ProjectBrowserItem) {
                         self.menuHandler.createSvPlain(item.path);
                     });
