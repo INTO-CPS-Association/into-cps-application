@@ -44,7 +44,6 @@ import { BrowserController } from "./proj/projbrowserview";
 import { IntoCpsAppMenuHandler } from "./IntoCpsAppMenuHandler";
 import { ViewController, IViewController } from "./iViewController";
 import * as CustomFs from "./custom-fs";
-import { IProject } from "./proj/IProject";
 import * as SystemUtil from "./SystemUtil";
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppComponent } from './angular2-app/app.component';
@@ -72,7 +71,6 @@ import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
 import { AppModule } from "./angular2-app/app.module";
-import { SvConfiguration } from "./intocps-configurations/sv-configuration";
 
 
 class InitializationController {
@@ -387,10 +385,9 @@ menuHandler.createSvPlain = (msgTitle: string = 'Create New SV Configuration') =
             width: 500,
             height: 200,
             callBack: function (value: String) {
-                let content = (new SvConfiguration).serializeToJsonString();
                 try {
                     if (!value) { return; }
-                    menuHandler.openSvView(<string>project.createSv(value, content));
+                    menuHandler.openSvView(<string>project.createSv(value));
                 } catch (error) {
                     menuHandler.createSvPlain('SV Configuration "' + value + '" already exists! Choose a different name.')
                     return;

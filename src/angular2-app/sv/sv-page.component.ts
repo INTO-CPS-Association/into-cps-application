@@ -29,51 +29,29 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {Component, Input, AfterViewInit, OnInit} from "@angular/core";
-import { SvConfiguration } from "../../intocps-configurations/sv-configuration";
-import * as fs from 'fs';
+import {Component, Input} from "@angular/core";
+import { SvConfigurationService } from "./sv-configuration.service";
 
 @Component({
     selector: "sv-page",
-    templateUrl: "./angular2-app/sv/sv-page.component.html"
+    templateUrl: "./angular2-app/sv/sv-page.component.html",
+    providers: [SvConfigurationService]
 })
 export class SvPageComponent{
+
     @Input()
     private _path: string;
-    svconfiguration: SvConfiguration;
     isNewConfiguration: boolean = true;
+
+    constructor(private svConfigurationService: SvConfigurationService){}
 
     @Input()
     set path(path:string) {
         this._path = path;
-
-        let file = fs.readFileSync(this._path);
-
-        if (file == undefined){
-            console.error(`Unable to read configuration file: ${this._path}`)
-        }
-        else{
-            try{
-                this.svconfiguration = SvConfiguration.createFromJsonString(file.toString());
-                this.isNewConfiguration = this.svconfiguration.experimentPath == "";
-            }
-            catch(Ex){
-                console.error(`Unable parse the SV configuration: ${Ex}`)
-            }
-        }
+        this.svConfigurationService.configPath = this._path;
+        this.svConfigurationService.setConfigurationFromPath().then(() => this.isNewConfiguration = this.svConfigurationService.isEmptyConfiguration).catch(err => console.error(err));
     }
     get path():string {
         return this._path;
-    }
-
-    onConfigurationChanged(config: SvConfiguration) {
-        this.svconfiguration = config;
-
-        // Save the configuration
-        fs.writeFile(this.path, this.svconfiguration.serializeToJsonString(), error => {
-            if (error){
-                console.error(`Unable to write configuration to file: ${error}`)
-            }
-        });
     }
 }

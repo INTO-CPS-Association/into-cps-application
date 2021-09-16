@@ -1,28 +1,31 @@
-import {Component, Input, Output, EventEmitter} from "@angular/core";
+import {Component, OnDestroy} from "@angular/core";
 import IntoCpsApp from "../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
 import {Project} from "../../proj/Project";
 import {MultiModelConfig} from "../../intocps-configurations/MultiModelConfig";
 import { SimulationEnvironmentParameters, Reactivity, SvConfiguration} from "../../intocps-configurations/sv-configuration";
+import { SvConfigurationService } from "./sv-configuration.service";
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: "sv-configuration",
     templateUrl: "./angular2-app/sv/sv-configuration.component.html"
 })
-export class SvConfigurationComponent {
-    private readonly notSelected = "";
+export class SvConfigurationComponent implements OnDestroy{
+    private readonly noPath = "";
     private mmPath: string = "";
     private coePath: string = "";
-    private _svConfiguration: SvConfiguration = new SvConfiguration();
+    private readonly mmFileName = "mm.json";
+    private readonly coeFileName = "coe.json";
+    private _configurationChangedSub: Subscription;
 
     reactivityKeys = Object.keys(Reactivity);
     editing: boolean = false;
     usePriorExperiment: boolean = false;
-    verifyAlgorithm: boolean = false;
-    canLocatePriorExperiment = true;
-    experimentPath: string = this.notSelected;
-    priorExperimentPath: string = this.notSelected;
+    cantLocatePriorExperiment = false;
+    experimentPath: string = this.noPath;
+    priorExperimentPath: string = this.noPath;
     experimentsPaths: string [] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
     priorExperimentsPaths: string [] = [];
 
@@ -30,35 +33,46 @@ export class SvConfigurationComponent {
     portsToReactivity: any[] = [];
     simEnvParams: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
 
-
-    @Input()
-    set svconfiguration(svConfiguration:SvConfiguration) {
-        this._svConfiguration = svConfiguration;
-        if(svConfiguration != undefined)
-            this.setViewModelsFromConfig();
+    constructor(private svConfigurationService: SvConfigurationService){
+        this._configurationChangedSub = this.svConfigurationService.configurationChangedObservable.subscribe(() => {
+            this.setViewModelItemsFromConfig();
+        });
     }
-    get svconfiguration():SvConfiguration {
-        return this._svConfiguration;
+    ngOnDestroy(): void {
+        this._configurationChangedSub.unsubscribe();
     }
 
-    @Output()
-    configurationchanged = new EventEmitter<SvConfiguration>();
-
-
-    setViewModelsFromConfig() {
-        this.experimentPath = this._svConfiguration.experimentPath;
-        this.usePriorExperiment = this._svConfiguration.priorExperimentPath != "";
-        if(this.usePriorExperiment){
+    setViewModelItemsFromConfig() {
+        this.experimentPath = this.svConfigurationService.configuration.experimentPath;
+        let coeFolderPath = this.experimentPath;
+        let mmFolderPath = Path.join(this.experimentPath, "..")
+        this.usePriorExperiment = this.svConfigurationService.configuration.priorExperimentPath != "";
+        if(this.experimentPath != ""){
             this.loadPriorExperimentsPaths();
-            this.priorExperimentPath = this._svConfiguration.priorExperimentPath;
-            this.canLocatePriorExperiment = this.priorExperimentsPaths.findIndex(p => p.includes(this.priorExperimentPath)) >= 0;
         }
-        this.simEnvParams = this._svConfiguration.simulationEnvironmentParameters;
-        this.mmPath = this._svConfiguration.mmPath;
-        this.portsToReactivity = Array.from(this._svConfiguration.extendedMultiModel.reactivity, ([key, value]) => ({ port: key, reactivity: value}));
+        if(this.usePriorExperiment){
+            this.priorExperimentPath = this.svConfigurationService.configuration.priorExperimentPath;
+            this.cantLocatePriorExperiment = this.priorExperimentsPaths.findIndex(p => p.includes(this.priorExperimentPath)) == -1;
+            coeFolderPath = this.priorExperimentPath;
+            mmFolderPath = this.priorExperimentPath;
+        }
+
+        let mmPath = Path.join(mmFolderPath, this.mmFileName)
+        let coePath = Path.join(coeFolderPath, this.coeFileName)
+
+        if(!this.isValidFilePath(coeFolderPath)){
+            this.coePath = coePath;
+        }
+
+        if(this.isValidFilePath(mmPath)){
+            this.mmPath = mmPath;
+            this.setMultimodelFromConfig(this.mmPath);
+        }
+        this.simEnvParams = this.svConfigurationService.configuration.simulationEnvironmentParameters;
+        this.portsToReactivity = Array.from(this.svConfigurationService.configuration.reactivity, ([key, value]) => ({ port: key, reactivity: value}));
     }
 
-    experimentNameFromPath(path: string, depth: number): string{
+    getExperimentNameFromPath(path: string, depth: number): string{
         let elems = path.split(Path.sep);
         if(elems.length <= 1) {
             return path;
@@ -99,116 +113,112 @@ export class SvConfigurationComponent {
         return experimentPaths;
     }
 
-    getFiles(path: string): string [] {
-        let fileList: string[] = [];
-        let files = fs.readdirSync(path);
-        for(let i in files){
-            let name = Path.join(path, files[i]);
-            if (fs.statSync(name).isDirectory()){
-                fileList = fileList.concat(this.getFiles(name));
-            } else {
-                fileList.push(name);
-            }
-        }
-    
-        return fileList;
-    }
-
     getNameOfSelectedExperiment(): string {
-        return this.experimentNameFromPath(this.usePriorExperiment ? this.priorExperimentPath : this.experimentPath, this.usePriorExperiment ? 3 : 2);
+        return this.getExperimentNameFromPath(this.usePriorExperiment ? this.priorExperimentPath : this.experimentPath, this.usePriorExperiment ? 3 : 2);
     }
 
-    locateAndSetCoePath(path: string){
-        path = Path.join(path, "coe.json");
+    isValidFilePath(path: string): boolean {
         if(!fs.existsSync(path)) {
-            console.error("Unable to locate the coe file at: " + path);
+            console.error("Unable to locate the file at: " + path);
+            return false;
         }
-        this.coePath = path;
-    }
-
-    locateAndSetMMPath(path: string){
-        path = Path.join(path, "mm.json");
-        if(!fs.existsSync(path)) {
-            console.error("Unable to locate the multi model file at: " + path);
-        }
-        this.mmPath = path;
+        return true;
     }
 
     onExperimentPathChanged(experimentPath: string) {
         this.loadPriorExperimentsPaths();
         this.experimentPath = experimentPath;
         this.usePriorExperiment = false;
-        this.priorExperimentPath = this.notSelected;
-        this.handleExperimentPathChanged(Path.join(experimentPath, ".."), experimentPath);
+        this.priorExperimentPath = this.noPath;
+        this.cantLocatePriorExperiment = false;
+        this.handleExperimentPathChanged(Path.join(experimentPath, "..", this.mmFileName), Path.join(experimentPath, this.coeFileName)).then(() => {
+            this.resetConfigurationOptionsViewElements();
+        });
     }
 
     onPriorExperimentPathChanged(experimentPath: string) {
         this.priorExperimentPath = experimentPath;
         this.usePriorExperiment = true;
-        this.handleExperimentPathChanged(experimentPath, experimentPath);
+        this.handleExperimentPathChanged(Path.join(experimentPath, this.mmFileName), Path.join(experimentPath, this.coeFileName)).then(() => {
+            this.resetConfigurationOptionsViewElements();
+        });
     }
 
-    handleExperimentPathChanged(mmPath: string, coePath: string) {
-        this.verifyAlgorithm = false;
-        this.canLocatePriorExperiment = true;
-        this.locateAndSetMMPath(mmPath);
-        this.locateAndSetCoePath(coePath);
-        this.populatePortOptions();
-        this.simEnvParams = this.coeToSimulationEnvironmentParameters();
+    resetConfigurationOptionsViewElements() {
+        // Set port reactivities to delayed
+        let connectionsMap: Map<string, string[]> = this.multiModelConfig.toObject().connections;
+            
+        let inputPorts = Object.values(connectionsMap).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
+
+        this.portsToReactivity = [];
+        let trackExistingVals: Map<string, boolean> = new Map();
+        for (let i=0; i<inputPorts.length; i++) {
+            let v = inputPorts[i];
+            if (!trackExistingVals.has(v)) {
+            this.portsToReactivity.push({port: v, reactivity: Reactivity.Delayed});
+            trackExistingVals.set(v, true);
+            }
+        }
+
+        // Set environment parameters from the coe json file
+        fs.readFile(this.coePath, (error, data) => {
+            if (error){
+                console.error(`Unable to read coe file and set simulation environment parameters: ${error}`)
+            }
+            else{
+                const jsonObj = JSON.parse(data.toString());
+                this.simEnvParams.convergenceAbsoluteTolerance = jsonObj["global_absolute_tolerance"];
+                this.simEnvParams.convergenceRelativeTolerance = jsonObj["global_relative_tolerance"];
+                this.simEnvParams.convergenceAttempts = 5;
+                this.simEnvParams.endTime = jsonObj["endTime"];
+                this.simEnvParams.startTime = jsonObj["startTime"];
+                this.simEnvParams.stepSize = jsonObj["algorithm"]["type"] == "fixed-step" ? jsonObj["algorithm"]["size"] : jsonObj["algorithm"]["initsize"];
+            }
+        });
+    }
+
+    handleExperimentPathChanged(newMMPath: string, newCoePath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if(this.isValidFilePath(newMMPath)){
+                this.mmPath = newMMPath;
+                this.setMultimodelFromConfig(this.mmPath).then(() => {
+                    if(this.isValidFilePath(newCoePath)){
+                        this.coePath = newCoePath;
+                        resolve();
+                    }
+                    else {
+                        //TODO: Handle unable to locate coe json
+                        reject();
+                    }
+                }, reason => {
+                    console.error(`${reason}`)
+                });
+            }
+            else {
+                //TODO: Handle unable to locate mm json
+                reject();
+            }
+        });
     }
 
     onReactivityChanged(portWithReactivity: {port: string, reactivity: Reactivity}, reactivity: string) {
         portWithReactivity.reactivity = Reactivity[reactivity as keyof typeof Reactivity]
     }
 
-    parseConfig(mmPath : string): Promise<void | MultiModelConfig> {
+    setMultimodelFromConfig(mmPath : string): Promise<void> {
         let project = IntoCpsApp.getInstance().getActiveProject();
-        return MultiModelConfig
-            .parse(mmPath, project.getFmusPath())
-            .catch(error => console.error(`Error during parsing of config: ${error}`));
+        return new Promise<void>((resolve, reject) => {
+            MultiModelConfig
+            .parse(mmPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
+                this.multiModelConfig = multiModel;
+                resolve();
+            }, err => {
+                console.error(`Error during parsing of config: ${err}`)
+                reject();
+            });
+         });
     }
-
-    populatePortOptions() {
-        this.parseConfig(this.mmPath).then((multiModel: MultiModelConfig) => {
-            this.multiModelConfig = multiModel;
-            let connsMap: Map<string, string[]> = multiModel.toObject().connections;
-            
-            let inputPorts = Object.values(connsMap).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
-
-            this.portsToReactivity = [];
-            let trackExistingVals: Map<string, boolean> = new Map();
-            for (let i=0; i<inputPorts.length; i++) {
-                let v = inputPorts[i];
-              if (!trackExistingVals.has(v)) {
-                this.portsToReactivity.push({port: v, reactivity: Reactivity.Delayed});
-                trackExistingVals.set(v, true);
-              }
-            }
-
-        }, reason => {
-            console.error(`${reason}`)
-        });
-    }
-
-    coeToSimulationEnvironmentParameters(): SimulationEnvironmentParameters {
-        const simulationEnvironmentToReturn = new SimulationEnvironmentParameters();
-        fs.readFile(this.coePath, (error, data) => {
-            if (error){
-                console.error(`Unable to read coe file: ${error}`)
-            }
-            else{
-                const jsonObj = JSON.parse(data.toString());
-                simulationEnvironmentToReturn.convergenceAbsoluteTolerance = jsonObj["global_absolute_tolerance"];
-                simulationEnvironmentToReturn.convergenceRelativeTolerance = jsonObj["global_relative_tolerance"];
-                simulationEnvironmentToReturn.convergenceAttempts = 5;
-                simulationEnvironmentToReturn.endTime = jsonObj["endTime"];
-                simulationEnvironmentToReturn.startTime = jsonObj["startTime"];
-                simulationEnvironmentToReturn.stepSize = jsonObj["algorithm"]["type"] == "fixed-step" ? jsonObj["algorithm"]["size"] : jsonObj["algorithm"]["initsize"];
-            }
-        });
-        return simulationEnvironmentToReturn;
-    }
-
+    
     onNavigate(): boolean {
         if (!this.editing)
             return true;
@@ -219,23 +229,17 @@ export class SvConfigurationComponent {
     onSubmit() {
         if (!this.editing) return;
 
-        // Set changes from the view models in the configuration
-        Object.assign(this._svConfiguration.extendedMultiModel, this.multiModelConfig);
-        this._svConfiguration.extendedMultiModel.reactivity = new Map(this.portsToReactivity.map(item => [item.port, item.reactivity]));
-        this._svConfiguration.extendedMultiModel.verification = this.verifyAlgorithm;
-        this._svConfiguration.masterModel = "";
-        this._svConfiguration.mmPath = this.mmPath;
-        this._svConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
-        this._svConfiguration.simulationEnvironmentParameters = this.simEnvParams;
-        this._svConfiguration.serializeToJsonString();
-        this._svConfiguration.experimentPath = this.experimentPath;
-        if(this.usePriorExperiment){
-            this.usePriorExperiment = this.priorExperimentPath != "";
-            this._svConfiguration.priorExperimentPath = this.priorExperimentPath;
-        }
+        const updatedSvConfiguration = new SvConfiguration;
 
-        // Inform of changes
-        this.configurationchanged.emit(this._svConfiguration)
+        // Set changes from the view models in the configuration
+        Object.assign(updatedSvConfiguration.multiModel, this.multiModelConfig);
+        updatedSvConfiguration.reactivity = new Map(this.portsToReactivity.map(item => [item.port, item.reactivity]));
+        updatedSvConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
+        updatedSvConfiguration.simulationEnvironmentParameters = this.simEnvParams;
+        updatedSvConfiguration.experimentPath = this.experimentPath;
+        updatedSvConfiguration.priorExperimentPath = !this.usePriorExperiment ? this.noPath : this.priorExperimentPath;
+        updatedSvConfiguration.masterModel = this.svConfigurationService.configuration.masterModel;
+        this.svConfigurationService.configuration = updatedSvConfiguration;
        
         this.editing = false;
     }

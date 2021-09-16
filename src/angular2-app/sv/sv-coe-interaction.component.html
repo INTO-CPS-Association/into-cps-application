@@ -1,10 +1,58 @@
-<h3>Coe Interaction Page Title</h3>
+<style>
+  .glyphicon.spinning {
+    animation: spin 2s infinite linear;
+}
 
-<div>
-    <div class="alert alert-danger alert-big">
-        <button (click)="errorClick()" type="button"
-                style="float: right; border-radius: 50%; border: none; background-color: white;"><span
-                class="glyphicon glyphicon-remove"></span></button>
-        <p>Error: Could not run config.</p>
-    </div>
-</div>
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg); }
+    to { transform: scale(1.1) rotate(360deg); }
+}
+
+</style>
+
+<h3>Coe Interaction Page Title</h3>
+<form class="form-horizontal">
+  <div *ngIf="!coeIsOnline" class="alert alert-danger">
+    Co-Simulation Engine offline. No connection at {{ coeUrl }}.
+    <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()">
+      <span class="glyphicon glyphicon-link"></span> Launch
+    </button>
+  </div>
+
+  <div *ngIf="coeIsOnline" class="alert alert-success">
+    Co-Simulation Engine, version {{ coeVersion }}, online at {{ coeUrl }}.
+  </div>
+
+  <div>
+    <button type="button" class="btn btn-sm btn-default" (click)="onGenerateScenarioClick()" [disabled] = "configIsInvalid">
+      <span>Generate Scenario</span> 
+    </button>
+  </div>
+
+  <div>
+    <button type="button" class="btn btn-sm btn-default" (click)="onVerifyClick()" [disabled]="isVerified || !isMasterModelValid || configIsInvalid">
+      <span *ngIf="!isVerified">Verify</span>
+      <span *ngIf="isVerified">Verified</span>
+    </button>
+  </div>
+
+  <div>
+    <button *ngIf="verificationFailed" type="button" class="btn btn-sm btn-default" (click)="onVisualizeTracesClick()" [disabled]="isGeneratingTraces">
+      <span *ngIf="isGeneratingTraces" class="glyphicon glyphicon-refresh spinning"></span> Visualize Traces
+    </button>
+  </div>
+
+  <div>
+    <button *ngIf="!verificationFailed" type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "configIsInvalid">
+      <span>Execute</span> 
+    </button>
+  </div>
+
+  <video 
+  *ngIf="videoUrl" 
+  [src]="videoUrl"  
+  controls></video>
+</form>
+
+
+
