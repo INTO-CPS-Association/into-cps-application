@@ -55,7 +55,7 @@ declare let window: MyWindow;
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
          <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
          <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
-         <dtp-page *ngIf="page === 'dtp'"></dtp-page>`
+         <dtp-page *ngIf="page === 'dtp'" [path]="path"></dtp-page>`
 })
 export class AppComponent implements OnInit {
     private page:string;

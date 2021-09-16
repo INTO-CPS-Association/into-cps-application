@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {Component} from "@angular/core";
+import {Component, Input} from "@angular/core";
 
 
 @Component({
@@ -37,6 +37,16 @@ import {Component} from "@angular/core";
     templateUrl: "./angular2-app/dtp/dtp-page.component.html"
 })
 export class DtpPageComponent {
+    private _path : string;
+
+    @Input()
+    set path(path: string){
+        this._path = path;
+    }
+    get path(){
+        return this._path;
+    }
+    
     constructor() {
         console.log("DTPPAGECOMPONENT");
       }

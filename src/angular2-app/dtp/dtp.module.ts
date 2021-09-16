@@ -28,35 +28,21 @@
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
+import {NgModule} from "@angular/core";
+import { DtpPageComponent } from "./dtp-page.component";
+import { DtpConfigurationComponent } from "./dtp-configuration.component";
+import { DtpMaestroComponent } from "./inputs/maestro.component";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { SharedModule } from "../shared/shared.module";
+import { CommonModule } from "@angular/common";
+@NgModule({
+    imports: [ FormsModule, ReactiveFormsModule, SharedModule, CommonModule], // module dependencies
+    declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent ], // components and directives
+    exports: [DtpPageComponent]
+  })
+  export class DtpModule {
 
-import {ViewController} from "../../iViewController";
-import IntoCpsApp from "../../IntoCpsApp";
-import {AppComponent} from "../app.component";
-import * as Path from 'path';
-
-interface MyWindow extends Window {
-    ng2app: AppComponent;
-}
-
-declare var window: MyWindow;
-
-export class DtpViewController extends ViewController {
-    constructor(private view: HTMLDivElement, private path:string) {
-        super(view);
+    constructor(){
+      console.log("DTP-MODULE")
     }
-
-    initialize() {
-        $(this.view).css('height',0);
-        IntoCpsApp.setTopName(Path.basename(Path.join(this.path,"../")));
-        window.ng2app.openDTP(this.path);
-    }
-    
-    deInitialize() {
-        if (window.ng2app.navigationService.canNavigate()) {
-            window.ng2app.closeAll();
-            $(this.view).css('height',"calc(100% - 80px)");
-            return true;
-        }
-        return false;
-    }
-}
+  }

@@ -1,0 +1,78 @@
+<form *ngIf="isLoaded" [formGroup]="form" (ngSubmit)="onSubmit()" >
+	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
+		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+	</button>
+	<button *ngIf="editing" class="btn btn-default">
+		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
+		Save
+	</button>
+
+	<div class="form-horizontal">
+		<div class="panel-group" id="accordion">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" data-parent="#accordion"
+							href="#basic-collapse1">
+							DTP configuration</a>
+					</h4>
+				</div>
+				<div id="basic-collapse1" class="panel-collapse collapse in">
+
+					<!-- Configuration Types -->
+					<div class="form-group">
+						<label class="col-sm-5 col-md-4 control-label">Type</label>
+						<div class="col-sm-7 col-md-8">
+							<div *ngIf="editing" class="input-group">
+								<select [(ngModel)]="newConfig"
+									[ngModelOptions]="{ standalone: true }"
+									class="form-control">
+									<option *ngFor="let dtpType of dtpTypeConstructors"
+										[ngValue]="dtpType">{{
+										getDtpTypeName(dtpType) }}</option>
+								</select>
+								<span class="input-group-btn">
+									<button type="button"
+										(click)="addDtpType(newConfig.value)"
+										class="btn btn-default">
+										<span
+											class="glyphicon glyphicon-plus"></span>
+										Add
+									</button>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="constraint-container">
+						<div class="panel panel-default constraint-panel" *ngFor="
+					  let dtpType of config.dtpTypes;
+					  let i = index
+					">
+							<div class="panel-heading">
+								<a *ngIf="editing"
+									(click)="removeDtpType(dtpType)"
+									class="pull-right"><span
+										class="glyphicon glyphicon-remove"></span></a>
+								{{ getDtpTypeName(dtpType) }}
+							</div>
+							<div class="panel-body">
+								<maestro [editing]="editing" [dtpType]="dtpType" *ngIf="dtpType.type === maestro"></maestro>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+			<hr />
+
+		</div>
+	</div>
+
+	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
+		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+	</button>
+	<button *ngIf="editing" class="btn btn-default">
+		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
+		Save
+	</button>
+</form>

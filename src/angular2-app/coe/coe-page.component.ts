@@ -29,6 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
+import { THIS_EXPR } from "@angular/compiler/src/output/output_ast";
 import {Component, Input} from "@angular/core";
 
 @Component({
@@ -36,6 +37,11 @@ import {Component, Input} from "@angular/core";
     templateUrl: "./angular2-app/coe/coe-page.component.html",
 })
 export class CoePageComponent {
+
+private _path: string
     @Input()
-    path:string;
+    set path(path:string){
+        this._path = path;
+    };
+    get path(){return this._path;}
 }

@@ -46,9 +46,11 @@ export interface IProject {
     createDse(name: String, jsonContent: String): String;
     createSysMLDSEConfig(name: String, jsonContent: String): String;
     createCoSimConfig(multimodelConfigPath: string, name: String, jsonContent: String): string;
+    createDtpConfig(name: String, jsonContent: string): string;
 
     getSettings(): ProjectSettings;
 
-    freshMultiModelName(name : String): String;
+    freshMultiModelName(name : String): String; 
+    freshDTPName(name: string): string
     freshFilename(path: string, name: string) : string
 }

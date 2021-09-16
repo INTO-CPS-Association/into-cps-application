@@ -157,6 +157,7 @@ export class Project implements IProject {
         return fullpath;
     }
 
+
     public createSysMLDSEConfig(name: String, jsonContent: String): String {
         let path = Path.normalize(this.rootPath + "/" + Project.PATH_DSE + "/" + name);
 
@@ -177,6 +178,19 @@ export class Project implements IProject {
         let fullpath = Path.normalize(path + "/" + name + ".dse.json");
 
         fs.writeFileSync(fullpath, jsonContent, "UTF-8");
+
+        return fullpath;
+    }
+    public createDtpConfig(name: String, jsonContent: string): string{
+        let path = Path.normalize(this.rootPath + "/" + Project.PATH_DTP + "/" + name);
+        
+        if (fs.existsSync(path)) throw new Error('DTP ' + name + ' already exists!');
+        
+        fs.mkdirSync(path);
+
+        let fullpath = Path.normalize(path + "/dtp.json");
+
+        fs.writeFileSync(fullpath, jsonContent == null ? "{}" : jsonContent, "UTF-8");
 
         return fullpath;
     }
@@ -210,6 +224,10 @@ export class Project implements IProject {
         return this.freshFilename(Path.normalize(this.rootPath + "/" + Project.PATH_MULTI_MODELS), name);
     }
 
+    public freshDTPName(name: string): string{
+        return this.freshFilename(Path.normalize(this.rootPath + "/" + Project.PATH_DTP), name);
+    }
+
 
     /**
      * Returns a fresh filename inside folder path with name as a prefix. 
@@ -217,6 +235,8 @@ export class Project implements IProject {
      * @param {string} name 
      */
     public freshFilename(path: string, name: string): string {
+        console.log("path: ");
+        console.log(path);
         var filepath: string;
         var newname: string = name;
 
@@ -228,12 +248,16 @@ export class Project implements IProject {
                 name: null,
                 ext: null
             });
+            console.log("path2: ");
+            console.log(filepath);
 
             if (!fs.existsSync(filepath)) return newname;
 
             newname = name + '-' + i;
         }
 
+            console.log("path3: ");
+            console.log(filepath);
         return name;
     }
 

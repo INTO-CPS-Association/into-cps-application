@@ -447,6 +447,17 @@ export class BrowserController {
                 parent.refresh();
                 return null;
             }
+            else if (path.endsWith("dtp.json")){
+                parent.opensInMainWindow = true;
+                (<any>parent).dtpConfig = path;
+                parent.dblClickHandler = function(item: ProjectBrowserItem){
+                    self.menuHandler.openDtpView((<any>item).dtpConfig);
+                }
+                parent.menuEntries = [menuEntryDelete, menuRename, menuReveal];
+                parent.refresh();
+                return null;
+
+            }
             else if (path.endsWith(".fmu")) {
                 result.img = "icon-page";
                 result.opensInMainWindow = true;
@@ -684,7 +695,7 @@ export class BrowserController {
                 result.menuEntries = [menuEntryCreate];
             }
             else if (Path.basename(path) == Project.PATH_DTP) {
-                let menuEntryCreate = menuEntry("DESCRIPTION HERE", "glyphicon glyphicon-asterisk",
+                let menuEntryCreate = menuEntry("New DTP Configuration", "glyphicon glyphicon-asterisk",
                     function (item: ProjectBrowserItem) {
                         self.menuHandler.createDtpPlain(item.path);
                     });

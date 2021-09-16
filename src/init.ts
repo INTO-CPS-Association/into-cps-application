@@ -372,11 +372,41 @@ menuHandler.createDsePlain = () => {
     }
 }
 
-menuHandler.createDtpPlain = (path: String) => {
-    let project = IntoCpsApp.getInstance().getActiveProject();
+menuHandler.createDtpPlain = (path: string) => {
+    /*let project = IntoCpsApp.getInstance().getActiveProject();
     if (project) {
         menuHandler.openDtpView(path);
+    }*/
+
+     let appInstance = IntoCpsApp.getInstance();
+    let project = appInstance.getActiveProject();
+
+    if (project) {
+        let ivname = project.freshDTPName(`dtp`);
+
+        let msgTitle = 'New DTP Configuration';
+        w2prompt({
+            label: 'Name',
+            value: ivname,
+            attrs: 'style="width: 500px"',
+            title: msgTitle,
+            ok_text: 'Ok',
+            cancel_text: 'Cancel',
+            width: 500,
+            height: 200,
+            callBack: function (value: String) {
+                try {
+                    if (!value) { return; }
+
+                    let coePath = project.createDtpConfig(value, null).toString();
+                    menuHandler.openDtpView(coePath);
+                } catch (error) {
+                    return;
+                }
+            }
+        });
     }
+
 }
 
 menuHandler.createMultiModelPlain = (titleMsg: string = 'New Multi-Model') => {
@@ -453,7 +483,7 @@ menuHandler.deletePath = (path) => {
            //  IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
-    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json")) {
+    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith("dtp.json")) {
         let dir = Path.dirname(path);
         console.info("Deleting " + dir);
         CustomFs.getCustomFs().removeRecursive(dir, function (err: any, v: any) {
@@ -473,7 +503,7 @@ menuHandler.rename = (path: string) => {
     var DialogHandler = require("./DialogHandler").default;
     let renameHandler = new DialogHandler("proj/rename.html", 300, 200/* , null, null, null */);
 
-    if (path.endsWith("coe.json") || path.endsWith("mm.json")) {
+    if (path.endsWith("coe.json") || path.endsWith("mm.json") || path.endsWith("dtp.json")) {
         renameHandler.openWindow(Path.dirname(path));
     }
 };
