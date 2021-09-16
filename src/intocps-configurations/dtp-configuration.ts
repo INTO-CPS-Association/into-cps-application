@@ -83,19 +83,19 @@ export class MaestroDtpType implements VariableStepConstraint {
     type = "MaestroDtpType";
 
     constructor(
-        public id: string = "MaestroDtpType"
+        public id: string = "Maestro"
     ) {
     }
 
     toFormGroup() {
         return new FormGroup({
-            id: new FormControl(this.id)
+            id: new FormControl(this.id,[Validators.required])
         });
     }
 
     toObject() {
         let obj: any = {
-            type: this.type
+            type: this.type,
         };
 
         return obj;

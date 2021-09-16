@@ -35,6 +35,10 @@ import IntoCpsApp from "../../IntoCpsApp";
 import { AMQPRepeaterDtpType, MaestroDtpType, DTPConfig } from "../../intocps-configurations/dtp-configuration";
 import { VariableStepConstraint } from "../../intocps-configurations/CoSimulationConfig";
 import { NavigationService } from "../shared/navigation.service";
+import {
+    numberValidator, integerValidator, lengthValidator,
+    uniqueGroupPropertyValidator, uniqueValidator
+} from "../../angular2-app/shared/validators";
 
 const dialog = require("electron").remote.dialog;
 
@@ -62,7 +66,7 @@ export class DtpConfigurationComponent {
     get path(): string {
         return this._path;
     }
-    form: FormGroup = new FormGroup({});
+    form: FormGroup;
     dtpTypes: VariableStepConstraint[] = [];
     editing: boolean = false;
     isLoaded: boolean = false;
@@ -82,6 +86,8 @@ export class DtpConfigurationComponent {
         DTPConfig.parse(this.path, project.getRootFilePath()).then(config => {
             this.config = config;
             this.isLoaded = true;
+            // Create a form group for each DTPType
+            this.form = new FormGroup({dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id"))});
             console.log("Parsing finished!");
 
         },error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
@@ -105,17 +111,27 @@ export class DtpConfigurationComponent {
         else if (dtpType === AMQPRepeaterDtpType || dtpType instanceof AMQPRepeaterDtpType) {
             return "AMQPRepeater"
         }
+        else {
+            console.log("Unknown DTPType");
+            if(this.newConfig){
+                console.log("newconfig: " + this.newConfig);
+            }
+        }
     }
 
     addDtpType() {
         if (!this.newConfig) return;
         let dtpType = new this.newConfig();
         this.config.dtpTypes.push(dtpType);
+        let formArray = <FormArray>this.form.get('dtpTypes');
+        formArray.push(dtpType.toFormGroup());
     }
 
     removeDtpType(dtpType: VariableStepConstraint){
+        let formArray = <FormArray>this.form.get('dtpTypes');
         let index = this.config.dtpTypes.indexOf(dtpType);
         this.config.dtpTypes.splice(index, 1);
+        formArray.removeAt(index);
     }
 
     onSubmit() {

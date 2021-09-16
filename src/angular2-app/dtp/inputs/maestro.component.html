@@ -1,11 +1,11 @@
-<div class="form-group">
-        <label class="col-sm-12 control-label" style="text-align: left">Maestro</label></div>
-        <hr>
-<div class="form-horizontal">
+<div class="form-horizontal" [formGroup]="formGroup">
     <div class="form-group">
+        <label class="col-sm-3 control-label">ID</label>
         <div class="col-sm-9">
-            <p class="form-control-static">Maestro enabled.</p>
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.id}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.id"  formControlName="id" class="form-control">
+            <div *ngIf="formGroup.hasError('required', 'id')" class="alert alert-danger">This field is required.</div>
+            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtpType.id" class="alert alert-danger">ID is not unique.</div>
         </div>
     </div>
 </div>
-

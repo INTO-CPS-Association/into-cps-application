@@ -1,8 +1,8 @@
-<form *ngIf="isLoaded" [formGroup]="form" (ngSubmit)="onSubmit()" >
+<form *ngIf="isLoaded" [formGroup]="form" (ngSubmit)="onSubmit()">
 	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
 		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
 	</button>
-	<button *ngIf="editing" class="btn btn-default">
+	<button *ngIf="editing" class="btn btn-default" [disabled]="!form.valid">
 		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
 		Save
 	</button>
@@ -33,8 +33,8 @@
 								</select>
 								<span class="input-group-btn">
 									<button type="button"
-										(click)="addDtpType(newConfig.value)"
-										class="btn btn-default">
+										(click)="addDtpType()"
+										class="btn btn-default" [disabled]="!newConfig">
 										<span
 											class="glyphicon glyphicon-plus"></span>
 										Add
@@ -49,14 +49,14 @@
 					  let i = index
 					">
 							<div class="panel-heading">
-								<a *ngIf="editing"
-									(click)="removeDtpType(dtpType)"
+								<a *ngIf="editing" (click)="removeDtpType(dtpType)"
 									class="pull-right"><span
 										class="glyphicon glyphicon-remove"></span></a>
 								{{ getDtpTypeName(dtpType) }}
 							</div>
 							<div class="panel-body">
-								<maestro [editing]="editing" [dtpType]="dtpType" *ngIf="dtpType.type === maestro"></maestro>
+								<maestro [editing]="editing" [dtpType]="dtpType"
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'MaestroDtpType'"></maestro>
 							</div>
 						</div>
 					</div>
@@ -71,7 +71,7 @@
 	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
 		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
 	</button>
-	<button *ngIf="editing" class="btn btn-default">
+	<button *ngIf="editing" class="btn btn-default" [disabled]="!form.valid" >
 		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
 		Save
 	</button>

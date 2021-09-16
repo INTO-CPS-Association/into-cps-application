@@ -29,8 +29,8 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {Component, Input} from "@angular/core";
-import {FormArray, FormControl, FormGroup} from "@angular/forms";
+import { Component, Input } from "@angular/core";
+import { FormArray, FormControl, FormGroup } from "@angular/forms";
 import { MaestroDtpType } from "../../../intocps-configurations/dtp-configuration";
 
 
@@ -40,15 +40,18 @@ import { MaestroDtpType } from "../../../intocps-configurations/dtp-configuratio
 })
 export class DtpMaestroComponent {
     @Input()
-    dtpType:MaestroDtpType
-
-    //@Input()
-    //formGroup:FormGroup;
+    dtpType: MaestroDtpType
 
     @Input()
-    editing:boolean = false;
+    formGroup:FormGroup;
 
-    customTrackBy(index:number, obj: any):any {
+    @Input()
+    editing: boolean = false;
+    constructor() {
+        console.log("Maestro component constructor");
+    }
+
+    customTrackBy(index: number, obj: any): any {
         return index;
     }
 }
