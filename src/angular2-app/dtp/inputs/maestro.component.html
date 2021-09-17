@@ -8,4 +8,15 @@
             <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtpType.id" class="alert alert-danger">ID is not unique.</div>
         </div>
     </div>
+
+    <!-- CO-SIMULATION EXPERIMENT -->
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Experiment:</label>
+        <div class="col-sm-9 row">
+            <p *ngIf="!editing" class="form-control-static" style="white-space: nowrap; display: inline-block;"><span>{{experimentPath}}</span></p>
+            <select *ngIf="editing" [(ngModel)]="experimentPath" [ngModelOptions]="{standalone:true}" class="form-control">
+                <option *ngFor="let path of experimentsPaths" [ngValue]="path">{{getExperimentNameFromPath(path, '2')}}</option>
+            </select>
+        </div>
+    </div>
 </div>

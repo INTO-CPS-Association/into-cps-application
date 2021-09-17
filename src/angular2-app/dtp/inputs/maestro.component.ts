@@ -32,7 +32,10 @@
 import { Component, Input } from "@angular/core";
 import { FormArray, FormControl, FormGroup } from "@angular/forms";
 import { MaestroDtpType } from "../../../intocps-configurations/dtp-configuration";
-
+import IntoCpsApp from "../../../IntoCpsApp";
+import * as Path from 'path';
+import * as fs from 'fs';
+import {Project} from "../../../proj/Project";
 
 @Component({
     selector: 'maestro',
@@ -47,12 +50,45 @@ export class DtpMaestroComponent {
 
     @Input()
     editing: boolean = false;
+
+    experimentsPaths: string [] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
+    experimentPath: string;
+
     constructor() {
         console.log("Maestro component constructor");
     }
 
     customTrackBy(index: number, obj: any): any {
         return index;
+    }
+
+    getExperimentNameFromPath(path: string, depth: number): string{
+        let elems = path.split(Path.sep);
+        if(elems.length <= 1) {
+            return path;
+        }
+        let pathToReturn = "";
+        for(let i = depth; i >= 1; i--){
+            pathToReturn += elems[elems.length-i] + (i == 1 ? "" : " | ");
+        }
+        return pathToReturn;
+    }
+
+    getExperimentsPaths(path: string): string[] {
+        let experimentPaths: string[] = []
+        let files = fs.readdirSync(path);
+        if(files.findIndex(f => f.endsWith("coe.json")) != -1){
+            experimentPaths.push(path);
+        }
+        else {
+            for(let i in files){
+                let fileName = Path.join(path, files[i]);   
+                if (fs.statSync(fileName).isDirectory()){
+                    experimentPaths = experimentPaths.concat(this.getExperimentsPaths(fileName));
+                }
+            }
+        }
+        return experimentPaths;
     }
 }
 
