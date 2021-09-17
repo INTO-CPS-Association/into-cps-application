@@ -26,11 +26,13 @@ export class SvCoeInteractionComponent implements OnDestroy{
     
     isVerified = false;
     videoUrl: any;
-    resultsPath: string = "C:\\Users\\frdrk\\Desktop\\results";
-    isGeneratingTraces = false;
-    shouldVerifyBeforeExecution = false;
-    isMasterModelValid = false;
-    configIsInvalid = true;
+    resultsPath: string = "C:\\Users\\au535871\\Desktop\\results";
+    isGeneratingTraces: boolean = false;
+    shouldVerifyBeforeExecution: boolean = false;
+    isMasterModelValid: boolean = false;
+    configIsInvalid: boolean = true;
+    isExecuted: boolean = false;
+    masterModel: string = "";
 
     constructor(private svService: SvScenarioVerifierService, private sanitizer : DomSanitizer, private svConfigurationService: SvConfigurationService) {
         this.coeUrl = svService.coeUrl;
@@ -47,6 +49,10 @@ export class SvCoeInteractionComponent implements OnDestroy{
             this.isMasterModelValid = this.svConfigurationService.configuration.masterModel != "" && !this.svConfigurationService.reactivityChanged;
             this.isVerified = this.isMasterModelValid && this.isVerified;
             this.configIsInvalid = !this.svConfigurationService.isConfigValid();
+            this.isExecuted = false;
+            if(this.isMasterModelValid){
+                this.masterModel = this.svConfigurationService.configuration.masterModel;
+            }
         });
     }
     
@@ -85,6 +91,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
         executableMMDTO[SvConfiguration.MASTERMODEL_TAG] = this.svConfigurationService.configuration.masterModel;
         executableMMDTO[SvConfiguration.MULTIMODEL_TAG] = this.configurationToExtendedMultiModelDTO();
         executableMMDTO[SvConfiguration.EXECUTIONPARAMETERS_TAG] = this.svConfigurationService.configuration.simulationEnvironmentParameters;
+        return executableMMDTO;
     }
 
     ngOnDestroy(): void {
@@ -96,12 +103,14 @@ export class SvCoeInteractionComponent implements OnDestroy{
         this.svService.launchCOE();
     }
 
-    onGenerateScenarioClick() {
+    onGenerateMasterModelClick() {
         this.svService.generateScenario(this.configurationToExtendedMultiModelDTO()).then(res => {
             this.svConfigurationService.configuration.masterModel = res;
+            this.masterModel = this.svConfigurationService.configuration.masterModel;
             this.svConfigurationService.saveConfiguration();
             this.isMasterModelValid = true;
             this.isVerified = false;
+            this.isExecuted = false;
         }, err => {});
     }
 
@@ -132,6 +141,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
     onExecuteClick() {
         this.svService.execute(this.configurationToExecutableMMDTO()).then(async zipFile => {
             this.writeFileToResultsPath(zipFile);
+            this.isExecuted = true;
         }, err => {});
     }
 

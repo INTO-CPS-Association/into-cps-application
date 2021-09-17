@@ -1,6 +1,10 @@
 <style>
   .glyphicon.spinning {
     animation: spin 2s infinite linear;
+  }
+  .boxed {
+    border: 1px solid green ;
+  }
 }
 
 @keyframes spin {
@@ -24,9 +28,13 @@
   </div>
 
   <div>
-    <button type="button" class="btn btn-sm btn-default" (click)="onGenerateScenarioClick()" [disabled] = "configIsInvalid">
-      <span>Generate Scenario</span> 
+    <button type="button" class="btn btn-sm btn-default" (click)="onGenerateMasterModelClick()" [disabled] = "configIsInvalid">
+      <span>Generate master model</span> 
     </button>
+  </div>
+
+  <div>
+    <textarea *ngIf="isMasterModelValid" [(ngModel)]="masterModel" name="message" style="width: 100%; height:auto; resize: none;"></textarea>
   </div>
 
   <div>
@@ -44,7 +52,8 @@
 
   <div>
     <button *ngIf="!verificationFailed" type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "configIsInvalid">
-      <span>Execute</span> 
+      <span *ngIf="!isExecuted">Execute</span>
+      <span *ngIf="isExecuted">Done!</span> 
     </button>
   </div>
 
