@@ -48,8 +48,8 @@ export class SvPageComponent{
     @Input()
     set path(path:string) {
         this._path = path;
-        this.svConfigurationService.configPath = this._path;
-        this.svConfigurationService.setConfigurationFromPath().then(() => this.isNewConfiguration = this.svConfigurationService.isEmptyConfiguration).catch(err => console.error(err));
+        this.svConfigurationService.configurationPath = this._path;
+        this.svConfigurationService.setConfigurationFromPath().then(() => this.isNewConfiguration = this.svConfigurationService.isDefaultConfiguration).catch(err => console.error(err));
     }
     get path():string {
         return this._path;

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, OnDestroy } from "@angular/core";
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
 import { IntoCpsApp } from "../../IntoCpsApp";
@@ -8,8 +8,14 @@ import { SettingsService, SettingKeys } from "../shared/settings.service";
 
 interface IVerificationDTO {
     verifiedSuccessfully: boolean;
+    uppaalModel: string;
     errorMessage: string;
 };
+
+interface IVndError {
+    logref: string;
+    message: string;
+}
 
 @Injectable()
 export class SvScenarioVerifierService implements OnDestroy {
@@ -37,47 +43,42 @@ export class SvScenarioVerifierService implements OnDestroy {
     }
 
     generateScenario(extendedMultiModelObj: Object){
-        return new Promise<string>((resolve, reject) => {
-            this.httpClient.post(`http://${this.coeUrl}/generateAlgorithmFromMultiModel`, extendedMultiModelObj, {responseType: 'text'}).toPromise().then(res => {
-                resolve(res as string)
-            }, err => {
-                reject(err)
+        return new Promise<File>((resolve, reject) => {
+            this.httpClient.post(`http://${this.coeUrl}/generateAlgorithmFromMultiModel`, extendedMultiModelObj, {responseType: 'text'}).toPromise().then(response => {
+                const blob = new Blob([response], { type: 'text/plain' });
+                resolve(new File([blob], "masterModel.conf", {type: blob.type}));
+            }, (errorResponse: HttpErrorResponse) => {
+                this.errorToJsonMsg(errorResponse).then(msg => reject(msg)).catch(err => {console.log(err); reject(errorResponse.message) });
             })
         });
     }
 
     execute(executionDTOObj: Object){
         return new Promise<File>((resolve, reject) => {
-            this.httpClient.post(`http://${this.coeUrl}/executeAlgorithm`, executionDTOObj, {responseType: 'blob'}).toPromise().then(res => {
-                let fileName = "executionResults.zip"
-
-                var file = new File([res], fileName, { lastModified: new Date().getTime(), type: res.type })
-                resolve(file)
-            }, err => {
-                reject(err)
+            this.httpClient.post(`http://${this.coeUrl}/executeAlgorithm`, executionDTOObj, {responseType: 'blob'}).toPromise().then(response => {
+                resolve(new File([response], "execution_results.zip", { lastModified: new Date().getTime(), type: response.type }));
+            }, (errorResponse: HttpErrorResponse) => {
+                this.errorToJsonMsg(errorResponse).then(msg => reject(msg)).catch(err => {console.log(err); reject(errorResponse.message) });
             })
         });
     }
 
     verifyAlgorithm(masterModelAsString: string){
         return new Promise<IVerificationDTO>((resolve, reject) => {
-            this.httpClient.post(`http://${this.coeUrl}/verifyAlgorithm`, masterModelAsString).toPromise().then(res => {
-                resolve(res as IVerificationDTO)
-            }, err => {
-                reject(err)
+            this.httpClient.post(`http://${this.coeUrl}/verifyAlgorithm`, masterModelAsString).toPromise().then(response => {
+                resolve(response as IVerificationDTO);
+            }, (errorResponse: HttpErrorResponse) => {
+                this.errorToJsonMsg(errorResponse).then(msg => reject(msg)).catch(err => {console.log(err); reject(errorResponse.message) });
             })
         });
     }
 
     visualizeTrace(masterModelAsString: string){
         return new Promise<File>((resolve, reject) => {
-            this.httpClient.post(`http://${this.coeUrl}/visualizeTrace`, masterModelAsString, {responseType:'blob'}).toPromise().then(async res => {
-                let fileName = "traceVisualization.mp4"
-
-                var file = new File([res], fileName, { lastModified: new Date().getTime(), type: res.type })
-                resolve(file)
-            }, err => {
-                reject(err)
+            this.httpClient.post(`http://${this.coeUrl}/visualizeTrace`, masterModelAsString).toPromise().then(response => { //, {responseType:'blob'}
+                resolve(new File([response as Blob], "trace_visualization.mp4", { lastModified: new Date().getTime(), type: 'blob' }));
+            }, (errorResponse: HttpErrorResponse) => {
+                this.errorToJsonMsg(errorResponse).then(msg => reject(msg)).catch(err => {console.log(err); reject(errorResponse.message) });
             })
         });
     }
@@ -91,5 +92,40 @@ export class SvScenarioVerifierService implements OnDestroy {
             },
             () => (this._coeIsOnline.next(false))
         );
+    }
+
+    private formatErrorMessage(statusCode: number, IVndErrors: IVndError[]): string {
+        return statusCode + " => " + IVndErrors.map(vndErr => vndErr.message).reduce((msg, currMsg) => currMsg + "<" + msg + ">");
+    }
+
+    private errorToJsonMsg(err: HttpErrorResponse): Promise<string> {
+        return new Promise<string> ((resolve, reject) => {
+            if (typeof err.error === "string") {
+                const IVndErrors: IVndError[] = JSON.parse(err.error as string);
+                resolve(this.formatErrorMessage(err.status, IVndErrors));;
+            }
+            else if(err.error instanceof Blob && err.error.type === "application/json") {
+                const reader = new FileReader();
+                reader.onload = (e: Event) => {
+                    const IVndErrors: IVndError[] = JSON.parse((<any>e.target).result);
+                    resolve(this.formatErrorMessage(err.status, IVndErrors));
+                }
+                reader.onerror = (e) => {
+                    reject(err);
+                };
+                reader.readAsText(err.error);      
+            }
+            else if(err.error.type === "application/json") {
+                try{
+                    resolve(this.formatErrorMessage(err.status, (err.error as IVndError[])));
+                }
+                catch(exc){
+                    reject(`Unable to convert to error format: ${exc}`);
+                }
+            }
+            else {
+                reject("Unable to convert to error format");
+            }
+        }); 
     }
 }

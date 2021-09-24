@@ -28,16 +28,20 @@ export class SvConfigurationComponent implements OnDestroy{
     priorExperimentPath: string = this.noPath;
     experimentsPaths: string [] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
     priorExperimentsPaths: string [] = [];
-
+    isMMWarnings: boolean = false;
+    mMWarnings: string[] = [];
     multiModelConfig: MultiModelConfig;
-    portsToReactivity: any[] = [];
+    portsToReactivity: Map<string, Reactivity> = new Map();
+
     simEnvParams: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
 
     constructor(private svConfigurationService: SvConfigurationService){
         this._configurationChangedSub = this.svConfigurationService.configurationChangedObservable.subscribe(() => {
             this.setViewModelItemsFromConfig();
+            this.validateMultiModel();
         });
     }
+
     ngOnDestroy(): void {
         this._configurationChangedSub.unsubscribe();
     }
@@ -66,10 +70,25 @@ export class SvConfigurationComponent implements OnDestroy{
 
         if(this.isValidFilePath(mmPath)){
             this.mmPath = mmPath;
-            this.setMultimodelFromConfig(this.mmPath);
+            this.setMultimodelFromPath(this.mmPath);
         }
-        this.simEnvParams = this.svConfigurationService.configuration.simulationEnvironmentParameters;
-        this.portsToReactivity = Array.from(this.svConfigurationService.configuration.reactivity, ([key, value]) => ({ port: key, reactivity: value}));
+        
+        this.simEnvParams = Object.assign(new SimulationEnvironmentParameters() , this.svConfigurationService.configuration.simulationEnvironmentParameters);
+        this.portsToReactivity = new Map(this.svConfigurationService.configuration.reactivity);
+    }
+
+    setMultimodelFromPath(mmPath : string): Promise<void> {
+        let project = IntoCpsApp.getInstance().getActiveProject();
+        return new Promise<void>((resolve, reject) => {
+            MultiModelConfig
+            .parse(mmPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
+                this.multiModelConfig = multiModel;
+                resolve();
+            }, err => {
+                console.error(`Error during parsing of config: ${err}`)
+                reject();
+            });
+         });
     }
 
     getExperimentNameFromPath(path: string, depth: number): string{
@@ -82,18 +101,6 @@ export class SvConfigurationComponent implements OnDestroy{
             pathToReturn += elems[elems.length-i] + (i == 1 ? "" : " | ");
         }
         return pathToReturn;
-    }
-
-    loadPriorExperimentsPaths() {
-        let priorExperimentsPaths: string[] = []
-        let files = fs.readdirSync(this.experimentPath);
-        for(let i in files){
-            let fileName = Path.join(this.experimentPath, files[i]);   
-            if (fs.statSync(fileName).isDirectory()){
-                priorExperimentsPaths = priorExperimentsPaths.concat(this.getExperimentsPaths(fileName));
-            }
-        }
-        this.priorExperimentsPaths = priorExperimentsPaths;
     }
 
     getExperimentsPaths(path: string): string[] {
@@ -117,14 +124,6 @@ export class SvConfigurationComponent implements OnDestroy{
         return this.getExperimentNameFromPath(this.usePriorExperiment ? this.priorExperimentPath : this.experimentPath, this.usePriorExperiment ? 3 : 2);
     }
 
-    isValidFilePath(path: string): boolean {
-        if(!fs.existsSync(path)) {
-            console.error("Unable to locate the file at: " + path);
-            return false;
-        }
-        return true;
-    }
-
     onExperimentPathChanged(experimentPath: string) {
         this.loadPriorExperimentsPaths();
         this.experimentPath = experimentPath;
@@ -144,22 +143,46 @@ export class SvConfigurationComponent implements OnDestroy{
         });
     }
 
+    onReactivityChanged(key: string, reactivity: string) {
+        this.portsToReactivity.set(key, Reactivity[reactivity as keyof typeof Reactivity]);
+    }
+
+    onSubmit() {
+        if (!this.editing) return;
+
+        const updatedSvConfiguration = new SvConfiguration;
+
+        // Set changes from the view models in the configuration
+        updatedSvConfiguration.experimentPath = this.experimentPath;
+        updatedSvConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
+        updatedSvConfiguration.masterModel = this.svConfigurationService.configuration.masterModel;
+        updatedSvConfiguration.priorExperimentPath = !this.usePriorExperiment ? this.noPath : this.priorExperimentPath;
+        updatedSvConfiguration.simulationEnvironmentParameters = Object.assign(new SimulationEnvironmentParameters() , this.simEnvParams);
+        updatedSvConfiguration.multiModel.sourcePath = this.multiModelConfig.sourcePath;
+        updatedSvConfiguration.multiModel.fmusRootPath = this.multiModelConfig.fmusRootPath;
+        updatedSvConfiguration.multiModel.fmus = Object.assign([], this.multiModelConfig.fmus);
+        updatedSvConfiguration.multiModel.fmuInstances = Object.assign([], this.multiModelConfig.fmuInstances);
+        updatedSvConfiguration.multiModel.instanceScalarPairs = Object.assign([], this.multiModelConfig.instanceScalarPairs);
+        updatedSvConfiguration.reactivity = new Map(this.portsToReactivity);
+
+        this.svConfigurationService.configuration = updatedSvConfiguration;
+        this.validateMultiModel();
+
+        this.editing = false;
+    }
+
+    isValidFilePath(path: string): boolean {
+        if(!fs.existsSync(path)) {
+            return false;
+        }
+        return true;
+    }
+
     resetConfigurationOptionsViewElements() {
         // Set port reactivities to delayed
-        let connectionsMap: Map<string, string[]> = this.multiModelConfig.toObject().connections;
-            
-        let inputPorts = Object.values(connectionsMap).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
-
-        this.portsToReactivity = [];
-        let trackExistingVals: Map<string, boolean> = new Map();
-        for (let i=0; i<inputPorts.length; i++) {
-            let v = inputPorts[i];
-            if (!trackExistingVals.has(v)) {
-            this.portsToReactivity.push({port: v, reactivity: Reactivity.Delayed});
-            trackExistingVals.set(v, true);
-            }
-        }
-
+        let inputPorts: string[] = Object.values(this.multiModelConfig.toObject().connections as Map<string, string[]>).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
+        this.portsToReactivity = new Map(inputPorts.map(p => [p, Reactivity.Delayed]));
+        
         // Set environment parameters from the coe json file
         fs.readFile(this.coePath, (error, data) => {
             if (error){
@@ -181,13 +204,13 @@ export class SvConfigurationComponent implements OnDestroy{
         return new Promise<void>((resolve, reject) => {
             if(this.isValidFilePath(newMMPath)){
                 this.mmPath = newMMPath;
-                this.setMultimodelFromConfig(this.mmPath).then(() => {
+                this.setMultimodelFromPath(this.mmPath).then(() => {
                     if(this.isValidFilePath(newCoePath)){
                         this.coePath = newCoePath;
                         resolve();
                     }
                     else {
-                        //TODO: Handle unable to locate coe json
+                        console.error("Unable to locate coe file at: " + newCoePath);
                         reject();
                     }
                 }, reason => {
@@ -195,52 +218,26 @@ export class SvConfigurationComponent implements OnDestroy{
                 });
             }
             else {
-                //TODO: Handle unable to locate mm json
+                console.error("Unable to locate multi model file at: " + newMMPath);
                 reject();
             }
         });
     }
 
-    onReactivityChanged(portWithReactivity: {port: string, reactivity: Reactivity}, reactivity: string) {
-        portWithReactivity.reactivity = Reactivity[reactivity as keyof typeof Reactivity]
+    validateMultiModel(){
+        this.mMWarnings = this.svConfigurationService.configuration.multiModel.validate().map(w => w.message);
+        this.isMMWarnings = this.mMWarnings.length > 0;
     }
 
-    setMultimodelFromConfig(mmPath : string): Promise<void> {
-        let project = IntoCpsApp.getInstance().getActiveProject();
-        return new Promise<void>((resolve, reject) => {
-            MultiModelConfig
-            .parse(mmPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
-                this.multiModelConfig = multiModel;
-                resolve();
-            }, err => {
-                console.error(`Error during parsing of config: ${err}`)
-                reject();
-            });
-         });
-    }
-    
-    onNavigate(): boolean {
-        if (!this.editing)
-            return true;
-
-        confirm("Save your work before leaving?")
-    }
-
-    onSubmit() {
-        if (!this.editing) return;
-
-        const updatedSvConfiguration = new SvConfiguration;
-
-        // Set changes from the view models in the configuration
-        Object.assign(updatedSvConfiguration.multiModel, this.multiModelConfig);
-        updatedSvConfiguration.reactivity = new Map(this.portsToReactivity.map(item => [item.port, item.reactivity]));
-        updatedSvConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
-        updatedSvConfiguration.simulationEnvironmentParameters = this.simEnvParams;
-        updatedSvConfiguration.experimentPath = this.experimentPath;
-        updatedSvConfiguration.priorExperimentPath = !this.usePriorExperiment ? this.noPath : this.priorExperimentPath;
-        updatedSvConfiguration.masterModel = this.svConfigurationService.configuration.masterModel;
-        this.svConfigurationService.configuration = updatedSvConfiguration;
-       
-        this.editing = false;
+    loadPriorExperimentsPaths() {
+        let priorExperimentsPaths: string[] = []
+        let files = fs.readdirSync(this.experimentPath);
+        for(let i in files){
+            let fileName = Path.join(this.experimentPath, files[i]);   
+            if (fs.statSync(fileName).isDirectory()){
+                priorExperimentsPaths = priorExperimentsPaths.concat(this.getExperimentsPaths(fileName));
+            }
+        }
+        this.priorExperimentsPaths = priorExperimentsPaths;
     }
 }

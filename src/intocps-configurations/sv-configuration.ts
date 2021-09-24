@@ -80,8 +80,6 @@ export class SvConfiguration implements ISerializable {
         objToReturn[SvConfiguration.REACTIVITY_TAG] = reactivity;
         return objToReturn;
     }
-
-
 }
 
 export class SimulationEnvironmentParameters implements ISerializable {
