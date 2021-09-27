@@ -380,12 +380,10 @@ export class BrowserController {
                     return null;
                 }
             }
-            else if (path.endsWith(".svConfiguration.json")) {
+            else if (path.endsWith(".sigverConfig.json")) {
                 parent.img = "glyphicon glyphicon-file";
                 parent.opensInMainWindow = true;
-                parent.dblClickHandler = function (item: ProjectBrowserItem) {
-                    self.menuHandler.openSvView(path);
-                };
+                parent.dblClickHandler = () => self.menuHandler.openSigverView(path);
                 parent.menuEntries = [menuEntryDelete, menuRename, menuReveal];
                 parent.refresh();
                 return null;
@@ -693,10 +691,10 @@ export class BrowserController {
                     });
                 result.menuEntries = [menuEntryCreate];
             } 
-            else if (Path.basename(path) == Project.PATH_SV){
-                let menuEntryCreate = menuEntry("Create new SV configuration", "glyphicon glyphicon-asterisk",
+            else if (Path.basename(path) == Project.PATH_SIGVER){
+                let menuEntryCreate = menuEntry("Create new configuration", "glyphicon glyphicon-asterisk",
                     function (item: ProjectBrowserItem) {
-                        self.menuHandler.createSvPlain(item.path);
+                        self.menuHandler.createSigverPlain(item.path);
                     });
                 result.menuEntries = [menuEntryCreate];
             }

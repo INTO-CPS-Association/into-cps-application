@@ -4,15 +4,15 @@ import * as Path from 'path';
 import * as fs from 'fs';
 import {Project} from "../../proj/Project";
 import {MultiModelConfig} from "../../intocps-configurations/MultiModelConfig";
-import { SimulationEnvironmentParameters, Reactivity, SvConfiguration} from "../../intocps-configurations/sv-configuration";
-import { SvConfigurationService } from "./sv-configuration.service";
+import { SimulationEnvironmentParameters, Reactivity, SigverConfiguration} from "../../intocps-configurations/sigver-configuration";
+import { SigverConfigurationService } from "./sigver-configuration.service";
 import { Subscription } from 'rxjs';
 
 @Component({
-    selector: "sv-configuration",
-    templateUrl: "./angular2-app/sv/sv-configuration.component.html"
+    selector: "sigver-configuration",
+    templateUrl: "./angular2-app/sigver/sigver-configuration.component.html"
 })
-export class SvConfigurationComponent implements OnDestroy{
+export class SigverConfigurationComponent implements OnDestroy{
     private readonly noPath = "";
     private mmPath: string = "";
     private coePath: string = "";
@@ -35,8 +35,8 @@ export class SvConfigurationComponent implements OnDestroy{
 
     simEnvParams: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
 
-    constructor(private svConfigurationService: SvConfigurationService){
-        this._configurationChangedSub = this.svConfigurationService.configurationChangedObservable.subscribe(() => {
+    constructor(private sigverConfigurationService: SigverConfigurationService){
+        this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.setViewModelItemsFromConfig();
             this.validateMultiModel();
         });
@@ -47,15 +47,15 @@ export class SvConfigurationComponent implements OnDestroy{
     }
 
     setViewModelItemsFromConfig() {
-        this.experimentPath = this.svConfigurationService.configuration.experimentPath;
+        this.experimentPath = this.sigverConfigurationService.configuration.experimentPath;
         let coeFolderPath = this.experimentPath;
         let mmFolderPath = Path.join(this.experimentPath, "..")
-        this.usePriorExperiment = this.svConfigurationService.configuration.priorExperimentPath != "";
+        this.usePriorExperiment = this.sigverConfigurationService.configuration.priorExperimentPath != "";
         if(this.experimentPath != ""){
             this.loadPriorExperimentsPaths();
         }
         if(this.usePriorExperiment){
-            this.priorExperimentPath = this.svConfigurationService.configuration.priorExperimentPath;
+            this.priorExperimentPath = this.sigverConfigurationService.configuration.priorExperimentPath;
             this.cantLocatePriorExperiment = this.priorExperimentsPaths.findIndex(p => p.includes(this.priorExperimentPath)) == -1;
             coeFolderPath = this.priorExperimentPath;
             mmFolderPath = this.priorExperimentPath;
@@ -73,8 +73,8 @@ export class SvConfigurationComponent implements OnDestroy{
             this.setMultimodelFromPath(this.mmPath);
         }
         
-        this.simEnvParams = Object.assign(new SimulationEnvironmentParameters() , this.svConfigurationService.configuration.simulationEnvironmentParameters);
-        this.portsToReactivity = new Map(this.svConfigurationService.configuration.reactivity);
+        this.simEnvParams = Object.assign(new SimulationEnvironmentParameters() , this.sigverConfigurationService.configuration.simulationEnvironmentParameters);
+        this.portsToReactivity = new Map(this.sigverConfigurationService.configuration.reactivity);
     }
 
     setMultimodelFromPath(mmPath : string): Promise<void> {
@@ -150,22 +150,22 @@ export class SvConfigurationComponent implements OnDestroy{
     onSubmit() {
         if (!this.editing) return;
 
-        const updatedSvConfiguration = new SvConfiguration;
+        const updatedSigverConfiguration = new SigverConfiguration;
 
         // Set changes from the view models in the configuration
-        updatedSvConfiguration.experimentPath = this.experimentPath;
-        updatedSvConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
-        updatedSvConfiguration.masterModel = this.svConfigurationService.configuration.masterModel;
-        updatedSvConfiguration.priorExperimentPath = !this.usePriorExperiment ? this.noPath : this.priorExperimentPath;
-        updatedSvConfiguration.simulationEnvironmentParameters = Object.assign(new SimulationEnvironmentParameters() , this.simEnvParams);
-        updatedSvConfiguration.multiModel.sourcePath = this.multiModelConfig.sourcePath;
-        updatedSvConfiguration.multiModel.fmusRootPath = this.multiModelConfig.fmusRootPath;
-        updatedSvConfiguration.multiModel.fmus = Object.assign([], this.multiModelConfig.fmus);
-        updatedSvConfiguration.multiModel.fmuInstances = Object.assign([], this.multiModelConfig.fmuInstances);
-        updatedSvConfiguration.multiModel.instanceScalarPairs = Object.assign([], this.multiModelConfig.instanceScalarPairs);
-        updatedSvConfiguration.reactivity = new Map(this.portsToReactivity);
+        updatedSigverConfiguration.experimentPath = this.experimentPath;
+        updatedSigverConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
+        updatedSigverConfiguration.masterModel = this.sigverConfigurationService.configuration.masterModel;
+        updatedSigverConfiguration.priorExperimentPath = !this.usePriorExperiment ? this.noPath : this.priorExperimentPath;
+        updatedSigverConfiguration.simulationEnvironmentParameters = Object.assign(new SimulationEnvironmentParameters() , this.simEnvParams);
+        updatedSigverConfiguration.multiModel.sourcePath = this.multiModelConfig.sourcePath;
+        updatedSigverConfiguration.multiModel.fmusRootPath = this.multiModelConfig.fmusRootPath;
+        updatedSigverConfiguration.multiModel.fmus = Object.assign([], this.multiModelConfig.fmus);
+        updatedSigverConfiguration.multiModel.fmuInstances = Object.assign([], this.multiModelConfig.fmuInstances);
+        updatedSigverConfiguration.multiModel.instanceScalarPairs = Object.assign([], this.multiModelConfig.instanceScalarPairs);
+        updatedSigverConfiguration.reactivity = new Map(this.portsToReactivity);
 
-        this.svConfigurationService.configuration = updatedSvConfiguration;
+        this.sigverConfigurationService.configuration = updatedSigverConfiguration;
         this.validateMultiModel();
 
         this.editing = false;
@@ -225,7 +225,7 @@ export class SvConfigurationComponent implements OnDestroy{
     }
 
     validateMultiModel(){
-        this.mMWarnings = this.svConfigurationService.configuration.multiModel.validate().map(w => w.message);
+        this.mMWarnings = this.sigverConfigurationService.configuration.multiModel.validate().map(w => w.message);
         this.isMMWarnings = this.mMWarnings.length > 0;
     }
 

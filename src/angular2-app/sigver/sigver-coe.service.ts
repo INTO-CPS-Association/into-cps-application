@@ -18,7 +18,7 @@ interface IVndError {
 }
 
 @Injectable()
-export class SvScenarioVerifierService implements OnDestroy {
+export class SigverCoeService implements OnDestroy {
     private _coe: CoeProcess;
     private _onlineInterval: number;
     private _coeIsOnline = new Subject<boolean>();

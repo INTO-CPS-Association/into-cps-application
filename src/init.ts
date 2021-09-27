@@ -66,7 +66,7 @@ declare var w2alert: any;
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { DseViewController } from "./angular2-app/dse/DseViewController";
-import { SvViewController } from "./angular2-app/sv/SvViewController";
+import { SigverViewController } from "./angular2-app/sigver/SigverViewController";
 import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
@@ -255,8 +255,8 @@ menuHandler.openMultiModel = (path: string) => {
     openView(null, view => new MmViewController(view, path));
 };
 
-menuHandler.openSvView = (path: string) => {
-    openView(null, view => new SvViewController(view, path));
+menuHandler.openSigverView = (path: string) => {
+    openView(null, view => new SigverViewController(view, path));
 }
 
 menuHandler.openDseView = (path: string) => {
@@ -371,7 +371,7 @@ menuHandler.createDsePlain = () => {
     }
 }
 
-menuHandler.createSvPlain = (msgTitle: string = 'Create New SV Configuration') => {
+menuHandler.createSigverPlain = (msgTitle: string = 'Create New Configuration') => {
     let project = IntoCpsApp.getInstance().getActiveProject();
     if (project) {
         let name = "";
@@ -387,9 +387,9 @@ menuHandler.createSvPlain = (msgTitle: string = 'Create New SV Configuration') =
             callBack: function (value: String) {
                 try {
                     if (!value) { return; }
-                    menuHandler.openSvView(<string>project.createSv(value));
+                    menuHandler.openSigverView(<string>project.createSigVer(value));
                 } catch (error) {
-                    menuHandler.createSvPlain('SV Configuration "' + value + '" already exists! Choose a different name.')
+                    menuHandler.createSigverPlain('Configuration "' + value + '" already exists! Choose a different name.')
                     return;
                 }
             }
@@ -471,7 +471,7 @@ menuHandler.deletePath = (path) => {
            //  IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
-    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith(".svConfiguration.json")) {
+    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith(".sigverConfig.json")) {
         let dir = Path.dirname(path);
         console.info("Deleting " + dir);
         CustomFs.getCustomFs().removeRecursive(dir, function (err: any, v: any) {

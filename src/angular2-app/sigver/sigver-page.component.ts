@@ -29,34 +29,29 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {ViewController} from "../../iViewController";
-import IntoCpsApp from "../../IntoCpsApp";
-import {AppComponent} from "../app.component";
-import * as Path from 'path';
+import {Component, Input} from "@angular/core";
+import { SigverConfigurationService } from "./sigver-configuration.service";
 
-interface MyWindow extends Window {
-    ng2app: AppComponent;
-}
+@Component({
+    selector: "sv-page",
+    templateUrl: "./angular2-app/sigver/sigver-page.component.html",
+    providers: [SigverConfigurationService]
+})
+export class SigverPageComponent{
 
-declare var window: MyWindow;
+    @Input()
+    private _path: string;
+    isNewConfiguration: boolean = true;
 
-export class SvViewController extends ViewController {
-    constructor(private view: HTMLDivElement, private path:string) {
-        super(view);
+    constructor(private sigverConfigurationService: SigverConfigurationService){}
+
+    @Input()
+    set path(path:string) {
+        this._path = path;
+        this.sigverConfigurationService.configurationPath = this._path;
+        this.sigverConfigurationService.setConfigurationFromPath().catch(err => console.error(err));
     }
-
-    initialize() {
-        $(this.view).css('height',0);
-        IntoCpsApp.setTopName(Path.basename(Path.join(this.path,"../")));
-        window.ng2app.openSV(this.path);
-    }
-    
-    deInitialize() {
-        if (window.ng2app.navigationService.canNavigate()) {
-            window.ng2app.closeAll();
-            $(this.view).css('height',"calc(100% - 80px)");
-            return true;
-        }
-        return false;
+    get path():string {
+        return this._path;
     }
 }

@@ -13,7 +13,7 @@
   <panel [title]="'Generation'">
     <div>
       <h4 style="margin-bottom: 5px;">Master model</h4>
-      <pre *ngIf="isMasterModelValid" style="max-width: fit-content;">{{svConfigurationService.configuration.masterModel}}</pre>
+      <pre *ngIf="isMasterModelValid" style="max-width: fit-content;">{{sigverConfigurationService.configuration.masterModel}}</pre>
       <pre *ngIf="!isMasterModelValid" style="width: 150px;"></pre>
     </div>
 
@@ -61,7 +61,7 @@
 
   </panel>
 
-  <panel [title]="'Execution'">
+  <panel [title]="'Execution'" [open]="!sigverConfigurationService.isDefaultConfiguration">
     <div>
       <button type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "!isCoeOnline || !isConfigValid || isExecuting || isVerificationFailed">
         <span *ngIf="!isExecuting">Execute</span>

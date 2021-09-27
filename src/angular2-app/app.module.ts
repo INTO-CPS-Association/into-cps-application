@@ -51,14 +51,14 @@ import {COEModule} from "./coe/coe.module"
 import { HttpClientModule } from '@angular/common/http';
 import { SharedModule } from './shared/shared.module';
 import { DseCoeLaunchComponent, SafePipe } from './dse/dse-coe-launch.component';
-import {SvPageComponent} from "./sv/sv-page.component";
-import {SvConfigurationComponent} from "./sv/sv-configuration.component";
-import {SvCoeInteractionComponent} from "./sv/sv-coe-interaction.component";
+import {SigverPageComponent} from "./sigver/sigver-page.component";
+import {SigverConfigurationComponent} from "./sigver/sigver-configuration.component";
+import {SigverCoeInteractionComponent} from "./sigver/sigver-coe-interaction.component";
 
 @NgModule({
   imports: [ BrowserModule, HttpClientModule, FormsModule,
      MmModule, COEModule, ReactiveFormsModule, SharedModule], // module dependencies
-  declarations: [AppComponent , SafePipe,  DsePageComponent, DseConfigurationComponent, DseCoeLaunchComponent,SvPageComponent, SvConfigurationComponent, SvCoeInteractionComponent], // components and directives
+  declarations: [AppComponent , SafePipe,  DsePageComponent, DseConfigurationComponent, DseCoeLaunchComponent, SigverPageComponent, SigverConfigurationComponent, SigverCoeInteractionComponent], // components and directives
   bootstrap: [AppComponent], // root component
   providers: [FileSystemService, SettingsService, NavigationService], // services
   exports: []

@@ -1,17 +1,17 @@
 import {Component, OnDestroy} from "@angular/core";
-import { SvScenarioVerifierService } from "./sv-scenarioverifier.service";
+import { SigverCoeService as SigverCoeService } from "./sigver-coe.service";
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import * as fs from 'fs';
 import * as path from 'path';
-import { SvConfigurationService } from "./sv-configuration.service";
+import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
 
 @Component({
-    selector: "sv-coe-interaction",
-    templateUrl: "./angular2-app/sv/sv-coe-interaction.component.html",
-    providers: [SvScenarioVerifierService]
+    selector: "sigver-coe-interaction",
+    templateUrl: "./angular2-app/sigver/sigver-coe-interaction.component.html",
+    providers: [SigverCoeService]
 })
-export class SvCoeInteractionComponent implements OnDestroy{
+export class SigverCoeInteractionComponent implements OnDestroy{
     private _configurationChangedSub: Subscription;
     private _coeIsOnlineSub: Subscription;
 
@@ -36,18 +36,18 @@ export class SvCoeInteractionComponent implements OnDestroy{
     isGeneratingMasterModel: boolean = false;
     isVerifying: boolean = false;
     
-    constructor(private svService: SvScenarioVerifierService, private sanitizer : DomSanitizer, private svConfigurationService: SvConfigurationService) {
-        this.coeUrl = svService.coeUrl;
-        this.coeVersion = svService.coeVersion;
-        this._coeIsOnlineSub = svService.coeIsOnlineObservable.subscribe(isOnline => {
+    constructor(private sigverCoeService: SigverCoeService, private sanitizer : DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
+        this.coeUrl = sigverCoeService.coeUrl;
+        this.coeVersion = sigverCoeService.coeVersion;
+        this._coeIsOnlineSub = sigverCoeService.coeIsOnlineObservable.subscribe(isOnline => {
             this.isCoeOnline = isOnline;
             if(isOnline){
-                this.coeUrl = svService.coeUrl;
-                this.coeVersion = svService.coeVersion;
+                this.coeUrl = sigverCoeService.coeUrl;
+                this.coeVersion = sigverCoeService.coeVersion;
             }
         });
 
-        this._configurationChangedSub = this.svConfigurationService.configurationChangedObservable.subscribe(() => {
+        this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.handleConfigurationChanges();
         });
     }
@@ -58,15 +58,15 @@ export class SvCoeInteractionComponent implements OnDestroy{
     }
 
     onCoeLaunchClick() {
-        this.svService.launchCOE();
+        this.sigverCoeService.launchCOE();
     }
 
     onGenerateMasterModelClick() {
         this.isGeneratingMasterModel = true;
-        this.svService.generateScenario(this.svConfigurationService.configurationToExtendedMultiModelDTO()).then(scenarioFile => {
+        this.sigverCoeService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(scenarioFile => {
             scenarioFile.text().then(txt => {
-                this.svConfigurationService.configuration.masterModel = txt;
-                this.svConfigurationService.saveConfiguration();
+                this.sigverConfigurationService.configuration.masterModel = txt;
+                this.sigverConfigurationService.saveConfiguration();
                 this.isMasterModelValid = true;
             });
             this.ensureResultPaths();
@@ -80,7 +80,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
 
     onVerifyClick() {
         this.isVerifying = true;
-        this.svService.verifyAlgorithm(this.svConfigurationService.configuration.masterModel).then(res => {
+        this.sigverCoeService.verifyAlgorithm(this.sigverConfigurationService.configuration.masterModel).then(res => {
             this.isVerified = true;
             this.isVerificationFailed = !res.verifiedSuccessfully;
             if(this.isVerificationFailed){
@@ -99,8 +99,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
 
     onVisualizeTracesClick() {
         this.isGeneratingTraces = true;
-        const masterModelAsString = fs.readFileSync('C:\\Users\\frdrk\\Desktop\\Repos\\maestroDev\\external_tester\\scenario_controller_resources\\visualize_traces\\masterModel.conf','utf8');
-        this.svService.visualizeTrace(masterModelAsString).then(videoFile => { //this.svConfigurationService.configuration.masterModel
+        this.sigverCoeService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
             this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(window.URL.createObjectURL(videoFile));
             this.ensureResultPaths();
             this.writeFileToDir(videoFile, this.verificationResultsPath);
@@ -114,7 +113,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
     onExecuteClick() {
         this.isExecuting = true;
         this.isExecutionSuccess = false;
-        this.svService.execute(this.svConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
+        this.sigverCoeService.execute(this.sigverConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
             this.isExecutionSuccess = true;
             this.ensureResultPaths();
             this.writeFileToDir(zipFile, this.executionResultsPath);
@@ -128,7 +127,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
 
     ensureResultPaths() {
         if(this.rootrResultsPath == ""){
-            this.rootrResultsPath = path.join(this.svConfigurationService.configurationPath, "..", "results", path.sep);
+            this.rootrResultsPath = path.join(this.sigverConfigurationService.configurationPath, "..", "results", path.sep);
 
             this.verificationResultsPath = path.join(this.rootrResultsPath, "verification");
             this.executionResultsPath = path.join(this.rootrResultsPath, "execution");
@@ -141,8 +140,8 @@ export class SvCoeInteractionComponent implements OnDestroy{
     }
 
     handleConfigurationChanges(){
-        this.isConfigValid = this.svConfigurationService.isConfigValid();
-        this.isMasterModelValid = this.svConfigurationService.configuration.masterModel != "";
+        this.isConfigValid = this.sigverConfigurationService.isConfigValid();
+        this.isMasterModelValid = this.sigverConfigurationService.configuration.masterModel != "";
         this.isVerified = this.isMasterModelValid && this.isVerified;
         this.isVerificationFailed = this.isVerified ? this.isVerificationFailed : false;
         if(!this.isVerificationFailed){

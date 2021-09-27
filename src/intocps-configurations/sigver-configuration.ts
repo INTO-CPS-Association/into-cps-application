@@ -2,7 +2,7 @@ import { Parser } from "./Parser";
 import { MultiModelConfig } from "./MultiModelConfig";
 import * as Path from 'path';
 
-export class SvConfiguration implements ISerializable {
+export class SigverConfiguration implements ISerializable {
     public multiModel: MultiModelConfig = new MultiModelConfig();
     public simulationEnvironmentParameters: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
     public masterModel: string = "";
@@ -20,43 +20,43 @@ export class SvConfiguration implements ISerializable {
     public static readonly SCENARIOVERIFIER_TAG: string = "scenarioVerifier";
     public static readonly REACTIVITY_TAG: string = "reactivity";
 
-    static async createFromJsonString(savedData: string): Promise<SvConfiguration> {
-        return new Promise<SvConfiguration>((resolve, reject) => {
-            const svConfiguration = new SvConfiguration();
+    static async createFromJsonString(savedData: string): Promise<SigverConfiguration> {
+        return new Promise<SigverConfiguration>((resolve, reject) => {
+            const sigverConfiguration = new SigverConfiguration();
             if(savedData == "{}"){
-                resolve(svConfiguration);
+                resolve(sigverConfiguration);
             }
             try{
                 const jsonObj = JSON.parse(savedData);
 
-                svConfiguration.fmuRootPath = jsonObj[this.FMUROOTPATH_TAG];
+                sigverConfiguration.fmuRootPath = jsonObj[this.FMUROOTPATH_TAG];
     
                 const multiModelObj = jsonObj[this.MULTIMODEL_TAG];
                 let parser = new Parser();
-                svConfiguration.reactivity = new Map(Object.entries(jsonObj[SvConfiguration.REACTIVITY_TAG]));
+                sigverConfiguration.reactivity = new Map(Object.entries(jsonObj[SigverConfiguration.REACTIVITY_TAG]));
     
-                svConfiguration.experimentPath = jsonObj[this.EXPERIMENTPATH_TAG];
-                svConfiguration.priorExperimentPath = jsonObj[this.PRIOREXPERIMENTPATH_TAG];
-                svConfiguration.masterModel = jsonObj[this.MASTERMODEL_TAG];
+                sigverConfiguration.experimentPath = jsonObj[this.EXPERIMENTPATH_TAG];
+                sigverConfiguration.priorExperimentPath = jsonObj[this.PRIOREXPERIMENTPATH_TAG];
+                sigverConfiguration.masterModel = jsonObj[this.MASTERMODEL_TAG];
     
                 const execParamObjs = jsonObj[this.EXECUTIONPARAMETERS_TAG];
-                svConfiguration.simulationEnvironmentParameters = new SimulationEnvironmentParameters();
-                svConfiguration.simulationEnvironmentParameters.convergenceAbsoluteTolerance = execParamObjs[SimulationEnvironmentParameters.ABSTOL_TAG];
-                svConfiguration.simulationEnvironmentParameters.convergenceRelativeTolerance = execParamObjs[SimulationEnvironmentParameters.RELTOL_TAG];
-                svConfiguration.simulationEnvironmentParameters.convergenceAttempts = execParamObjs[SimulationEnvironmentParameters.CONVATT_TAG];
-                svConfiguration.simulationEnvironmentParameters.endTime = execParamObjs[SimulationEnvironmentParameters.ENDTIME_TAG];
-                svConfiguration.simulationEnvironmentParameters.startTime = execParamObjs[SimulationEnvironmentParameters.STARTTIME_TAG];
-                svConfiguration.simulationEnvironmentParameters.stepSize = execParamObjs[SimulationEnvironmentParameters.STEPSIZE_TAG];
+                sigverConfiguration.simulationEnvironmentParameters = new SimulationEnvironmentParameters();
+                sigverConfiguration.simulationEnvironmentParameters.convergenceAbsoluteTolerance = execParamObjs[SimulationEnvironmentParameters.ABSTOL_TAG];
+                sigverConfiguration.simulationEnvironmentParameters.convergenceRelativeTolerance = execParamObjs[SimulationEnvironmentParameters.RELTOL_TAG];
+                sigverConfiguration.simulationEnvironmentParameters.convergenceAttempts = execParamObjs[SimulationEnvironmentParameters.CONVATT_TAG];
+                sigverConfiguration.simulationEnvironmentParameters.endTime = execParamObjs[SimulationEnvironmentParameters.ENDTIME_TAG];
+                sigverConfiguration.simulationEnvironmentParameters.startTime = execParamObjs[SimulationEnvironmentParameters.STARTTIME_TAG];
+                sigverConfiguration.simulationEnvironmentParameters.stepSize = execParamObjs[SimulationEnvironmentParameters.STEPSIZE_TAG];
     
-                parser.parseFmus(multiModelObj, Path.normalize(svConfiguration.fmuRootPath)).then(async fmus => {
-                    svConfiguration.multiModel.fmus = fmus;
-                    parser.parseConnections(multiModelObj, svConfiguration.multiModel);
-                    parser.parseParameters(multiModelObj, svConfiguration.multiModel);
-                    resolve(svConfiguration);
+                parser.parseFmus(multiModelObj, Path.normalize(sigverConfiguration.fmuRootPath)).then(async fmus => {
+                    sigverConfiguration.multiModel.fmus = fmus;
+                    parser.parseConnections(multiModelObj, sigverConfiguration.multiModel);
+                    parser.parseParameters(multiModelObj, sigverConfiguration.multiModel);
+                    resolve(sigverConfiguration);
                 }).catch(err => reject(err));
             }
             catch(ex){
-                reject(`Unable parse the SV configuration: ${ex}`);
+                reject(`Unable parse the configuration: ${ex}`);
             }
         })
     }
@@ -71,13 +71,13 @@ export class SvConfiguration implements ISerializable {
         const reactivity: { [key: string]: Reactivity } = {};
         this.reactivity.forEach((value: Reactivity, key: string) => (reactivity[key] = value));
         
-        objToReturn[SvConfiguration.MASTERMODEL_TAG] = this.masterModel;
-        objToReturn[SvConfiguration.EXECUTIONPARAMETERS_TAG] = this.simulationEnvironmentParameters.toObject();
-        objToReturn[SvConfiguration.MULTIMODEL_TAG] = mmObject;
-        objToReturn[SvConfiguration.FMUROOTPATH_TAG] = this.fmuRootPath;
-        objToReturn[SvConfiguration.EXPERIMENTPATH_TAG] = this.experimentPath;
-        objToReturn[SvConfiguration.PRIOREXPERIMENTPATH_TAG] = this.priorExperimentPath;
-        objToReturn[SvConfiguration.REACTIVITY_TAG] = reactivity;
+        objToReturn[SigverConfiguration.MASTERMODEL_TAG] = this.masterModel;
+        objToReturn[SigverConfiguration.EXECUTIONPARAMETERS_TAG] = this.simulationEnvironmentParameters.toObject();
+        objToReturn[SigverConfiguration.MULTIMODEL_TAG] = mmObject;
+        objToReturn[SigverConfiguration.FMUROOTPATH_TAG] = this.fmuRootPath;
+        objToReturn[SigverConfiguration.EXPERIMENTPATH_TAG] = this.experimentPath;
+        objToReturn[SigverConfiguration.PRIOREXPERIMENTPATH_TAG] = this.priorExperimentPath;
+        objToReturn[SigverConfiguration.REACTIVITY_TAG] = reactivity;
         return objToReturn;
     }
 }

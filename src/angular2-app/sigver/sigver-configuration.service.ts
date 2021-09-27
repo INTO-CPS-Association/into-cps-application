@@ -1,15 +1,14 @@
 import { Injectable } from "@angular/core";
 import { Subject } from 'rxjs';
-import { Reactivity, SimulationEnvironmentParameters, SvConfiguration } from "../../intocps-configurations/sv-configuration";
+import { Reactivity, SigverConfiguration } from "../../intocps-configurations/sigver-configuration";
 import * as fs from 'fs';
-import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
 
 @Injectable()
-export class SvConfigurationService{
+export class SigverConfigurationService{
     private readonly SCENARIOVERIFIER_TAG: string = "scenarioVerifier";
     private readonly VERIFICATION_TAG: string = "verification";
     private readonly TRACEVISUALIZATION_TAG: string = "traceVisualization";
-    private _configuration: SvConfiguration = new SvConfiguration;
+    private _configuration: SigverConfiguration = new SigverConfiguration;
     private _configurationChanged = new Subject<boolean>();
 
     configurationChangedObservable = this._configurationChanged.asObservable();
@@ -24,7 +23,7 @@ export class SvConfigurationService{
                 if(fileErr){
                     reject(`Unable to read configuration file from: ${filePath} due to: ${fileErr}`);
                 }
-                SvConfiguration.createFromJsonString(fileData.toString()).then(res => {
+                SigverConfiguration.createFromJsonString(fileData.toString()).then(res => {
                     this._configuration = res;
                     this.isDefaultConfiguration = this._configuration.experimentPath == "";
                     this.configurationChanged();
@@ -44,18 +43,18 @@ export class SvConfigurationService{
         return this._configuration.multiModel.fmus.length > 0;
     }
 
-    set configuration(svConfiguration: SvConfiguration){
+    set configuration(sigverConfiguration: SigverConfiguration){
         // Search for changes that invalidates the masterModel
         let resetMasterModel: boolean = false;
-        if(svConfiguration.masterModel != ""){
+        if(sigverConfiguration.masterModel != ""){
             for (const entry of Array.from(this._configuration.reactivity.entries())) {
-                if(!svConfiguration.reactivity.has(entry[0]) || svConfiguration.reactivity.get(entry[0]) != entry[1]){
+                if(!sigverConfiguration.reactivity.has(entry[0]) || sigverConfiguration.reactivity.get(entry[0]) != entry[1]){
                     resetMasterModel = true;
                     break;
                 }
             }
         }
-        this._configuration = svConfiguration;
+        this._configuration = sigverConfiguration;
         if(!this.isConfigValid() || resetMasterModel){
             this._configuration.masterModel = "";
         }
@@ -67,7 +66,7 @@ export class SvConfigurationService{
         this.configurationChanged();
     }
     
-    get configuration(): SvConfiguration{
+    get configuration(): SigverConfiguration{
         return this._configuration;
     }
 
@@ -101,7 +100,7 @@ export class SvConfigurationService{
         this._configuration.reactivity.forEach((value: Reactivity, key: string) => (reactivity[key] = value));
 
         const scenarioVerifierDTO: any = {}
-        scenarioVerifierDTO[SvConfiguration.REACTIVITY_TAG] = reactivity;
+        scenarioVerifierDTO[SigverConfiguration.REACTIVITY_TAG] = reactivity;
         scenarioVerifierDTO[this.VERIFICATION_TAG] = verify;
         scenarioVerifierDTO[this.TRACEVISUALIZATION_TAG] = false;
 
@@ -112,9 +111,9 @@ export class SvConfigurationService{
 
     configurationToExecutableMMDTO(verify: boolean = false): any {
         const executableMMDTO: any = {}
-        executableMMDTO[SvConfiguration.MASTERMODEL_TAG] = this._configuration.masterModel;
-        executableMMDTO[SvConfiguration.MULTIMODEL_TAG] = this.configurationToExtendedMultiModelDTO(verify);
-        executableMMDTO[SvConfiguration.EXECUTIONPARAMETERS_TAG] = this._configuration.simulationEnvironmentParameters;
+        executableMMDTO[SigverConfiguration.MASTERMODEL_TAG] = this._configuration.masterModel;
+        executableMMDTO[SigverConfiguration.MULTIMODEL_TAG] = this.configurationToExtendedMultiModelDTO(verify);
+        executableMMDTO[SigverConfiguration.EXECUTIONPARAMETERS_TAG] = this._configuration.simulationEnvironmentParameters;
         return executableMMDTO;
     }
 }

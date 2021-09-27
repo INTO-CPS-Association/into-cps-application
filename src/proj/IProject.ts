@@ -44,7 +44,7 @@ export interface IProject {
 
     createMultiModel(name: String, jsonContent: String): String;
     createDse(name: String, jsonContent: String): String;
-    createSv(name: String): String;
+    createSigVer(name: String): String;
     createSysMLDSEConfig(name: String, jsonContent: String): String;
     createCoSimConfig(multimodelConfigPath: string, name: String, jsonContent: String): string;
 
