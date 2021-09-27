@@ -18,7 +18,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
     coeUrl: string = "";
     coeVersion: string = "";
     videoUrl: any;
-    resultsPath: string = "";
+    rootrResultsPath: string = "";
     generationResultsPath: string = "";
     verificationResultsPath: string = "";
     executionResultsPath: string = "";
@@ -69,6 +69,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
                 this.svConfigurationService.saveConfiguration();
                 this.isMasterModelValid = true;
             });
+            this.ensureResultPaths();
             this.writeFileToDir(scenarioFile, this.generationResultsPath);
         }, errMsg => {
             console.error(`Error occurred when generating the master model: ${errMsg}`);
@@ -87,6 +88,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
             }
             const blob = new Blob([res.uppaalModel], { type: 'text/plain' });
             const uppaalFile = new File([blob], "uppaalModel.xml", {type: blob.type});
+            this.ensureResultPaths();
             this.writeFileToDir(uppaalFile, this.verificationResultsPath);
         }, errMsg => {
             console.error(`Error occurred when verifying the master model: ${errMsg}`);
@@ -100,6 +102,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
         const masterModelAsString = fs.readFileSync('C:\\Users\\frdrk\\Desktop\\Repos\\maestroDev\\external_tester\\scenario_controller_resources\\visualize_traces\\masterModel.conf','utf8');
         this.svService.visualizeTrace(masterModelAsString).then(videoFile => { //this.svConfigurationService.configuration.masterModel
             this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(window.URL.createObjectURL(videoFile));
+            this.ensureResultPaths();
             this.writeFileToDir(videoFile, this.verificationResultsPath);
         }, errMsg => {
             console.error(`Error occurred when visualizing traces: ${errMsg}`);
@@ -113,6 +116,7 @@ export class SvCoeInteractionComponent implements OnDestroy{
         this.isExecutionSuccess = false;
         this.svService.execute(this.svConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
             this.isExecutionSuccess = true;
+            this.ensureResultPaths();
             this.writeFileToDir(zipFile, this.executionResultsPath);
         }, errMsg => {
             this.isExecutionSuccess = false;
@@ -122,16 +126,21 @@ export class SvCoeInteractionComponent implements OnDestroy{
         });
     }
 
-    handleConfigurationChanges(){
-        if(this.resultsPath == ""){
-            this.resultsPath = path.join(this.svConfigurationService.configurationPath, "..", "results", path.sep);
-            this.generationResultsPath = path.join(this.resultsPath, "generation");
-            this.verificationResultsPath = path.join(this.resultsPath, "verification");
-            this.executionResultsPath = path.join(this.resultsPath, "execution");
-            this.ensureDirectoryExistence(this.generationResultsPath);
-            this.ensureDirectoryExistence(this.verificationResultsPath);
-            this.ensureDirectoryExistence(this.executionResultsPath);
+    ensureResultPaths() {
+        if(this.rootrResultsPath == ""){
+            this.rootrResultsPath = path.join(this.svConfigurationService.configurationPath, "..", "results", path.sep);
+
+            this.verificationResultsPath = path.join(this.rootrResultsPath, "verification");
+            this.executionResultsPath = path.join(this.rootrResultsPath, "execution");
+            this.generationResultsPath = path.join(this.rootrResultsPath, "generation");
+
+            this.ensureDirectoryExistence(this.verificationResultsPath).catch(err => console.log(err));
+            this.ensureDirectoryExistence(this.executionResultsPath).catch(err => console.log(err));
+            this.ensureDirectoryExistence(this.generationResultsPath).catch(err => console.log(err));
         }
+    }
+
+    handleConfigurationChanges(){
         this.isConfigValid = this.svConfigurationService.isConfigValid();
         this.isMasterModelValid = this.svConfigurationService.configuration.masterModel != "";
         this.isVerified = this.isMasterModelValid && this.isVerified;
@@ -141,11 +150,17 @@ export class SvCoeInteractionComponent implements OnDestroy{
         }
     }
 
-    ensureDirectoryExistence(filePath: string) {
-        if (!fs.existsSync(filePath)) {
-            this.ensureDirectoryExistence(path.dirname(filePath));
-            fs.mkdirSync(filePath);
-        }
+    ensureDirectoryExistence(filePath: string): Promise<void> {
+        return new Promise<void> ((resolve, reject) => {
+            if(fs.existsSync(filePath)){
+                resolve();
+            }
+            fs.promises.mkdir(filePath, { recursive: true }).then(() => {
+                resolve();
+            }, err => {
+                reject(err);
+            });
+        });
     }
 
     writeFileToDir(file: File, dirPath: string) {
