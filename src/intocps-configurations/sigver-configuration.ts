@@ -17,7 +17,7 @@ export class SigverConfiguration implements ISerializable {
     public static readonly MASTERMODEL_TAG: string = "masterModel";
     public static readonly EXPERIMENTPATH_TAG: string = "experimentPath";
     public static readonly PRIOREXPERIMENTPATH_TAG: string = "priorExperimentPath";
-    public static readonly SCENARIOVERIFIER_TAG: string = "scenarioVerifier";
+    public static readonly SIGVER_TAG: string = "sigver";
     public static readonly REACTIVITY_TAG: string = "reactivity";
 
     static async createFromJsonString(savedData: string): Promise<SigverConfiguration> {
