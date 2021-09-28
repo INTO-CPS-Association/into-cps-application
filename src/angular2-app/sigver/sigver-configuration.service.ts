@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 @Injectable()
 export class SigverConfigurationService{
-    private readonly SCENARIOVERIFIER_TAG: string = "scenarioVerifier";
+    private readonly SCENARIOVERIFIER_TAG: string = "sigver";
     private readonly VERIFICATION_TAG: string = "verification";
     private readonly TRACEVISUALIZATION_TAG: string = "traceVisualization";
     private _configuration: SigverConfiguration = new SigverConfiguration;
