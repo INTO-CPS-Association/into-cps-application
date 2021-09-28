@@ -381,7 +381,7 @@ export class BrowserController {
                 }
             }
             else if (path.endsWith(".sigverConfig.json")) {
-                parent.img = "glyphicon glyphicon-file";
+                parent.img = "into-cps-icon-projbrowser-config";
                 parent.opensInMainWindow = true;
                 parent.dblClickHandler = () => self.menuHandler.openSigverView(path);
                 parent.menuEntries = [menuEntryDelete, menuRename, menuReveal];
