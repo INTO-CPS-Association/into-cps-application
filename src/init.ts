@@ -44,7 +44,6 @@ import { BrowserController } from "./proj/projbrowserview";
 import { IntoCpsAppMenuHandler } from "./IntoCpsAppMenuHandler";
 import { ViewController, IViewController } from "./iViewController";
 import * as CustomFs from "./custom-fs";
-import { IProject } from "./proj/IProject";
 import * as SystemUtil from "./SystemUtil";
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppComponent } from './angular2-app/app.component';
@@ -67,6 +66,7 @@ declare var w2alert: any;
 import { CoeViewController } from "./angular2-app/coe/CoeViewController";
 import { MmViewController } from "./angular2-app/mm/MmViewController";
 import { DseViewController } from "./angular2-app/dse/DseViewController";
+import { SigverViewController } from "./angular2-app/sigver/SigverViewController";
 import { enableProdMode } from '@angular/core';
 
 import { CoeServerStatusUiController,CoeLogUiController } from "./CoeServerStatusUiController"
@@ -255,6 +255,9 @@ menuHandler.openMultiModel = (path: string) => {
     openView(null, view => new MmViewController(view, path));
 };
 
+menuHandler.openSigverView = (path: string) => {
+    openView(null, view => new SigverViewController(view, path));
+}
 
 menuHandler.openDseView = (path: string) => {
     openView(null, view => new DseViewController(view, path));
@@ -368,6 +371,32 @@ menuHandler.createDsePlain = () => {
     }
 }
 
+menuHandler.createSigverPlain = (msgTitle: string = 'Create New Configuration') => {
+    let project = IntoCpsApp.getInstance().getActiveProject();
+    if (project) {
+        let name = "";
+        w2prompt({
+            label: 'Name',
+            value: name,
+            attrs: 'style="width: 500px"',
+            title: msgTitle,
+            ok_text: 'Ok',
+            cancel_text: 'Cancel',
+            width: 500,
+            height: 200,
+            callBack: function (value: String) {
+                try {
+                    if (!value) { return; }
+                    menuHandler.openSigverView(<string>project.createSigVer(value));
+                } catch (error) {
+                    menuHandler.createSigverPlain('Configuration "' + value + '" already exists! Choose a different name.')
+                    return;
+                }
+            }
+        });
+    }
+}
+
 menuHandler.createMultiModelPlain = (titleMsg: string = 'New Multi-Model') => {
     let project = IntoCpsApp.getInstance().getActiveProject();
 
@@ -442,7 +471,7 @@ menuHandler.deletePath = (path) => {
            //  IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
-    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json")) {
+    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith(".sigverConfig.json")) {
         let dir = Path.dirname(path);
         console.info("Deleting " + dir);
         CustomFs.getCustomFs().removeRecursive(dir, function (err: any, v: any) {

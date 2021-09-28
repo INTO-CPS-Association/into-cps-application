@@ -1,0 +1,91 @@
+<style>
+  .glyphicon.spinning {
+    animation: spin 2s infinite linear;
+  }
+
+  @keyframes spin {
+    from { transform: scale(1) rotate(0deg); }
+    to { transform: scale(1.1) rotate(360deg); }
+  }
+</style>
+
+<form class="form-horizontal">
+  <panel [title]="'Generation'">
+    <div>
+      <h4 style="margin-bottom: 5px;">Master model</h4>
+      <pre *ngIf="isMasterModelValid" style="max-width: fit-content;">{{sigverConfigurationService.configuration.masterModel}}</pre>
+      <pre *ngIf="!isMasterModelValid" style="width: 150px;"></pre>
+    </div>
+
+    <div>
+      <button type="button" class="btn btn-sm btn-default" (click)="onGenerateMasterModelClick()" [disabled] = "!isCoeOnline || !isConfigValid || isGeneratingMasterModel">
+        <span>Generate master model</span>
+        <span *ngIf="isGeneratingMasterModel">Generating... </span>
+        <span *ngIf="isGeneratingMasterModel" class="glyphicon glyphicon-refresh spinning"></span>
+      </button>
+    </div>
+  </panel>
+
+  <panel [title]="'Verification'">
+
+    <div>
+      <label style="margin-right: 5px;">Successfully verified: </label>
+      <span *ngIf="isVerified && !isVerificationFailed" class="glyphicon glyphicon-ok" style="color: green;"></span>
+      <span *ngIf="isVerified && isVerificationFailed" class="glyphicon glyphicon-remove" style="color: red;"></span>
+      <span *ngIf="!isVerified" class="glyphicon glyphicon-question-sign" style="color: blue;"></span>
+    </div>
+
+    <div *ngIf="isVerificationFailed">
+      <p>{{verificationErrMsg}}</p>
+    </div>
+
+    <div>
+      <button type="button" class="btn btn-sm btn-default" (click)="onVerifyClick()" [disabled]="!isCoeOnline || !isMasterModelValid || isVerifying">
+        <span *ngIf="!isVerifying">Verify</span>
+        <span *ngIf="isVerifying">Verifying... </span>
+        <span *ngIf="isVerifying" class="glyphicon glyphicon-refresh spinning"></span>
+      </button>
+    </div>
+
+    <hr>
+
+    <video style="max-width: 100%;" *ngIf="videoUrl" [src]="videoUrl" controls></video>
+
+    <div style="margin-top: 10px;">
+      <button type="button" class="btn btn-sm btn-default" (click)="onVisualizeTracesClick()" [disabled]="!isCoeOnline|| !isMasterModelValid || isGeneratingTraces || !isVerificationFailed">
+        <span *ngIf="!isGeneratingTraces" >Generate trace visualization</span>
+        <span *ngIf="isGeneratingTraces">Generating... </span>
+        <span *ngIf="isGeneratingTraces" class="glyphicon glyphicon-refresh spinning"></span>
+      </button>
+    </div>
+
+  </panel>
+
+  <panel [title]="'Execution'" [open]="!sigverConfigurationService.isDefaultConfiguration">
+    <div>
+      <button type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "!isCoeOnline || !isConfigValid || isExecuting || isVerificationFailed">
+        <span *ngIf="!isExecuting">Execute</span>
+        <span *ngIf="isExecuting">Executing... </span>
+        <span *ngIf="isExecuting" class="glyphicon glyphicon-refresh spinning"></span>
+      </button>
+    </div>
+
+    <div>
+      <p *ngIf="isExecutionSuccess" style="color: green; margin-top: 10px;">Successfully executed</p>
+    </div>
+  </panel>
+
+  <div *ngIf="!isCoeOnline" class="alert alert-danger">
+    Co-Simulation Engine offline. No connection at {{ coeUrl }}.
+    <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()">
+      <span class="glyphicon glyphicon-link"></span> Launch
+    </button>
+  </div>
+
+  <div *ngIf="isCoeOnline" class="alert alert-success">
+    Co-Simulation Engine, version {{ coeVersion }}, online at {{ coeUrl }}.
+  </div>
+</form>
+
+
+
