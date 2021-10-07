@@ -1,4 +1,4 @@
-import {Component, OnDestroy} from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
 import { SigverCoeService as SigverCoeService } from "./sigver-coe.service";
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
@@ -11,7 +11,7 @@ import { SigverConfigurationService as SigverConfigurationService } from "./sigv
     templateUrl: "./angular2-app/sigver/sigver-coe-interaction.component.html",
     providers: [SigverCoeService]
 })
-export class SigverCoeInteractionComponent implements OnDestroy{
+export class SigverCoeInteractionComponent implements OnDestroy {
     private _configurationChangedSub: Subscription;
     private _coeIsOnlineSub: Subscription;
 
@@ -35,13 +35,13 @@ export class SigverCoeInteractionComponent implements OnDestroy{
     isExecuting: boolean = false;
     isGeneratingMasterModel: boolean = false;
     isVerifying: boolean = false;
-    
-    constructor(private sigverCoeService: SigverCoeService, private sanitizer : DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
+
+    constructor(private sigverCoeService: SigverCoeService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
         this.coeUrl = sigverCoeService.coeUrl;
         this.coeVersion = sigverCoeService.coeVersion;
         this._coeIsOnlineSub = sigverCoeService.coeIsOnlineObservable.subscribe(isOnline => {
             this.isCoeOnline = isOnline;
-            if(isOnline){
+            if (isOnline) {
                 this.coeUrl = sigverCoeService.coeUrl;
                 this.coeVersion = sigverCoeService.coeVersion;
             }
@@ -83,11 +83,11 @@ export class SigverCoeInteractionComponent implements OnDestroy{
         this.sigverCoeService.verifyAlgorithm(this.sigverConfigurationService.configuration.masterModel).then(res => {
             this.isVerified = true;
             this.isVerificationFailed = !res.verifiedSuccessfully;
-            if(this.isVerificationFailed){
+            if (this.isVerificationFailed) {
                 this.verificationErrMsg = res.errorMessage;
             }
             const blob = new Blob([res.uppaalModel], { type: 'text/plain' });
-            const uppaalFile = new File([blob], "uppaalModel.xml", {type: blob.type});
+            const uppaalFile = new File([blob], "uppaalModel.xml", { type: blob.type });
             this.ensureResultPaths();
             this.writeFileToDir(uppaalFile, this.verificationResultsPath);
         }, errMsg => {
@@ -126,7 +126,7 @@ export class SigverCoeInteractionComponent implements OnDestroy{
     }
 
     ensureResultPaths() {
-        if(this.rootrResultsPath == ""){
+        if (this.rootrResultsPath == "") {
             this.rootrResultsPath = path.join(this.sigverConfigurationService.configurationPath, "..", "results", path.sep);
 
             this.verificationResultsPath = path.join(this.rootrResultsPath, "verification");
@@ -139,19 +139,19 @@ export class SigverCoeInteractionComponent implements OnDestroy{
         }
     }
 
-    handleConfigurationChanges(){
+    handleConfigurationChanges() {
         this.isConfigValid = this.sigverConfigurationService.isConfigValid();
         this.isMasterModelValid = this.sigverConfigurationService.configuration.masterModel != "";
         this.isVerified = this.isMasterModelValid && this.isVerified;
         this.isVerificationFailed = this.isVerified ? this.isVerificationFailed : false;
-        if(!this.isVerificationFailed){
+        if (!this.isVerificationFailed) {
             this.videoUrl = null;
         }
     }
 
     ensureDirectoryExistence(filePath: string): Promise<void> {
-        return new Promise<void> ((resolve, reject) => {
-            if(fs.existsSync(filePath)){
+        return new Promise<void>((resolve, reject) => {
+            if (fs.existsSync(filePath)) {
                 resolve();
             }
             fs.promises.mkdir(filePath, { recursive: true }).then(() => {

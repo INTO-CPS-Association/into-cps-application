@@ -4,7 +4,7 @@ import { Reactivity, SigverConfiguration } from "../../intocps-configurations/si
 import * as fs from 'fs';
 
 @Injectable()
-export class SigverConfigurationService{
+export class SigverConfigurationService {
     private readonly SCENARIOVERIFIER_TAG: string = "sigver";
     private readonly VERIFICATION_TAG: string = "verification";
     private readonly TRACEVISUALIZATION_TAG: string = "traceVisualization";
@@ -16,11 +16,11 @@ export class SigverConfigurationService{
     automaticallySaveOnChanges: boolean = true;
     isDefaultConfiguration: boolean = true;
 
-    setConfigurationFromPath(path: string = ""): Promise<boolean>{
-        return new Promise<boolean> ((resolve, reject) =>{
+    setConfigurationFromPath(path: string = ""): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
             let filePath = path == "" ? this.configurationPath : path;
             fs.readFile(filePath, (fileErr, fileData) => {
-                if(fileErr){
+                if (fileErr) {
                     reject(`Unable to read configuration file from: ${filePath} due to: ${fileErr}`);
                 }
                 SigverConfiguration.createFromJsonString(fileData.toString()).then(res => {
@@ -28,14 +28,14 @@ export class SigverConfigurationService{
                     this.isDefaultConfiguration = this._configuration.experimentPath == "";
                     this.configurationChanged();
                     resolve(true);
-                }).catch(err =>{
+                }).catch(err => {
                     reject(`Unable to set configuration from file: ${filePath} due to: ${err}`);
-                }); 
+                });
             });
         });
     }
 
-    configurationChanged(){
+    configurationChanged() {
         this._configurationChanged.next(true);
     }
 
@@ -43,53 +43,53 @@ export class SigverConfigurationService{
         return this._configuration.multiModel.fmus.length > 0;
     }
 
-    set configuration(sigverConfiguration: SigverConfiguration){
+    set configuration(sigverConfiguration: SigverConfiguration) {
         // Search for changes that invalidates the masterModel
         let resetMasterModel: boolean = false;
-        if(sigverConfiguration.masterModel != ""){
+        if (sigverConfiguration.masterModel != "") {
             for (const entry of Array.from(this._configuration.reactivity.entries())) {
-                if(!sigverConfiguration.reactivity.has(entry[0]) || sigverConfiguration.reactivity.get(entry[0]) != entry[1]){
+                if (!sigverConfiguration.reactivity.has(entry[0]) || sigverConfiguration.reactivity.get(entry[0]) != entry[1]) {
                     resetMasterModel = true;
                     break;
                 }
             }
         }
         this._configuration = sigverConfiguration;
-        if(!this.isConfigValid() || resetMasterModel){
+        if (!this.isConfigValid() || resetMasterModel) {
             this._configuration.masterModel = "";
         }
 
-        if(this.automaticallySaveOnChanges){
+        if (this.automaticallySaveOnChanges) {
             this.saveConfiguration();
         }
 
         this.configurationChanged();
     }
-    
-    get configuration(): SigverConfiguration{
+
+    get configuration(): SigverConfiguration {
         return this._configuration;
     }
 
-    saveConfiguration(path: string = ""): boolean{
-        try{
+    saveConfiguration(path: string = ""): boolean {
+        try {
             fs.writeFileSync(path == "" ? this.configurationPath : path, this._configuration.toJsonString());
         }
-        catch(err){
+        catch (err) {
             console.error(`Unable to write configuration to file: ${err}`)
             return false;
         }
         return true;
     }
 
-    configurationToExtendedMultiModelDTO(verify: boolean = false): any{
+    configurationToExtendedMultiModelDTO(verify: boolean = false): any {
         const extendedMultiModelDTO = this._configuration.multiModel.toObject();
         let fmus: any = {};
         this._configuration.multiModel.fmus.forEach(fmu => {
             let fmuPath;
-            if (fmu.isNested()){
+            if (fmu.isNested()) {
                 fmuPath = "coe:/" + fmu.path;
             }
-            else{
+            else {
                 fmuPath = "file:///" + fmu.path
             }
             fmus[fmu.name] = fmuPath.replace(/\\/g, "/").replace(/ /g, "%20");

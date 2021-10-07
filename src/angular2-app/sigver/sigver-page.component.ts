@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {Component, Input} from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { SigverConfigurationService } from "./sigver-configuration.service";
 
 @Component({
@@ -37,21 +37,21 @@ import { SigverConfigurationService } from "./sigver-configuration.service";
     templateUrl: "./angular2-app/sigver/sigver-page.component.html",
     providers: [SigverConfigurationService]
 })
-export class SigverPageComponent{
+export class SigverPageComponent {
 
     @Input()
     private _path: string;
     isNewConfiguration: boolean = true;
 
-    constructor(private sigverConfigurationService: SigverConfigurationService){}
+    constructor(private sigverConfigurationService: SigverConfigurationService) { }
 
     @Input()
-    set path(path:string) {
+    set path(path: string) {
         this._path = path;
         this.sigverConfigurationService.configurationPath = this._path;
         this.sigverConfigurationService.setConfigurationFromPath().catch(err => console.error(err));
     }
-    get path():string {
+    get path(): string {
         return this._path;
     }
 }
