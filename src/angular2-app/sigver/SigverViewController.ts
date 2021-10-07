@@ -29,9 +29,9 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import {ViewController} from "../../iViewController";
+import { ViewController } from "../../iViewController";
 import IntoCpsApp from "../../IntoCpsApp";
-import {AppComponent} from "../app.component";
+import { AppComponent } from "../app.component";
 import * as Path from 'path';
 
 interface MyWindow extends Window {
@@ -41,20 +41,20 @@ interface MyWindow extends Window {
 declare var window: MyWindow;
 
 export class SigverViewController extends ViewController {
-    constructor(private view: HTMLDivElement, private path:string) {
+    constructor(private view: HTMLDivElement, private path: string) {
         super(view);
     }
 
     initialize() {
-        $(this.view).css('height',0);
-        IntoCpsApp.setTopName(Path.basename(Path.join(this.path,"../")));
+        $(this.view).css('height', 0);
+        IntoCpsApp.setTopName(Path.basename(Path.join(this.path, "../")));
         window.ng2app.openSV(this.path);
     }
-    
+
     deInitialize() {
         if (window.ng2app.navigationService.canNavigate()) {
             window.ng2app.closeAll();
-            $(this.view).css('height',"calc(100% - 80px)");
+            $(this.view).css('height', "calc(100% - 80px)");
             return true;
         }
         return false;
