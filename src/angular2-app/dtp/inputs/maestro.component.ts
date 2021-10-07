@@ -52,7 +52,6 @@ export class DtpMaestroComponent {
     editing: boolean = false;
 
     experimentsPaths: string [] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
-    experimentPath: string;
 
     constructor() {
         console.log("Maestro component constructor");

@@ -32,7 +32,7 @@
 import { Component, Input, EventEmitter, Output, NgZone } from "@angular/core";
 import { Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
-import { AMQPRepeaterDtpType, MaestroDtpType, DTPConfig } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType } from "../../intocps-configurations/dtp-configuration";
 import { VariableStepConstraint } from "../../intocps-configurations/CoSimulationConfig";
 import { NavigationService } from "../shared/navigation.service";
 import {
@@ -73,7 +73,7 @@ export class DtpConfigurationComponent {
     parseError: string = null;
 
     private config: DTPConfig;
-    private dtpTypeConstructors = [MaestroDtpType, AMQPRepeaterDtpType]
+    private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType]
 
     constructor(private zone: NgZone, private navigationService: NavigationService) {
         console.log("HURRAY");
@@ -108,8 +108,14 @@ export class DtpConfigurationComponent {
         if (dtpType === MaestroDtpType || dtpType instanceof MaestroDtpType) {
             return "Maestro"
         }
-        else if (dtpType === AMQPRepeaterDtpType || dtpType instanceof AMQPRepeaterDtpType) {
-            return "AMQPRepeater"
+        else if (dtpType === ServerDtpType || dtpType instanceof ServerDtpType) {
+            return "Server"
+        }
+        else if (dtpType === SignalDtpType || dtpType instanceof SignalDtpType){
+            return "Signal"
+        }
+        else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType){
+            return "Data-Repeater"
         }
         else {
             console.log("Unknown DTPType");
@@ -134,13 +140,16 @@ export class DtpConfigurationComponent {
         formArray.removeAt(index);
     }
 
+    export(){
+        let tools: any;
+        if(this.dtpTypes.includes)
+        let obj: any = {tools: }}
+    }
+
     onSubmit() {
         if (!this.editing) return;
             this.config.save()
                 /*.then(() => this.change.emit(this.path))*/.catch(error => console.error("error when saving: " + error));
-
-
-
         this.editing = false;
     }
 }

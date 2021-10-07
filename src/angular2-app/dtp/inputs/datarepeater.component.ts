@@ -28,24 +28,44 @@
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
-import {NgModule} from "@angular/core";
-import { DtpPageComponent } from "./dtp-page.component";
-import { DtpConfigurationComponent } from "./dtp-configuration.component";
-import { DtpMaestroComponent } from "./inputs/maestro.component";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { SharedModule } from "../shared/shared.module";
-import { CommonModule } from "@angular/common";
-import { DtpServerComponent } from "./inputs/server.component";
-import {DtpSignalComponent} from "./inputs/signal.component";
-import { DtpDataRepeaterComponent } from "./inputs/datarepeater.component";
-@NgModule({
-    imports: [ FormsModule, ReactiveFormsModule, SharedModule, CommonModule], // module dependencies
-    declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent, DtpServerComponent, DtpSignalComponent, DtpDataRepeaterComponent], // components and directives
-    exports: [DtpPageComponent]
-  })
-  export class DtpModule {
 
-    constructor(){
-      console.log("DTP-MODULE")
+import { Component, Input } from "@angular/core";
+import { FormArray, FormControl, FormGroup } from "@angular/forms";
+import { DataRepeaterDtpType, SignalDtpType} from "../../../intocps-configurations/dtp-configuration";
+import IntoCpsApp from "../../../IntoCpsApp";
+import * as Path from 'path';
+import * as fs from 'fs';
+import {Project} from "../../../proj/Project";
+
+@Component({
+    selector: 'data-repeater',
+    templateUrl: "./angular2-app/dtp/inputs/datarepeater.component.html"
+})
+export class DtpDataRepeaterComponent {
+    @Input()
+    dtpType: DataRepeaterDtpType
+
+    @Input()
+    formGroup:FormGroup;
+
+    @Input()
+    editing: boolean = false;
+
+
+    constructor() {
+        console.log("DataRepeater component constructor");
     }
-  }
+
+    customTrackBy(index: number, obj: any): any {
+        return index;
+    }
+
+    addSignal(){
+        this.dtpType.signals.push("");
+    }
+
+    removeSignal(index: number){
+        this.dtpType.signals.splice(index,1);
+    }
+}
+

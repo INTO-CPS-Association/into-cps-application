@@ -57,6 +57,17 @@
 							<div class="panel-body">
 								<maestro [editing]="editing" [dtpType]="dtpType"
 									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'MaestroDtpType'"></maestro>
+
+								<server [editing]="editing" [dtpType]="dtpType"
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'ServerDtpType'"></server>
+
+								<signal [editing]="editing" [dtpType]="dtpType"
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'SignalDtpType'"></signal>
+								<data-repeater 
+									[editing]="editing" 
+									[dtpType]="dtpType"
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type == 'DataRepeaterDtpType'">
+								</data-repeater>
 							</div>
 						</div>
 					</div>
@@ -70,6 +81,9 @@
 
 	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
 		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+	</button>
+	<button *ngIf="!editing" class="btn btn-default" (click)="export()">
+		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Export
 	</button>
 	<button *ngIf="editing" class="btn btn-default" [disabled]="!form.valid" >
 		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>

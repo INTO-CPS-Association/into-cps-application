@@ -1,0 +1,84 @@
+<div class="form-horizontal" [formGroup]="formGroup">
+    <div class="form-group">
+        <label class="col-sm-3 control-label">ID</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.id}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.id"  formControlName="id" class="form-control">
+            <div *ngIf="formGroup.hasError('required', 'id')" class="alert alert-danger">This field is required.</div>
+            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtpType.id" class="alert alert-danger">ID is not unique.</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Name</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.name"  formControlName="name" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Source Exchange</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.source.exchange}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.source.exchange"  formControlName="source_exchange" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Source Data Type</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.source.datatype}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.source.datatype"  formControlName="source_datatype" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Source Routing Key</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.source.routing_key}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.source.routing_key"  formControlName="source_routing_key" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Target Exchange</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.target.exchange}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.target.exchange"  formControlName="target_exchange" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal target Data Type</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.target.datatype}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.target.datatype"  formControlName="target_datatype" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Target Routing Key</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.target.routing_key}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.target.routing_key"  formControlName="target_routing_key" class="form-control">
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal target Pack</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.target.pack}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.target.pack"  formControlName="target_pack" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Signal Target Path</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.target.path}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.target.path"  formControlName="target_path" class="form-control">
+        </div>
+    </div>
+</div>
