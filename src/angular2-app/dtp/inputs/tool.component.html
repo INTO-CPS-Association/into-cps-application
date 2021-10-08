@@ -1,0 +1,30 @@
+<div class="form-horizontal" [formGroup]="formGroup">
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtpType.name"  formControlName="name" class="form-control">
+            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Path</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.path}}</p>
+            <file-browser *ngIf="editing" [basePath]="dtpType.path" [path]="dtpType.path" (pathChange)="setPath($event)"></file-browser>
+            <div *ngIf="formGroup.hasError('required', 'path')" class="alert alert-danger">This field is required.</div> <!-- This doesn't work when using the file-browser -->
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Type</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtpType.toolType}}</p>
+            <select *ngIf="editing" [(ngModel)]="dtpType.toolType"  formControlName="toolType" class="form-control">
+                <option *ngFor="let key of keys" [value]="key">{{toolTypes[key]}}</option>
+            </select>
+            <div *ngIf="formGroup.hasError('required', 'toolType')" class="alert alert-danger">This field is required.</div>
+        </div>
+    </div>
+</div>
