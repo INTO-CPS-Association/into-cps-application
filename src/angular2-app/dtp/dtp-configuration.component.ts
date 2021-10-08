@@ -29,16 +29,13 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input, EventEmitter, Output, NgZone } from "@angular/core";
-import { Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
+import { Component, Input, NgZone } from "@angular/core";
+import { FormArray, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
-import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType } from "../../intocps-configurations/dtp-configuration";
-import { VariableStepConstraint } from "../../intocps-configurations/CoSimulationConfig";
+import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpType, DtpTypes, ToolDtpType, TaskConfigurationDtpType } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import {
-    numberValidator, integerValidator, lengthValidator,
-    uniqueGroupPropertyValidator, uniqueValidator
-} from "../../angular2-app/shared/validators";
+    uniqueGroupPropertyValidator} from "../../angular2-app/shared/validators";
 
 const dialog = require("electron").remote.dialog;
 
@@ -49,7 +46,7 @@ const dialog = require("electron").remote.dialog;
 export class DtpConfigurationComponent {
     private _path: string;
 
-    newConfig: new (...args: any[]) => VariableStepConstraint;
+    newConfig: new (...args: any[]) => IDtpType;
 
     @Input()
     set path(path: string) {
@@ -67,13 +64,14 @@ export class DtpConfigurationComponent {
         return this._path;
     }
     form: FormGroup;
-    dtpTypes: VariableStepConstraint[] = [];
+    dtpTypes: IDtpType[] = [];
     editing: boolean = false;
     isLoaded: boolean = false;
     parseError: string = null;
+    dtpTypesEnum = DtpTypes;
 
     private config: DTPConfig;
-    private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType]
+    private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType, ToolDtpType, TaskConfigurationDtpType]
 
     constructor(private zone: NgZone, private navigationService: NavigationService) {
         console.log("HURRAY");
@@ -87,7 +85,7 @@ export class DtpConfigurationComponent {
             this.config = config;
             this.isLoaded = true;
             // Create a form group for each DTPType
-            this.form = new FormGroup({dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id"))});
+            this.form = new FormGroup({dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()))}); //, uniqueGroupPropertyValidator("name")
             console.log("Parsing finished!");
 
         },error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
@@ -97,9 +95,9 @@ export class DtpConfigurationComponent {
         if (!this.editing)
             return true;
         else {
-            if (confirm("Save your work before leaving?"))
-                this.onSubmit();
-
+            if (confirm("Save your work before leaving?")){
+                //this.onSubmit();
+            }
             return true;
         }
     }
@@ -117,6 +115,12 @@ export class DtpConfigurationComponent {
         else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType){
             return "Data-Repeater"
         }
+        else if (dtpType === ToolDtpType || dtpType instanceof ToolDtpType){
+            return "Tool"
+        }
+        else if (dtpType === TaskConfigurationDtpType || dtpType instanceof TaskConfigurationDtpType){
+            return "Configuration"
+        }
         else {
             console.log("Unknown DTPType");
             if(this.newConfig){
@@ -133,7 +137,7 @@ export class DtpConfigurationComponent {
         formArray.push(dtpType.toFormGroup());
     }
 
-    removeDtpType(dtpType: VariableStepConstraint){
+    removeDtpType(dtpType: IDtpType){
         let formArray = <FormArray>this.form.get('dtpTypes');
         let index = this.config.dtpTypes.indexOf(dtpType);
         this.config.dtpTypes.splice(index, 1);
@@ -142,8 +146,10 @@ export class DtpConfigurationComponent {
 
     export(){
         let tools: any;
-        if(this.dtpTypes.includes)
-        let obj: any = {tools: }}
+        if(this.dtpTypes.includes){
+            //let obj: any = {tools: }}
+        }
+
     }
 
     onSubmit() {

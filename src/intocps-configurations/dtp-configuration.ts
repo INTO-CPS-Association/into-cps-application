@@ -2,7 +2,6 @@ import * as fs from "fs"
 import {
     integerValidator
 } from "../angular2-app/shared/validators";
-import { VariableStepConstraint} from "./CoSimulationConfig"
 import { FormArray, FormGroup, FormControl, Validators } from "@angular/forms";
 
 export class DTPConfig implements ISerializable {
@@ -24,18 +23,18 @@ export class DTPConfig implements ISerializable {
     protected static TAG_DTP_TYPES = "dtp_types";
 
     constructor(
-        public dtpTypes: Array<VariableStepConstraint> = []
+        public dtpTypes: Array<IDtpType> = []
     ) {
 
     }
 
     toObject() {
         let dtpTypes: any = {};
-        this.dtpTypes.forEach(x => dtpTypes[x.id] = x.toObject());
+        this.dtpTypes.forEach(dtpItem => dtpTypes[dtpItem.type + "_" + dtpItem.name] = dtpItem.toObject());
 
-        var objectToSerialize:any= {};
-        objectToSerialize[DTPConfig.TAG_DTP_TYPES]=dtpTypes;
-        return  objectToSerialize;
+        var objectToSerialize: any = {};
+        objectToSerialize[DTPConfig.TAG_DTP_TYPES] = dtpTypes;
+        return objectToSerialize;
     }
 
     static create(path: string, projectRoot: string, data: any): Promise<DTPConfig> {
@@ -47,29 +46,32 @@ export class DTPConfig implements ISerializable {
         });
     }
 
-    private static parseDtpTypes(dtpTypes: any): Array<VariableStepConstraint> {
+    private static parseDtpTypes(dtpTypes: any): Array<IDtpType> {
         if (dtpTypes) {
             return Object.keys(dtpTypes).map(id => {
                 let c = dtpTypes[id];
-                if (c.type === "MaestroDtpType") {
+                if (c.type == DtpTypes.MaestroDtpType) {
                     return MaestroDtpType.parse(c);
                 }
-                else if (c.type == "ServerDtpType"){
+                else if (c.type == DtpTypes.ServerDtpType) {
                     return ServerDtpType.parse(c);
                 }
-                else if (c.type == "SignalDtpType"){
+                else if (c.type == DtpTypes.SignalDtpType) {
                     return SignalDtpType.parse(c);
                 }
-                else if (c.type = "DataRepeaterDtpType"){
+                else if (c.type == DtpTypes.DataRepeaterDtpType) {
                     return DataRepeaterDtpType.parse(c);
+                }
+                else if (c.type == DtpTypes.ToolDtpType) {
+                    return ToolDtpType.parse(c);
+                }
+                else if (c.type == DtpTypes.ConfigurationDtpType) {
+                    return TaskConfigurationDtpType.parse(c);
                 }
             });
         }
-        else return Array<VariableStepConstraint>();
-
+        else return Array<IDtpType>();
     }
-
-
 
     static parse(path: string, projectRoot: string): Promise<DTPConfig> {
         return new Promise<DTPConfig>((resolve, reject) => {
@@ -87,12 +89,73 @@ export class DTPConfig implements ISerializable {
         });
     }
 }
-export class ServerDtpType implements VariableStepConstraint {
-    type = "ServerDtpType";
-    constructor(public id: string = "server", public name: string = "name", public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: string = "AMQP"){}
-    toFormGroup(){
+
+export interface IDtpType {
+    name: string;
+    type: DtpTypes;
+    toFormGroup(): FormGroup;
+    toObject(): { [key: string]: any };
+}
+
+export enum DtpTypes {
+    ServerDtpType = "ServerDtpType",
+    MaestroDtpType = "MaestroDtpType",
+    SignalDtpType = "SignalDtpType",
+    DataRepeaterDtpType = "DataRepeaterDtpType",
+    ToolDtpType = "ToolDtpType",
+    ConfigurationDtpType = "ConfigurationDtpType"
+}
+
+export enum ToolTypes {
+    Maestro = "Maestro",
+    RabbitMq = "RabbitMq"
+}
+
+export class TaskConfigurationDtpType implements IDtpType {
+    type = DtpTypes.ConfigurationDtpType;
+    constructor(public name: string = "", public tasks: IDtpType[]) {}
+    toFormGroup() {
         return new FormGroup({
-            id: new FormControl(this.id,[Validators.required]),
+            name: new FormControl(this.name, Validators.required),
+            tasks: new FormControl(this.tasks)
+        })
+    }
+
+    toObject() {
+        return { name: this.name, type: this.type, tasks: this.tasks};
+    }
+
+    static parse(json: any): TaskConfigurationDtpType {
+        return new TaskConfigurationDtpType(json["name"], json["tasks"]);
+    }
+}
+
+export class ToolDtpType implements IDtpType {
+    type = DtpTypes.ToolDtpType;
+    constructor(public name: string = "", public path: string = "", public toolType: ToolTypes) {}
+    toFormGroup() {
+        return new FormGroup({
+            name: new FormControl(this.name, Validators.required),
+            path: new FormControl(this.path, Validators.required),
+            toolType: new FormControl(this.toolType, Validators.required)
+        })
+    }
+
+    toObject() {
+        return { name: this.name, type: this.type, path: this.path, toolType: this.toolType };
+    }
+
+    static parse(json: any): ToolDtpType {
+        return new ToolDtpType(json["name"], json["path"], json["toolType"]);
+    }
+}
+
+export class ServerDtpType implements IDtpType {
+    type = DtpTypes.ServerDtpType;
+    constructor(public id: string, public name: string = "Server", public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: string = "AMQP") { }
+    toFormGroup() {
+        return new FormGroup({
+            id: new FormControl(this.id, [Validators.required]),
             name: new FormControl(this.name),
             servertype: new FormControl(this.servertype),
             username: new FormControl(this.username),
@@ -103,22 +166,20 @@ export class ServerDtpType implements VariableStepConstraint {
 
         })
     }
-    toObject(){
-        let obj: any = {id: this.id, name: this.name, type: this.type, username:this.username, password: this.password, host:this.host, port:this.port, embedded:this.embedded, servertype: this.servertype};
-        return obj;
+    toObject() {
+        return { id: this.id, name: this.name, type: this.type, username: this.username, password: this.password, host: this.host, port: this.port, embedded: this.embedded, servertype: this.servertype };
     }
-    static parse(json: any): ServerDtpType
-    {
+    static parse(json: any): ServerDtpType {
         return new ServerDtpType(json["id"], json["name"], json["username"], json["password"], json["host"], json["port"], json["embedded"], json["servertype"]);
-
     }
 }
-export class MaestroDtpType implements VariableStepConstraint {
-    type = "MaestroDtpType";
+
+export class MaestroDtpType implements IDtpType {
+    type = DtpTypes.MaestroDtpType;
     version: number = 2;
     implementation: string = "maestro";
     constructor(
-        public id: string = "Maestro",
+        public name: string = "Maestro",
         public experimentPath: string = "",
         public capture_output: boolean = false
     ) {
@@ -126,65 +187,65 @@ export class MaestroDtpType implements VariableStepConstraint {
 
     toFormGroup() {
         return new FormGroup({
-            id: new FormControl(this.id,[Validators.required]),
+            name: new FormControl(this.name, [Validators.required]),
             capture_output: new FormControl(this.capture_output)
         });
     }
 
     toObject() {
-        let obj: any = {
-            id: this.id,
+        return {
+            name: this.name,
             type: this.type,
             experimentpath: this.experimentPath,
             capture_output: this.capture_output
         };
-
-        return obj;
     }
 
-    static parse(json: any): MaestroDtpType{
-        return new MaestroDtpType(json["id"], json["experimentpath"], json["capture_output"])
+    static parse(json: any): MaestroDtpType {
+        return new MaestroDtpType(json["name"], json["experimentpath"], json["capture_output"])
     }
 }
 
-export class SignalSource{
-    constructor(public exchange: string = "exchange", public datatype: string = "double", public routing_key: string = "routing_key"){}
-    toObject(){let obj: any = {
-        exchange: this.exchange,
-        datatype: this.datatype,
-        routing_key: this.routing_key
-    }}
+export class SignalSource {
+    constructor(public exchange: string = "exchange", public datatype: string = "double", public routing_key: string = "routing_key") { }
+    toObject() {
+        return {
+            exchange: this.exchange,
+            datatype: this.datatype,
+            routing_key: this.routing_key
+        }
+    }
 }
 
-export class SignalTarget{
-    constructor(public exchange: string = "exchange", public pack: string = "JSON", public path="path", public datatype="double", public routing_key="routing_key"){}
+export class SignalTarget {
+    constructor(public exchange: string = "exchange", public pack: string = "JSON", public path = "path", public datatype = "double", public routing_key = "routing_key") { }
 
-    toObject(){let obj: any = {
-        exchange: this.exchange,
-        pack: this.pack,
-        path: this.path,
-        datatype: this.datatype,
-        routing_key: this.routing_key
-    }}
+    toObject() {
+        return {
+            exchange: this.exchange,
+            pack: this.pack,
+            path: this.path,
+            datatype: this.datatype,
+            routing_key: this.routing_key
+        }
+    }
 }
 
-export class SignalDtpType{
-    type="SignalDtpType"
-    constructor(public id: string = "Signal", public name: string = "name", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget){}
-    toObject(){
+export class SignalDtpType implements IDtpType {
+    type = DtpTypes.SignalDtpType;
+    constructor(public name: string = "Signal", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget) { }
+    toObject() {
         let obj: any = {
             type: this.type,
-            id: this.id,
             name: this.name,
             source: this.source.toObject(),
             target: this.target.toObject()
         }
         return obj;
     }
-    toFormGroup(){
+    toFormGroup() {
         return new FormGroup({
-            id: new FormControl(this.id),
-            name: new FormControl(this.name),
+            name: new FormControl(this.name, [Validators.required]),
             source_exchange: new FormControl(this.source.exchange),
             source_datatype: new FormControl(this.source.datatype),
             source_routing_key: new FormControl(this.source.routing_key),
@@ -196,34 +257,34 @@ export class SignalDtpType{
         })
     }
 
-    static parse(json: any): SignalDtpType{
-        return new SignalDtpType(json["id"], json["name"], 
-        new SignalSource(json["source_exchange"], json["source_datatype"], json["source_routing_key"]), 
-        new SignalTarget(json["target_exchange"], json["target_pack"], json["target_path"], json["target_datatype"], json["target_routing_key"]));
+    static parse(json: any): SignalDtpType {
+        return new SignalDtpType(json["name"],
+            new SignalSource(json["source_exchange"], json["source_datatype"], json["source_routing_key"]),
+            new SignalTarget(json["target_exchange"], json["target_pack"], json["target_path"], json["target_datatype"], json["target_routing_key"]));
     }
 }
 
-export class DataRepeaterDtpType implements VariableStepConstraint{
-    type = "DataRepeaterDtpType";
-    dtexport_implementation="AMQP-AMQP"
-    dtexport_type="data-repeater"
-    constructor(public id: string = "Data Repeater", public server_source:string="", public server_target:string="", public signals: Array<String>=[]){}
-    toFormGroup(){
-        return new FormGroup({id: new FormControl(this.id), 
-            server_source: new FormControl(this.server_source), 
-            server_target: new FormControl(this.server_target)})
+export class DataRepeaterDtpType implements IDtpType {
+    type = DtpTypes.DataRepeaterDtpType;
+    dtexport_implementation = "AMQP-AMQP"
+    dtexport_type = "data-repeater"
+    constructor(public name: string = "Data Repeater", public server_source: string = "", public server_target: string = "", public signals: Array<String> = []) { }
+    toFormGroup() {
+        return new FormGroup({
+            name: new FormControl(this.name, [Validators.required]),
+            server_source: new FormControl(this.server_source),
+            server_target: new FormControl(this.server_target)
+        })
     }
-    toObject(){
-        let obj: any = {
-            id: this.id,
+    toObject() {
+        return {
+            name: this.name,
             type: this.type,
             signals: this.signals
         };
-
-        return obj;
     }
 
     static parse(json: any): DataRepeaterDtpType {
-        return new DataRepeaterDtpType(json["id"], json["server_source"], json["server_target"], json["signals"]);
+        return new DataRepeaterDtpType(json["name"], json["server_source"], json["server_target"], json["signals"]);
     }
 }
