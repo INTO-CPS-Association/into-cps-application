@@ -56,18 +56,28 @@
 							</div>
 							<div class="panel-body">
 								<maestro [editing]="editing" [dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'MaestroDtpType'"></maestro>
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.MaestroDtpType"></maestro>
 
 								<server [editing]="editing" [dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'ServerDtpType'"></server>
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.ServerDtpType"></server>
 
 								<signal [editing]="editing" [dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === 'SignalDtpType'"></signal>
+									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.SignalDtpType"></signal>
 								<data-repeater 
 									[editing]="editing" 
 									[dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type == 'DataRepeaterDtpType'">
-								</data-repeater>
+									[formGroup]="form.get('dtpTypes').at(i)" 
+									*ngIf="dtpType.type === dtpTypesEnum.DataRepeaterDtpType"></data-repeater>
+								<tool
+									[editing]="editing" 
+									[dtpType]="dtpType"
+									[formGroup]="form.get('dtpTypes').at(i)" 
+									*ngIf="dtpType.type === dtpTypesEnum.ToolDtpType"></tool>
+								<task-configuration
+									[editing]="editing" 
+									[dtpType]="dtpType"
+									[formGroup]="form.get('dtpTypes').at(i)" 
+									*ngIf="dtpType.type === dtpTypesEnum.ConfigurationDtpType"></task-configuration>
 							</div>
 						</div>
 					</div>
