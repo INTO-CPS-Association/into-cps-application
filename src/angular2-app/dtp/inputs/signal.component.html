@@ -1,19 +1,11 @@
 <div class="form-horizontal" [formGroup]="formGroup">
     <div class="form-group">
-        <label class="col-sm-3 control-label">ID</label>
-        <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtpType.id}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtpType.id"  formControlName="id" class="form-control">
-            <div *ngIf="formGroup.hasError('required', 'id')" class="alert alert-danger">This field is required.</div>
-            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtpType.id" class="alert alert-danger">ID is not unique.</div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label">Signal Name</label>
+        <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{dtpType.name}}</p>
             <input *ngIf="editing" [(ngModel)]="dtpType.name"  formControlName="name" class="form-control">
+            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtpType.name" class="alert alert-danger">Name is not unique.</div>
         </div>
     </div>
 
