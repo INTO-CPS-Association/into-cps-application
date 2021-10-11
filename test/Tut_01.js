@@ -52,12 +52,12 @@ describe('In Tutorial 1', function () {
             .equal("Three Tank")
     });
 
-    it("Open Multi-Model from sidebar", async function () {
+    it("Open Multi-Model from sidebar", function () {
         // multi model button
         return app.client.$("#node_ProjectBrowserItem_11")
-            .doubleClick()
-            .$("#activeTabTitle")
-            .getText()
+            .then(n => n.doubleClick())
+            .then(() => app.client.$("#activeTabTitle"))
+            .then(n => n.getText())
             .should
             .eventually
             .equal("Non-3D");
@@ -67,11 +67,11 @@ describe('In Tutorial 1', function () {
     it("Click on +", function () {
         // "#node_ProjectBrowserItem_27" is "Non-3D" multi-model
         // .w2ui-node-dots is the class on the "+" button
-        return app.client.$("#node_ProjectBrowserItem_11")
-            .$(".w2ui-node-dots")
-            .click()
-            .$("#node_ProjectBrowserItem_11_sub") // #node_ProjectBrowserItem_27_sub is the "Experiment1
-            .getAttribute("style")
+        return app.client.$("#node_ProjectBrowserItem_11 .w2ui-node-dots")
+            // .then(() => app.client.$(".w2ui-node-dots"))
+            .then(n => n.click())
+            .then(() => app.client.$("#node_ProjectBrowserItem_11_sub")) // #node_ProjectBrowserItem_27_sub is the "Experiment1
+            .then(n => n.getAttribute("style"))
             .should
             .eventually
             .not
@@ -82,9 +82,9 @@ describe('In Tutorial 1', function () {
     it('Go to Non-3D > Experiment1 from sidebar', function () {
         // #node_ProjectBrowserItem_27_sub is "Experiment1" in the sidebar
         return app.client.$("#node_ProjectBrowserItem_11_sub")
-            .doubleClick()
-            .$("#activeTabTitle")
-            .getText()
+            .then(n => n.doubleClick())
+            .then(() => app.client.$("#activeTabTitle"))
+            .then(n => n.getText())
             .should
             .eventually
             .equal("Non-3D > Experiment1");
@@ -92,9 +92,9 @@ describe('In Tutorial 1', function () {
 
     it('Co-Simulation Engine offline', function () {
         return app.client.$("#Simulation")
-            .click()
-            .$("coe-simulation")
-            .getText()
+            .then(n => n.click())
+            .then(() => app.client.$("coe-simulation"))
+            .then(n => n.getText())
             .should
             .eventually
             .contain("Co-Simulation Engine offline");
@@ -102,8 +102,8 @@ describe('In Tutorial 1', function () {
 
     it("Launch button says Launch", function () {
         return app.client.$("coe-simulation")
-            .$(".btn.btn-sm.btn-default")
-            .getText()
+            .then(() => app.client.$(".btn.btn-sm.btn-default"))
+            .then(n => n.getText())
             .should
             .eventually
             .equal("Launch");
@@ -111,8 +111,8 @@ describe('In Tutorial 1', function () {
 
     it("Simulate button is disabled", function () {
         return app.client.$("coe-simulation")
-            .$("div>div>.btn.btn-default")
-            .isEnabled()
+            .then(() => app.client.$("div>div>.btn.btn-default"))
+            .then(n => n.isEnabled())
             .should
             .eventually
             .be
@@ -122,19 +122,27 @@ describe('In Tutorial 1', function () {
     //Step 7. Click Launch
     it('Co-Simulation Engine online', function () {
         return app.client.$("coe-simulation")
-            .$(".btn.btn-sm.btn-default")
-            .click()
-            .then(async () => {
-                return await waitFor(() => app.client.$("div.alert.alert-success").getText())
+            .then(() => app.client.$(".btn.btn-sm.btn-default"))
+            .then(n => n.click())
+            .then(() => app.client.$("coe-simulation"))
+            .then(n => n.$(".alert.alert-success"))
+            // .then(async () => {
+            //     return await waitFor(() => app.client.$("div.alert.alert-success").getText())
+            //         .to
+            //         .match(/Co-Simulation Engine, .+, online at .+\./);
+            //     });
+            .then(async n => {
+                return waitFor(await n.getText())
                     .to
                     .match(/Co-Simulation Engine, .+, online at .+\./);
-            });
+                });
+            
     });
 
     it("Simulate button is enabled", function () {
         return app.client.$("coe-simulation")
-            .$("div>div>.btn.btn-default")
-            .isEnabled()
+            .then(() => app.client.$("div>div>.btn.btn-default"))
+            .then(n => n.isEnabled())
             .should
             .eventually
             .be
@@ -143,8 +151,8 @@ describe('In Tutorial 1', function () {
 
     it('Simulate button shows simulate', function () {
         return app.client.$("coe-simulation")
-            .$("div>div>.btn.btn-default")
-            .getText()
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.getText())
             .should
             .eventually
             .equal("Simulate");
@@ -153,11 +161,11 @@ describe('In Tutorial 1', function () {
     //Step 8. Click simulate to run a co-simulation
     it('Simulate shows Stop after clicking', function () {
         return app.client.$("coe-simulation")
-            .$("div>div>.btn.btn-default")
-            .click()
-            .$("coe-simulation")
-            .$("div>div>.btn.btn-default")
-            .getText()
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.click())
+            .then(() => app.client.$("coe-simulation"))
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.getText())
             .should
             .eventually
             .equal("Stop");
@@ -166,25 +174,42 @@ describe('In Tutorial 1', function () {
     //Step 10. Expand the configuration
     it('Click Edit button to change the Co-Simulation parameters', function () {
         return app.client.$("#Configuration") // open the config panel
-            .click()
-            .$(".btn.btn-default") // click on the edit button
-            .click()
-            .$(".btn.btn-default") /// check the button now says save
-            .getText()
+            .then(n => n.click())
+            .then(() => app.client.$(".btn.btn-default")) // click on the edit button
+            .then(n => n.click())
+            .then(() => app.client.$(".btn.btn-default")) /// check the button now says save
+            .then(n => n.getText())
             .should
             .eventually
             .equal("Save");
     });
 
     //Step 11. Click Edit Button, set Start time
-    it('Change Start Time Co-Simulation parameter', async function () {
+    it('Change Start Time Co-Simulation parameter', function () {
         // find the start time form input
-        let startInput = await app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid");
+        let startInput = app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid");
         return startInput
-            .setValue("7")
-            .getValue()
-            .should
-            .eventually
-            .equal("7");
+            .then(n => n.setValue("7"))
+            // .then(n => n.$(".form-control.ng-untouched.ng-pristine.ng-valid"))
+            .then(() => app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid"))
+            // .then(n => n.getValue())
+            // .then(n => n.getValue()
+            // .should
+            // .eventually
+            // .equal("7")
+            // )
+            // .then(n => {
+            //     n.setValue("7");
+            //     waitFor(await n.getValue())
+            //         .to
+            //         .eventually
+            //         .equal("7");
+            // })
+            .then(async n => {
+                return waitFor(await n.getValue())
+                    .to
+                    // .eventually
+                    .equal("7");
+              });
     });
 });

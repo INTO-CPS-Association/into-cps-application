@@ -29,9 +29,9 @@ describe('Generic tests', function () {
   })
 
   // Maybe related to https://github.com/electron-userland/spectron/issues/815npm 
-  it('Displays the expected message in the window', async function () {
+  it('Displays the expected message in the window', function () {
     return app.client.$("#mainView")
-        .getText()
+        .then(n => n.getText())
         .should
         .eventually
         .contain('Welcome to the INTO-CPS Application version ' + appVersion);
