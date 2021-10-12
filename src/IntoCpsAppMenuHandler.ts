@@ -43,11 +43,14 @@ export class IntoCpsAppMenuHandler {
     openFmu: (path: string) => void;
     openDseView: (path: string) => void;
     openDtpView: (path: String) => void;   
+    openSigverView: (path: string) => void;
+    
     deInitialize: () => boolean;
     
     createDse: (path: string) => void;
     createDsePlain: (path: string) => void;
     createDtpPlain: (path: String) => void;
+    createSigverPlain: (path: string) => void;
     createSysMLDSEConfig: (path: string) => void;
     createMultiModel: (path: string, titleMsg? : string) => void;
     createCoSimConfiguration: (path: string) => void;

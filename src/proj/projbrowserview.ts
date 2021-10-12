@@ -380,6 +380,14 @@ export class BrowserController {
                     return null;
                 }
             }
+            else if (path.endsWith(".sigverConfig.json")) {
+                parent.img = "into-cps-icon-projbrowser-config";
+                parent.opensInMainWindow = true;
+                parent.dblClickHandler = () => self.menuHandler.openSigverView(path);
+                parent.menuEntries = [menuEntryDelete, menuRename, menuReveal];
+                parent.refresh();
+                return null;
+            }
             else if (path.endsWith(".dse.json")) {
                 // merge DSE and folder
                 parent.img = "into-cps-icon-projbrowser-dse";
@@ -701,6 +709,13 @@ export class BrowserController {
                     });
                 result.menuEntries = [menuEntryCreate];
             } 
+            else if (Path.basename(path) == Project.PATH_SIGVER){
+                let menuEntryCreate = menuEntry("Create new configuration", "glyphicon glyphicon-asterisk",
+                    function (item: ProjectBrowserItem) {
+                        self.menuHandler.createSigverPlain(item.path);
+                    });
+                result.menuEntries = [menuEntryCreate];
+            }
             else if (Path.basename(path) == Project.PATH_TRACEABILITY) {
                 let menuGraph = menuEntry("View Traceability Graph", "glyphicon glyphicon-asterisk",
                     function (item: ProjectBrowserItem) {

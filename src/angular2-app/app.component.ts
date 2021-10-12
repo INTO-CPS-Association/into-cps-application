@@ -55,7 +55,8 @@ declare let window: MyWindow;
         <mm-page *ngIf="page === 'multiModel'" [path]="path"></mm-page>
          <coe-page *ngIf="page === 'coe'" [path]="path"></coe-page>
          <dse-page *ngIf="page === 'dse'" [path]="path"></dse-page>
-         <dtp-page *ngIf="page === 'dtp'" [path]="path"></dtp-page>`
+         <dtp-page *ngIf="page === 'dtp'" [path]="path"></dtp-page>
+         <sv-page *ngIf="page === 'sv'" [path]="path"></sv-page>`
 })
 export class AppComponent implements OnInit {
     private page:string;
@@ -114,6 +115,13 @@ export class AppComponent implements OnInit {
         });
     }
 
+
+    openSV(path: string):void {
+        this.zone.run(() => {
+            this.path = path;
+            this.page = "sv";
+        });
+    }
 
     closeAll():void {
       /*   this.zone.run(() => { */

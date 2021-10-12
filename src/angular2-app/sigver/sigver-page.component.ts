@@ -29,29 +29,29 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
- 
- // See the CONTRIBUTORS file for author and contributor information. 
+import { Component, Input } from "@angular/core";
+import { SigverConfigurationService } from "./sigver-configuration.service";
 
-import {ProjectSettings} from "./ProjectSettings"
+@Component({
+    selector: "sv-page",
+    templateUrl: "./angular2-app/sigver/sigver-page.component.html",
+    providers: [SigverConfigurationService]
+})
+export class SigverPageComponent {
 
-export interface IProject {
-    getName(): string;
-    getRootFilePath(): string;
-    getProjectConfigFilePath(): string;
-    getFmusPath(): string;
-    getSysMlFolderName(): String;
-    save():void;
+    @Input()
+    private _path: string;
+    isNewConfiguration: boolean = true;
 
-    createMultiModel(name: String, jsonContent: String): String;
-    createDse(name: String, jsonContent: String): String;
-    createSigVer(name: String): String;
-    createSysMLDSEConfig(name: String, jsonContent: String): String;
-    createCoSimConfig(multimodelConfigPath: string, name: String, jsonContent: String): string;
-    createDtpConfig(name: String, jsonContent: string): string;
+    constructor(private sigverConfigurationService: SigverConfigurationService) { }
 
-    getSettings(): ProjectSettings;
-
-    freshMultiModelName(name : String): String; 
-    freshDTPName(name: string): string
-    freshFilename(path: string, name: string) : string
+    @Input()
+    set path(path: string) {
+        this._path = path;
+        this.sigverConfigurationService.configurationPath = this._path;
+        this.sigverConfigurationService.setConfigurationFromPath().catch(err => console.error(err));
+    }
+    get path(): string {
+        return this._path;
+    }
 }
