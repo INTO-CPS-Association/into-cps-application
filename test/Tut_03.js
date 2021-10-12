@@ -57,7 +57,7 @@ describe('In Tutorial 3', function () {
         .then(() => app.client.$("#node_ProjectBrowserItem_14 .w2ui-expand"))
         .then(n => n.click())
         .then(() => app.client.$("#node_ProjectBrowserItem_17"))
-        .then(n => n.doubleClick())
+        .then(n => n.doubleClick(3000))
         .then(() => app.client.$("#node_ProjectBrowserItem_17"))
         .then(n => n.click({button: "right"}))
         .then(() => app.client.$("#w2ui-overlay tbody"))
