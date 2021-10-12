@@ -44,13 +44,13 @@ describe('In Tutorial 6', function () {
 
 	//Step 46
 	it('Right click on the configuration file and create DSE configuration', function () {
-		return app.client.$("#node_ProjectBrowserItem_8 .w2ui-expand")
+		return app.client.$("#node_ProjectBrowserItem_9 .w2ui-expand")
 			.then(n => n.click())
-			.then(() => app.client.$("#node_ProjectBrowserItem_9 .w2ui-expand"))
+			.then(() => app.client.$("#node_ProjectBrowserItem_10 .w2ui-expand"))
 			.then(n => n.click())
-			.then(() => app.client.$("#node_ProjectBrowserItem_12"))
+			.then(() => app.client.$("#node_ProjectBrowserItem_13"))
 			.then(n => n.doubleClick(3000)) // prevents right clicking on the wrong thing
-			.then(() => app.client.$("#node_ProjectBrowserItem_12"))
+			.then(() => app.client.$("#node_ProjectBrowserItem_13"))
 			.then(n => n.click({button: "right"}))
 			.then(() => app.client.$("#w2ui-overlay tbody"))
 			.then(n => n.$$("tr"))

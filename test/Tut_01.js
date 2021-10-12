@@ -190,21 +190,7 @@ describe('In Tutorial 1', function () {
         let startInput = app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid");
         return startInput
             .then(n => n.setValue("7"))
-            // .then(n => n.$(".form-control.ng-untouched.ng-pristine.ng-valid"))
-            .then(() => app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid"))
-            // .then(n => n.getValue())
-            // .then(n => n.getValue()
-            // .should
-            // .eventually
-            // .equal("7")
-            // )
-            // .then(n => {
-            //     n.setValue("7");
-            //     waitFor(await n.getValue())
-            //         .to
-            //         .eventually
-            //         .equal("7");
-            // })
+            .then(() => app.client.$(".form-control.ng-touched.ng-dirty.ng-valid"))
             .then(async n => {
                 return waitFor(await n.getValue())
                     .to

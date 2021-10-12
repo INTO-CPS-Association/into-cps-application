@@ -52,13 +52,13 @@ describe('In Tutorial 3', function () {
   });
 
   it("Right click on 3D Robot", function () {
-    return app.client.$("#node_ProjectBrowserItem_13 .w2ui-expand")
+    return app.client.$("#node_ProjectBrowserItem_14 .w2ui-expand")
         .then(n => n.click())
-        .then(() => app.client.$("#node_ProjectBrowserItem_14 .w2ui-expand"))
+        .then(() => app.client.$("#node_ProjectBrowserItem_15 .w2ui-expand"))
         .then(n => n.click())
-        .then(() => app.client.$("#node_ProjectBrowserItem_17"))
+        .then(() => app.client.$("#node_ProjectBrowserItem_18"))
         .then(n => n.doubleClick(3000))
-        .then(() => app.client.$("#node_ProjectBrowserItem_17"))
+        .then(() => app.client.$("#node_ProjectBrowserItem_18"))
         .then(n => n.click({button: "right"}))
         .then(() => app.client.$("#w2ui-overlay tbody"))
         .then(n => n.getText())
@@ -207,7 +207,7 @@ describe('In Tutorial 3', function () {
   });
 
   it("Create a Co-Sim from the MM", function () {
-    return app.client.$("#node_ProjectBrowserItem_21")
+    return app.client.$("#node_ProjectBrowserItem_19")
         .then(n => n.click({button: "right"}))
         .then(() => app.client.$("#w2ui-overlay tbody"))
         .then(n => n.$$("tr"))
