@@ -1,176 +1,215 @@
-const Application = require('spectron').Application
-const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
 
+const waitFor = chaiWaitFor.bindWaitFor({
+    timeout: 20000,
+    retryInterval: 100
+});
 
-describe.skip('In Tutorial 1', function () {
-  this.timeout(120000)
+const app = require("./TestHelpers").app();
+const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test1_data.zip");
+const testDataPath = path.resolve("test/TestData/test1_data");
 
+describe('In Tutorial 1', function () {
+    this.timeout(120000)
 
+    before(async function () {
 
-  beforeEach(async function () {
+        await app.start();
+        await app.client.waitUntilWindowLoaded();
+        require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
+        await app.electron.remote.app.loadProject(testDataPath + "/.project.json");
 
-    this.app = new Application({
-      path: electronPath,
-      env: { RUNNING_IN_SPECTRON: '1' },
-      args: [path.join(__dirname, '..')]
+        await require("./TestHelpers").downloadCOE(app);
+
+        return app;
+    });
+
+    after(function () {
+        require("./TestHelpers").deleteCOE(app);
+        return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
+    });
+
+    // This should be done before as soon as we solve the programmatic project load problem
+    it('Should have tutorial 1 loaded', function () {
+        return app.electron.remote.app.getActiveProject()
+            .should
+            .eventually
+            .equal(testDataPath + "/.project.json");
     })
 
-    fakeMenu.apply(this.app);
+    it("Should have name Three Tank", function () {
+        return app.electron.remote.app.getIProject()
+            .then(n => n.name)
+            .should
+            .eventually
+            .equal("Three Tank")
+    });
 
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
+    it("Open Multi-Model from sidebar", function () {
+        // multi model button
+        return app.client.$("#node_ProjectBrowserItem_11")
+            .then(n => n.doubleClick())
+            .then(() => app.client.$("#activeTabTitle"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Non-3D");
+    });
 
-    if (!(this.currentTest.title === 'File->Open Project Menu Click')) {
-      await this.app.client.waitForVisible('#node_ProjectBrowserItem_28', 20000);
+    //Step 5. Click the + symbol next to Non-3D multimodel to expand it
+    it("Click on +", function () {
+        // "#node_ProjectBrowserItem_27" is "Non-3D" multi-model
+        // .w2ui-node-dots is the class on the "+" button
+        return app.client.$("#node_ProjectBrowserItem_11 .w2ui-node-dots")
+            // .then(() => app.client.$(".w2ui-node-dots"))
+            .then(n => n.click())
+            .then(() => app.client.$("#node_ProjectBrowserItem_11_sub")) // #node_ProjectBrowserItem_27_sub is the "Experiment1
+            .then(n => n.getAttribute("style"))
+            .should
+            .eventually
+            .not
+            .contain("display: hidden;");
+    });
 
-      await this.app.client.$('#node_ProjectBrowserItem_28').$('.w2ui-expand').click();
+    //Step 6. Double click to open Experiment1.
+    it('Go to Non-3D > Experiment1 from sidebar', function () {
+        // #node_ProjectBrowserItem_27_sub is "Experiment1" in the sidebar
+        return app.client.$("#node_ProjectBrowserItem_11_sub")
+            .then(n => n.doubleClick())
+            .then(() => app.client.$("#activeTabTitle"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Non-3D > Experiment1");
+    });
 
-      await this.app.client.waitForVisible('#node_ProjectBrowserItem_29');
+    it('Co-Simulation Engine offline', function () {
+        return app.client.$("#Simulation")
+            .then(n => n.click())
+            .then(() => app.client.$("coe-simulation"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .contain("Co-Simulation Engine offline");
+    });
 
-      await this.app.client.doubleClick('#node_ProjectBrowserItem_29');
-
-      await this.app.client.waitUntilWindowLoaded();
-    }
-
-
-    return this.app;
-
-  })
-
-  afterEach(function () {
-
-    if (this.app && this.app.isRunning()) {
-
-      return this.app.stop()
-        .then(() => {
-          if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 1 loaded')
-            throw Error("Tutorial 1 project is not loaded!")
-        })
-    }
-  })
-
-  //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click', function () {
-    fakeMenu.clickMenu('File', 'Open Project');
-    return this.app;
-  })
-
-  // This should be done before as soon as we solve the programmatic project load problem
-  it('Should have tutorial 1 loaded', function () {
-    return this.app.client.waitUntilWindowLoaded()
-      .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_1'); })
-
-      })
-  })
-
-  //Step 5. Click the + symbol next to Non-3D multimodel to expand it
-  //Step 6. Double click to open Experiment1.
-  it('Go to Non-3D > Experiment1 from sidebar', function () {
-
-    this.app.client.$('#activeTabTitle').waitForVisible().then(() => {
-
-      return this.app.client.getText('#activeTabTitle')
-        .then(function (title) {
-          assert.equal(title, 'Non-3D > Experiment1')
-        });
+    it("Launch button says Launch", function () {
+        return app.client.$("coe-simulation")
+            .then(() => app.client.$(".btn.btn-sm.btn-default"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Launch");
     })
 
-  })
-
-  it('Co-Simulation Engine offline', function () {
-
-    this.app.client.$('coe-simulation').waitForVisible()
-      .then(() => {
-
-        return this.app.client.$('coe-simulation')
-          .$('.alert.alert-danger')
-          .getText()
-          .then(function (text) {
-            expect(text).contain('Co-Simulation Engine offline')
-          })
-      })
-  })
-
-
-  //Step 7. Click Launch
-  it('Co-Simulation Engine online', function () {
-
-    this.app.client.$('coe-simulation').waitForVisible().then(() => {
-
-      return this.app.client
-        .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-        .$('.alert.alert-success').getText()
-        .then(function (text) {
-          expect(text).contain('online')
-        })
+    it("Simulate button is disabled", function () {
+        return app.client.$("coe-simulation")
+            .then(() => app.client.$("div>div>.btn.btn-default"))
+            .then(n => n.isEnabled())
+            .should
+            .eventually
+            .be
+            .false;
     })
-  })
 
-  //Step 8. Click simulate to run a co-simulation
-  it('Button shows Stop after clicking Simulate button', function () {
+    //Step 7. Click Launch
+    it('Co-Simulation Engine online', function () {
+        return app.client.$("coe-simulation")
+            .then(() => app.client.$(".btn.btn-sm.btn-default"))
+            .then(n => n.click())
+            .then(() => app.client.$("coe-simulation"))
+            .then(n => n.$(".alert.alert-success"))
+            // .then(async () => {
+            //     return await waitFor(() => app.client.$("div.alert.alert-success").getText())
+            //         .to
+            //         .match(/Co-Simulation Engine, .+, online at .+\./);
+            //     });
+            .then(async n => {
+                return waitFor(await n.getText())
+                    .to
+                    .match(/Co-Simulation Engine, .+, online at .+\./);
+                });
+            
+    });
 
-    this.app.client.$('coe-simulation').waitForVisible().then(() => {
+    it("Simulate button is enabled", function () {
+        return app.client.$("coe-simulation")
+            .then(() => app.client.$("div>div>.btn.btn-default"))
+            .then(n => n.isEnabled())
+            .should
+            .eventually
+            .be
+            .true;
+    });
 
-      return this.app.client
-        .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-        .$('.btn.btn-default').click()
-        .$('.btn.btn-default').getText()
-        .then(function (text) {
-          expect(text).contain('Stop')
-        })
-    })
-  })
+    it('Simulate button shows simulate', function () {
+        return app.client.$("coe-simulation")
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Simulate");
+    });
 
-  it('Click on COE Console', function () {
+    //Step 8. Click simulate to run a co-simulation
+    it('Simulate shows Stop after clicking', function () {
+        return app.client.$("coe-simulation")
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.click())
+            .then(() => app.client.$("coe-simulation"))
+            .then(n => n.$("div>div>.btn.btn-default"))
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Stop");
+    });
 
-    this.app.client.$('#coe-status-btn-status').waitForExist()
-      .then(() => {
+    //Step 10. Expand the configuration
+    it('Click Edit button to change the Co-Simulation parameters', function () {
+        return app.client.$("#Configuration") // open the config panel
+            .then(n => n.click())
+            .then(() => app.client.$(".btn.btn-default")) // click on the edit button
+            .then(n => n.click())
+            .then(() => app.client.$(".btn.btn-default")) /// check the button now says save
+            .then(n => n.getText())
+            .should
+            .eventually
+            .equal("Save");
+    });
 
-        this.app.client.$('#coe-status-btn-status').doubleClick()
-          .$('.navbar-brand').waitForExist().then(() => {
-            return NavBar.$('.navbar-brand').getText()
-              .then(function (text) {
-                expect(text).contain('COE Status')
-              })
-          });
-      });
-  })
-
-  //Step 10. Expand the configuration
-  it('Click Edit button to change the Co-Simulation parameters', function () {
-
-    this.app.client.$('coe-page').waitForVisible()
-      .then(() => {
-
-        return this.app.client
-          .$('coe-page').$('.panel-heading').click()
-          .$('.btn.btn-default').click()
-          .$('.btn.btn-default').getText()
-          .then(function (text) {
-            expect(text).contain('Save')
-          })
-      })
-  })
-
-  //Step 11. Click Edit Button, set Start time 
-  it('Change Start Time Co-Simulation parameter', function () {
-
-    this.app.client.$('coe-page').waitForVisible()
-      .then(() => {
-
-        return this.app.client
-          .$('coe-page').$('.panel-heading').click()
-          .$('.btn.btn-default').click().pause(3000)
-          .$('.form-control.ng-untouched.ng-pristine.ng-valid').setValue('0')
-          .$('.form-control.ng-untouched.ng-pristine.ng-valid').getValue()
-          .then(function (text) {
-            expect(text).contain('0')
-          })
-      })
-  })
-})
+    //Step 11. Click Edit Button, set Start time
+    it('Change Start Time Co-Simulation parameter', function () {
+        // find the start time form input
+        let startInput = app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid");
+        return startInput
+            .then(n => n.setValue("7"))
+            // .then(n => n.$(".form-control.ng-untouched.ng-pristine.ng-valid"))
+            .then(() => app.client.$(".form-control.ng-untouched.ng-pristine.ng-valid"))
+            // .then(n => n.getValue())
+            // .then(n => n.getValue()
+            // .should
+            // .eventually
+            // .equal("7")
+            // )
+            // .then(n => {
+            //     n.setValue("7");
+            //     waitFor(await n.getValue())
+            //         .to
+            //         .eventually
+            //         .equal("7");
+            // })
+            .then(async n => {
+                return waitFor(await n.getValue())
+                    .to
+                    // .eventually
+                    .equal("7");
+              });
+    });
+});
