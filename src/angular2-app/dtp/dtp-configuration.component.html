@@ -66,7 +66,9 @@
 								<data-repeater 
 									[editing]="editing" 
 									[dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" 
+									[formGroup]="form.get('dtpTypes').at(i)"
+									[dtpTypes]="config.dtpTypes" 
+									[typesArrayChangedEvent]="typesArrayChanged.asObservable()"
 									*ngIf="dtpType.type === dtpTypesEnum.DataRepeaterDtpType"></data-repeater>
 								<tool
 									[editing]="editing" 
@@ -77,6 +79,8 @@
 									[editing]="editing" 
 									[dtpType]="dtpType"
 									[formGroup]="form.get('dtpTypes').at(i)" 
+									[dtpTypes]="config.dtpTypes"
+									[typesArrayChangedEvent]="typesArrayChanged.asObservable()"
 									*ngIf="dtpType.type === dtpTypesEnum.ConfigurationDtpType"></task-configuration>
 							</div>
 						</div>

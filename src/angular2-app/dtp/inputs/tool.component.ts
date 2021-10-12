@@ -55,10 +55,6 @@ export class DtpToolComponent {
         this.keys = Object.keys(this.toolTypes);
     }
 
-    customTrackBy(index: number, obj: any): any {
-        return index;
-    }
-
     setPath(path: string) {
         this.dtpType.path = path;
         this.formGroup.patchValue({path: path});

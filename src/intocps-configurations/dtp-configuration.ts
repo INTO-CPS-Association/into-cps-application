@@ -22,11 +22,7 @@ export class DTPConfig implements ISerializable {
     }
     protected static TAG_DTP_TYPES = "dtp_types";
 
-    constructor(
-        public dtpTypes: Array<IDtpType> = []
-    ) {
-
-    }
+    constructor(public dtpTypes: Array<IDtpType> = []) { }
 
     toObject() {
         let dtpTypes: any = {};
@@ -48,27 +44,40 @@ export class DTPConfig implements ISerializable {
 
     private static parseDtpTypes(dtpTypes: any): Array<IDtpType> {
         if (dtpTypes) {
-            return Object.keys(dtpTypes).map(id => {
-                let c = dtpTypes[id];
-                if (c.type == DtpTypes.MaestroDtpType) {
-                    return MaestroDtpType.parse(c);
+            var unTransformedTypes: IDtpType[] = [];
+            const typesArray = Object.keys(dtpTypes).reduce((types:IDtpType[], id:string) => {
+                const idtpType = dtpTypes[id];
+                if (idtpType.type == DtpTypes.MaestroDtpType) {
+                    types.push(MaestroDtpType.parse(idtpType));
                 }
-                else if (c.type == DtpTypes.ServerDtpType) {
-                    return ServerDtpType.parse(c);
+                else if (idtpType.type == DtpTypes.ServerDtpType) {
+                    types.push(ServerDtpType.parse(idtpType));
                 }
-                else if (c.type == DtpTypes.SignalDtpType) {
-                    return SignalDtpType.parse(c);
+                else if (idtpType.type == DtpTypes.SignalDtpType) {
+                    types.push(SignalDtpType.parse(idtpType));
                 }
-                else if (c.type == DtpTypes.DataRepeaterDtpType) {
-                    return DataRepeaterDtpType.parse(c);
+                else if (idtpType.type == DtpTypes.ToolDtpType) {
+                    types.push(ToolDtpType.parse(idtpType));
+                }       
+                else {
+                    unTransformedTypes.push(idtpType);
                 }
-                else if (c.type == DtpTypes.ToolDtpType) {
-                    return ToolDtpType.parse(c);
+                return types;
+            }, []);
+            if(unTransformedTypes.length > 0){
+                //TODO: Optimise
+                unTransformedTypes.forEach(type => {
+                    if(type.type == DtpTypes.DataRepeaterDtpType){
+                        typesArray.push(DataRepeaterDtpType.parse(type, typesArray));
+                    }
+                })
+
+                const configurationType = unTransformedTypes.find(idtpType => idtpType.type == DtpTypes.ConfigurationDtpType);
+                if(configurationType){
+                    typesArray.push(TaskConfigurationDtpType.parse(configurationType, typesArray));
                 }
-                else if (c.type == DtpTypes.ConfigurationDtpType) {
-                    return TaskConfigurationDtpType.parse(c);
-                }
-            });
+            }
+            return typesArray;
         }
         else return Array<IDtpType>();
     }
@@ -108,12 +117,12 @@ export enum DtpTypes {
 
 export enum ToolTypes {
     Maestro = "Maestro",
-    RabbitMq = "RabbitMq"
+    DataRepeater = "DataRepeater"
 }
 
 export class TaskConfigurationDtpType implements IDtpType {
     type = DtpTypes.ConfigurationDtpType;
-    constructor(public name: string = "", public tasks: IDtpType[]) {}
+    constructor(public name: string = "", public tasks: Array<IDtpType> = []) { }
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
@@ -122,17 +131,19 @@ export class TaskConfigurationDtpType implements IDtpType {
     }
 
     toObject() {
-        return { name: this.name, type: this.type, tasks: this.tasks};
+        return { name: this.name, type: this.type, tasks: this.tasks };
     }
 
-    static parse(json: any): TaskConfigurationDtpType {
-        return new TaskConfigurationDtpType(json["name"], json["tasks"]);
+    static parse(json: any, idtpTypes: IDtpType[]): TaskConfigurationDtpType {
+        const tasks: IDtpType[] = json["tasks"];
+        const tasksFromExistingTypes = tasks.map(task => idtpTypes.find(type => type.name == task.name && type.type == task.type));
+        return new TaskConfigurationDtpType(json["name"], tasksFromExistingTypes);
     }
 }
 
 export class ToolDtpType implements IDtpType {
     type = DtpTypes.ToolDtpType;
-    constructor(public name: string = "", public path: string = "", public toolType: ToolTypes) {}
+    constructor(public name: string = "", public path: string = "", public toolType: ToolTypes) { }
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
@@ -268,7 +279,7 @@ export class DataRepeaterDtpType implements IDtpType {
     type = DtpTypes.DataRepeaterDtpType;
     dtexport_implementation = "AMQP-AMQP"
     dtexport_type = "data-repeater"
-    constructor(public name: string = "Data Repeater", public server_source: string = "", public server_target: string = "", public signals: Array<String> = []) { }
+    constructor(public name: string = "Data Repeater", public server_source: string = "", public server_target: string = "", public signals: Array<IDtpType> = []) { }
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, [Validators.required]),
@@ -284,7 +295,9 @@ export class DataRepeaterDtpType implements IDtpType {
         };
     }
 
-    static parse(json: any): DataRepeaterDtpType {
-        return new DataRepeaterDtpType(json["name"], json["server_source"], json["server_target"], json["signals"]);
+    static parse(json: any, idtpTypes: IDtpType[]): DataRepeaterDtpType {
+        const jsonSignals: IDtpType[] = json["signals"];
+        const signalsFromExistingTypes: IDtpType[] = jsonSignals.map(jsonSignal => idtpTypes.find(type => type.name == jsonSignal.name && type.type == jsonSignal.type));
+        return new DataRepeaterDtpType(json["name"], json["server_source"], json["server_target"], signalsFromExistingTypes);
     }
 }

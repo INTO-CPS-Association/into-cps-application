@@ -27,22 +27,26 @@
 
     <div class="form-group">
         <label class="col-sm-3 control-label">
-            Signals
-            <button *ngIf="editing" type="button" (click)="addSignal()" class="btn btn-default btn-xs">
-                <span class="glyphicon glyphicon-plus"></span>
-            </button>
+            Tasks
         </label>
-        <div class="col-sm-9">
-            <div *ngFor="let signal of dtpType.signals; let i=index; trackBy:customTrackBy">
-                <p *ngIf="!editing" class="form-control-static">{{signal}}</p>
-                <div *ngIf="editing" class="input-group">
-                    <input [(ngModel)]="dtpType.signals[i]" [ngModelOptions]="{standalone: true}" class="form-control">
-                    <span class="input-group-btn">
-                        <button type="button" (click)="removeSignal(i)" class="btn btn-default">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </button>
-                    </span>
-                </div>
+        <div *ngIf="editing && showSelectGroup" class="input-group">
+            <select [(ngModel)]="selectedSignal" [ngModelOptions]="{standalone: true}" class="form-control">
+                <option *ngFor="let signalName of getRemaningSignalsNames()" [value]="signalName">{{signalName}}</option>
+            </select>
+            <span class="input-group-btn">
+                <button type="button" (click)="addSignal()" class="btn btn-default">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </button>
+            </span>    
+        </div>
+        <div class="col-sm-9" *ngFor="let signal of dtpType.signals">
+            <div *ngIf="editing" class="input-group">
+                <p class="form-control">{{signal.name}}</p>
+                <span class="input-group-btn">
+                    <button type="button" (click)="removeSignal(signal)" class="btn btn-default">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </span>
             </div>
         </div>
     </div>

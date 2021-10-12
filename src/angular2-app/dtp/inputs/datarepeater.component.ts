@@ -29,19 +29,18 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
-import { FormArray, FormControl, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpType, SignalDtpType} from "../../../intocps-configurations/dtp-configuration";
-import IntoCpsApp from "../../../IntoCpsApp";
-import * as Path from 'path';
-import * as fs from 'fs';
-import {Project} from "../../../proj/Project";
+import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
+import { FormGroup } from "@angular/forms";
+import { DataRepeaterDtpType, DtpTypes, IDtpType} from "../../../intocps-configurations/dtp-configuration";
+import { Observable, Subscription } from "rxjs";
 
 @Component({
     selector: 'data-repeater',
     templateUrl: "./angular2-app/dtp/inputs/datarepeater.component.html"
 })
-export class DtpDataRepeaterComponent {
+export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
+    private typesArrayChangedEventSubscription: Subscription;
+    
     @Input()
     dtpType: DataRepeaterDtpType
 
@@ -51,21 +50,73 @@ export class DtpDataRepeaterComponent {
     @Input()
     editing: boolean = false;
 
+    @Input()
+    dtpTypes: IDtpType[];
+
+    @Input()
+    typesArrayChangedEvent: Observable<void>;
+
+    selectedSignal: string;
+
+    showSelectGroup: boolean = true;
 
     constructor() {
         console.log("DataRepeater component constructor");
     }
 
-    customTrackBy(index: number, obj: any): any {
-        return index;
+    ngAfterContentInit(): void {
+        this.typesArrayChangedEventSubscription = this.typesArrayChangedEvent.subscribe(() => this.syncTasksWithTypes());
+        this.updateSelectedSignal();
+    }
+
+    ngOnDestroy() {
+        this.typesArrayChangedEventSubscription.unsubscribe();
+    }
+
+    syncTasksWithTypes() {
+        const indeciesToRemove = this.dtpType.signals.reduce((indecies, signal) => {
+            if (!this.dtpTypes.includes(signal)) {
+                const index = this.dtpType.signals.findIndex(signal2 => signal2.name == signal.name && signal2.type == signal.type);
+                if(index >= 0){
+                    indecies.push(index);
+                }
+            }
+            return indecies;
+        }, []);
+
+        for (var i = indeciesToRemove.length -1; i >= 0; i--){
+            this.dtpType.signals.splice(indeciesToRemove[i], 1);
+        }
+        this.updateSelectedSignal();
+    }
+
+    updateSelectedSignal() {
+        this.selectedSignal = this.getRemaningSignalsNames()[0] ?? "";
+        this.showSelectGroup = this.selectedSignal != "";
+    }
+
+    getRemaningSignalsNames(): string[] {
+        const signals = this.dtpTypes.reduce((signals: string[], idtpType) => {
+            if (!this.dtpType.signals.includes(idtpType) && idtpType.type == DtpTypes.SignalDtpType) {
+                signals.push(idtpType.name);
+            }
+            return signals;
+        }, []);
+        return signals.sort();
     }
 
     addSignal(){
-        this.dtpType.signals.push("");
+        const signal = this.dtpTypes.find(type => type.type == DtpTypes.SignalDtpType && type.name == this.selectedSignal);
+        this.dtpType.signals.push(signal);
+        this.updateSelectedSignal();
     }
 
-    removeSignal(index: number){
-        this.dtpType.signals.splice(index,1);
+    removeSignal(signal: IDtpType){
+        const index = this.dtpType.signals.indexOf(signal, 0);
+        if (index > -1) {
+            this.dtpType.signals.splice(index, 1);
+        }
+        this.updateSelectedSignal();
     }
 }
 

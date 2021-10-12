@@ -34,8 +34,8 @@ import { FormArray, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
 import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpType, DtpTypes, ToolDtpType, TaskConfigurationDtpType } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
-import {
-    uniqueGroupPropertyValidator} from "../../angular2-app/shared/validators";
+import {uniqueGroupPropertyValidator} from "../../angular2-app/shared/validators";
+import { Subject } from "rxjs/internal/Subject";
 
 const dialog = require("electron").remote.dialog;
 
@@ -48,6 +48,12 @@ export class DtpConfigurationComponent {
 
     newConfig: new (...args: any[]) => IDtpType;
 
+    typesArrayChanged: Subject<void> = new Subject<void>();
+
+    private emitTypesArrayChanged() {
+        this.typesArrayChanged.next();
+    }
+
     @Input()
     set path(path: string) {
         console.log("Path was set");
@@ -56,9 +62,6 @@ export class DtpConfigurationComponent {
         if (path)
             this.parseConfig();
     }
-
-    //@Output()
-    //change = new EventEmitter<string>();
 
     get path(): string {
         return this._path;
@@ -85,7 +88,7 @@ export class DtpConfigurationComponent {
             this.config = config;
             this.isLoaded = true;
             // Create a form group for each DTPType
-            this.form = new FormGroup({dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()))}); //, uniqueGroupPropertyValidator("name")
+            this.form = new FormGroup({dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()))}); //TODO: uniqueGroupPropertyValidator("name")
             console.log("Parsing finished!");
 
         },error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
@@ -135,6 +138,7 @@ export class DtpConfigurationComponent {
         this.config.dtpTypes.push(dtpType);
         let formArray = <FormArray>this.form.get('dtpTypes');
         formArray.push(dtpType.toFormGroup());
+        this.emitTypesArrayChanged();
     }
 
     removeDtpType(dtpType: IDtpType){
@@ -142,13 +146,16 @@ export class DtpConfigurationComponent {
         let index = this.config.dtpTypes.indexOf(dtpType);
         this.config.dtpTypes.splice(index, 1);
         formArray.removeAt(index);
+        this.emitTypesArrayChanged();
     }
 
     export(){
-        let tools: any;
-        if(this.dtpTypes.includes){
-            //let obj: any = {tools: }}
-        }
+        let tools: Array<IDtpType> = [];
+        let servers: Array<IDtpType> = [];
+        let configurations: Array<IDtpType> = [];
+        this.dtpTypes.forEach(idtptype => {
+            
+        })
 
     }
 

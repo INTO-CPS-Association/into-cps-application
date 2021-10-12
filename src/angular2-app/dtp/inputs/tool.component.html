@@ -21,7 +21,7 @@
         <label class="col-sm-3 control-label">Type</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{dtpType.toolType}}</p>
-            <select *ngIf="editing" [(ngModel)]="dtpType.toolType"  formControlName="toolType" class="form-control">
+            <select *ngIf="editing" [(ngModel)]="dtpType.toolType" formControlName="toolType" class="form-control">
                 <option *ngFor="let key of keys" [value]="key">{{toolTypes[key]}}</option>
             </select>
             <div *ngIf="formGroup.hasError('required', 'toolType')" class="alert alert-danger">This field is required.</div>
