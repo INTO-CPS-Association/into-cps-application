@@ -1,143 +1,138 @@
-const Application = require('spectron').Application
-const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
 
+const app = require("./TestHelpers").app();
+const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test7_data.zip");
+const testDataPath = path.resolve("test/TestData/test7_data");
 
-describe.skip('In Tutorial 7', function () {
+describe('In Tutorial 7', function () {
   this.timeout(120000)
 
+  before(async function () {
+    await app.start();
+    await app.client.waitUntilWindowLoaded();
+    require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
+    await app.electron.remote.app.loadProject(testDataPath + "/project/.project.json");
 
+    return app;
+  });
 
-  beforeEach(async function () {
-
-    this.app = new Application({
-      path: electronPath,
-      env: { RUNNING_IN_SPECTRON: '1' },
-      args: [path.join(__dirname, '..')]
-    })
-
-    fakeMenu.apply(this.app);
-
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
-
-    if (!(this.currentTest.title === 'File->Open Project Menu Click')) {
-
-      await this.app.client.waitForVisible('#node_ProjectBrowserItem_4', 20000);
-
-      await this.app.client.$('#node_ProjectBrowserItem_4').doubleClick();
-
-      await this.app.client.waitUntilWindowLoaded();
-
-      await this.app.client.waitForVisible('dse-page', 20000);
-
-      await this.app.client.$('.panel-heading').click()
-
-      await this.app.client.waitForVisible('.btn.btn-default', 20000);
-
-      await this.app.client.$('dse-configuration').$('.btn.btn-default').click()
-
-      await this.app.client.waitForVisible('.form-control.ng-untouched.ng-pristine.ng-valid', 20000);
-
-      await this.app.client.$('.form-control.ng-untouched.ng-pristine.ng-valid').selectByVisibleText('Experiment | lfr-non3d');
-
-      await this.app.client.$('.btn.btn-default').click();
-    }
-
-
-    return this.app;
-
-  })
-
-  afterEach(function () {
-
-    if (this.app && this.app.isRunning()) {
-
-      return this.app.stop()
-        .then(() => {
-          if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 7 loaded')
-            throw Error("Tutorial 7 project is not loaded!")
-        })
-    }
-  })
-
-  //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click', function () {
-    fakeMenu.clickMenu('File', 'Open Project');
-    return this.app;
-  })
+  after(function () {
+    return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
+  });
 
   // This should be done before as soon as we solve the programmatic project load problem
   it('Should have tutorial 7 loaded', function () {
-    return this.app.client.waitUntilWindowLoaded()
-      .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('Tutorial_7'); })
-
-      })
+    return app.electron.remote.app.getActiveProject()
+        .should
+        .eventually
+        .equal(testDataPath + "/project/.project.json");
   })
+
+  it("Should have the correct name", function () {
+    return app.electron.remote.app.getIProject()
+        .then(n => n.name)
+        .should
+        .eventually
+        .equal("")
+  });
+
+  it("Open DSE Page", function () {
+    return app.client.$("#node_ProjectBrowserItem_3")
+        .then(n => n.doubleClick())
+        .then(() => app.client.$("#activeTabTitle"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("dse-DSE Example-78");
+  });
+
+  it("Should open configuration", function () {
+    return app.client.$('.panel-heading')
+        .then(n => n.click())
+        .then(() => app.client.$('dse-configuration'))
+        .should
+        .eventually
+        .have
+        .property("elementId");
+  });
+
+  it("Should be able to edit DSE configuration", function () {
+    return app.client.$("dse-configuration .btn.btn-default")
+        .then(n => n.click())
+        .then(() => app.client.$("dse-configuration .btn.btn-default"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("Save");
+  });
 
   // step 2 Opening a DSE Configuration
   it('Select the Experiment/lfr-non3d multi model', function () {
-    return this.app.client
-      .$('.btn.btn-default').click()
-      .waitForVisible('.form-control.ng-untouched.ng-pristine.ng-valid', 20000)
-      .$('.form-control.ng-untouched.ng-pristine.ng-valid').selectByVisibleText('Experiment | lfr-non3d')
-      .getText('option:checked')
-      .then(function (text) {
-        expect(text).contain("lfr-non3d")
-      })
-  })
+    return app.client.$("select.form-control.ng-untouched.ng-pristine.ng-valid")
+        .then(n => n.selectByVisibleText('Experiment | lfr-non3d'))
+        .then(() => app.client.$("select.form-control.ng-valid.ng-dirty"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("lfr-non3d");
+  });
 
-  it('Select the Experiment/lfr-non3d multi model and click save', function () {
-    return this.app.client.$('.form-control-static').getText()
-      .then(function (text) {
-        expect(text).contain("lfr-non3d | Multi-models")
-      })
-  })
+  it("Set algorithm to exhaustive", function () {
+    return app.client.$("div.col-sm-7.col-md-8>select.form-control.ng-untouched.ng-pristine.ng-valid")
+        .then(n => n.selectByVisibleText("Exhaustive"))
+        .then(() => app.client.$("div.col-sm-7.col-md-8>select.form-control.ng-valid.ng-dirty"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("Exhaustive");
+  });
 
-  it('algorithm choice Exhaustive showing after multi-model is set ', function () {
-    return this.app.client
-      .waitForVisible('.col-sm-7.col-md-8', 2000)
-      .waitForVisible('.form-control-static', 2000)
-      .$('.col-sm-7.col-md-8').$('.form-control-static').getText()
-      .then(function (text) {
-        expect(text).contain("Exhaustive")
-      })
-  })
+  it("Should add a constraint on the y position", function () {
+    return app.client.$("#AddConstraints")
+        .then(n => n.click())
+        .then(() => app.client.$("#conparameter0"))
+        .then(n => n.setValue("{sensor1}.sensor1.lf_position_y == {sensor2FMU}.sensor2.lf_position_y"))
+        .then(() => app.client.$("#conparameter0"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .equal("{sensor1}.sensor1.lf_position_y == {sensor2FMU}.sensor2.lf_position_y")
+  });
 
-  it('Switching into editing mode from the top of the DSE configuration by clicking on Edit button ', function () {
-    return this.app.client
-      .$('#btn-edit').click().pause(3000)
-      .$('#btn-save').getText()
-      .then(function (text) {
-        assert.equal(text, "Save")
-      })
-  })
+  it("Should add a constraint on the x position", function () {
+    return app.client.$("#AddConstraints")
+        .then(n => n.click())
+        .then(() => app.client.$("#conparameter1"))
+        .then(n => n.setValue("{sensor1}.sensor1.lf_position_x == - {sensor2FMU}.sensor2.lf_position_x"))
+        .then(() => app.client.$("#conparameter1"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .equal("{sensor1}.sensor1.lf_position_x == - {sensor2FMU}.sensor2.lf_position_x")
+  });
 
-  //Page 9 and Page 11
-  it('Adding two constraints and studentMap in the scenarios text box.', function () {
-    return this.app.client
-      .$('#btn-edit').click()
-      .waitForVisible('#selectalg', 20000)
-      .$('#selectalg').click()
-      .waitForVisible('#Exhaustive', 20000)
-      .$('#Exhaustive').click()
+  it("Should set studentMap in the scenario", function () {
+    return app.client.$("#scenarios0")
+        .then(n => n.setValue("studentMap"))
+        .then(() => app.client.$("#scenarios0"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .equal("studentMap");
+  });
 
-      .$('#AddConstraints').click()
-      .$('#AddConstraints').click().pause(3000)
-
-      .waitForVisible('#conparameter0')
-      .waitForVisible('#conparameter1')
-      .$('#conparameter0').setValue('{sensor1}.sensor1.lf_position_y == {sensor2FMU}.sensor2.lf_position_y')
-      .$('#conparameter1').setValue('{sensor1}.sensor1.lf_position_x == - {sensor2FMU}.sensor2.lf_position_x')
-
-      .waitForVisible('#scenarios0')
-      .$('#scenarios0').getValue()
-      .then(function (value) {
-        assert.equal(value, 'studentMap')
-      })
-  })
-})
+  it("Should be able to save the configuration", function () {
+    return app.client.$("dse-configuration .btn.btn-default")
+        .then(n => n.click())
+        .then(() => app.client.$("dse-configuration .btn.btn-default"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("Edit");
+  });
+});
