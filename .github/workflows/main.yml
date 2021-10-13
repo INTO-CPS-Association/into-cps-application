@@ -1,4 +1,4 @@
-name: CI
+name: run-tutorial-tests
 
 on: 
    push:
@@ -6,24 +6,25 @@ on:
        - development
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
       with: 
-       ref: development
+        ref: development
+
     - name: Setup Node
-      run: echo Hello, world!
-    - name: Run a multi-line script
       uses: actions/setup-node@v1
       with:
-        node-version: '11.x'
+        node-version: '14.x'
+
     - name: Install Dependencies
       run: npm install  
+
     - name: Run Gulp
       run: gulp
+
     - name: Run headless test
       uses: GabrielBB/xvfb-action@v1.0
       with:
