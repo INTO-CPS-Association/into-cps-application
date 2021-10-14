@@ -97,3 +97,7 @@ module.exports.unZipTestData = function (zipPath, extractPath) {
     const zip = new require("adm-zip")(zipPath);
     zip.extractAllTo(extractPath, true);
 }
+
+module.exports.sleep = function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
