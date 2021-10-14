@@ -21,8 +21,9 @@ let wasDownloaded = false;
 
 module.exports.downloadCOE = async function(app) {
     const request = require("request");
+    const coeDownloadURL = "https://github.com/INTO-CPS-Association/maestro/releases/download/Release%2F1.0.10/coe-1.0.10-jar-with-dependencies.jar";
     // const coeDownloadURL = "https://github.com/INTO-CPS-Association/maestro/releases/download/Release%2F1.0.10/webapi-1.0.10.jar";
-    const coeDownloadURL = "https://github.com/INTO-CPS-Association/maestro/releases/download/Release%2F2.1.4/maestro-webapi-2.1.4.jar";
+    // const coeDownloadURL = "https://github.com/INTO-CPS-Association/maestro/releases/download/Release%2F2.1.4/maestro-webapi-2.1.4.jar";
 
     let p = await app.electron.remote.app.getCOEDownloadPath()
 
@@ -36,11 +37,20 @@ module.exports.downloadCOE = async function(app) {
         return;
     }
 
-    await request.get(coeDownloadURL)
-        .on("error", error => console.log("Failed to download COE: " + error))
+    let dwnPromise = new Promise((res, rej) => {
+        request.get(coeDownloadURL)
+        .on("error", error => {
+            console.log("Failed to download COE: " + error)
+            rej()
+        })
         .pipe(fs.createWriteStream(coePath))
-        .on("finish", () =>
-            console.log("finished download"));
+        .on("finish", () => {
+            console.log("finished download")
+            res()
+        });
+    });
+
+    await dwnPromise;
 }
 
 module.exports.deleteCOE = function(app) {
