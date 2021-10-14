@@ -57,6 +57,7 @@ describe('In Tutorial 9', function () {
         .then(n => n.click())
         .then(() => app.client.$("coe-simulation .btn.btn-sm.btn-default"))
         .then(n => n.click())
+        .then(() => sleep(100))
         .then(() => app.client.$("coe-simulation"))
         .then(n => n.$(".alert.alert-success"))
         .then(async n => {
