@@ -23,6 +23,7 @@
             </span>    
         </div>
         <div class="col-sm-9" *ngFor="let task of dtpType.tasks">
+            <p *ngIf="!editing" class="form-control-static">{{getTaskName(task)}}</p>
             <div *ngIf="editing" class="input-group">
                 <p class="form-control">{{getTaskName(task)}}</p>
                 <span class="input-group-btn">

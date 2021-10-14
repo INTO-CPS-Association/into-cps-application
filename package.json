@@ -41,8 +41,8 @@
       "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico"
     },
     "nsis": {
-      "oneClick" : false,
-      "allowToChangeInstallationDirectory" : true
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "linux": {
       "target": [
@@ -70,6 +70,7 @@
     "@types/sql.js": "~0.0.28",
     "@types/w2ui": "~1.4.30",
     "ace-builds": "^1.4.12",
+    "ajv": "^6.12.6",
     "bluebird": "~3.4.7",
     "bootstrap": "^3.3.6",
     "electron-default-menu": "^1.0.1",
@@ -77,6 +78,7 @@
     "fs-extra": "~0.30.0",
     "is-running": "~2.1.0",
     "jquery": "^3.4.1",
+    "js-yaml": "^4.1.0",
     "jsonschema": "~1.1.1",
     "jszip": "^3.2.2",
     "md5-promised": "~1.0.1",

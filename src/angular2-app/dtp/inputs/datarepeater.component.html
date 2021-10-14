@@ -40,6 +40,7 @@
             </span>    
         </div>
         <div class="col-sm-9" *ngFor="let signal of dtpType.signals">
+            <p *ngIf="!editing" class="form-control-static">{{signal.name}}</p>
             <div *ngIf="editing" class="input-group">
                 <p class="form-control">{{signal.name}}</p>
                 <span class="input-group-btn">
