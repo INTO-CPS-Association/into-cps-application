@@ -25,10 +25,13 @@ describe('In Tutorial 9', function () {
     require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
     await app.electron.remote.app.loadProject(testDataPath + "/project/.project.json");
 
+    await require("./TestHelpers").downloadCOE(app);
+
     return app;
   });
 
   after(function () {
+    require("./TestHelpers").deleteCOE(app);
     return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
   });
 
