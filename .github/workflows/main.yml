@@ -1,9 +1,9 @@
-name: run-tutorial-tests
+name: Run Tutorial Tests
 
 on: 
-   push:
-     branches: 
-       - development
+  push:
+    branches: 
+      - development
 
 jobs:
   test:
@@ -28,5 +28,5 @@ jobs:
     - name: Run headless test
       uses: GabrielBB/xvfb-action@v1.0
       with:
-        run: npm test test/spec.js
+        run: npm test
 
