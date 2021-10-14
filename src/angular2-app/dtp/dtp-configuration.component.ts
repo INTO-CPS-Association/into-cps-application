@@ -215,7 +215,7 @@ export class DtpConfigurationComponent {
                     console.error(`Unable to write yaml configuration to ${configPath}`);
                 }
             });
-            const schemaPath = "C:\\Users\\frdrk\\Desktop\\schema-0.0.2.yml";
+            const schemaPath = Path.join(Path.dirname(this._path), "schema.yml");
             const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), {json: true});
 
             const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
