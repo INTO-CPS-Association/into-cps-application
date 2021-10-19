@@ -93,7 +93,8 @@ export class DtpConfigurationComponent {
             this.config = config;
             this.isLoaded = true;
             // Create a form group for each DTPType
-            this.form = new FormGroup({ dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup())) }); //TODO: uniqueGroupPropertyValidator("name")
+
+            this.form = new FormGroup({ dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name")) });
             console.log("Parsing finished!");
 
         }, error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
@@ -147,6 +148,10 @@ export class DtpConfigurationComponent {
     }
 
     removeDtpType(dtpType: IDtpType) {
+        if(dtpType.type == DtpTypes.MaestroDtpType){
+            const maestroType = dtpType as MaestroDtpType;
+            fs.unlink(maestroType.multiModelPath, err => {if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`)});
+        }
         let formArray = <FormArray>this.form.get('dtpTypes');
         let index = this.config.dtpTypes.indexOf(dtpType);
         this.config.dtpTypes.splice(index, 1);
@@ -185,7 +190,7 @@ export class DtpConfigurationComponent {
                         } else if (task.type == DtpTypes.MaestroDtpType) {
                             const maestro: MaestroDtpType = task as MaestroDtpType;
                             let project = IntoCpsApp.getInstance().getActiveProject();
-                            const mmPath = Path.join(maestro.experimentPath, "..", "mm.json");
+                            const mmPath = Path.join(maestro.multiModelPath, "..", "mm.json");
                             var maestroObj;
                             await MultiModelConfig.parse(mmPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
                                 maestroObj = { simulation: { name: maestro.name, execution: { capture_output: maestro.capture_output }, tool: maestro.tool, version: maestro.version, config: multiModel.toObject() } };

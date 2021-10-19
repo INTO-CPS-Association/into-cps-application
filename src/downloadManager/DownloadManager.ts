@@ -107,7 +107,6 @@ window.onload = function () {
 }
 
 function fetchList() {
-
     let settings = IntoCpsApp.getInstance().getSettings();
     console.log(settings);
     var url = settings.getValue(SettingKeys.UPDATE_SITE);

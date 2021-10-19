@@ -11,12 +11,24 @@
 
     <!-- CO-SIMULATION EXPERIMENT -->
     <div class="form-group">
-        <label class="col-sm-3 control-label">Experiment</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static"><span>{{dtpType.experimentPath}}</span></p>
-            <select *ngIf="editing" [(ngModel)]="dtpType.experimentPath" [ngModelOptions]="{standalone:true}" class="form-control">
-                <option *ngFor="let path of experimentsPaths" [ngValue]="path">{{getExperimentNameFromPath(path, '2')}}</option>
-            </select>
+            <div *ngIf="isFirtTimeSetup && editing">
+                <span class="input-group-btn">
+                    <button type="button" (click)="doFirstTimeSetup(false)" class="btn btn-default" [disabled] = "this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtpType.name">
+                        Clean setup
+                        <span class="glyphicon glyphicon-edit"></span>
+                    </button>
+                </span>
+                <span class="input-group-btn">
+                    <select [disabled] = "this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtpType.name" [(ngModel)]="baseExperimentPath" [ngModelOptions]="{standalone:true}" class="form-control">
+                        <option *ngFor="let path of experimentsPaths" [ngValue]="path">{{getExperimentNameFromPath(path, '2')}}</option>
+                    </select>
+                    <button type="button" (click)="doFirstTimeSetup(true)" class="btn btn-default" [disabled] = "this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtpType.name">
+                        Setup from experiment
+                        <span class="glyphicon glyphicon-edit"></span>
+                    </button>
+                </span>
+            </div>
         </div>
     </div>
 
@@ -25,5 +37,15 @@
         <div class="col-sm-9">
             <input [disabled]="!editing" [(ngModel)]="dtpType.capture_output" formControlName="capture_output" type="checkbox">
         </div>
+    </div>
+
+    <div *ngIf="!isFirtTimeSetup">
+        <panel [title]="'Overview'" [open]="false">
+            <mm-overview #overview [(path)]="dtpType.multiModelPath"></mm-overview>
+        </panel>
+        
+        <panel *ngIf="editing" id="Configuration" [title]="'Configuration'" [open]="false">
+            <mm-configuration [(path)]="dtpType.multiModelPath" (change)="overview.parseConfig()"></mm-configuration>
+        </panel>
     </div>
 </div>

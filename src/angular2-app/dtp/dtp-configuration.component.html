@@ -55,7 +55,7 @@
 								{{ getDtpTypeName(dtpType) }}
 							</div>
 							<div class="panel-body">
-								<maestro [editing]="editing" [dtpType]="dtpType"
+								<maestro [editing]="editing" [dtpType]="dtpType" [configPath] = "config.sourcePath"
 									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.MaestroDtpType"></maestro>
 
 								<server [editing]="editing" [dtpType]="dtpType"

@@ -185,7 +185,7 @@ export class MaestroDtpType implements IDtpType {
     tool: string = "maestro";
     constructor(
         public name: string = "Maestro",
-        public experimentPath: string = "",
+        public multiModelPath: string = "",
         public capture_output: boolean = false
     ) {
     }
@@ -201,13 +201,13 @@ export class MaestroDtpType implements IDtpType {
         return {
             name: this.name,
             type: this.type,
-            experimentpath: this.experimentPath,
+            multiModelPath: this.multiModelPath,
             capture_output: this.capture_output
         };
     }
 
     static parse(json: any): MaestroDtpType {
-        return new MaestroDtpType(json["name"], json["experimentpath"], json["capture_output"])
+        return new MaestroDtpType(json["name"], json["multiModelPath"], json["capture_output"])
     }
 }
 

@@ -29,46 +29,109 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
-import { FormArray, FormControl, FormGroup } from "@angular/forms";
+import { Component, Input, AfterContentInit } from "@angular/core";
+import { FormGroup } from "@angular/forms";
 import { MaestroDtpType } from "../../../intocps-configurations/dtp-configuration";
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
-import {Project} from "../../../proj/Project";
+import { Project } from "../../../proj/Project";
 
 @Component({
     selector: 'maestro',
     templateUrl: "./angular2-app/dtp/inputs/maestro.component.html"
 })
-export class DtpMaestroComponent {
+export class DtpMaestroComponent implements AfterContentInit{
+
     @Input()
     dtpType: MaestroDtpType
 
     @Input()
-    formGroup:FormGroup;
+    formGroup: FormGroup;
 
     @Input()
     editing: boolean = false;
 
-    experimentsPaths: string [] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
+    @Input()
+    configPath: string = "";
+
+    baseExperimentPath: string = "";
+
+    baseOnExperiment: boolean = false;
+
+    experimentsPaths: string[] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
+
+    isFirtTimeSetup: boolean = false;
+
+    isSetupFromExperiment: boolean = false;
 
     constructor() {
         console.log("Maestro component constructor");
     }
 
-    customTrackBy(index: number, obj: any): any {
-        return index;
+    ngAfterContentInit(): void {
+        if(this.dtpType.multiModelPath != ""){
+            if(fs.existsSync(this.dtpType.multiModelPath)){
+                return;
+            }
+            else {
+                console.error(`Unable to locate multi-model at: ${this.dtpType.multiModelPath}.`);
+            }
+        }
+        this.isFirtTimeSetup = true;
     }
 
-    getExperimentNameFromPath(path: string, depth: number): string{
+    hasUniqueName(): boolean {
+        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtpType.name;
+    }
+
+    doFirstTimeSetup(setupFromExperiment: boolean) {
+        this.isFirtTimeSetup = false;
+        this.isSetupFromExperiment = setupFromExperiment;
+
+        const mm_destinationName = Path.join(Path.dirname(this.configPath), this.dtpType.name + "_multiModel.json");
+
+        if(setupFromExperiment){
+            if (!fs.existsSync(this.baseExperimentPath)) {
+                return;
+            }
+            const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
+            fs.readdir(mm_sourcePath, (err, files) => {
+                if (files) {
+                    const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
+                    if (mm_name) {
+                        const mm_sourceName = Path.join(mm_sourcePath, mm_name);
+                        fs.copyFile(mm_sourceName, mm_destinationName, (err) => {
+                            if (err) {
+                                console.error(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`);
+                            }
+                            else {
+                                this.dtpType.multiModelPath = mm_destinationName;
+                            }
+                        });
+                    }
+                    else {
+                        console.error(`Unable to locate multi model in: ${mm_sourcePath}.`);
+                    }
+                } else {
+                    console.error(`Unable to read directory: ${mm_sourcePath}: "${err}."`);
+                }
+            });
+        }
+        else {
+            this.dtpType.multiModelPath = mm_destinationName;
+            fs.writeFileSync(this.dtpType.multiModelPath, "{}", 'utf-8');
+        }
+    }
+
+    getExperimentNameFromPath(path: string, depth: number): string {
         let elems = path.split(Path.sep);
-        if(elems.length <= 1) {
+        if (elems.length <= 1) {
             return path;
         }
         let pathToReturn = "";
-        for(let i = depth; i >= 1; i--){
-            pathToReturn += elems[elems.length-i] + (i == 1 ? "" : " | ");
+        for (let i = depth; i >= 1; i--) {
+            pathToReturn += elems[elems.length - i] + (i == 1 ? "" : " | ");
         }
         return pathToReturn;
     }
@@ -76,13 +139,13 @@ export class DtpMaestroComponent {
     getExperimentsPaths(path: string): string[] {
         let experimentPaths: string[] = []
         let files = fs.readdirSync(path);
-        if(files.findIndex(f => f.endsWith("coe.json")) != -1){
+        if (files.findIndex(f => f.endsWith("coe.json")) != -1) {
             experimentPaths.push(path);
         }
         else {
-            for(let i in files){
-                let fileName = Path.join(path, files[i]);   
-                if (fs.statSync(fileName).isDirectory()){
+            for (let i in files) {
+                let fileName = Path.join(path, files[i]);
+                if (fs.statSync(fileName).isDirectory()) {
                     experimentPaths = experimentPaths.concat(this.getExperimentsPaths(fileName));
                 }
             }
