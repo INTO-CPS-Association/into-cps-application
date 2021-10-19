@@ -7,91 +7,165 @@
 		Save
 	</button>
 
+	<hr />
+
 	<div class="form-horizontal">
-		<div class="panel-group" id="accordion">
-			<div class="panel panel-primary">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a data-toggle="collapse" data-parent="#accordion"
-							href="#basic-collapse1">
-							DTP configuration</a>
-					</h4>
-				</div>
-				<div id="basic-collapse1" class="panel-collapse collapse in">
-
-					<!-- Configuration Types -->
-					<div class="form-group">
-						<label class="col-sm-5 col-md-4 control-label">Type</label>
-						<div class="col-sm-7 col-md-8">
-							<div *ngIf="editing" class="input-group">
-								<select [(ngModel)]="newConfig"
-									[ngModelOptions]="{ standalone: true }"
-									class="form-control">
-									<option *ngFor="let dtpType of dtpTypeConstructors"
-										[ngValue]="dtpType">{{
-										getDtpTypeName(dtpType) }}</option>
-								</select>
-								<span class="input-group-btn">
-									<button type="button"
-										(click)="addDtpType()"
-										class="btn btn-default" [disabled]="!newConfig">
-										<span
-											class="glyphicon glyphicon-plus"></span>
-										Add
-									</button>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="constraint-container">
-						<div class="panel panel-default constraint-panel" *ngFor="
-					  let dtpType of config.dtpTypes;
-					  let i = index
-					">
-							<div class="panel-heading">
-								<a *ngIf="editing" (click)="removeDtpType(dtpType)"
-									class="pull-right"><span
-										class="glyphicon glyphicon-remove"></span></a>
-								{{ getDtpTypeName(dtpType) }}
-							</div>
-							<div class="panel-body">
-								<maestro [editing]="editing" [dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.MaestroDtpType"></maestro>
-
-								<server [editing]="editing" [dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.ServerDtpType"></server>
-
-								<signal [editing]="editing" [dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" *ngIf="dtpType.type === dtpTypesEnum.SignalDtpType"></signal>
-								<data-repeater 
-									[editing]="editing" 
-									[dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)"
-									[dtpTypes]="config.dtpTypes" 
-									[typesArrayChangedEvent]="typesArrayChanged.asObservable()"
-									*ngIf="dtpType.type === dtpTypesEnum.DataRepeaterDtpType"></data-repeater>
-								<tool
-									[editing]="editing" 
-									[dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" 
-									*ngIf="dtpType.type === dtpTypesEnum.ToolDtpType"></tool>
-								<task-configuration
-									[editing]="editing" 
-									[dtpType]="dtpType"
-									[formGroup]="form.get('dtpTypes').at(i)" 
-									[dtpTypes]="config.dtpTypes"
-									[typesArrayChangedEvent]="typesArrayChanged.asObservable()"
-									*ngIf="dtpType.type === dtpTypesEnum.ConfigurationDtpType"></task-configuration>
-							</div>
-						</div>
+		<panel id="tools" [title]="'Tools'" [open]="false">
+			<!-- Configuration Types -->
+			<div *ngIf="editing" class="form-group">
+				<label class="col-sm-5 col-md-4 control-label">Available tools</label>
+				<div class="col-sm-7 col-md-8">
+					<div class="input-group">
+						<select [(ngModel)]="newConfig"
+							[ngModelOptions]="{ standalone: true }"
+							class="form-control">
+							<option *ngFor="let dtpType of dtpTypeConstructors"
+								[ngValue]="dtpType">{{
+								getDtpTypeName(dtpType) }}</option>
+						</select>
+						<span class="input-group-btn">
+							<button type="button"
+								(click)="addDtpType()"
+								class="btn btn-default" [disabled]="!newConfig">
+								<span
+									class="glyphicon glyphicon-plus"></span>
+								Add
+							</button>
+						</span>
 					</div>
 				</div>
-
 			</div>
+
+			<div class="constraint-container">
+				<div class="panel panel-default constraint-panel" *ngFor="let dtpType of config.tools;let i = index">
+					<div class="panel-heading">
+						<a *ngIf="editing" (click)="removeDtpType(dtpType)"
+							class="pull-right"><span
+								class="glyphicon glyphicon-remove"></span></a>
+						{{ getDtpTypeName(dtpType) }}
+					</div>
+					<div class="panel-body">
+						<tool
+							[editing]="editing" 
+							[dtpType]="dtpType"
+							[formGroup]="form.get('tools').at(i)" 
+							*ngIf="dtpType.type === dtpTypesEnum.ToolDtpType"></tool>		
+					</div>
+				</div>
+			</div>
+		</panel>
+
+		<panel id="servers" [title]="'Servers'" [open]="false">
+			<div *ngIf="editing" class="form-group">
+				<div class="col-sm-7 col-md-8">
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button type="button" (click)="addServer()" class="btn btn-default">
+								Add new server 
+								<span class="glyphicon glyphicon-plus"></span>
+							</button>
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="constraint-container">
+				<div class="panel panel-default constraint-panel" *ngFor="let server of config.servers;let i = index">
+					<div class="panel-heading">
+						<a *ngIf="editing" (click)="removeServer(server)" class="pull-right">
+							<span class="glyphicon glyphicon-remove"></span>
+						</a>
+					</div>
+					<div class="panel-body">
+						<server [editing]="editing" [dtpType]="server" [formGroup]="form.get('servers').at(i)"></server>			
+					</div>
+				</div>
+			</div>
+		</panel>
+
+		<panel id="configurations" [title]="'Configurations'" [open]="false">
+
+			<div *ngIf="editing" class="form-group">
+				<div class="col-sm-7 col-md-8">
+					<div class="input-group">
+						<span class="input-group-btn">
+							<button type="button" (click)="addConfiguration()" class="btn btn-default">
+								Add new configuration 
+								<span class="glyphicon glyphicon-plus"></span>
+							</button>
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="constraint-container">
+				<div class="panel panel-default constraint-panel" *ngFor="let configuration of config.configurations;let i = index">
+					<div class="panel-heading">
+						<a *ngIf="editing" (click)="removeConfiguration(configuration)" class="pull-right">
+							<span class="glyphicon glyphicon-remove"></span>
+						</a>
+					</div>
+					<div class="panel-body">
+						<task-configuration [editing]="editing" [dtpType]="configuration" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
+					</div>
+				</div>
+			</div>
+
 			<hr />
 
-		</div>
+			<panel id="tasks" [title]="'Tasks'" [open]="false">
+				<div *ngIf="editing" class="form-group">
+					<label class="col-sm-5 col-md-4 control-label">Task</label>
+					<div class="col-sm-7 col-md-8">
+						<div *ngIf="editing" class="input-group">
+							<select [(ngModel)]="newTask"
+								[ngModelOptions]="{ standalone: true }"
+								class="form-control">
+								<option *ngFor="let task of taskConstructors"
+									[ngValue]="task">{{
+									getDtpTypeName(task) }}</option>
+							</select>
+							<span class="input-group-btn">
+								<button type="button"
+									(click)="addTask()"
+									class="btn btn-default" [disabled]="!newTask">
+									<span
+										class="glyphicon glyphicon-plus"></span>
+									Add
+								</button>
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="constraint-container">
+					<div class="panel panel-default constraint-panel" *ngFor="let task of config.tasks; let i = index">
+						<div class="panel-heading">
+							<a *ngIf="editing" (click)="removeTask(task)"
+								class="pull-right"><span
+									class="glyphicon glyphicon-remove"></span></a>
+							{{ getDtpTypeName(task) }}
+						</div>
+						<div class="panel-body">
+							<maestro [editing]="editing" [dtpType]="task"
+								[formGroup]="form.get('tasks').at(i)" *ngIf="task.type === dtpTypesEnum.MaestroDtpType"></maestro>
+
+							<signal [editing]="editing" [dtpType]="task"
+								[formGroup]="form.get('tasks').at(i)" *ngIf="task.type === dtpTypesEnum.SignalDtpType"></signal>
+							<data-repeater 
+								[editing]="editing" 
+								[dtpType]="task"
+								[formGroup]="form.get('tasks').at(i)"
+								[config]="config" 
+								*ngIf="task.type === dtpTypesEnum.DataRepeaterDtpType"></data-repeater>
+						</div>
+					</div>
+				</div>
+			</panel>
+		</panel>
 	</div>
+	
+	<hr />
 
 	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
 		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit

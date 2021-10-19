@@ -27,7 +27,7 @@
 
     <div class="form-group">
         <label class="col-sm-3 control-label">
-            Tasks
+            Signals
         </label>
         <div *ngIf="editing && showSelectGroup" class="input-group">
             <select [(ngModel)]="selectedSignal" [ngModelOptions]="{standalone: true}" class="form-control">
@@ -40,14 +40,18 @@
             </span>    
         </div>
         <div class="col-sm-9" *ngFor="let signal of dtpType.signals">
-            <div *ngIf="editing" class="input-group">
-                <p class="form-control">{{signal.name}}</p>
-                <span class="input-group-btn">
-                    <button type="button" (click)="removeSignal(signal)" class="btn btn-default">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
-                </span>
+            <div class="col-sm-9">
+                <p *ngIf="!editing" class="form-control-static">{{signal.name}}</p>
+                <div *ngIf="editing" class="input-group">
+                    <p class="form-control">{{signal.name}}</p>
+                    <span class="input-group-btn">
+                        <button type="button" (click)="removeSignal(signal)" class="btn btn-default">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                    </span>
+                </div>
             </div>
+            
         </div>
     </div>
 </div>

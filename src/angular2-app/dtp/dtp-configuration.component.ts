@@ -34,8 +34,11 @@ import { FormArray, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
 import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpType, DtpTypes, ToolDtpType, TaskConfigurationDtpType } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
-import {uniqueGroupPropertyValidator} from "../../angular2-app/shared/validators";
-import { Subject } from "rxjs/internal/Subject";
+import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
+import * as fs from "fs"
+import * as Path from 'path';
+
+const yaml = require('js-yaml');
 
 const dialog = require("electron").remote.dialog;
 
@@ -48,11 +51,7 @@ export class DtpConfigurationComponent {
 
     newConfig: new (...args: any[]) => IDtpType;
 
-    typesArrayChanged: Subject<void> = new Subject<void>();
-
-    private emitTypesArrayChanged() {
-        this.typesArrayChanged.next();
-    }
+    newTask: new (...args: any[]) => IDtpType;
 
     @Input()
     set path(path: string) {
@@ -67,7 +66,6 @@ export class DtpConfigurationComponent {
         return this._path;
     }
     form: FormGroup;
-    dtpTypes: IDtpType[] = [];
     editing: boolean = false;
     isLoaded: boolean = false;
     parseError: string = null;
@@ -75,6 +73,7 @@ export class DtpConfigurationComponent {
 
     private config: DTPConfig;
     private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType, ToolDtpType, TaskConfigurationDtpType]
+    private taskConstructors = [DataRepeaterDtpType, SignalDtpType, MaestroDtpType];
 
     constructor(private zone: NgZone, private navigationService: NavigationService) {
         console.log("HURRAY");
@@ -88,17 +87,17 @@ export class DtpConfigurationComponent {
             this.config = config;
             this.isLoaded = true;
             // Create a form group for each DTPType
-            this.form = new FormGroup({dtpTypes: new FormArray(this.config.dtpTypes.map(c => c.toFormGroup()))}); //TODO: uniqueGroupPropertyValidator("name")
+            this.form = new FormGroup({ tasks: new FormArray(this.config.tasks.map(c => c.toFormGroup())), servers: new FormArray(this.config.servers.map(c => c.toFormGroup())), tools: new FormArray(this.config.tools.map(c => c.toFormGroup())), configurations: new FormArray(this.config.configurations.map(c => c.toFormGroup())) });
             console.log("Parsing finished!");
 
-        },error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
+        }, error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
     }
 
     onNavigate(): boolean {
         if (!this.editing)
             return true;
         else {
-            if (confirm("Save your work before leaving?")){
+            if (confirm("Save your work before leaving?")) {
                 //this.onSubmit();
             }
             return true;
@@ -112,24 +111,73 @@ export class DtpConfigurationComponent {
         else if (dtpType === ServerDtpType || dtpType instanceof ServerDtpType) {
             return "Server"
         }
-        else if (dtpType === SignalDtpType || dtpType instanceof SignalDtpType){
+        else if (dtpType === SignalDtpType || dtpType instanceof SignalDtpType) {
             return "Signal"
         }
-        else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType){
+        else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType) {
             return "Data-Repeater"
         }
-        else if (dtpType === ToolDtpType || dtpType instanceof ToolDtpType){
+        else if (dtpType === ToolDtpType || dtpType instanceof ToolDtpType) {
             return "Tool"
         }
-        else if (dtpType === TaskConfigurationDtpType || dtpType instanceof TaskConfigurationDtpType){
+        else if (dtpType === TaskConfigurationDtpType || dtpType instanceof TaskConfigurationDtpType) {
             return "Configuration"
         }
         else {
             console.log("Unknown DTPType");
-            if(this.newConfig){
+            if (this.newConfig) {
                 console.log("newconfig: " + this.newConfig);
             }
         }
+    }
+
+    addServer() {
+        const server = new ServerDtpType("new id");
+        this.config.servers.push(server);
+        let formArray = <FormArray>this.form.get('servers');
+        formArray.push(server.toFormGroup());
+        this.config.emitConfigChanged();
+    }
+
+    removeServer(server: IDtpType) {
+        let formArray = <FormArray>this.form.get('servers');
+        let index = this.config.servers.indexOf(server);
+        this.config.servers.splice(index, 1);
+        formArray.removeAt(index);
+        this.config.emitConfigChanged();
+    }
+
+    addConfiguration() {
+        const configuration = new TaskConfigurationDtpType();
+        this.config.configurations.push(configuration);
+        let formArray = <FormArray>this.form.get('configurations');
+        formArray.push(configuration.toFormGroup());
+        this.config.emitConfigChanged();
+    }
+
+    removeConfiguration(configuration: IDtpType) {
+        let formArray = <FormArray>this.form.get('configurations');
+        let index = this.config.configurations.indexOf(configuration);
+        this.config.configurations.splice(index, 1);
+        formArray.removeAt(index);
+        this.config.emitConfigChanged();
+    }
+
+    addTask() {
+        if (!this.newTask) return;
+        let task = new this.newTask();
+        this.config.tasks.push(task);
+        let formArray = <FormArray>this.form.get('tasks');
+        formArray.push(task.toFormGroup());
+        this.config.emitConfigChanged();
+    }
+
+    removeTask(task: IDtpType) {
+        let formArray = <FormArray>this.form.get('tasks');
+        let index = this.config.tasks.indexOf(task);
+        this.config.tasks.splice(index, 1);
+        formArray.removeAt(index);
+        this.config.emitConfigChanged();
     }
 
     addDtpType() {
@@ -138,30 +186,54 @@ export class DtpConfigurationComponent {
         this.config.dtpTypes.push(dtpType);
         let formArray = <FormArray>this.form.get('dtpTypes');
         formArray.push(dtpType.toFormGroup());
-        this.emitTypesArrayChanged();
+        this.config.emitConfigChanged();
     }
 
-    removeDtpType(dtpType: IDtpType){
+    removeDtpType(dtpType: IDtpType) {
         let formArray = <FormArray>this.form.get('dtpTypes');
         let index = this.config.dtpTypes.indexOf(dtpType);
         this.config.dtpTypes.splice(index, 1);
         formArray.removeAt(index);
-        this.emitTypesArrayChanged();
+        this.config.emitConfigChanged();
     }
 
-    export(){
+    export() {
         let tools: Array<IDtpType> = [];
         let servers: Array<IDtpType> = [];
         let configurations: Array<IDtpType> = [];
-        this.dtpTypes.forEach(idtptype => {
-            
+        this.config.dtpTypes.forEach(idtptype => {
+            switch (idtptype.type) {
+                case DtpTypes.ConfigurationDtpType:
+                    configurations.push(idtptype);
+                    break;
+                case DtpTypes.ServerDtpType:
+                    servers.push(idtptype);
+                    break;
+                case DtpTypes.ToolDtpType:
+                    tools.push(idtptype);
+                    break;
+            }
         })
+        let jsonObj: any = { tools: tools, servers: servers, configurations: configurations };
+        try {
+            var yamlConfig = yaml.dump(jsonObj);
+        }
+        catch (exception) {
+            console.error(`Unable to generate yaml configuration: ${exception}`);
+        }
 
+        let dir = Path.dirname(this.path);
+        let path = Path.join(dir, "configuration.yaml");
+        fs.writeFile(path, yamlConfig, error => {
+            if (error) {
+                console.error(`Unable to write yaml config file to: ${path}`);
+            }
+        });
     }
 
     onSubmit() {
         if (!this.editing) return;
-            this.config.save()
+        this.config.save()
                 /*.then(() => this.change.emit(this.path))*/.catch(error => console.error("error when saving: " + error));
         this.editing = false;
     }

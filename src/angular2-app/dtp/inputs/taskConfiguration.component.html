@@ -23,14 +23,18 @@
             </span>    
         </div>
         <div class="col-sm-9" *ngFor="let task of dtpType.tasks">
-            <div *ngIf="editing" class="input-group">
-                <p class="form-control">{{getTaskName(task)}}</p>
-                <span class="input-group-btn">
-                    <button type="button" (click)="removeTask(task)" class="btn btn-default">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
-                </span>
+            <div class="col-sm-9">
+                <p *ngIf="!editing" class="form-control-static">{{getTaskName(task)}}</p>
+                <div *ngIf="editing" class="input-group">
+                    <p class="form-control">{{getTaskName(task)}}</p>
+                    <span class="input-group-btn">
+                        <button type="button" (click)="removeTask(task)" class="btn btn-default">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                    </span>
+                </div>
             </div>
+            
         </div>
     </div>
 </div>

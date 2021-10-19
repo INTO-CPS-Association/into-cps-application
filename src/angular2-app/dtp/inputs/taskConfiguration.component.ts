@@ -30,7 +30,7 @@
  */
 
 import { Component, Input, AfterContentInit, OnDestroy } from "@angular/core";
-import { FormArray, FormGroup } from "@angular/forms";
+import { FormGroup } from "@angular/forms";
 import { Observable, Subscription } from "rxjs";
 import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpType, MaestroDtpType, ServerDtpType, SignalDtpType, TaskConfigurationDtpType, ToolDtpType } from "../../../intocps-configurations/dtp-configuration";
 
@@ -39,7 +39,7 @@ import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpType, MaestroDtpType, Ser
     templateUrl: "./angular2-app/dtp/inputs/taskConfiguration.component.html"
 })
 export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestroy{
-    private typesArrayChangedEventSubscription: Subscription;
+    private configChangedSub: Subscription;
 
     @Input()
     dtpType: TaskConfigurationDtpType
@@ -48,13 +48,10 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
     formGroup: FormGroup;
 
     @Input()
-    dtpTypes: IDtpType[];
+    config: DTPConfig;
 
     @Input()
     editing: boolean = false;
-
-    @Input()
-    typesArrayChangedEvent: Observable<void>;
 
     selectedTask: string;
     showSelectGroup: boolean;
@@ -66,12 +63,12 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
     typeFilterPredicate = (idtpType:IDtpType) => { return idtpType.type == DtpTypes.DataRepeaterDtpType || idtpType.type == DtpTypes.MaestroDtpType}
 
     ngAfterContentInit(): void {
-        this.typesArrayChangedEventSubscription = this.typesArrayChangedEvent.subscribe(() => this.syncTasksWithTypes());
+        this.configChangedSub = this.config.configChanged.asObservable().subscribe(() => this.syncWithAvailableTasks());
         this.updateSelectedTask();
     }
 
     ngOnDestroy() {
-        this.typesArrayChangedEventSubscription.unsubscribe();
+        this.configChangedSub.unsubscribe();
     }
 
     updateSelectedTask() {
@@ -79,9 +76,9 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
         this.showSelectGroup = this.selectedTask != "";
     }
 
-    syncTasksWithTypes() {
+    syncWithAvailableTasks() {
         const indeciesToRemove = this.dtpType.tasks.reduce((indecies, task) => {
-            if (!this.dtpTypes.includes(task)) {
+            if (!this.config.tasks.includes(task)) {
                 const index = this.dtpType.tasks.findIndex(task2 => task2.name == task.name && task2.type == task.type);
                 if(index >= 0){
                     indecies.push(index);
@@ -97,7 +94,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
     }
 
     getRemaningTasksNames(): string[] {
-        const tasks = this.dtpTypes.reduce((tasks: string[], idtpType) => {
+        const tasks = this.config.tasks.reduce((tasks: string[], idtpType) => {
             if (!this.dtpType.tasks.includes(idtpType) && this.typeFilterPredicate(idtpType)) {
                 tasks.push(this.getTaskName(idtpType));
             }
@@ -107,7 +104,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
     }
 
     addTask() {
-        const task = this.dtpTypes.find(type => this.getTaskName(type) == this.selectedTask);
+        const task = this.config.tasks.find(type => this.getTaskName(type) == this.selectedTask);
         this.dtpType.tasks.push(task);
         this.updateSelectedTask();
     }

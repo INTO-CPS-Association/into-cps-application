@@ -3,6 +3,7 @@ import {
     integerValidator
 } from "../angular2-app/shared/validators";
 import { FormArray, FormGroup, FormControl, Validators } from "@angular/forms";
+import { Subject } from "rxjs";
 
 export class DTPConfig implements ISerializable {
     sourcePath: string;
@@ -22,7 +23,7 @@ export class DTPConfig implements ISerializable {
     }
     protected static TAG_DTP_TYPES = "dtp_types";
 
-    constructor(public dtpTypes: Array<IDtpType> = []) { }
+    constructor(public dtpTypes: Array<IDtpType> = [], public configurations: Array<IDtpType> = [], public tools: Array<IDtpType> = [], public servers: Array<IDtpType> = [], public tasks: Array<IDtpType> = []) { }
 
     toObject() {
         let dtpTypes: any = {};
@@ -33,10 +34,34 @@ export class DTPConfig implements ISerializable {
         return objectToSerialize;
     }
 
+    configChanged: Subject<void> = new Subject<void>();
+
+    public emitConfigChanged() {
+        this.configChanged.next();
+    }
+
     static create(path: string, projectRoot: string, data: any): Promise<DTPConfig> {
         return new Promise<DTPConfig>((resolve, reject) => {
             let config = new DTPConfig();
+
             config.dtpTypes = this.parseDtpTypes(data[this.TAG_DTP_TYPES]);
+
+            config.dtpTypes.forEach(idtptype => {
+                if(idtptype instanceof ToolDtpType){
+                    config.tools.push(idtptype);
+                }else if(idtptype instanceof ServerDtpType){
+                    config.servers.push(idtptype);
+                }else if(idtptype instanceof MaestroDtpType){
+                    config.tasks.push(idtptype);
+                }else if(idtptype instanceof DataRepeaterDtpType){
+                    config.tasks.push(idtptype);
+                }else if(idtptype instanceof SignalDtpType){
+                    config.tasks.push(idtptype);
+                }else if(idtptype instanceof TaskConfigurationDtpType){
+                    config.configurations.push(idtptype);
+                }
+            })
+
             config.sourcePath = path;
             resolve(config);
         });
