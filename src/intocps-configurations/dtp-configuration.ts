@@ -70,7 +70,7 @@ export class DTPConfig implements ISerializable {
     private static parseDtpTypes(dtpTypes: any): Array<IDtpType> {
         if (dtpTypes) {
             var unTransformedTypes: IDtpType[] = [];
-            const typesArray = Object.keys(dtpTypes).reduce((types:IDtpType[], id:string) => {
+            const typesArray = Object.keys(dtpTypes).reduce((types: IDtpType[], id: string) => {
                 const idtpType = dtpTypes[id];
                 if (idtpType.type == DtpTypes.MaestroDtpType) {
                     types.push(MaestroDtpType.parse(idtpType));
@@ -83,25 +83,19 @@ export class DTPConfig implements ISerializable {
                 }
                 else if (idtpType.type == DtpTypes.ToolDtpType) {
                     types.push(ToolDtpType.parse(idtpType));
-                }       
+                }
                 else {
                     unTransformedTypes.push(idtpType);
                 }
                 return types;
             }, []);
-            if(unTransformedTypes.length > 0){
-                //TODO: Optimise
-                unTransformedTypes.forEach(type => {
-                    if(type.type == DtpTypes.DataRepeaterDtpType){
-                        typesArray.push(DataRepeaterDtpType.parse(type, typesArray));
-                    }
-                })
-
-                const configurationType = unTransformedTypes.find(idtpType => idtpType.type == DtpTypes.ConfigurationDtpType);
-                if(configurationType){
-                    typesArray.push(TaskConfigurationDtpType.parse(configurationType, typesArray));
+            unTransformedTypes.forEach(type => {
+                if (type.type == DtpTypes.DataRepeaterDtpType) {
+                    typesArray.push(DataRepeaterDtpType.parse(type, typesArray));
+                } else if (type.type == DtpTypes.ConfigurationDtpType) {
+                    typesArray.push(TaskConfigurationDtpType.parse(type, typesArray));
                 }
-            }
+            });
             return typesArray;
         }
         else return Array<IDtpType>();
@@ -141,8 +135,8 @@ export enum DtpTypes {
 }
 
 export enum ToolTypes {
-    Maestro = "Maestro",
-    DataRepeater = "DataRepeater"
+    maestro = "maestro",
+    rabbitmq = "rabbitmq"
 }
 
 export class TaskConfigurationDtpType implements IDtpType {
@@ -212,11 +206,11 @@ export class ServerDtpType implements IDtpType {
 
 export class MaestroDtpType implements IDtpType {
     type = DtpTypes.MaestroDtpType;
-    version: number = 2;
-    implementation: string = "maestro";
+    version: string = '2';
+    tool: string = "maestro";
     constructor(
         public name: string = "Maestro",
-        public experimentPath: string = "",
+        public multiModelPath: string = "",
         public capture_output: boolean = false
     ) {
     }
@@ -232,13 +226,13 @@ export class MaestroDtpType implements IDtpType {
         return {
             name: this.name,
             type: this.type,
-            experimentpath: this.experimentPath,
+            multiModelPath: this.multiModelPath,
             capture_output: this.capture_output
         };
     }
 
     static parse(json: any): MaestroDtpType {
-        return new MaestroDtpType(json["name"], json["experimentpath"], json["capture_output"])
+        return new MaestroDtpType(json["name"], json["multiModelPath"], json["capture_output"])
     }
 }
 
@@ -295,8 +289,8 @@ export class SignalDtpType implements IDtpType {
 
     static parse(json: any): SignalDtpType {
         return new SignalDtpType(json["name"],
-            new SignalSource(json["source_exchange"], json["source_datatype"], json["source_routing_key"]),
-            new SignalTarget(json["target_exchange"], json["target_pack"], json["target_path"], json["target_datatype"], json["target_routing_key"]));
+            new SignalSource(json["source"]["exchange"], json["source"]["datatype"], json["source"]["routing_key"]),
+            new SignalTarget(json["target"]["exchange"], json["target"]["pack"], json["target"]["path"], json["target"]["datatype"], json["target"]["routing_key"]));
     }
 }
 
@@ -309,12 +303,15 @@ export class DataRepeaterDtpType implements IDtpType {
         return new FormGroup({
             name: new FormControl(this.name, [Validators.required]),
             server_source: new FormControl(this.server_source),
-            server_target: new FormControl(this.server_target)
+            server_target: new FormControl(this.server_target),
+            signals: new FormControl(this.signals)
         })
     }
     toObject() {
         return {
             name: this.name,
+            server_source: this.server_source,
+            server_target: this.server_target,
             type: this.type,
             signals: this.signals
         };

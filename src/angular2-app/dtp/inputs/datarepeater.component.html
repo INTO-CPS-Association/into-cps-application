@@ -2,26 +2,26 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtpType.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtpType.name"  formControlName="name" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{dtptype.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtptype.name"  formControlName="name" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
-            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtpType.name" class="alert alert-danger">Name is not unique.</div>
+            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtptype.name" class="alert alert-danger">Name is not unique.</div>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Source</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtpType.server_source}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtpType.server_source"  formControlName="server_source" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{dtptype.server_source}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtptype.server_source"  formControlName="server_source" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Target</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtpType.server_target}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtpType.server_target"  formControlName="server_target" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{dtptype.server_target}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtptype.server_target"  formControlName="server_target" class="form-control">
         </div>
     </div>
 
@@ -39,7 +39,7 @@
                 </button>
             </span>    
         </div>
-        <div class="col-sm-9" *ngFor="let signal of dtpType.signals">
+        <div class="col-sm-9" *ngFor="let signal of dtptype.signals">
             <div class="col-sm-9">
                 <p *ngIf="!editing" class="form-control-static">{{signal.name}}</p>
                 <div *ngIf="editing" class="input-group">
