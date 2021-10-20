@@ -43,7 +43,7 @@ import {Project} from "../../../proj/Project";
 })
 export class DtpServerComponent {
     @Input()
-    dtpType: ServerDtpType
+    dtptype: ServerDtpType
 
     @Input()
     formGroup:FormGroup;

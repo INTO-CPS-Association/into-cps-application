@@ -35,7 +35,6 @@ import IntoCpsApp from "../../IntoCpsApp";
 import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpType, DtpTypes, ToolDtpType, TaskConfigurationDtpType, ToolTypes } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
-import { Subject } from "rxjs/internal/Subject";
 import * as fs from "fs";
 import * as Path from 'path';
 import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
@@ -51,8 +50,6 @@ const Ajv = require("ajv")
 })
 export class DtpConfigurationComponent {
     private _path: string;
-
-    newConfig: new (...args: any[]) => IDtpType;
 
     newTask: new (...args: any[]) => IDtpType;
 
@@ -79,7 +76,6 @@ export class DtpConfigurationComponent {
     private taskConstructors = [DataRepeaterDtpType, SignalDtpType, MaestroDtpType];
 
     constructor(private zone: NgZone, private navigationService: NavigationService) {
-        console.log("HURRAY");
         this.navigationService.registerComponent(this);
     }
 
@@ -90,7 +86,12 @@ export class DtpConfigurationComponent {
             this.config = config;
             this.isLoaded = true;
             // Create a form group for each DTPType
-            this.form = new FormGroup({ tasks: new FormArray(this.config.tasks.map(c => c.toFormGroup())), servers: new FormArray(this.config.servers.map(c => c.toFormGroup())), tools: new FormArray(this.config.tools.map(c => c.toFormGroup())), configurations: new FormArray(this.config.configurations.map(c => c.toFormGroup())) });
+            this.form = new FormGroup({ 
+                tasks: new FormArray(this.config.tasks.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name")), 
+                servers: new FormArray(this.config.servers.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id")), 
+                tools: new FormArray(this.config.tools.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name")), 
+                configurations: new FormArray(this.config.configurations.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name")) 
+            });
             console.log("Parsing finished!");
 
         }, error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
@@ -108,30 +109,101 @@ export class DtpConfigurationComponent {
     }
 
     getDtpTypeName(dtpType: any) {
-        if (dtpType === MaestroDtpType || dtpType instanceof MaestroDtpType) {
-            return "Maestro"
+        if('type' in dtpType){
+            console.log("Unknown DTPType");
+        } else {
+            return (dtpType as IDtpType).type.toString();
         }
-        else if (dtpType === ServerDtpType || dtpType instanceof ServerDtpType) {
-            return "Server"
+        // if (dtpType === MaestroDtpType || dtpType instanceof MaestroDtpType) {
+        //     return "Maestro"
+        // }
+        // else if (dtpType === ServerDtpType || dtpType instanceof ServerDtpType) {
+        //     return "Server"
+        // }
+        // else if (dtpType === SignalDtpType || dtpType instanceof SignalDtpType) {
+        //     return "Signal"
+        // }
+        // else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType) {
+        //     return "Data-Repeater"
+        // }
+        // else if (dtpType === ToolDtpType || dtpType instanceof ToolDtpType) {
+        //     return "Tool"
+        // }
+        // else if (dtpType === TaskConfigurationDtpType || dtpType instanceof TaskConfigurationDtpType) {
+        //     return "Configuration"
+        // }
+        // else {
+        //     console.log("Unknown DTPType");
+        // }
+    }
+
+    addNewDtpType(typeName: string) {
+        let type;
+        let formArray;
+        if (typeName == "Task") {
+            if (!this.newTask) return;
+            type = new this.newTask();
+            this.config.tasks.push(type);
+            formArray = <FormArray>this.form.get('tasks');
         }
-        else if (dtpType === SignalDtpType || dtpType instanceof SignalDtpType) {
-            return "Signal"
+        else if (typeName == "Server") {
+            type = new ServerDtpType("new id");
+            this.config.servers.push(type);
+            formArray = <FormArray>this.form.get('servers');
         }
-        else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType) {
-            return "Data-Repeater"
+        else if (typeName == "Configuration") {
+            type = new TaskConfigurationDtpType();
+            this.config.configurations.push(type);
+            formArray = <FormArray>this.form.get('configurations');
         }
-        else if (dtpType === ToolDtpType || dtpType instanceof ToolDtpType) {
-            return "Tool"
-        }
-        else if (dtpType === TaskConfigurationDtpType || dtpType instanceof TaskConfigurationDtpType) {
-            return "Configuration"
+        else if (typeName == "Tool") {
+            type = new ToolDtpType("Tool", "", ToolTypes.maestro);
+            this.config.tools.push(type);
+            formArray = <FormArray>this.form.get('tools');
         }
         else {
             console.log("Unknown DTPType");
-            if (this.newConfig) {
-                console.log("newconfig: " + this.newConfig);
-            }
+            return;
         }
+
+        formArray.push(type.toFormGroup());
+        this.config.emitConfigChanged();
+    }
+
+    removeDtpDtype(type: IDtpType){
+        let formArray;
+        let index;
+        if (type.type == DtpTypes.Signal || type.type == DtpTypes.DataRepeater || type.type == DtpTypes.Maestro) {
+            if (type.type == DtpTypes.Maestro) {
+                const maestroType = type as MaestroDtpType;
+                fs.unlink(maestroType.multiModelPath, err => { if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`) });
+            }
+            formArray = <FormArray>this.form.get('tasks');
+            index = this.config.tasks.indexOf(type);
+            this.config.tasks.splice(index, 1);
+        }
+        else if (type.type == DtpTypes.Server) {
+            formArray = <FormArray>this.form.get('servers');
+            index = this.config.servers.indexOf(type);
+            this.config.servers.splice(index, 1);
+        }
+        else if (type.type == DtpTypes.Configuration) {
+            formArray = <FormArray>this.form.get('configurations');
+            index = this.config.configurations.indexOf(type);
+            this.config.configurations.splice(index, 1);
+        }
+        else if (type.type == DtpTypes.Tool) {
+            formArray = <FormArray>this.form.get('tools');
+            index = this.config.tools.indexOf(type);
+            this.config.tools.splice(index, 1);
+        }
+        else {
+            console.log("Unknown DTPType");
+            return;
+        }
+
+        formArray.removeAt(index);
+        this.config.emitConfigChanged();
     }
 
     addServer() {
@@ -166,6 +238,22 @@ export class DtpConfigurationComponent {
         this.config.emitConfigChanged();
     }
 
+    addTool() {
+        const tool = new ToolDtpType("Tool", "", ToolTypes.maestro);
+        this.config.tools.push(tool);
+        let formArray = <FormArray>this.form.get('tools');
+        formArray.push(tool.toFormGroup());
+        this.config.emitConfigChanged();
+    }
+
+    removeTool(tool: IDtpType) {
+        let formArray = <FormArray>this.form.get('tools');
+        let index = this.config.tools.indexOf(tool);
+        this.config.tools.splice(index, 1);
+        formArray.removeAt(index);
+        this.config.emitConfigChanged();
+    }
+
     addTask() {
         if (!this.newTask) return;
         let task = new this.newTask();
@@ -176,30 +264,13 @@ export class DtpConfigurationComponent {
     }
 
     removeTask(task: IDtpType) {
+        if (task.type == DtpTypes.Maestro) {
+            const maestroType = task as MaestroDtpType;
+            fs.unlink(maestroType.multiModelPath, err => { if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`) });
+        }
         let formArray = <FormArray>this.form.get('tasks');
         let index = this.config.tasks.indexOf(task);
         this.config.tasks.splice(index, 1);
-        formArray.removeAt(index);
-        this.config.emitConfigChanged();
-    }
-
-    addDtpType() {
-        if (!this.newConfig) return;
-        let dtpType = new this.newConfig();
-        this.config.dtpTypes.push(dtpType);
-        let formArray = <FormArray>this.form.get('dtpTypes');
-        formArray.push(dtpType.toFormGroup());
-        this.config.emitConfigChanged();
-    }
-
-    removeDtpType(dtpType: IDtpType) {
-        if(dtpType.type == DtpTypes.MaestroDtpType){
-            const maestroType = dtpType as MaestroDtpType;
-            fs.unlink(maestroType.multiModelPath, err => {if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`)});
-        }
-        let formArray = <FormArray>this.form.get('dtpTypes');
-        let index = this.config.dtpTypes.indexOf(dtpType);
-        this.config.dtpTypes.splice(index, 1);
         formArray.removeAt(index);
         this.config.emitConfigChanged();
     }
@@ -209,20 +280,20 @@ export class DtpConfigurationComponent {
         const serverObjs: any[] = [];
         const configurationObjs: any[] = [];
         const toolObj: any = {};
-        Promise.all(this.config.dtpTypes.map(async idtptype => {
+        Promise.all(this.config.configurations.concat(this.config.tools).concat(this.config.servers).map(async idtptype => {
             switch (idtptype.type) {
-                case DtpTypes.ToolDtpType:
+                case DtpTypes.Tool:
                     const tool = idtptype as ToolDtpType;
                     toolObj[tool.toolType] = { path: tool.path };
                     break;
-                case DtpTypes.ServerDtpType:
+                case DtpTypes.Server:
                     const server = idtptype as ServerDtpType;
                     serverObjs.push({ id: server.id, name: server.name, user: server.username, password: server.password, host: server.host, port: server.port, type: server.servertype, embedded: server.embedded })
                     break;
-                case DtpTypes.ConfigurationDtpType:
+                case DtpTypes.Configuration:
                     const configuration = idtptype as TaskConfigurationDtpType;
                     await Promise.all(configuration.tasks.map(async task => {
-                        if (task.type == DtpTypes.DataRepeaterDtpType) {
+                        if (task.type == DtpTypes.DataRepeater) {
                             const dataRepeater: DataRepeaterDtpType = task as DataRepeaterDtpType;
                             const signalsObj: any = {};
                             dataRepeater.signals.forEach(signal => {
@@ -232,7 +303,7 @@ export class DtpConfigurationComponent {
                             let dataRepeaterObj: any = {};
                             dataRepeaterObj[dataRepeater.dtexport_type] = { name: dataRepeater.name, tool: dataRepeater.dtexport_implementation, servers: { source: dataRepeater.server_source, target: dataRepeater.server_target }, signals: signalsObj };
                             return dataRepeaterObj;
-                        } else if (task.type == DtpTypes.MaestroDtpType) {
+                        } else if (task.type == DtpTypes.Maestro) {
                             const maestro: MaestroDtpType = task as MaestroDtpType;
                             let project = IntoCpsApp.getInstance().getActiveProject();
                             const mmPath = Path.join(maestro.multiModelPath, "..", "mm.json");
@@ -265,8 +336,8 @@ export class DtpConfigurationComponent {
                     console.error(`Unable to write yaml configuration to ${configPath}`);
                 }
             });
-            const schemaPath = Path.join(Path.dirname(this._path), "schema.yml");
-            const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), {json: true});
+            const schemaPath = Path.join(Path.dirname(this._path), "..", "schema.yml");
+            const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), { json: true });
 
             const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
 

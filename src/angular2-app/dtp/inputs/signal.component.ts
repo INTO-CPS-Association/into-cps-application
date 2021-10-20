@@ -43,7 +43,7 @@ import {Project} from "../../../proj/Project";
 })
 export class DtpSignalComponent {
     @Input()
-    dtpType: SignalDtpType
+    dtptype: SignalDtpType
 
     @Input()
     formGroup:FormGroup;

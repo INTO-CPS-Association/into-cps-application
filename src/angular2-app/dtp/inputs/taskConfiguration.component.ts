@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit, OnDestroy } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { Observable, Subscription } from "rxjs";
+import { Subscription } from "rxjs";
 import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpType, MaestroDtpType, ServerDtpType, SignalDtpType, TaskConfigurationDtpType, ToolDtpType } from "../../../intocps-configurations/dtp-configuration";
 
 @Component({
@@ -42,7 +42,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
     private configChangedSub: Subscription;
 
     @Input()
-    dtpType: TaskConfigurationDtpType
+    dtptype: TaskConfigurationDtpType
 
     @Input()
     formGroup: FormGroup;
@@ -60,7 +60,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
         console.log("Configuration component constructor");
     }
 
-    typeFilterPredicate = (idtpType:IDtpType) => { return idtpType.type == DtpTypes.DataRepeaterDtpType || idtpType.type == DtpTypes.MaestroDtpType}
+    typeFilterPredicate = (idtpType:IDtpType) => { return idtpType.type == DtpTypes.DataRepeater || idtpType.type == DtpTypes.Maestro}
 
     ngAfterContentInit(): void {
         this.configChangedSub = this.config.configChanged.asObservable().subscribe(() => this.syncWithAvailableTasks());
@@ -77,9 +77,9 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
     }
 
     syncWithAvailableTasks() {
-        const indeciesToRemove = this.dtpType.tasks.reduce((indecies, task) => {
+        const indeciesToRemove = this.dtptype.tasks.reduce((indecies, task) => {
             if (!this.config.tasks.includes(task)) {
-                const index = this.dtpType.tasks.findIndex(task2 => task2.name == task.name && task2.type == task.type);
+                const index = this.dtptype.tasks.findIndex(task2 => task2.name == task.name && task2.type == task.type);
                 if(index >= 0){
                     indecies.push(index);
                 }
@@ -88,14 +88,14 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
         }, []);
 
         for (var i = indeciesToRemove.length -1; i >= 0; i--){
-            this.dtpType.tasks.splice(indeciesToRemove[i], 1);
+            this.dtptype.tasks.splice(indeciesToRemove[i], 1);
         }
         this.updateSelectedTask();
     }
 
     getRemaningTasksNames(): string[] {
         const tasks = this.config.tasks.reduce((tasks: string[], idtpType) => {
-            if (!this.dtpType.tasks.includes(idtpType) && this.typeFilterPredicate(idtpType)) {
+            if (!this.dtptype.tasks.includes(idtpType) && this.typeFilterPredicate(idtpType)) {
                 tasks.push(this.getTaskName(idtpType));
             }
             return tasks;
@@ -105,14 +105,14 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
 
     addTask() {
         const task = this.config.tasks.find(type => this.getTaskName(type) == this.selectedTask);
-        this.dtpType.tasks.push(task);
+        this.dtptype.tasks.push(task);
         this.updateSelectedTask();
     }
 
     removeTask(task: IDtpType) {
-        const index = this.dtpType.tasks.indexOf(task, 0);
+        const index = this.dtptype.tasks.indexOf(task, 0);
         if (index > -1) {
-            this.dtpType.tasks.splice(index, 1);
+            this.dtptype.tasks.splice(index, 1);
         }
         this.updateSelectedTask();
     }

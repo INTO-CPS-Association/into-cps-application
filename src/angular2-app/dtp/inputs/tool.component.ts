@@ -39,7 +39,7 @@ import { ToolDtpType, ToolTypes } from "../../../intocps-configurations/dtp-conf
 })
 export class DtpToolComponent {
     @Input()
-    dtpType: ToolDtpType
+    dtptype: ToolDtpType
 
     @Input()
     formGroup:FormGroup;
@@ -56,7 +56,7 @@ export class DtpToolComponent {
     }
 
     setPath(path: string) {
-        this.dtpType.path = path;
+        this.dtptype.path = path;
         this.formGroup.patchValue({path: path});
         let formControl = <FormControl> this.formGroup.get('path');
         formControl.updateValueAndValidity();

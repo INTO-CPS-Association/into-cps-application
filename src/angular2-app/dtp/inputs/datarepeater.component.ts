@@ -32,7 +32,7 @@
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
 import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpType} from "../../../intocps-configurations/dtp-configuration";
-import { Observable, Subscription } from "rxjs";
+import { Subscription } from "rxjs";
 
 @Component({
     selector: 'data-repeater',
@@ -42,7 +42,7 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
     private configChangedSub: Subscription;
     
     @Input()
-    dtpType: DataRepeaterDtpType
+    dtptype: DataRepeaterDtpType
 
     @Input()
     formGroup:FormGroup;
@@ -71,9 +71,9 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
     }
 
     syncTasksWithTypes() {
-        const indeciesToRemove = this.dtpType.signals.reduce((indecies, signal) => {
+        const indeciesToRemove = this.dtptype.signals.reduce((indecies, signal) => {
             if (!this.config.tasks.includes(signal)) {
-                const index = this.dtpType.signals.findIndex(signal2 => signal2.name == signal.name && signal2.type == signal.type);
+                const index = this.dtptype.signals.findIndex(signal2 => signal2.name == signal.name && signal2.type == signal.type);
                 if(index >= 0){
                     indecies.push(index);
                 }
@@ -82,7 +82,7 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
         }, []);
 
         for (var i = indeciesToRemove.length -1; i >= 0; i--){
-            this.dtpType.signals.splice(indeciesToRemove[i], 1);
+            this.dtptype.signals.splice(indeciesToRemove[i], 1);
         }
         this.updateSelectedSignal();
     }
@@ -94,7 +94,7 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
 
     getRemaningSignalsNames(): string[] {
         const signals = this.config.tasks.reduce((signals: string[], idtpType) => {
-            if (!this.dtpType.signals.includes(idtpType) && idtpType.type == DtpTypes.SignalDtpType) {
+            if (!this.dtptype.signals.includes(idtpType) && idtpType.type == DtpTypes.Signal) {
                 signals.push(idtpType.name);
             }
             return signals;
@@ -103,15 +103,15 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
     }
 
     addSignal(){
-        const signal = this.config.tasks.find(type => type.type == DtpTypes.SignalDtpType && type.name == this.selectedSignal);
-        this.dtpType.signals.push(signal);
+        const signal = this.config.tasks.find(type => type.type == DtpTypes.Signal && type.name == this.selectedSignal);
+        this.dtptype.signals.push(signal);
         this.updateSelectedSignal();
     }
 
     removeSignal(signal: IDtpType){
-        const index = this.dtpType.signals.indexOf(signal, 0);
+        const index = this.dtptype.signals.indexOf(signal, 0);
         if (index > -1) {
-            this.dtpType.signals.splice(index, 1);
+            this.dtptype.signals.splice(index, 1);
         }
         this.updateSelectedSignal();
     }

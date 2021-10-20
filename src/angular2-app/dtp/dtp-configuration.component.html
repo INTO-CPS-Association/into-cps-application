@@ -11,25 +11,13 @@
 
 	<div class="form-horizontal">
 		<panel id="tools" [title]="'Tools'" [open]="false">
-			<!-- Configuration Types -->
 			<div *ngIf="editing" class="form-group">
-				<label class="col-sm-5 col-md-4 control-label">Available tools</label>
 				<div class="col-sm-7 col-md-8">
 					<div class="input-group">
-						<select [(ngModel)]="newConfig"
-							[ngModelOptions]="{ standalone: true }"
-							class="form-control">
-							<option *ngFor="let dtptype of dtpTypeConstructors"
-								[ngValue]="dtptype">{{
-								getDtpTypeName(dtptype) }}</option>
-						</select>
 						<span class="input-group-btn">
-							<button type="button"
-								(click)="addDtpType()"
-								class="btn btn-default" [disabled]="!newConfig">
-								<span
-									class="glyphicon glyphicon-plus"></span>
-								Add
+							<button type="button" (click)="addTool()" class="btn btn-default">
+								New tool 
+								<span class="glyphicon glyphicon-plus"></span>
 							</button>
 						</span>
 					</div>
@@ -39,10 +27,9 @@
 			<div class="constraint-container">
 				<div class="panel panel-default constraint-panel" *ngFor="let dtptype of config.tools;let i = index">
 					<div class="panel-heading">
-						<a *ngIf="editing" (click)="removeDtpType(dtptype)"
-							class="pull-right"><span
-								class="glyphicon glyphicon-remove"></span></a>
-						{{ getDtpTypeName(dtptype) }}
+						<a *ngIf="editing" (click)="removeTool(dtptype)" class="pull-right">
+							<span class="glyphicon glyphicon-remove"></span>
+						</a>
 					</div>
 					<div class="panel-body">
 						<tool
@@ -61,7 +48,7 @@
 					<div class="input-group">
 						<span class="input-group-btn">
 							<button type="button" (click)="addServer()" class="btn btn-default">
-								Add new server 
+								New server 
 								<span class="glyphicon glyphicon-plus"></span>
 							</button>
 						</span>
@@ -90,7 +77,7 @@
 					<div class="input-group">
 						<span class="input-group-btn">
 							<button type="button" (click)="addConfiguration()" class="btn btn-default">
-								Add new configuration 
+								New configuration 
 								<span class="glyphicon glyphicon-plus"></span>
 							</button>
 						</span>
@@ -114,23 +101,17 @@
 			<hr />
 
 			<panel id="tasks" [title]="'Tasks'" [open]="false">
+				
 				<div *ngIf="editing" class="form-group">
 					<label class="col-sm-5 col-md-4 control-label">Task</label>
 					<div class="col-sm-7 col-md-8">
 						<div *ngIf="editing" class="input-group">
-							<select [(ngModel)]="newTask"
-								[ngModelOptions]="{ standalone: true }"
-								class="form-control">
-								<option *ngFor="let task of taskConstructors"
-									[ngValue]="task">{{
-									getDtpTypeName(task) }}</option>
+							<select [(ngModel)]="newTask" [ngModelOptions]="{ standalone: true }" class="form-control">
+								<option *ngFor="let task of taskConstructors" [ngValue]="task">{{getDtpTypeName(task) }}</option>
 							</select>
 							<span class="input-group-btn">
-								<button type="button"
-									(click)="addTask()"
-									class="btn btn-default" [disabled]="!newTask">
-									<span
-										class="glyphicon glyphicon-plus"></span>
+								<button type="button" (click)="addTask()" class="btn btn-default" [disabled]="!newTask">
+									<span class="glyphicon glyphicon-plus"></span>
 									Add
 								</button>
 							</span>
@@ -141,13 +122,13 @@
 				<div class="constraint-container">
 					<div class="panel panel-default constraint-panel" *ngFor="let task of config.tasks; let i = index">
 						<div class="panel-heading">
-							<a *ngIf="editing" (click)="removeTask(task)"
-								class="pull-right"><span
-									class="glyphicon glyphicon-remove"></span></a>
+							<a *ngIf="editing" (click)="removeTask(task)" class="pull-right">
+								<span class="glyphicon glyphicon-remove"></span>
+							</a>
 							{{ getDtpTypeName(task) }}
 						</div>
 						<div class="panel-body">
-							<maestro [editing]="editing" [dtptype]="task" [configPath] = "config.sourcePath"
+							<maestro [editing]="editing" [dtptype]="task" [configpath] = "config.sourcePath"
 								[formGroup]="form.get('tasks').at(i)" *ngIf="task.type === dtpTypesEnum.MaestroDtpType"></maestro>
 
 							<signal [editing]="editing" [dtptype]="task"

@@ -44,7 +44,7 @@ import { Project } from "../../../proj/Project";
 export class DtpMaestroComponent implements AfterContentInit{
 
     @Input()
-    dtpType: MaestroDtpType
+    dtptype: MaestroDtpType
 
     @Input()
     formGroup: FormGroup;
@@ -53,7 +53,7 @@ export class DtpMaestroComponent implements AfterContentInit{
     editing: boolean = false;
 
     @Input()
-    configPath: string = "";
+    configpath: string = "";
 
     baseExperimentPath: string = "";
 
@@ -61,66 +61,66 @@ export class DtpMaestroComponent implements AfterContentInit{
 
     experimentsPaths: string[] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
 
-    isFirtTimeSetup: boolean = false;
+    showFirstTimeSetupBtns: boolean = false;
 
-    isSetupFromExperiment: boolean = false;
+    showExperimentSelect: boolean = false;
 
     constructor() {
         console.log("Maestro component constructor");
     }
 
     ngAfterContentInit(): void {
-        if(this.dtpType.multiModelPath != ""){
-            if(fs.existsSync(this.dtpType.multiModelPath)){
+        if(this.dtptype.multiModelPath != ""){
+            if(fs.existsSync(this.dtptype.multiModelPath)){
                 return;
             }
             else {
-                console.error(`Unable to locate multi-model at: ${this.dtpType.multiModelPath}.`);
+                console.error(`Unable to locate multi-model at: ${this.dtptype.multiModelPath}.`);
             }
         }
-        this.isFirtTimeSetup = true;
+        this.showFirstTimeSetupBtns = true;
     }
 
     hasUniqueName(): boolean {
-        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtpType.name;
+        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtptype.name;
+    }
+
+    onBaseExperimentChanged(){
+        if (!fs.existsSync(this.baseExperimentPath)) {
+            return;
+        }
+        const mm_destinationName = Path.join(Path.dirname(this.configpath), this.dtptype.name + "_multiModel.json");
+        const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
+        fs.readdir(mm_sourcePath, (err, files) => {
+            if (files) {
+                const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
+                if (mm_name) {
+                    const mm_sourceName = Path.join(mm_sourcePath, mm_name);
+                    fs.copyFile(mm_sourceName, mm_destinationName, (err) => {
+                        if (err) {
+                            console.error(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`);
+                        }
+                        else {
+                            this.dtptype.multiModelPath = mm_destinationName;
+                        }
+                    });
+                }
+                else {
+                    console.error(`Unable to locate multi model in: ${mm_sourcePath}.`);
+                }
+            } else {
+                console.error(`Unable to read directory: ${mm_sourcePath}: "${err}."`);
+            }
+        });
+        this.showExperimentSelect = false;
     }
 
     doFirstTimeSetup(setupFromExperiment: boolean) {
-        this.isFirtTimeSetup = false;
-        this.isSetupFromExperiment = setupFromExperiment;
-
-        const mm_destinationName = Path.join(Path.dirname(this.configPath), this.dtpType.name + "_multiModel.json");
-
-        if(setupFromExperiment){
-            if (!fs.existsSync(this.baseExperimentPath)) {
-                return;
-            }
-            const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
-            fs.readdir(mm_sourcePath, (err, files) => {
-                if (files) {
-                    const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
-                    if (mm_name) {
-                        const mm_sourceName = Path.join(mm_sourcePath, mm_name);
-                        fs.copyFile(mm_sourceName, mm_destinationName, (err) => {
-                            if (err) {
-                                console.error(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`);
-                            }
-                            else {
-                                this.dtpType.multiModelPath = mm_destinationName;
-                            }
-                        });
-                    }
-                    else {
-                        console.error(`Unable to locate multi model in: ${mm_sourcePath}.`);
-                    }
-                } else {
-                    console.error(`Unable to read directory: ${mm_sourcePath}: "${err}."`);
-                }
-            });
-        }
-        else {
-            this.dtpType.multiModelPath = mm_destinationName;
-            fs.writeFileSync(this.dtpType.multiModelPath, "{}", 'utf-8');
+        this.showFirstTimeSetupBtns = false;
+        this.showExperimentSelect = setupFromExperiment;
+        if(!setupFromExperiment){
+            this.dtptype.multiModelPath = Path.join(Path.dirname(this.configpath), this.dtptype.name + "_multiModel.json");
+            fs.writeFileSync(this.dtptype.multiModelPath, "{}", 'utf-8');
         }
     }
 
