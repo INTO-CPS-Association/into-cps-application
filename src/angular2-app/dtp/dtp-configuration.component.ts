@@ -237,9 +237,8 @@ export class DtpConfigurationComponent {
                         } else if (task.type == DtpTypes.Maestro) {
                             const maestro: MaestroDtpType = task as MaestroDtpType;
                             let project = IntoCpsApp.getInstance().getActiveProject();
-                            const mmPath = Path.join(maestro.multiModelPath, "..", "mm.json");
                             var maestroObj;
-                            await MultiModelConfig.parse(mmPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
+                            await MultiModelConfig.parse(maestro.multiModelPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
                                 maestroObj = { simulation: { name: maestro.name, execution: { capture_output: maestro.capture_output }, tool: maestro.tool, version: maestro.version, config: multiModel.toObject() } };
                             }, err => {
                                 console.error(`Error during parsing of config: ${err}`);
@@ -270,9 +269,7 @@ export class DtpConfigurationComponent {
             const schemaPath = Path.join(Path.dirname(this._path), "..", "schema.yml");
             const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), { json: true });
 
-            const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
-
-            const validate = ajv.compile(schemaObj)
+            const validate = new Ajv().compile(schemaObj) // options can be passed, e.g. {allErrors: true}
 
             const valid = validate(yamlObj)
             if (!valid) console.log(validate.errors)
