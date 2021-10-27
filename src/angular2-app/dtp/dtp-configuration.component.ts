@@ -29,19 +29,18 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input, NgZone } from "@angular/core";
+import { Component, Input, NgZone, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
-import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpType, DtpTypes, ToolDtpType, TaskConfigurationDtpType, ToolTypes } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpItem, DtpTypes, ToolDtpType, TaskConfigurationDtpType, ToolTypes } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import * as fs from "fs";
 import * as Path from 'path';
 import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
-import { ThrowStmt } from "@angular/compiler";
+import { HttpClient } from "@angular/common/http";
+import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 
-
-const dialog = require("electron").remote.dialog;
 const Yaml = require('js-yaml');
 const Ajv = require("ajv")
 
@@ -49,15 +48,17 @@ const Ajv = require("ajv")
     selector: "dtp-configuration",
     templateUrl: "./angular2-app/dtp/dtp-configuration.component.html"
 })
-export class DtpConfigurationComponent {
+export class DtpConfigurationComponent implements AfterContentInit {
     private _path: string;
     private readonly servers_key = "servers";
     private readonly configurations_key = "configurations";
     private readonly tools_key = "tools";
     private readonly tasks_key = "tasks";
+    private config: DTPConfig;
+    private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType, ToolDtpType, TaskConfigurationDtpType]
+    private taskConstructors = [DataRepeaterDtpType, SignalDtpType, MaestroDtpType];
 
-    newTask: new (...args: any[]) => IDtpType;
-
+    newTask: new (...args: any[]) => IDtpItem;
     @Input()
     set path(path: string) {
         console.log("Path was set");
@@ -75,19 +76,20 @@ export class DtpConfigurationComponent {
     isLoaded: boolean = false;
     parseError: string = null;
     dtpTypesEnum = DtpTypes;
+    isConfigValid: boolean = false;
 
-    private config: DTPConfig;
-    private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType, ToolDtpType, TaskConfigurationDtpType]
-    private taskConstructors = [DataRepeaterDtpType, SignalDtpType, MaestroDtpType];
 
-    constructor(private zone: NgZone, private navigationService: NavigationService) {
+    constructor(private zone: NgZone, private navigationService: NavigationService, private httpClient: HttpClient, private dtpToolingService: DtpDtToolingService) {
         this.navigationService.registerComponent(this);
+
+    }
+
+    ngAfterContentInit(): void {
+        this.dtpToolingService.startServer(Path.dirname(this._path));
     }
 
     private parseConfig() {
-        let project = IntoCpsApp.getInstance().getActiveProject();
-
-        DTPConfig.parse(this.path, project.getRootFilePath()).then(config => {
+        DTPConfig.parse(this.path).then(config => {
             this.config = config;
             this.isLoaded = true;
             // Create a form group for each DTPType
@@ -157,7 +159,7 @@ export class DtpConfigurationComponent {
             formArray = <FormArray>this.form.get(this.configurations_key);
         }
         else if (typeName == "tool") {
-            type = new ToolDtpType("Tool", "", ToolTypes.maestro);
+            type = new ToolDtpType("Tool", "", "", ToolTypes.maestro);
             this.config.tools.push(type);
             formArray = <FormArray>this.form.get(this.tools_key);
         }
@@ -167,10 +169,10 @@ export class DtpConfigurationComponent {
         }
 
         formArray.push(type.toFormGroup());
-        this.config.emitConfigChanged();
+        this.config.emitTypeAdded(type);
     }
 
-    removeDtpDtype(type: IDtpType){
+    removeDtpDtype(type: IDtpItem) {
         let formArray;
         let index;
         if (type.type == DtpTypes.Signal || type.type == DtpTypes.DataRepeater || type.type == DtpTypes.Maestro) {
@@ -203,83 +205,26 @@ export class DtpConfigurationComponent {
         }
 
         formArray.removeAt(index);
-        this.config.emitConfigChanged();
+        this.config.emitTypeRemoved(type);
     }
 
-    async export() {
-        // Format object structure to match yaml schema.
-        const serverObjs: any[] = [];
-        const configurationObjs: any[] = [];
-        const toolObj: any = {};
-        Promise.all(this.config.configurations.concat(this.config.tools).concat(this.config.servers).map(async idtptype => {
-            switch (idtptype.type) {
-                case DtpTypes.Tool:
-                    const tool = idtptype as ToolDtpType;
-                    toolObj[tool.toolType] = { path: tool.path };
-                    break;
-                case DtpTypes.Server:
-                    const server = idtptype as ServerDtpType;
-                    serverObjs.push({ id: server.id, name: server.name, user: server.username, password: server.password, host: server.host, port: server.port, type: server.servertype, embedded: server.embedded })
-                    break;
-                case DtpTypes.Configuration:
-                    const configuration = idtptype as TaskConfigurationDtpType;
-                    await Promise.all(configuration.tasks.map(async task => {
-                        if (task.type == DtpTypes.DataRepeater) {
-                            const dataRepeater: DataRepeaterDtpType = task as DataRepeaterDtpType;
-                            const signalsObj: any = {};
-                            dataRepeater.signals.forEach(signal => {
-                                const dtpSignal = signal as SignalDtpType;
-                                signalsObj[dtpSignal.name] = { source: dtpSignal.source.toObject(), target: dtpSignal.target.toObject() };
-                            });
-                            let dataRepeaterObj: any = {};
-                            dataRepeaterObj[dataRepeater.dtexport_type] = { name: dataRepeater.name, tool: dataRepeater.dtexport_implementation, servers: { source: dataRepeater.server_source, target: dataRepeater.server_target }, signals: signalsObj };
-                            return dataRepeaterObj;
-                        } else if (task.type == DtpTypes.Maestro) {
-                            const maestro: MaestroDtpType = task as MaestroDtpType;
-                            let project = IntoCpsApp.getInstance().getActiveProject();
-                            var maestroObj;
-                            await MultiModelConfig.parse(maestro.multiModelPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
-                                maestroObj = { simulation: { name: maestro.name, execution: { capture_output: maestro.capture_output }, tool: maestro.tool, version: maestro.version, config: multiModel.toObject() } };
-                            }, err => {
-                                console.error(`Error during parsing of config: ${err}`);
-                            });
-                            return maestroObj;
-                        }
-                    })).then(tasks => {
-                        configurationObjs.push({ name: configuration.name, tasks: tasks });
-                    });
-                    break;
-            }
-        })).then(() => {
-            const yamlObj = { version: "0.0.1", tools: toolObj, servers: serverObjs, configurations: configurationObjs };
-
-            try {
-                var yamlConfig = Yaml.dump(yamlObj);
-            }
-            catch (ex) {
-                console.error(`Unable to generate yaml configuration: ${ex}`);
-            }
-
-            const configPath = Path.join(Path.dirname(this._path), "configuration.yml");
-            fs.writeFile(configPath, yamlConfig, error => {
-                if (error) {
-                    console.error(`Unable to write yaml configuration to ${configPath}`);
-                }
-            });
+    validateConfig() {
+        this.config.toYaml().then(yamlObj => {
             const schemaPath = Path.join(Path.dirname(this._path), "..", "schema.yml");
             const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), { json: true });
-
+    
             const validate = new Ajv().compile(schemaObj) // options can be passed, e.g. {allErrors: true}
-
-            const valid = validate(yamlObj)
-            if (!valid) console.log(validate.errors)
+            this.isConfigValid = validate(yamlObj);
+            if (this.isConfigValid) {
+                console.log("Unable to validate YAML config" + validate.errors);
+            }
         });
     }
 
     onSubmit() {
         if (!this.editing) return;
-        this.config.save()
-                /*.then(() => this.change.emit(this.path))*/.catch(error => console.error("error when saving: " + error));
+        this.config.save().catch(error => console.error("error when saving: " + error));
+
         this.editing = false;
     }
 }

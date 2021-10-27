@@ -31,21 +31,27 @@
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpType} from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, SignalDtpType, TaskConfigurationDtpType, ToolDtpType, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
 import { Subscription } from "rxjs";
+import { DtpDtToolingService } from "../dtp-dt-tooling.service";
+import * as Path from 'path';
+import * as fs from "fs";
 
 @Component({
     selector: 'data-repeater',
     templateUrl: "./angular2-app/dtp/inputs/datarepeater.component.html"
 })
-export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
-    private configChangedSub: Subscription;
-    
+export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy {
+    private typeRemovedSub: Subscription;
+    private typeAddedSub: Subscription;
+    private isToolingServerOnlineSub: Subscription;
+    private isToolingServerOnline: boolean = false;
+
     @Input()
     dtptype: DataRepeaterDtpType
 
     @Input()
-    formGroup:FormGroup;
+    formGroup: FormGroup;
 
     @Input()
     editing: boolean = false;
@@ -57,34 +63,33 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
 
     showSelectGroup: boolean = true;
 
-    constructor() {
+    constructor(private dtpToolingService: DtpDtToolingService) {
         console.log("DataRepeater component constructor");
+        this.isToolingServerOnlineSub = dtpToolingService.isOnlineObservable.subscribe(isOnline => {
+            if (this.isToolingServerOnline != isOnline) {
+                this.isToolingServerOnline = isOnline
+            }
+        });
     }
 
     ngAfterContentInit(): void {
-        this.configChangedSub = this.config.configChanged.asObservable().subscribe(() => this.syncTasksWithTypes());
+        this.typeRemovedSub = this.config.typeRemoved.asObservable().subscribe(type => {
+            if (type.type == DtpTypes.Signal) {
+                this.removeSignal(type);
+            }
+        });
+        this.typeAddedSub = this.config.typeAdded.asObservable().subscribe(type => {
+            if (type.type == DtpTypes.Signal) {
+                this.updateSelectedSignal();
+            }
+        });
         this.updateSelectedSignal();
     }
 
     ngOnDestroy() {
-        this.configChangedSub.unsubscribe();
-    }
-
-    syncTasksWithTypes() {
-        const indeciesToRemove = this.dtptype.signals.reduce((indecies, signal) => {
-            if (!this.config.tasks.includes(signal)) {
-                const index = this.dtptype.signals.findIndex(signal2 => signal2.name == signal.name && signal2.type == signal.type);
-                if(index >= 0){
-                    indecies.push(index);
-                }
-            }
-            return indecies;
-        }, []);
-
-        for (var i = indeciesToRemove.length -1; i >= 0; i--){
-            this.dtptype.signals.splice(indeciesToRemove[i], 1);
-        }
-        this.updateSelectedSignal();
+        this.typeRemovedSub.unsubscribe();
+        this.typeAddedSub.unsubscribe();
+        this.isToolingServerOnlineSub.unsubscribe();
     }
 
     updateSelectedSignal() {
@@ -102,13 +107,51 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy{
         return signals.sort();
     }
 
-    addSignal(){
+    createFMU() {
+        // const toolPath = (this.config.tools.find(t => (t as ToolDtpType).toolType == ToolTypes.rabbitmq) as ToolDtpType)?.path;
+        // this.dtpToolingService.createFmuFromDataRepeater(this.dtptype.toYaml(), toolPath).then(res => {
+        //     this.dtptype.fmu_path = res;
+        // }).catch(err => console.log(err));
+
+        // this.config.toYaml().then(yamlObj => {
+        //     const configurations = this.config.configurations;
+        //     const tempProject = "temp";
+        //     const tempDir = Path.join(this.dtpToolingService.projectBasePath, tempProject);
+        //     this.dtpToolingService.createProjectWithConfig(yamlObj, tempProject).then(() => {
+        //         for (let i = 0; i < configurations.length; i++) {
+        //             const configuration: TaskConfigurationDtpType = configurations[i] as TaskConfigurationDtpType;
+        //             for (let l = 0; l < configuration.tasks.length; l++) {
+        //                 if (configuration.tasks[l].type == DtpTypes.DataRepeater && configuration.tasks[l].name == this.dtptype.name) {
+        //                     this.dtpToolingService.createFmuFromDataRepeaterIndex(`configurations/${i}/tasks/${l}`, tempProject).then(res => {
+        //                         this.dtptype.fmu_path = res.file
+        //                         const tempFmuPath = Path.join(this.dtpToolingService.projectBasePath, this.dtptype.fmu_path);
+        //                         const targetDirPath = Path.join(this.dtpToolingService.projectBasePath, this.config.name);
+        //                         fs.mkdirSync(targetDirPath, { recursive: true });
+        //                         const targetFmuPath = Path.join(targetDirPath, `${this.dtptype.name}.fmu`);
+
+        //                         fs.promises.copyFile(tempFmuPath, targetFmuPath).then(() => {
+        //                             this.dtptype.fmu_path = targetFmuPath;
+        //                             //this.dtpToolingService.deleteProject(tempProject);
+        //                             fs.rmdirSync(tempDir, { recursive: true });
+        //                         }).catch(err => console.log(err));
+        //                     }, err => console.log(err));
+
+        //                     l = configuration.tasks.length;
+        //                     i = configurations.length;
+        //                 }
+        //             }
+        //         }
+        //     }).catch(err => console.warn(err));
+        // }).catch(err => console.warn(err));
+    }
+
+    addSignal() {
         const signal = this.config.tasks.find(type => type.type == DtpTypes.Signal && type.name == this.selectedSignal);
         this.dtptype.signals.push(signal);
         this.updateSelectedSignal();
     }
 
-    removeSignal(signal: IDtpType){
+    removeSignal(signal: IDtpItem) {
         const index = this.dtptype.signals.indexOf(signal, 0);
         if (index > -1) {
             this.dtptype.signals.splice(index, 1);

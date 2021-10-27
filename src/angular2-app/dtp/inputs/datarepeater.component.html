@@ -54,4 +54,20 @@
             
         </div>
     </div>
+
+    <div class="form-group">
+        <div *ngIf="!dtptype.fmu_path && editing">
+            <span class="input-group-btn">
+                <button type="button" (click)="createFMU()" class="btn btn-default" > <!--[disabled] = "!isToolingServerOnline"-->
+                    Create FMU
+                </button>
+            </span> 
+        </div>
+        <div *ngIf="dtptype.fmu_path">
+            <label class="col-sm-3 control-label">FMU Path</label>
+            <div class="col-sm-9">
+                <p class="form-control-static">{{dtptype.fmu_path}}</p>
+            </div>
+        </div>
+    </div>
 </div>

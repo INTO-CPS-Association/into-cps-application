@@ -30,11 +30,13 @@
  */
 
 import {Component, Input} from "@angular/core";
+import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 
 
 @Component({
     selector: "dtp-page",
-    templateUrl: "./angular2-app/dtp/dtp-page.component.html"
+    templateUrl: "./angular2-app/dtp/dtp-page.component.html",
+    providers: [DtpDtToolingService]
 })
 export class DtpPageComponent {
     private _path : string;

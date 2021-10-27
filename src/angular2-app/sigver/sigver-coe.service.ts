@@ -23,9 +23,9 @@ export class SigverCoeService implements OnDestroy {
     private _onlineInterval: number;
     private _coeIsOnline = new Subject<boolean>();
 
-    coeVersion: string = "";
-    coeUrl: string = "";
-    coeIsOnlineObservable = this._coeIsOnline.asObservable();
+    public coeVersion: string = "";
+    public coeUrl: string = "";
+    public coeIsOnlineObservable = this._coeIsOnline.asObservable();
 
     constructor(private httpClient: HttpClient, private settings: SettingsService) {
         this.coeUrl = this.settings.get(SettingKeys.COE_URL);

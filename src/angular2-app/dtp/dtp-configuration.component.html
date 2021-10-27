@@ -150,9 +150,13 @@
 	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
 		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
 	</button>
-	<button *ngIf="!editing" class="btn btn-default" (click)="export()">
-		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Export
-	</button>
+	<div>
+		<button *ngIf="!editing" class="btn btn-default" (click)="validateConfig()">
+			<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Validate
+		</button>
+		<p *ngIf="isConfigValid">Config is valid</p>
+	</div>
+	
 	<button *ngIf="editing" class="btn btn-default" [disabled]="!form.valid" >
 		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
 		Save

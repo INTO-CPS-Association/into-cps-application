@@ -32,14 +32,15 @@
 import { Component, Input, AfterContentInit, OnDestroy } from "@angular/core";
 import { FormGroup } from "@angular/forms";
 import { Subscription } from "rxjs";
-import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpType, MaestroDtpType, ServerDtpType, SignalDtpType, TaskConfigurationDtpType, ToolDtpType } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, MaestroDtpType, ServerDtpType, SignalDtpType, TaskConfigurationDtpType, ToolDtpType } from "../../../intocps-configurations/dtp-configuration";
 
 @Component({
     selector: 'task-configuration',
     templateUrl: "./angular2-app/dtp/inputs/taskConfiguration.component.html"
 })
 export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestroy{
-    private configChangedSub: Subscription;
+    private typeRemovedSub: Subscription;
+    private typeAddedSub: Subscription;
 
     @Input()
     dtptype: TaskConfigurationDtpType
@@ -60,15 +61,25 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
         console.log("Configuration component constructor");
     }
 
-    typeFilterPredicate = (idtpType:IDtpType) => { return idtpType.type == DtpTypes.DataRepeater || idtpType.type == DtpTypes.Maestro}
+    typeFilterPredicate = (idtpType:IDtpItem) => { return idtpType.type == DtpTypes.DataRepeater || idtpType.type == DtpTypes.Maestro}
 
     ngAfterContentInit(): void {
-        this.configChangedSub = this.config.configChanged.asObservable().subscribe(() => this.syncWithAvailableTasks());
+        this.typeRemovedSub = this.config.typeRemoved.asObservable().subscribe(type => {
+            if(this.typeFilterPredicate(type)){
+                this.removeTask(type);
+            }
+        });
+        this.typeAddedSub = this.config.typeAdded.asObservable().subscribe(type => {
+            if(this.typeFilterPredicate(type)){
+                this.updateSelectedTask();
+            }
+        });
         this.updateSelectedTask();
     }
 
     ngOnDestroy() {
-        this.configChangedSub.unsubscribe();
+        this.typeRemovedSub.unsubscribe();
+        this.typeAddedSub.unsubscribe();
     }
 
     updateSelectedTask() {
@@ -109,7 +120,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
         this.updateSelectedTask();
     }
 
-    removeTask(task: IDtpType) {
+    removeTask(task: IDtpItem) {
         const index = this.dtptype.tasks.indexOf(task, 0);
         if (index > -1) {
             this.dtptype.tasks.splice(index, 1);
@@ -117,7 +128,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestro
         this.updateSelectedTask();
     }
 
-    getTaskName(dtpType: IDtpType): string {
+    getTaskName(dtpType: IDtpItem): string {
         var typeName: string = "";
         if (dtpType instanceof MaestroDtpType) {
             typeName = "Maestro"

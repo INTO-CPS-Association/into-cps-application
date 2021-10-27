@@ -16,6 +16,14 @@
             <div *ngIf="formGroup.hasError('required', 'path')" class="alert alert-danger">This field is required.</div>
         </div>
     </div>
+    
+    <div class="form-group">
+        <label class="col-sm-3 control-label">URL</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{dtptype.url}}</p>
+            <input *ngIf="editing" [(ngModel)]="dtptype.url"  formControlName="url" class="form-control">
+        </div>
+    </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Type</label>
