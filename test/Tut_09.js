@@ -82,9 +82,9 @@ describe('In Tutorial 9', function () {
 
   it("Should open edit mode of the mm", function () {
     return app.client.$('#Configuration')
-        .then(n => n.click())
+        .then(n => n.click()).then(() => sleep(100))
         .then(() => app.client.$('mm-configuration button.btn.btn-default'))
-        .then(n => n.click())
+        .then(n => n.click()).then(() => sleep(100))
         .then(() => app.client.$('button.btn.btn-default'))
         .then(n => n.getText())
         .should
