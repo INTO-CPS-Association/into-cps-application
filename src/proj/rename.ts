@@ -34,7 +34,6 @@
 
 
 
-import { IntoCpsApp } from "../IntoCpsApp";
 import Path = require("path");
 
 
