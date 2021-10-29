@@ -40,6 +40,8 @@ import downloader = require("../downloader/Downloader");
 
 const dialog = require("electron").remote.dialog;
 
+const BrowserWindow = require('electron').remote.BrowserWindow;
+
 function scrollIntoView(eleID: any) {
     var e = document.getElementById(eleID);
     if (!!e && e.scrollIntoView) {
@@ -240,8 +242,9 @@ function showVersion(version: string, data: any) {
         }
 
         btn.onclick = function (e) {
+            const currentWindow = BrowserWindow.getFocusedWindow() //this window
             let buttons: string[] = ["No", "Yes"];
-            dialog.showMessageBox(IntoCpsApp.getInstance().window, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }).then(function(button: any) {
+            dialog.showMessageBox(currentWindow, { type: 'question', buttons: buttons, message: "Download: " + tool.name + " (" + tool.version + ")" }).then(function(button: any) {
                 if(button.response == 1)// yes
                 {
                     // console.log(res.response);
@@ -266,7 +269,7 @@ function showVersion(version: string, data: any) {
                                 downloader.unpackTool(filePath, installDirectory);
                                 shell.showItemInFolder(installDirectory);
                             } else if (downloader.checkToolAction(tool, downloader.DownloadAction.LAUNCH)) {
-                               let launch = dialog.showMessageBox(IntoCpsApp.getInstance().window, { type: 'question', buttons: buttons, message: "Accept launch of installer: " + Path.basename(filePath) + " downloaded for: " + tool.name + " (" + tool.version + ")" }) 
+                               let launch = dialog.showMessageBox(currentWindow, { type: 'question', buttons: buttons, message: "Accept launch of installer: " + Path.basename(filePath) + " downloaded for: " + tool.name + " (" + tool.version + ")" }) 
                                launch.catch((error: Error) => {
                                    console.error(error);
                                    return;
@@ -283,7 +286,7 @@ function showVersion(version: string, data: any) {
                             } else if (downloader.checkToolAction(tool, downloader.DownloadAction.NONE)) {
                                 //do nothing
                             } else {
-                                dialog.showMessageBox(IntoCpsApp.getInstance().window, { type: 'info', buttons: ["OK"], message: "Download completed: " + filePath });
+                                dialog.showMessageBox(currentWindow, { type: 'info', buttons: ["OK"], message: "Download completed: " + filePath });
                             }
                         }, function (error) { dialog.showErrorBox("Invalid Checksum", error); });
                     });
