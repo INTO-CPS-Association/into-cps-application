@@ -2,39 +2,44 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.name"  formControlName="name" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{configuration.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="configuration.name"  formControlName="name" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
         </div>
     </div>
 
-    <div class="form-group">
-        <label class="col-sm-3 control-label">
-            Tasks
-        </label>
-        <div *ngIf="editing && showSelectGroup" class="input-group">
-            <select [(ngModel)]="selectedTask" [ngModelOptions]="{standalone: true}" class="form-control">
-                <option *ngFor="let taskName of getRemaningTasksNames()" [value]="taskName">{{taskName}}</option>
-            </select>
-            <span class="input-group-btn">
-                <button type="button" (click)="addTask()" class="btn btn-default">
-                    <span class="glyphicon glyphicon-plus"></span>
-                </button>
-            </span>    
-        </div>
-        <div class="col-sm-9" *ngFor="let task of dtptype.tasks">
-            <div class="col-sm-9">
-                <p *ngIf="!editing" class="form-control-static">{{getTaskName(task)}}</p>
-                <div *ngIf="editing" class="input-group">
-                    <p class="form-control">{{getTaskName(task)}}</p>
+    <panel id="tasks" [title]="'Tasks'" [open]="false">
+
+        <div class="form-group">
+            <div class="col-sm-7 col-md-8">
+                <div class="input-group">
+                    <select [(ngModel)]="newTask" [ngModelOptions]="{ standalone: true }" class="form-control">
+                        <option *ngFor="let task of taskConstructors" [ngValue]="task">{{getTaskName(task) }}</option>
+                    </select>
                     <span class="input-group-btn">
-                        <button type="button" (click)="removeTask(task)" class="btn btn-default">
-                            <span class="glyphicon glyphicon-remove"></span>
+                        <button type="button" (click)="addNewTask()" class="btn btn-default" [disabled]="!newTask">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Add Task
                         </button>
                     </span>
                 </div>
-            </div>
-            
+            </div> 
         </div>
-    </div>
+ 
+        <div class="constraint-container">
+            <div class="panel panel-default dtp-inner-constraint-panel" *ngFor="let task of configuration.tasks; let i = index">
+                <div class="panel-heading btn-panel-heading">
+                    <button class="btn btn-default btn-sm pull-right" title="Remove task" (click)="removeTask(task)" *ngIf= "editing">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+
+                    <h4 class="panel-title" style="text-align: left;">{{ getTaskName(task) }}</h4>
+                </div>
+                <div class="panel-body">
+                    <maestro [maestro]="task" [editing] = "editing" [config]="config" [configpath] = "config.sourcePath" [formGroup]="formGroup.get('tasks').at(i)" *ngIf="task.type === dtpTypesEnum.Maestro"></maestro>
+                    <data-repeater [datarepeater]="task" [editing] = "editing" [formGroup]="formGroup.get('tasks').at(i)" [config]="config" *ngIf="task.type === dtpTypesEnum.DataRepeater"></data-repeater>
+                </div>
+            </div>
+        </div>
+    </panel>
 </div>

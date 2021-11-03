@@ -29,25 +29,26 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
+import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
-import { ToolDtpType, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
+import { DTPConfig, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
 
 @Component({
     selector: 'tool',
     templateUrl: "./angular2-app/dtp/inputs/tool.component.html"
 })
-export class DtpToolComponent {
+export class DtpToolComponent implements AfterContentInit{
     @Input()
-    dtptype: ToolDtpType
+    tool: ToolDtpItem
 
     @Input()
     formGroup:FormGroup;
-
+    
     @Input()
-    editing: boolean = false;
+    editing: boolean = true;
 
     toolTypes = ToolTypes
+
     keys: string[];
 
     constructor() {
@@ -55,8 +56,12 @@ export class DtpToolComponent {
         this.keys = Object.keys(this.toolTypes);
     }
 
+    ngAfterContentInit(): void {
+        this.editing = this.tool.name == "";
+    }
+
     setPath(path: string) {
-        this.dtptype.path = path;
+        this.tool.path = path;
         this.formGroup.patchValue({path: path});
         let formControl = <FormControl> this.formGroup.get('path');
         formControl.updateValueAndValidity();

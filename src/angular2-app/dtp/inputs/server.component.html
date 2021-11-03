@@ -2,50 +2,50 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">ID</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.id}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.id"  formControlName="id" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{server.id}}</p>
+            <input *ngIf="editing" [(ngModel)]="server.id"  formControlName="id" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'id')" class="alert alert-danger">This field is required.</div>
-            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtptype.id" class="alert alert-danger">ID is not unique.</div>
+            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === server.id" class="alert alert-danger">ID is not unique.</div>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.name"  formControlName="name" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{server.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="server.name"  formControlName="name" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Username</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.username}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.username"  formControlName="username" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{server.username}}</p>
+            <input *ngIf="editing" [(ngModel)]="server.username"  formControlName="username" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Password</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.password}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.password"  formControlName="password" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{server.password}}</p>
+            <input *ngIf="editing" [(ngModel)]="server.password"  formControlName="password" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">host</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.host}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.host"  formControlName="host" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{server.host}}</p>
+            <input *ngIf="editing" [(ngModel)]="server.host"  formControlName="host" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Port</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.port}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.port"  formControlName="port" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{server.port}}</p>
+            <input *ngIf="editing" [(ngModel)]="server.port"  formControlName="port" class="form-control">
             <div *ngIf="formGroup.hasError('invalidInteger', 'port')" class="alert alert-danger">Only integers are allowed.</div>
         </div>
     </div>
@@ -53,7 +53,7 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Embedded</label>
         <div class="col-sm-9">
-            <input [disabled]="!editing" [(ngModel)]="dtptype.embedded" formControlName="embedded" type="checkbox">
+            <input [disabled]="!editing" [(ngModel)]="server.embedded" formControlName="embedded" type="checkbox">
         </div>
     </div>
 </div>

@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { MaestroDtpType } from "../../../intocps-configurations/dtp-configuration";
+import { DTPConfig, IDtpItem, MaestroDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
@@ -44,16 +44,19 @@ import { Project } from "../../../proj/Project";
 export class DtpMaestroComponent implements AfterContentInit{
 
     @Input()
-    dtptype: MaestroDtpType
+    maestro: MaestroDtpItem
 
     @Input()
     formGroup: FormGroup;
-
+    
     @Input()
-    editing: boolean = false;
+    editing: boolean = true;
 
     @Input()
     configpath: string = "";
+
+    @Input()
+    config: DTPConfig;
 
     baseExperimentPath: string = "";
 
@@ -61,7 +64,7 @@ export class DtpMaestroComponent implements AfterContentInit{
 
     experimentsPaths: string[] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
 
-    showFirstTimeSetupBtns: boolean = false;
+    showInitialSetupBtns: boolean = false;
 
     showExperimentSelect: boolean = false;
 
@@ -69,27 +72,40 @@ export class DtpMaestroComponent implements AfterContentInit{
         console.log("Maestro component constructor");
     }
 
+    simulationNamesFromTools(tools: IDtpItem[]): string[] {
+        return tools.reduce((maestroToolNames: string[], tool: ToolDtpItem) => {
+            if(tool.toolType == ToolTypes.maestro){
+                maestroToolNames.push(tool.name);
+            }
+            return maestroToolNames;
+        }, []);
+    }
+
     ngAfterContentInit(): void {
-        if(this.dtptype.multiModelPath != ""){
-            if(fs.existsSync(this.dtptype.multiModelPath)){
+        if(this.maestro.multiModelPath != ""){
+            if(fs.existsSync(this.maestro.multiModelPath)){
                 return;
             }
             else {
-                console.error(`Unable to locate multi-model at: ${this.dtptype.multiModelPath}.`);
+                console.error(`Unable to locate multi-model at: ${this.maestro.multiModelPath}.`);
             }
         }
-        this.showFirstTimeSetupBtns = true;
+        this.showInitialSetupBtns = true;
+        this.editing = this.maestro.name == "";
+
+        const availableTools = this.simulationNamesFromTools(this.config.tools);
+        this.maestro.tool = availableTools.length > 0 ? availableTools[0] : "";
     }
 
     hasUniqueName(): boolean {
-        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.dtptype.name;
+        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name;
     }
 
     onBaseExperimentChanged(){
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-        const mm_destinationName = Path.join(Path.dirname(this.configpath), this.dtptype.name + "_multiModel.json");
+        const mm_destinationName = Path.join(Path.dirname(this.configpath), this.maestro.name + "_multiModel.json");
         const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
         fs.readdir(mm_sourcePath, (err, files) => {
             if (files) {
@@ -101,7 +117,7 @@ export class DtpMaestroComponent implements AfterContentInit{
                             console.error(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`);
                         }
                         else {
-                            this.dtptype.multiModelPath = mm_destinationName;
+                            this.maestro.multiModelPath = mm_destinationName;
                         }
                     });
                 }
@@ -115,12 +131,12 @@ export class DtpMaestroComponent implements AfterContentInit{
         this.showExperimentSelect = false;
     }
 
-    doFirstTimeSetup(setupFromExperiment: boolean) {
-        this.showFirstTimeSetupBtns = false;
+    doInitialSetup(setupFromExperiment: boolean) {
+        this.showInitialSetupBtns = false;
         this.showExperimentSelect = setupFromExperiment;
         if(!setupFromExperiment){
-            this.dtptype.multiModelPath = Path.join(Path.dirname(this.configpath), this.dtptype.name + "_multiModel.json");
-            fs.writeFileSync(this.dtptype.multiModelPath, "{}", 'utf-8');
+            this.maestro.multiModelPath = Path.join(Path.dirname(this.configpath), this.maestro.name + "_multiModel.json");
+            fs.writeFileSync(this.maestro.multiModelPath, "{}", 'utf-8');
         }
     }
 

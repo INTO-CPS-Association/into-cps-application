@@ -30,31 +30,36 @@
  */
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
-import { FormGroup } from "@angular/forms";
-import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, SignalDtpType, TaskConfigurationDtpType, ToolDtpType, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
+import { FormArray, FormGroup } from "@angular/forms";
+import { DataRepeaterDtpType, DTPConfig, IDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from 'path';
-import * as fs from "fs";
 
 @Component({
     selector: 'data-repeater',
     templateUrl: "./angular2-app/dtp/inputs/datarepeater.component.html"
 })
-export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy {
-    private typeRemovedSub: Subscription;
-    private typeAddedSub: Subscription;
+export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
+    public static signalFormIndex = "signals";
     private isToolingServerOnlineSub: Subscription;
     private isToolingServerOnline: boolean = false;
+    private _editing: boolean = true;
 
     @Input()
-    dtptype: DataRepeaterDtpType
+    datarepeater: DataRepeaterDtpType
 
     @Input()
     formGroup: FormGroup;
-
+    
     @Input()
-    editing: boolean = false;
+    set editing(editing: boolean) {
+        this._editing = editing;
+    }
+
+    get editing(): boolean {
+        return this.datarepeater.fmu_path == "" && this._editing;
+    }
 
     @Input()
     config: DTPConfig;
@@ -62,6 +67,8 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy {
     selectedSignal: string;
 
     showSelectGroup: boolean = true;
+
+    isEditable: boolean = true;
 
     constructor(private dtpToolingService: DtpDtToolingService) {
         console.log("DataRepeater component constructor");
@@ -73,90 +80,72 @@ export class DtpDataRepeaterComponent implements AfterContentInit, OnDestroy {
     }
 
     ngAfterContentInit(): void {
-        this.typeRemovedSub = this.config.typeRemoved.asObservable().subscribe(type => {
-            if (type.type == DtpTypes.Signal) {
-                this.removeSignal(type);
-            }
-        });
-        this.typeAddedSub = this.config.typeAdded.asObservable().subscribe(type => {
-            if (type.type == DtpTypes.Signal) {
-                this.updateSelectedSignal();
-            }
-        });
-        this.updateSelectedSignal();
+        const availableTools = this.rabbitMqNamesFromTools(this.config.tools);
+        this.datarepeater.tool = availableTools.length > 0 ? availableTools[0] : "";
+    }
+
+    onSaveSignal(entry: any) {
+        if (!entry.value) return;
+        entry.value = false;
+        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 
     ngOnDestroy() {
-        this.typeRemovedSub.unsubscribe();
-        this.typeAddedSub.unsubscribe();
         this.isToolingServerOnlineSub.unsubscribe();
     }
 
-    updateSelectedSignal() {
-        this.selectedSignal = this.getRemaningSignalsNames()[0] ?? "";
-        this.showSelectGroup = this.selectedSignal != "";
+    getAvailableServersNames(servers: IDtpItem[]): string[] {
+        return servers.reduce((serverNames: string[], server: IDtpItem) => {
+            if(this.datarepeater.server_source != server.name && this.datarepeater.server_target != server.name){
+                serverNames.push(server.name);
+            }
+            return serverNames;
+        }, []);
     }
 
-    getRemaningSignalsNames(): string[] {
-        const signals = this.config.tasks.reduce((signals: string[], idtpType) => {
-            if (!this.dtptype.signals.includes(idtpType) && idtpType.type == DtpTypes.Signal) {
-                signals.push(idtpType.name);
+    rabbitMqNamesFromTools(tools: IDtpItem[]): string[] {
+        return tools.reduce((rabbitMqToolNames: string[], tool: ToolDtpItem) => {
+            if(tool.toolType == ToolTypes.rabbitmq){
+                rabbitMqToolNames.push(tool.name);
             }
-            return signals;
+            return rabbitMqToolNames;
         }, []);
-        return signals.sort();
     }
 
     createFMU() {
-        // const toolPath = (this.config.tools.find(t => (t as ToolDtpType).toolType == ToolTypes.rabbitmq) as ToolDtpType)?.path;
-        // this.dtpToolingService.createFmuFromDataRepeater(this.dtptype.toYaml(), toolPath).then(res => {
-        //     this.dtptype.fmu_path = res;
-        // }).catch(err => console.log(err));
+        let dataRepeaterIndex: number;
+        const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => {
+            const index = configuration.tasks.findIndex((task: IDtpItem) => task.name == this.datarepeater.name);
+            if(index > -1){
+                dataRepeaterIndex = index;
+                return true;
+            }
+            return false;
+        }) as TaskConfigurationDtpItem;
 
-        // this.config.toYaml().then(yamlObj => {
-        //     const configurations = this.config.configurations;
-        //     const tempProject = "temp";
-        //     const tempDir = Path.join(this.dtpToolingService.projectBasePath, tempProject);
-        //     this.dtpToolingService.createProjectWithConfig(yamlObj, tempProject).then(() => {
-        //         for (let i = 0; i < configurations.length; i++) {
-        //             const configuration: TaskConfigurationDtpType = configurations[i] as TaskConfigurationDtpType;
-        //             for (let l = 0; l < configuration.tasks.length; l++) {
-        //                 if (configuration.tasks[l].type == DtpTypes.DataRepeater && configuration.tasks[l].name == this.dtptype.name) {
-        //                     this.dtpToolingService.createFmuFromDataRepeaterIndex(`configurations/${i}/tasks/${l}`, tempProject).then(res => {
-        //                         this.dtptype.fmu_path = res.file
-        //                         const tempFmuPath = Path.join(this.dtpToolingService.projectBasePath, this.dtptype.fmu_path);
-        //                         const targetDirPath = Path.join(this.dtpToolingService.projectBasePath, this.config.name);
-        //                         fs.mkdirSync(targetDirPath, { recursive: true });
-        //                         const targetFmuPath = Path.join(targetDirPath, `${this.dtptype.name}.fmu`);
-
-        //                         fs.promises.copyFile(tempFmuPath, targetFmuPath).then(() => {
-        //                             this.dtptype.fmu_path = targetFmuPath;
-        //                             //this.dtpToolingService.deleteProject(tempProject);
-        //                             fs.rmdirSync(tempDir, { recursive: true });
-        //                         }).catch(err => console.log(err));
-        //                     }, err => console.log(err));
-
-        //                     l = configuration.tasks.length;
-        //                     i = configurations.length;
-        //                 }
-        //             }
-        //         }
-        //     }).catch(err => console.warn(err));
-        // }).catch(err => console.warn(err));
+        parentConfiguration.toYaml().then(yamlObj => {
+            const confObjArr: any[] = [];
+            confObjArr.push(yamlObj);
+            const parentConfigurationIndex = this.config.configurations.indexOf(parentConfiguration);
+            this.dtpToolingService.addConfigurationToProject(confObjArr, this.config.projectName).then(() => {
+                this.dtpToolingService.createFmuFromDataRepeater(parentConfigurationIndex.toString(), dataRepeaterIndex.toString(), this.config.projectName).then(relativeFmuPath => {
+                    this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath);
+                }, err => console.log(err));
+            });
+        });
     }
 
-    addSignal() {
-        const signal = this.config.tasks.find(type => type.type == DtpTypes.Signal && type.name == this.selectedSignal);
-        this.dtptype.signals.push(signal);
-        this.updateSelectedSignal();
+    addNewSignal() {
+        const signal = new SignalDtpType("");
+        this.datarepeater.signals.push(signal);
+        (this.formGroup.get("signals") as FormArray).push(signal.toFormGroup());
     }
 
     removeSignal(signal: IDtpItem) {
-        const index = this.dtptype.signals.indexOf(signal, 0);
-        if (index > -1) {
-            this.dtptype.signals.splice(index, 1);
-        }
-        this.updateSelectedSignal();
+        const index = this.datarepeater.signals.indexOf(signal);
+        this.datarepeater.signals.splice(index, 1);
+        (this.formGroup.get("signals") as FormArray).removeAt(index);
+        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 }
 

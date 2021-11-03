@@ -29,35 +29,30 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
-import { FormArray, FormControl, FormGroup } from "@angular/forms";
-import { SignalDtpType } from "../../../intocps-configurations/dtp-configuration";
-import IntoCpsApp from "../../../IntoCpsApp";
-import * as Path from 'path';
-import * as fs from 'fs';
-import {Project} from "../../../proj/Project";
+import { Component, Input, AfterContentInit } from "@angular/core";
+import { FormGroup } from "@angular/forms";
+import { DTPConfig, SignalDtpType } from "../../../intocps-configurations/dtp-configuration";
 
 @Component({
     selector: 'signal',
     templateUrl: "./angular2-app/dtp/inputs/signal.component.html"
 })
-export class DtpSignalComponent {
+export class DtpSignalComponent implements AfterContentInit {
     @Input()
-    dtptype: SignalDtpType
+    signal: SignalDtpType
 
     @Input()
     formGroup:FormGroup;
-
+    
     @Input()
-    editing: boolean = false;
+    editing: boolean = true;
 
     constructor() {
         console.log("Signal component constructor");
     }
 
-    customTrackBy(index: number, obj: any): any {
-        return index;
+    ngAfterContentInit(): void {
+        this.editing = this.signal.name == "";
     }
-
 }
 

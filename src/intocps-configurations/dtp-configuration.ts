@@ -2,14 +2,12 @@ import * as fs from "fs"
 import {
     integerValidator
 } from "../angular2-app/shared/validators";
-import { FormGroup, FormControl, Validators } from "@angular/forms";
-import { Subject } from "rxjs";
+import { FormGroup, FormControl, Validators, FormArray } from "@angular/forms";
 import { IntoCpsApp } from "../IntoCpsApp";
 import { MultiModelConfig } from "./MultiModelConfig";
+import * as Path from 'path';
 
 export class DTPConfig implements ISerializable {
-    public typeAdded: Subject<IDtpItem> = new Subject<IDtpItem>();
-    public typeRemoved: Subject<IDtpItem> = new Subject<IDtpItem>();
     protected sourcePath: string;
     save(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -28,34 +26,23 @@ export class DTPConfig implements ISerializable {
     public static TAG_CONFIGURATIONS = "Configurations";
     public static TAG_TOOLS = "Tools";
     public static TAG_SERVERS = "Servers";
-    public static TAG_NAME = "Name";
 
-    constructor(public configurations: Array<IDtpItem> = [], public tools: Array<IDtpItem> = [], public servers: Array<IDtpItem> = [], public tasks: Array<IDtpItem> = []) { }
+    constructor(public configurations: Array<IDtpItem> = [], public tools: Array<IDtpItem> = [], public servers: Array<IDtpItem> = [], public projectName: string = "") { }
 
     toObject() {
         var objectToSerialize: any = {};
-        objectToSerialize[DTPConfig.TAG_CONFIGURATIONS] = this.configurations.map(c => c.toObject());
+        objectToSerialize[DTPConfig.TAG_CONFIGURATIONS] = this.configurations.map(configuration => configuration.toObject());
         objectToSerialize[DTPConfig.TAG_TOOLS] = this.tools.map(c => c.toObject());
         objectToSerialize[DTPConfig.TAG_SERVERS] = this.servers.map(c => c.toObject());
         return objectToSerialize;
     }
 
-    public emitTypeAdded(type: IDtpItem) {
-        this.typeAdded.next(type);
-    }
-
-    public emitTypeRemoved(type: IDtpItem) {
-        this.typeRemoved.next(type);
-    }
-
     static create(path: string, jsonData: any): Promise<DTPConfig> {
         return new Promise<DTPConfig>((resolve, reject) => {
-            const tasks: Array<IDtpItem> = [];
-            const configurations: Array<IDtpItem> = this.parseConfigurations(jsonData[this.TAG_CONFIGURATIONS], tasks);
-            const tools: Array<IDtpItem> = this.parseSimpleDtpTypes(jsonData[this.TAG_TOOLS]);
-            const servers: Array<IDtpItem> = this.parseSimpleDtpTypes(jsonData[this.TAG_SERVERS]);
-
-            let config = new DTPConfig(configurations, tools, servers, tasks);
+            const tools: Array<IDtpItem> = this.parseDtpItems(jsonData[this.TAG_TOOLS]);
+            const servers: Array<IDtpItem> = this.parseDtpItems(jsonData[this.TAG_SERVERS]);
+            const configurations: Array<IDtpItem> = this.parseDtpItems(jsonData[this.TAG_CONFIGURATIONS]);
+            const config = new DTPConfig(configurations, tools, servers, Path.basename(Path.dirname(path)));
             config.sourcePath = path;
             resolve(config);
         });
@@ -63,10 +50,14 @@ export class DTPConfig implements ISerializable {
 
     public toYaml(): Promise<any> {
         // Format object structure to match yaml schema.
-        const serverObjs = this.servers.map(server => server.toYaml());
-        const toolObj = this.tools.reduce((tools: any, tool: ToolDtpType) => {
-            tools[tool.toolType] = { path: tool.path }
-            return tools;
+        const serverObjs = this.servers.reduce((objs: any, server: ToolDtpItem) => {
+            objs[server.name] = server.toYaml();
+            return objs;
+        }, {});
+
+        const toolObj = this.tools.reduce((objs: any, tool: ToolDtpItem) => {
+            objs[tool.name] = tool.toYaml();
+            return objs;
         }, {});
 
         return new Promise<any>((resolve, reject) => {
@@ -76,30 +67,21 @@ export class DTPConfig implements ISerializable {
         });
     }
 
-    private static parseSimpleDtpTypes(dtpTypes: any): Array<IDtpItem> {
+    private static parseDtpItems(dtpTypes: any): Array<IDtpItem> {
         if (dtpTypes) {
             return Object.keys(dtpTypes).reduce((types: IDtpItem[], id: string) => {
                 const idtpType = dtpTypes[id];
                 if (idtpType.type == DtpTypes.Server) {
-                    types.push(ServerDtpType.parse(idtpType));
+                    types.push(ServerDtpItem.parse(idtpType));
                 } else if (idtpType.type == DtpTypes.Tool) {
-                    types.push(ToolDtpType.parse(idtpType));
+                    types.push(ToolDtpItem.parse(idtpType));
+                } else if (idtpType.type == DtpTypes.Configuration) {
+                    types.push(TaskConfigurationDtpItem.parse(idtpType));
                 }
                 return types;
             }, []);
         }
         else return Array<IDtpItem>();
-    }
-
-    private static parseConfigurations(configurationsJson: any, nestedTasks: Array<IDtpItem>): Array<TaskConfigurationDtpType> {
-        if (configurationsJson) {
-            return Object.keys(configurationsJson).reduce((configurations: TaskConfigurationDtpType[], id: string) => {
-                const idtpType = configurationsJson[id];
-                configurations.push(TaskConfigurationDtpType.parse(idtpType, nestedTasks));
-                return configurations;
-            }, []);
-        }
-        else return Array<TaskConfigurationDtpType>();
     }
 
     static parse(path: string): Promise<DTPConfig> {
@@ -141,71 +123,67 @@ export enum ToolTypes {
     rabbitmq = "rabbitmq"
 }
 
-export interface KeyValue {
-    [key: string]: any;
-}
-
-export class TaskConfigurationDtpType implements IDtpItem {
+export class TaskConfigurationDtpItem implements IDtpItem {
+    public static TAG_SIMULATIONS = "Simulations";
+    public static TAG_DATAREPEATERS = "Datarepeaters";
     type = DtpTypes.Configuration;
     constructor(public name: string = "", public tasks: Array<IDtpItem> = []) { }
 
-    async toYaml() {
-        const tasks = await Promise.all(this.tasks.map( async task => {
-            if (task.type == DtpTypes.DataRepeater) {
-                let dataRepeaterObj: any = {};
-                dataRepeaterObj["data-repeater"] = task.toYaml();
-                return dataRepeaterObj;
-            } else if (task.type == DtpTypes.Maestro) {
-                return { simulation: await (task as MaestroDtpType).toYaml() };
+    toObject() {
+        const configurationObj: any = {};
+        configurationObj.name = this.name;
+        configurationObj.type = this.type;
+        const simulations: IDtpItem[] = [];
+        configurationObj[TaskConfigurationDtpItem.TAG_DATAREPEATERS] = this.tasks.reduce((dataRepeaters, task) => {
+            if(task instanceof DataRepeaterDtpType){
+                dataRepeaters.push(task);
             }
-        }));
+            else if(task instanceof MaestroDtpItem){
+                simulations.push(task);
+            }
+            return dataRepeaters;
+        }, []);
+        configurationObj[TaskConfigurationDtpItem.TAG_SIMULATIONS] = simulations;
+        return configurationObj;
+    }
 
-        return { name: this.name, tasks: tasks };
+    async toYaml(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            Promise.all(this.tasks.map( async task => {
+                if (task.type == DtpTypes.DataRepeater) {
+                    let dataRepeaterObj: any = {};
+                    dataRepeaterObj["amqp-repeater"] = task.toYaml();
+                    return dataRepeaterObj;
+                } else if (task.type == DtpTypes.Maestro) {
+                    return { simulation: await (task as MaestroDtpItem).toYaml() };
+                }
+            })).then(tasks => {
+                resolve({ name: this.name, tasks: tasks });
+            }).catch(err => reject(err));
+        });
     }
 
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
-            tasks: new FormControl(this.tasks)
+            tasks: new FormArray(this.tasks.map(task => task.toFormGroup()))
         })
     }
 
-    toObject() {
-        return { name: this.name, type: this.type, tasks: this.tasks.map(task => task.toObject()) };
-    }
-
-    static parse(json: any, nestedTaskItems: Array<IDtpItem>): TaskConfigurationDtpType {
-        const tasks: IDtpItem[] = json["tasks"].map((task: any) => {
-            if (task.type == DtpTypes.DataRepeater) {
-                let dataRepeater = nestedTaskItems.find(nt => nt.type == DtpTypes.DataRepeater && nt.name == task.name);
-                if (dataRepeater) {
-                    return dataRepeater;
-                }
-                dataRepeater = DataRepeaterDtpType.parse(task, nestedTaskItems);
-                nestedTaskItems.push(dataRepeater);
-                return dataRepeater;
-            }
-
-            if (task.type == DtpTypes.Maestro) {
-                let maestro = nestedTaskItems.find(nt => nt.type == DtpTypes.Maestro && nt.name == task.name);
-                if (maestro) {
-                    return maestro;
-                }
-                maestro = MaestroDtpType.parse(task);
-                nestedTaskItems.push(maestro);
-                return maestro;
-            }
-        });
-        return new TaskConfigurationDtpType(json["name"], tasks);
+    static parse(json: any): TaskConfigurationDtpItem {
+        const tasks: IDtpItem[] = (json[TaskConfigurationDtpItem.TAG_DATAREPEATERS]).map((json:any) => DataRepeaterDtpType.parse(json)).concat(json[TaskConfigurationDtpItem.TAG_SIMULATIONS].map((json:any) => MaestroDtpItem.parse(json)));
+        return new TaskConfigurationDtpItem(json["name"], tasks);
     }
 }
 
-export class ToolDtpType implements IDtpItem {
+export class ToolDtpItem implements IDtpItem {
     type = DtpTypes.Tool;
     constructor(public name: string = "", public path: string = "", public url: string = "", public toolType: ToolTypes) { }
+
     toYaml(): {} {
-        throw new Error("Method not implemented.");
+        return { path: this.path, url: this.url };
     }
+
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
@@ -219,16 +197,16 @@ export class ToolDtpType implements IDtpItem {
         return { name: this.name, type: this.type, path: this.path, url: this.url, toolType: this.toolType };
     }
 
-    static parse(json: any): ToolDtpType {
-        return new ToolDtpType(json["name"], json["path"], json["url"], json["toolType"]);
+    static parse(json: any): ToolDtpItem {
+        return new ToolDtpItem(json["name"], json["path"], json["url"], json["toolType"]);
     }
 }
 
-export class ServerDtpType implements IDtpItem {
+export class ServerDtpItem implements IDtpItem {
     type = DtpTypes.Server;
-    constructor(public id: string, public name: string = "Server", public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: string = "AMQP") { }
+    constructor(public id: string, public name: string = "", public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: string = "AMQP") { }
     toYaml(): {} {
-        return { id: this.id, name: this.name, user: this.username, password: this.password, host: this.host, port: this.port, type: this.servertype, embedded: this.embedded }
+        return { name: this.name, user: this.username, password: this.password, host: this.host, port: this.port, type: this.servertype, embedded: this.embedded }
     }
     toFormGroup() {
         return new FormGroup({
@@ -246,31 +224,33 @@ export class ServerDtpType implements IDtpItem {
     toObject() {
         return { id: this.id, name: this.name, type: this.type, username: this.username, password: this.password, host: this.host, port: this.port, embedded: this.embedded, servertype: this.servertype };
     }
-    static parse(json: any): ServerDtpType {
-        return new ServerDtpType(json["id"], json["name"], json["username"], json["password"], json["host"], json["port"], json["embedded"], json["servertype"]);
+    static parse(json: any): ServerDtpItem {
+        return new ServerDtpItem(json["id"], json["name"], json["username"], json["password"], json["host"], json["port"], json["embedded"], json["servertype"]);
     }
 }
 
-export class MaestroDtpType implements IDtpItem {
+export class MaestroDtpItem implements IDtpItem {
     type = DtpTypes.Maestro;
     version: string = '2';
-    tool: string = "maestro";
     constructor(
-        public name: string = "Maestro",
+        public name: string = "",
         public multiModelPath: string = "",
-        public capture_output: boolean = false
+        public capture_output: boolean = false,
+        public tool: string = ""
     ) {
     }
     async toYaml() {
         let project = IntoCpsApp.getInstance().getActiveProject();
         const multiModel: MultiModelConfig = await MultiModelConfig.parse(this.multiModelPath, project.getFmusPath());
-        return { name: this.name, execution: { capture_output: this.capture_output }, tool: this.tool, version: this.version, config: multiModel.toObject() };
+        return { name: this.name, execution: { tool: this.tool, capture_output: this.capture_output }, prepare: {tool: this.tool}, config: multiModel.toObject() };
     }
 
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, [Validators.required]),
-            capture_output: new FormControl(this.capture_output)
+            capture_output: new FormControl(this.capture_output),
+            multiModelPath: new FormControl(this.multiModelPath),
+            tool: new FormControl(this.tool)
         });
     }
 
@@ -279,12 +259,13 @@ export class MaestroDtpType implements IDtpItem {
             name: this.name,
             type: this.type,
             multiModelPath: this.multiModelPath,
-            capture_output: this.capture_output
+            capture_output: this.capture_output,
+            tool: this.tool
         };
     }
 
-    static parse(json: any): MaestroDtpType {
-        return new MaestroDtpType(json["name"], json["multiModelPath"], json["capture_output"])
+    static parse(json: any): MaestroDtpItem {
+        return new MaestroDtpItem(json["name"], json["multiModelPath"], json["capture_output"], json["tool"])
     }
 }
 
@@ -315,7 +296,7 @@ export class SignalTarget {
 
 export class SignalDtpType implements IDtpItem {
     type = DtpTypes.Signal;
-    constructor(public name: string = "Signal", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget) { }
+    constructor(public name: string = "", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget) { }
     toYaml(): {} {
         throw new Error("Method not implemented.");
     }
@@ -351,16 +332,15 @@ export class SignalDtpType implements IDtpItem {
 
 export class DataRepeaterDtpType implements IDtpItem {
     type = DtpTypes.DataRepeater;
-    dtexport_implementation = "AMQP-AMQP"
-    dtexport_type = "data-repeater"
-    constructor(public name: string = "Data Repeater", public server_source: string = "", public server_target: string = "", public signals: Array<IDtpItem> = [], public fmu_path: string = "") { }
+    constructor(public name: string = "", public tool: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<IDtpItem> = [], public fmu_path: string = "") { }
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, [Validators.required]),
-            server_source: new FormControl(this.server_source, [Validators.required]),
-            server_target: new FormControl(this.server_target, [Validators.required]),
-            signals: new FormControl(this.signals, [Validators.required]),
-            fmu_path: new FormControl(this.fmu_path)
+            server_source: new FormControl(this.server_source),
+            server_target: new FormControl(this.server_target),
+            signals: new FormArray(this.signals.map(signal => signal.toFormGroup())),
+            fmu_path: new FormControl(this.fmu_path),
+            tool: new FormControl(this.tool)
         });
     }
 
@@ -372,12 +352,13 @@ export class DataRepeaterDtpType implements IDtpItem {
         });
 
         const t = JSON.stringify(this.signals);
-        return { name: this.name, tool: this.dtexport_implementation, servers: { source: this.server_source, target: this.server_target }, signals: signalsObj };
+        return { name: this.name, prepare: { tool: this.tool }, servers: { source: this.server_source, target: this.server_target }, signals: signalsObj };
     }
 
     toObject() {
         return {
             name: this.name,
+            tool: this.tool,
             server_source: this.server_source,
             server_target: this.server_target,
             type: this.type,
@@ -386,16 +367,8 @@ export class DataRepeaterDtpType implements IDtpItem {
         };
     }
 
-    static parse(json: any, nestedTaskItems: Array<IDtpItem>): DataRepeaterDtpType {
-        const signals: SignalDtpType[] = json["signals"].map((sig: any) => {
-            let signal = nestedTaskItems.find(nt => nt.type == DtpTypes.Signal && nt.name == sig.name);
-            if (signal) {
-                return signal;
-            }
-            signal = SignalDtpType.parse(sig);
-            nestedTaskItems.push(signal);
-            return signal;
-        });
-        return new DataRepeaterDtpType(json["name"], json["server_source"], json["server_target"], signals, json["fmu_path"]);
+    static parse(json: any): DataRepeaterDtpType {
+        const signals: SignalDtpType[] = json["signals"].map((json: any) => SignalDtpType.parse(json));
+        return new DataRepeaterDtpType(json["name"], json["tool"], json["server_source"], json["server_target"], signals, json["fmu_path"]);
     }
 }

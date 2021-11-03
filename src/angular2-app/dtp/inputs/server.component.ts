@@ -29,34 +29,30 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
-import { FormArray, FormControl, FormGroup } from "@angular/forms";
-import { ServerDtpType } from "../../../intocps-configurations/dtp-configuration";
-import IntoCpsApp from "../../../IntoCpsApp";
-import * as Path from 'path';
-import * as fs from 'fs';
-import {Project} from "../../../proj/Project";
+import { Component, Input, AfterContentInit } from "@angular/core";
+import { FormGroup } from "@angular/forms";
+import { DTPConfig, ServerDtpItem } from "../../../intocps-configurations/dtp-configuration";
 
 @Component({
     selector: 'server',
     templateUrl: "./angular2-app/dtp/inputs/server.component.html"
 })
-export class DtpServerComponent {
+export class DtpServerComponent implements AfterContentInit {
     @Input()
-    dtptype: ServerDtpType
+    server: ServerDtpItem
 
     @Input()
     formGroup:FormGroup;
-
+    
     @Input()
-    editing: boolean = false;
+    editing: boolean = true;
 
     constructor() {
         console.log("Server component constructor");
     }
 
-    customTrackBy(index: number, obj: any): any {
-        return index;
+    ngAfterContentInit(): void {
+        this.editing = this.server.name == "";
     }
 }
 

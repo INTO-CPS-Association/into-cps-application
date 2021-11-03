@@ -2,72 +2,83 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.name"  formControlName="name" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{datarepeater.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="datarepeater.name"  formControlName="name" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
-            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === dtptype.name" class="alert alert-danger">Name is not unique.</div>
+            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === datarepeater.name" class="alert alert-danger">Name is not unique.</div>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Source</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.server_source}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.server_source"  formControlName="server_source" class="form-control">
+            <select *ngIf="editing" [(ngModel)]="datarepeater.server_source" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
+                <option *ngFor="let serverName of getAvailableServersNames(config.servers)" [ngValue]="serverName">{{serverName}}</option>
+            </select>
+            <p *ngIf="!editing" class="form-control-static">{{datarepeater.server_source}}</p>
         </div>
     </div>
+    
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Target</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{dtptype.server_target}}</p>
-            <input *ngIf="editing" [(ngModel)]="dtptype.server_target"  formControlName="server_target" class="form-control">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-3 control-label">
-            Signals
-        </label>
-        <div *ngIf="editing && showSelectGroup" class="input-group">
-            <select [(ngModel)]="selectedSignal" [ngModelOptions]="{standalone: true}" class="form-control">
-                <option *ngFor="let signalName of getRemaningSignalsNames()" [value]="signalName">{{signalName}}</option>
+            <select *ngIf="editing" [(ngModel)]="datarepeater.server_target" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
+                <option *ngFor="let serverName of getAvailableServersNames(config.servers)" [ngValue]="serverName">{{serverName}}</option>
             </select>
-            <span class="input-group-btn">
-                <button type="button" (click)="addSignal()" class="btn btn-default">
-                    <span class="glyphicon glyphicon-plus"></span>
-                </button>
-            </span>    
-        </div>
-        <div class="col-sm-9" *ngFor="let signal of dtptype.signals">
-            <div class="col-sm-9">
-                <p *ngIf="!editing" class="form-control-static">{{signal.name}}</p>
-                <div *ngIf="editing" class="input-group">
-                    <p class="form-control">{{signal.name}}</p>
-                    <span class="input-group-btn">
-                        <button type="button" (click)="removeSignal(signal)" class="btn btn-default">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </button>
-                    </span>
-                </div>
-            </div>
-            
+            <p *ngIf="!editing" class="form-control-static">{{datarepeater.server_target}}</p>
         </div>
     </div>
 
     <div class="form-group">
-        <div *ngIf="!dtptype.fmu_path && editing">
+        <label class="col-sm-3 control-label">RabbitMQ Tool</label>
+        <div class="col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="datarepeater.tool" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
+                <option *ngFor="let toolName of rabbitMqNamesFromTools(config.tools)" [ngValue]="toolName">{{toolName}}</option>
+            </select>
+            <p *ngIf="!editing" class="form-control-static">{{datarepeater.tool}}</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">FMU Path </label>
+        <div *ngIf="!datarepeater.fmu_path">
             <span class="input-group-btn">
-                <button type="button" (click)="createFMU()" class="btn btn-default" > <!--[disabled] = "!isToolingServerOnline"-->
+                <button type="button" (click)="createFMU()" class="btn btn-default" [disabled] = "!isToolingServerOnline">
                     Create FMU
                 </button>
             </span> 
         </div>
-        <div *ngIf="dtptype.fmu_path">
-            <label class="col-sm-3 control-label">FMU Path</label>
-            <div class="col-sm-9">
-                <p class="form-control-static">{{dtptype.fmu_path}}</p>
-            </div>
+        <div *ngIf="datarepeater.fmu_path" class="col-sm-9">
+            <p class="form-control-static">{{datarepeater.fmu_path}}</p>
         </div>
     </div>
+   
+    <panel id="signals" [title]="'Signals'" [open]="false">
+        <div class="form-group" *ngIf="editing">
+            <div class="col-sm-7 col-md-8">
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button type="button" (click)="addNewSignal()" class="btn btn-default">
+                            New signal 
+                            <span class="glyphicon glyphicon-plus"></span>
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="constraint-container">
+            <div class="panel panel-default dtp-inner-constraint-panel" *ngFor="let signal of datarepeater.signals; let i = index">
+                <div class="panel-heading btn-panel-heading">
+                    <button class="btn btn-default btn-sm pull-right" title="Remove signal" (click)="removeSignal(signal)" *ngIf="editing">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </div>
+                <div class="panel-body">
+                    <signal [signal]="signal" [editing] = "editing" [formGroup]="formGroup.get('signals').at(i)"></signal>			
+                </div>
+            </div>
+        </div>
+    </panel>
 </div>

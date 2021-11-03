@@ -52,6 +52,39 @@ coe-configuration,dtp-configuration .constraint-panel {
     margin-right: 2.5%;
 }
 
+dtp-configuration .dtp-inner-constraint-container {
+    display: flex;
+    flex-wrap: wrap;
+    width: fit-content;
+}
+
+dtp-configuration .dtp-outer-constraint-panel {
+    width: 300px;
+    min-width:fit-content;
+    margin-left: 0.5%;
+    margin-right: 0.5%;
+}
+
+dtp-configuration .dtp-inner-constraint-panel {
+    min-width: fit-content;
+    margin-left: 0.5%;
+    margin-right: 0.5%;
+}
+
+dtp-configuration .btn-panel-heading {
+    overflow: hidden;
+    padding: 0px;
+}
+
+dtp-configuration .panel-heading-btn-group {
+    margin: 0px;
+}
+
+dtp-configuration .dtp-panel-title {
+    text-align: left;
+    margin-top: 8px;
+    margin-left: 8px;
+}
 
 coe-configuration a {
     cursor: pointer;

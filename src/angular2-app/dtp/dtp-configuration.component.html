@@ -1,21 +1,11 @@
-<form *ngIf="isLoaded" [formGroup]="form" (ngSubmit)="onSubmit()">
-	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
-		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
-	</button>
-	<button *ngIf="editing" class="btn btn-default" [disabled]="!form.valid">
-		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
-		Save
-	</button>
-
-	<hr />
-
+<form *ngIf="isLoaded" [formGroup]="form">
 	<div class="form-horizontal">
 		<panel id="tools" [title]="'Tools'" [open]="false">
-			<div *ngIf="editing" class="form-group">
+			<div class="form-group">
 				<div class="col-sm-7 col-md-8">
 					<div class="input-group">
 						<span class="input-group-btn">
-							<button type="button" (click)="addNewDtpType('tool')" class="btn btn-default">
+							<button type="button" (click)="addDtpItem('tool')" class="btn btn-default">
 								New tool 
 								<span class="glyphicon glyphicon-plus"></span>
 							</button>
@@ -25,28 +15,33 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let tool of config.tools;let i = index">
-					<div class="panel-heading">
-						<a *ngIf="editing" (click)="removeDtpDtype(tool)" class="pull-right">
-							<span class="glyphicon glyphicon-remove"></span>
-						</a>
+				<div class="panel panel-default constraint-panel" *ngFor="let entry of toolsWithEditing | keyvalue; let i = index">
+					<div class="panel-heading btn-panel-heading">
+						<div class="btn-group panel-heading-btn-group pull-right">
+							<button class="btn btn-default" title="Edit tool" (click)="onEditDtpItem(entry)" *ngIf="!entry.value">
+								<span class="glyphicon glyphicon-edit"></span>
+							</button>
+							<button class="btn btn-default" title="Save tool" (click)="onSaveDtpItem(entry)" *ngIf="entry.value" [disabled]="!form.get('tools').at(i).valid">
+								<span class="glyphicon glyphicon-floppy-saved"></span>
+							</button>
+							<button class="btn btn-default" title="Remove tool" (click)="removeDtpItem(entry.key)">
+								<span class="glyphicon glyphicon-remove"></span>
+							</button>
+						</div>
 					</div>
 					<div class="panel-body">
-						<tool
-							[editing]="editing" 
-							[dtptype]="tool"
-							[formGroup]="form.get('tools').at(i)"></tool>		
+						<tool [tool]="entry.key" [editing] = "entry.value" [formGroup]="form.get('tools').at(i)"></tool>		
 					</div>
 				</div>
 			</div>
 		</panel>
 
 		<panel id="servers" [title]="'Servers'" [open]="false">
-			<div *ngIf="editing" class="form-group">
+			<div class="form-group">
 				<div class="col-sm-7 col-md-8">
 					<div class="input-group">
 						<span class="input-group-btn">
-							<button type="button" (click)="addNewDtpType('server')" class="btn btn-default">
+							<button type="button" (click)="addDtpItem('server')" class="btn btn-default">
 								New server 
 								<span class="glyphicon glyphicon-plus"></span>
 							</button>
@@ -56,14 +51,22 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let server of config.servers;let i = index">
-					<div class="panel-heading">
-						<a *ngIf="editing" (click)="removeDtpDtype(server)" class="pull-right">
-							<span class="glyphicon glyphicon-remove"></span>
-						</a>
+				<div class="panel panel-default constraint-panel" *ngFor="let entry of serversWithEditing | keyvalue; let i = index">
+					<div class="panel-heading btn-panel-heading">
+						<div class="btn-group panel-heading-btn-group pull-right">
+							<button class="btn btn-default" title="Edit server" (click)="onEditDtpItem(entry)" *ngIf="!entry.value">
+								<span class="glyphicon glyphicon-edit"></span>
+							</button>
+							<button class="btn btn-default" title="Save server" (click)="onSaveDtpItem(entry)" *ngIf="entry.value" [disabled]="!form.get('servers').at(i).valid">
+								<span class="glyphicon glyphicon-floppy-saved"></span>
+							</button>
+							<button class="btn btn-default" title="Remove server" (click)="removeDtpItem(entry.key)">
+								<span class="glyphicon glyphicon-remove"></span>
+							</button>
+						</div>
 					</div>
 					<div class="panel-body">
-						<server [editing]="editing" [dtptype]="server" [formGroup]="form.get('servers').at(i)"></server>			
+						<server [server]="entry.key" [editing] = "entry.value" [formGroup]="form.get('servers').at(i)"></server>			
 					</div>
 				</div>
 			</div>
@@ -71,11 +74,11 @@
 
 		<panel id="configurations" [title]="'Configurations'" [open]="false">
 
-			<div *ngIf="editing" class="form-group">
+			<div class="form-group">
 				<div class="col-sm-7 col-md-8">
 					<div class="input-group">
 						<span class="input-group-btn">
-							<button type="button" (click)="addNewDtpType('configuration')" class="btn btn-default">
+							<button type="button" (click)="addDtpItem('configuration')" class="btn btn-default">
 								New configuration 
 								<span class="glyphicon glyphicon-plus"></span>
 							</button>
@@ -85,80 +88,32 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let configuration of config.configurations;let i = index">
-					<div class="panel-heading">
-						<a *ngIf="editing" (click)="removeDtpDtype(configuration)" class="pull-right">
-							<span class="glyphicon glyphicon-remove"></span>
-						</a>
+				<div class="panel panel-default dtp-outer-constraint-panel" *ngFor="let entry of configurationsWithEditing | keyvalue; let i = index">
+					<div class="panel-heading btn-panel-heading">
+						<div class="btn-group panel-heading-btn-group pull-right">
+							<button class="btn btn-default" title="Edit configuration" (click)="onEditDtpItem(entry)" *ngIf="!entry.value">
+								<span class="glyphicon glyphicon-edit"></span>
+							</button>
+							<button class="btn btn-default" title="Save configuration" (click)="onSaveDtpItem(entry)" *ngIf="entry.value" [disabled]="!form.get('configurations').at(i).valid">
+								<span class="glyphicon glyphicon-floppy-saved"></span>
+							</button>
+							<button class="btn btn-default" title="Remove configuration" (click)="removeDtpItem(entry.key)">
+								<span class="glyphicon glyphicon-remove"></span>
+							</button>
+						</div>
 					</div>
 					<div class="panel-body">
-						<task-configuration [editing]="editing" [dtptype]="configuration" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
+						<task-configuration [configuration]="entry.key" [editing] = "entry.value" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
 					</div>
 				</div>
 			</div>
-
-			<hr />
-
-			<panel id="tasks" [title]="'Tasks'" [open]="false">
-				
-				<div *ngIf="editing" class="form-group">
-					<label class="col-sm-5 col-md-4 control-label">Task</label>
-					<div class="col-sm-7 col-md-8">
-						<div *ngIf="editing" class="input-group">
-							<select [(ngModel)]="newTask" [ngModelOptions]="{ standalone: true }" class="form-control">
-								<option *ngFor="let task of taskConstructors" [ngValue]="task">{{getDtpTypeName(task) }}</option>
-							</select>
-							<span class="input-group-btn">
-								<button type="button" (click)="addNewDtpType('task')" class="btn btn-default" [disabled]="!newTask">
-									<span class="glyphicon glyphicon-plus"></span>
-									Add
-								</button>
-							</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="constraint-container">
-					<div class="panel panel-default constraint-panel" *ngFor="let task of config.tasks; let i = index">
-						<div class="panel-heading">
-							<a *ngIf="editing" (click)="removeDtpDtype(task)" class="pull-right">
-								<span class="glyphicon glyphicon-remove"></span>
-							</a>
-							{{ getDtpTypeName(task) }}
-						</div>
-						<div class="panel-body">
-							<maestro [editing]="editing" [dtptype]="task" [configpath] = "config.sourcePath"
-								[formGroup]="form.get('tasks').at(i)" *ngIf="task.type === dtpTypesEnum.Maestro"></maestro>
-
-							<signal [editing]="editing" [dtptype]="task"
-								[formGroup]="form.get('tasks').at(i)" *ngIf="task.type === dtpTypesEnum.Signal"></signal>
-							<data-repeater 
-								[editing]="editing" 
-								[dtptype]="task"
-								[formGroup]="form.get('tasks').at(i)"
-								[config]="config" 
-								*ngIf="task.type === dtpTypesEnum.DataRepeater"></data-repeater>
-						</div>
-					</div>
-				</div>
-			</panel>
 		</panel>
 	</div>
 	
-	<hr />
-
-	<button *ngIf="!editing" class="btn btn-default" (click)="editing = true">
-		<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
-	</button>
 	<div>
-		<button *ngIf="!editing" class="btn btn-default" (click)="validateConfig()">
+		<button class="btn btn-default" (click)="validateConfig()">
 			<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Validate
 		</button>
 		<p *ngIf="isConfigValid">Config is valid</p>
 	</div>
-	
-	<button *ngIf="editing" class="btn btn-default" [disabled]="!form.valid" >
-		<span class="glyphicon glyphicon-floppy-saved" aria-hidden="true" (click)="onSubmit()"></span>
-		Save
-	</button>
 </form>

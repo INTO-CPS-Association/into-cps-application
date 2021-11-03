@@ -31,14 +31,11 @@
 
 import { Component, Input, NgZone, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import IntoCpsApp from "../../IntoCpsApp";
-import { MaestroDtpType, DTPConfig, ServerDtpType, SignalDtpType, DataRepeaterDtpType, IDtpItem, DtpTypes, ToolDtpType, TaskConfigurationDtpType, ToolTypes } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpType, IDtpItem, DtpTypes, ToolDtpItem, TaskConfigurationDtpItem, ToolTypes } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import * as fs from "fs";
 import * as Path from 'path';
-import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
-import { HttpClient } from "@angular/common/http";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 
 const Yaml = require('js-yaml');
@@ -50,15 +47,12 @@ const Ajv = require("ajv")
 })
 export class DtpConfigurationComponent implements AfterContentInit {
     private _path: string;
-    private readonly servers_key = "servers";
-    private readonly configurations_key = "configurations";
-    private readonly tools_key = "tools";
-    private readonly tasks_key = "tasks";
+    private readonly formkey_servers = "servers";
+    private readonly formkey_configurations = "configurations";
+    private readonly formkey_tools = "tools";
     private config: DTPConfig;
-    private dtpTypeConstructors = [MaestroDtpType, ServerDtpType, SignalDtpType, DataRepeaterDtpType, ToolDtpType, TaskConfigurationDtpType]
-    private taskConstructors = [DataRepeaterDtpType, SignalDtpType, MaestroDtpType];
+    private dtpTypeConstructors = [MaestroDtpItem, ServerDtpItem, SignalDtpType, DataRepeaterDtpType, ToolDtpItem, TaskConfigurationDtpItem];
 
-    newTask: new (...args: any[]) => IDtpItem;
     @Input()
     set path(path: string) {
         console.log("Path was set");
@@ -72,32 +66,42 @@ export class DtpConfigurationComponent implements AfterContentInit {
         return this._path;
     }
     form: FormGroup;
-    editing: boolean = false;
     isLoaded: boolean = false;
     parseError: string = null;
-    dtpTypesEnum = DtpTypes;
     isConfigValid: boolean = false;
+    configurationsWithEditing = new Map<IDtpItem, Boolean>();
+    serversWithEditing = new Map<IDtpItem, Boolean>();
+    toolsWithEditing = new Map<IDtpItem, Boolean>();
 
-
-    constructor(private zone: NgZone, private navigationService: NavigationService, private httpClient: HttpClient, private dtpToolingService: DtpDtToolingService) {
+    constructor(private zone: NgZone, private navigationService: NavigationService, private dtpToolingService: DtpDtToolingService) {
         this.navigationService.registerComponent(this);
-
     }
 
     ngAfterContentInit(): void {
-        this.dtpToolingService.startServer(Path.dirname(this._path));
+        //this.dtpToolingService.startServer(Path.dirname(this._path));
+
+        this.dtpToolingService.getProjects().then((projectNames: string[]) => {
+            if(projectNames.findIndex(name => this.config.projectName == name) == -1){
+                this.dtpToolingService.createProject(this.config.projectName);
+            }
+        });
     }
 
     private parseConfig() {
         DTPConfig.parse(this.path).then(config => {
             this.config = config;
             this.isLoaded = true;
+
+            this.config.configurations.forEach(configuration => this.configurationsWithEditing.set(configuration, configuration.name == ""));
+            this.config.servers.forEach(server => this.serversWithEditing.set(server, server.name == ""));
+            this.config.tools.forEach(tool => this.toolsWithEditing.set(tool, tool.name == ""));
+
             // Create a form group for each DTPType
             const groupObj: any = {};
-            groupObj[this.tasks_key] = new FormArray(this.config.tasks.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
-            groupObj[this.servers_key] = new FormArray(this.config.servers.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id"));
-            groupObj[this.tools_key] = new FormArray(this.config.tools.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
-            groupObj[this.configurations_key] = new FormArray(this.config.configurations.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
+            groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id"));
+            groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
+            groupObj[this.formkey_configurations] = new FormArray(this.config.configurations.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
+
             this.form = new FormGroup(groupObj);
             console.log("Parsing finished!");
 
@@ -105,107 +109,109 @@ export class DtpConfigurationComponent implements AfterContentInit {
     }
 
     onNavigate(): boolean {
-        if (!this.editing)
-            return true;
-        else {
-            if (confirm("Save your work before leaving?")) {
-                //this.onSubmit();
-            }
-            return true;
-        }
-    }
+        return true;
+     }
 
-    getDtpTypeName(dtpType: any) {
-        if (dtpType === MaestroDtpType || dtpType instanceof MaestroDtpType) {
-            return "Maestro"
-        }
-        else if (dtpType === ServerDtpType || dtpType instanceof ServerDtpType) {
+    getDtpTypeName(dtpType: any): string {
+        if (dtpType === ServerDtpItem || dtpType instanceof ServerDtpItem) {
             return "Server"
-        }
-        else if (dtpType === SignalDtpType || dtpType instanceof SignalDtpType) {
-            return "Signal"
-        }
-        else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType) {
-            return "Data-Repeater"
-        }
-        else if (dtpType === ToolDtpType || dtpType instanceof ToolDtpType) {
+        } else if (dtpType === ToolDtpItem || dtpType instanceof ToolDtpItem) {
             return "Tool"
-        }
-        else if (dtpType === TaskConfigurationDtpType || dtpType instanceof TaskConfigurationDtpType) {
+        } else if (dtpType === TaskConfigurationDtpItem || dtpType instanceof TaskConfigurationDtpItem) {
             return "Configuration"
-        }
-        else {
+        } else {
             console.log("Unknown DTPType");
         }
     }
 
-    addNewDtpType(typeName: string) {
+    addDtpItem(typeName: string) {
         let type;
         let formArray;
-        if (typeName == "task") {
-            if (!this.newTask) return;
-            type = new this.newTask();
-            this.config.tasks.push(type);
-            formArray = <FormArray>this.form.get(this.tasks_key);
-        }
-        else if (typeName == "server") {
-            type = new ServerDtpType("new id");
+        if (typeName == "server") {
+            type = new ServerDtpItem("new id");
             this.config.servers.push(type);
-            formArray = <FormArray>this.form.get(this.servers_key);
+            formArray = <FormArray>this.form.get(this.formkey_servers);
+            this.toolsWithEditing.set(type, true);
         }
         else if (typeName == "configuration") {
-            type = new TaskConfigurationDtpType();
+            type = new TaskConfigurationDtpItem();
             this.config.configurations.push(type);
-            formArray = <FormArray>this.form.get(this.configurations_key);
+            formArray = <FormArray>this.form.get(this.formkey_configurations);
+            this.configurationsWithEditing.set(type, true);
         }
         else if (typeName == "tool") {
-            type = new ToolDtpType("Tool", "", "", ToolTypes.maestro);
+            type = new ToolDtpItem("Tool", "", "", ToolTypes.maestro);
             this.config.tools.push(type);
-            formArray = <FormArray>this.form.get(this.tools_key);
+            formArray = <FormArray>this.form.get(this.formkey_tools);
+            this.toolsWithEditing.set(type, true);
         }
         else {
             console.log("Unknown DTPType");
             return;
         }
-
         formArray.push(type.toFormGroup());
-        this.config.emitTypeAdded(type);
+        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 
-    removeDtpDtype(type: IDtpItem) {
+    removeDtpItem(item: IDtpItem) {
         let formArray;
         let index;
-        if (type.type == DtpTypes.Signal || type.type == DtpTypes.DataRepeater || type.type == DtpTypes.Maestro) {
-            if (type.type == DtpTypes.Maestro) {
-                const maestroType = type as MaestroDtpType;
-                fs.unlink(maestroType.multiModelPath, err => { if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`) });
-            }
-            formArray = <FormArray>this.form.get(this.tasks_key);
-            index = this.config.tasks.indexOf(type);
-            this.config.tasks.splice(index, 1);
-        }
-        else if (type.type == DtpTypes.Server) {
-            formArray = <FormArray>this.form.get(this.servers_key);
-            index = this.config.servers.indexOf(type);
+        if (item.type == DtpTypes.Server) {
+            formArray = <FormArray>this.form.get(this.formkey_servers);
+            index = this.config.servers.indexOf(item);
             this.config.servers.splice(index, 1);
-        }
-        else if (type.type == DtpTypes.Configuration) {
-            formArray = <FormArray>this.form.get(this.configurations_key);
-            index = this.config.configurations.indexOf(type);
+            this.serversWithEditing.delete(item);
+        } else if (item.type == DtpTypes.Configuration) {
+            formArray = <FormArray>this.form.get(this.formkey_configurations);
+            index = this.config.configurations.indexOf(item);
             this.config.configurations.splice(index, 1);
-        }
-        else if (type.type == DtpTypes.Tool) {
-            formArray = <FormArray>this.form.get(this.tools_key);
-            index = this.config.tools.indexOf(type);
+            this.configurationsWithEditing.delete(item);
+        } else if (item.type == DtpTypes.Tool) {
+            formArray = <FormArray>this.form.get(this.formkey_tools);
+            index = this.config.tools.indexOf(item);
             this.config.tools.splice(index, 1);
-        }
-        else {
+            this.toolsWithEditing.delete(item);
+        } else {
             console.log("Unknown DTPType");
             return;
         }
-
         formArray.removeAt(index);
-        this.config.emitTypeRemoved(type);
+        this.config.save().catch(error => console.error("error when saving: " + error));
+    }
+
+    onSaveDtpItem(entry: any) {
+        if (!entry.value) return;
+        entry.value = false;
+        const dtpItem = entry.key;
+        if(dtpItem instanceof ServerDtpItem){
+            this.dtpToolingService.addServerToProject(dtpItem.name, (dtpItem as IDtpItem).toYaml(), this.config.projectName);
+        } else if(dtpItem instanceof ToolDtpItem){
+            this.dtpToolingService.addToolToProject(dtpItem.name, (dtpItem as IDtpItem).toYaml(), this.config.projectName);
+        } else if(dtpItem instanceof TaskConfigurationDtpItem){
+            (dtpItem as TaskConfigurationDtpItem).toYaml().then(configYamlObj => {
+                const confObjArr: any[] = [];
+                confObjArr.push(configYamlObj);
+                this.dtpToolingService.addConfigurationToProject(confObjArr, this.config.projectName);
+            })            
+        }
+
+        this.config.save().catch(error => console.error("error when saving: " + error));
+    }
+
+    onEditDtpItem(entry: any) {
+        if (entry.value) return;
+        entry.value = true;
+        const dtpItem = entry.key;
+        if(dtpItem instanceof ServerDtpItem){
+            this.dtpToolingService.removeServerInProject(dtpItem.name, this.config.projectName);
+        } else if(dtpItem instanceof ToolDtpItem){
+            this.dtpToolingService.removeToolInProject(dtpItem.name, this.config.projectName);
+        } else if(dtpItem instanceof TaskConfigurationDtpItem){
+            const index = this.config.configurations.indexOf(dtpItem).toString();
+            this.dtpToolingService.removeConfigurationInProject(index, this.config.projectName);
+        }
+
+        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 
     validateConfig() {
@@ -213,18 +219,21 @@ export class DtpConfigurationComponent implements AfterContentInit {
             const schemaPath = Path.join(Path.dirname(this._path), "..", "schema.yml");
             const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), { json: true });
     
-            const validate = new Ajv().compile(schemaObj) // options can be passed, e.g. {allErrors: true}
+            const validate = new Ajv().compile(schemaObj)
             this.isConfigValid = validate(yamlObj);
-            if (this.isConfigValid) {
-                console.log("Unable to validate YAML config" + validate.errors);
+            if (!this.isConfigValid) {
+                console.warn("YAML config has errors: " + validate.errors);
             }
         });
-    }
 
-    onSubmit() {
-        if (!this.editing) return;
-        this.config.save().catch(error => console.error("error when saving: " + error));
+        this.dtpToolingService.getProject(this.config.projectName).then(res => {
+            const yamlObj = res;
 
-        this.editing = false;
+            const i = 1;
+        });
+
+
+
+        //this.dtpToolingService.stopServer();
     }
 }

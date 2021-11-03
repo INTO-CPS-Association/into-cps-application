@@ -29,128 +29,74 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input, AfterContentInit, OnDestroy } from "@angular/core";
-import { FormGroup } from "@angular/forms";
-import { Subscription } from "rxjs";
-import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, MaestroDtpType, ServerDtpType, SignalDtpType, TaskConfigurationDtpType, ToolDtpType } from "../../../intocps-configurations/dtp-configuration";
+import { Component, Input, AfterContentInit } from "@angular/core";
+import { FormArray, FormGroup } from "@angular/forms";
+import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
+import * as fs from "fs";
 
 @Component({
     selector: 'task-configuration',
     templateUrl: "./angular2-app/dtp/inputs/taskConfiguration.component.html"
 })
-export class DtpTaskConfigurationComponent implements AfterContentInit, OnDestroy{
-    private typeRemovedSub: Subscription;
-    private typeAddedSub: Subscription;
+export class DtpTaskConfigurationComponent implements AfterContentInit {
+    private taskConstructors = [DataRepeaterDtpType, MaestroDtpItem];
+    dtpTypesEnum = DtpTypes;
+    
+    newTask: new (...args: any[]) => IDtpItem;
 
     @Input()
-    dtptype: TaskConfigurationDtpType
+    configuration: TaskConfigurationDtpItem
 
     @Input()
     formGroup: FormGroup;
 
     @Input()
     config: DTPConfig;
-
+    
     @Input()
-    editing: boolean = false;
-
-    selectedTask: string;
-    showSelectGroup: boolean;
+    editing: boolean = true;
 
     constructor() {
         console.log("Configuration component constructor");
     }
 
-    typeFilterPredicate = (idtpType:IDtpItem) => { return idtpType.type == DtpTypes.DataRepeater || idtpType.type == DtpTypes.Maestro}
-
     ngAfterContentInit(): void {
-        this.typeRemovedSub = this.config.typeRemoved.asObservable().subscribe(type => {
-            if(this.typeFilterPredicate(type)){
-                this.removeTask(type);
-            }
-        });
-        this.typeAddedSub = this.config.typeAdded.asObservable().subscribe(type => {
-            if(this.typeFilterPredicate(type)){
-                this.updateSelectedTask();
-            }
-        });
-        this.updateSelectedTask();
+        this.editing = this.configuration.name == "";
     }
 
-    ngOnDestroy() {
-        this.typeRemovedSub.unsubscribe();
-        this.typeAddedSub.unsubscribe();
+    onSaveTask(entry: any) {
+        if (!entry.value) return;
+        entry.value = false;
+        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 
-    updateSelectedTask() {
-        this.selectedTask = this.getRemaningTasksNames()[0] ?? "";
-        this.showSelectGroup = this.selectedTask != "";
-    }
+    taskFilter = (idtpType:IDtpItem) => { return idtpType.type == DtpTypes.DataRepeater || idtpType.type == DtpTypes.Maestro}
 
-    syncWithAvailableTasks() {
-        const indeciesToRemove = this.dtptype.tasks.reduce((indecies, task) => {
-            if (!this.config.tasks.includes(task)) {
-                const index = this.dtptype.tasks.findIndex(task2 => task2.name == task.name && task2.type == task.type);
-                if(index >= 0){
-                    indecies.push(index);
-                }
-            }
-            return indecies;
-        }, []);
-
-        for (var i = indeciesToRemove.length -1; i >= 0; i--){
-            this.dtptype.tasks.splice(indeciesToRemove[i], 1);
+    getTaskName(dtpType: any): string {
+        if (dtpType === MaestroDtpItem || dtpType instanceof MaestroDtpItem) {
+            return "Maestro"
+        } else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType) {
+            return "Data-Repeater"
+        } else {
+            console.log("Unknown task type");
         }
-        this.updateSelectedTask();
     }
 
-    getRemaningTasksNames(): string[] {
-        const tasks = this.config.tasks.reduce((tasks: string[], idtpType) => {
-            if (!this.dtptype.tasks.includes(idtpType) && this.typeFilterPredicate(idtpType)) {
-                tasks.push(this.getTaskName(idtpType));
-            }
-            return tasks;
-        }, []);
-        return tasks.sort();
-    }
-
-    addTask() {
-        const task = this.config.tasks.find(type => this.getTaskName(type) == this.selectedTask);
-        this.dtptype.tasks.push(task);
-        this.updateSelectedTask();
+    addNewTask() {
+        if (!this.newTask) return;
+        const task = new this.newTask();
+        this.configuration.tasks.push(task);
+        (this.formGroup.get("tasks") as FormArray).push(task.toFormGroup());
     }
 
     removeTask(task: IDtpItem) {
-        const index = this.dtptype.tasks.indexOf(task, 0);
-        if (index > -1) {
-            this.dtptype.tasks.splice(index, 1);
+        if (task.type == DtpTypes.Maestro) {
+            const maestroType = task as MaestroDtpItem;
+            fs.unlink(maestroType.multiModelPath, err => { if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`) });
         }
-        this.updateSelectedTask();
-    }
-
-    getTaskName(dtpType: IDtpItem): string {
-        var typeName: string = "";
-        if (dtpType instanceof MaestroDtpType) {
-            typeName = "Maestro"
-        }
-        else if (dtpType instanceof ServerDtpType) {
-            typeName = "Server"
-        }
-        else if (dtpType instanceof SignalDtpType) {
-            typeName = "Signal"
-        }
-        else if (dtpType instanceof DataRepeaterDtpType) {
-            typeName = "Data-Repeater"
-        }
-        else if (dtpType instanceof ToolDtpType) {
-            typeName = "Tool"
-        }
-        else if (dtpType instanceof TaskConfigurationDtpType) {
-            typeName = "Configuration"
-        }
-        else {
-            console.log("Unknown DTPType");
-        }
-        return typeName + "_" + dtpType.name;
+        const index = this.configuration.tasks.indexOf(task);
+        this.configuration.tasks.splice(index, 1);
+        (this.formGroup.get("tasks") as FormArray).removeAt(index);
+        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 }
