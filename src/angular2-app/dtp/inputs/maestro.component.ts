@@ -53,9 +53,6 @@ export class DtpMaestroComponent implements AfterContentInit{
     editing: boolean = true;
 
     @Input()
-    configpath: string = "";
-
-    @Input()
     config: DTPConfig;
 
     baseExperimentPath: string = "";
@@ -74,8 +71,8 @@ export class DtpMaestroComponent implements AfterContentInit{
 
     simulationNamesFromTools(tools: IDtpItem[]): string[] {
         return tools.reduce((maestroToolNames: string[], tool: ToolDtpItem) => {
-            if(tool.toolType == ToolTypes.maestro){
-                maestroToolNames.push(tool.name);
+            if(tool.type == ToolTypes.maestro){
+                maestroToolNames.push(tool.id);
             }
             return maestroToolNames;
         }, []);
@@ -105,7 +102,7 @@ export class DtpMaestroComponent implements AfterContentInit{
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-        const mm_destinationName = Path.join(Path.dirname(this.configpath), this.maestro.name + "_multiModel.json");
+        const mm_destinationName = Path.join(Path.dirname(this.config.projectPath), this.maestro.name + "_multiModel.json");
         const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
         fs.readdir(mm_sourcePath, (err, files) => {
             if (files) {
@@ -135,7 +132,7 @@ export class DtpMaestroComponent implements AfterContentInit{
         this.showInitialSetupBtns = false;
         this.showExperimentSelect = setupFromExperiment;
         if(!setupFromExperiment){
-            this.maestro.multiModelPath = Path.join(Path.dirname(this.configpath), this.maestro.name + "_multiModel.json");
+            this.maestro.multiModelPath = Path.join(Path.dirname(this.config.projectPath), this.maestro.name + "_multiModel.json");
             fs.writeFileSync(this.maestro.multiModelPath, "{}", 'utf-8');
         }
     }

@@ -15,22 +15,16 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let entry of toolsWithEditing | keyvalue; let i = index">
+				<div class="panel panel-default constraint-panel" *ngFor="let tool of config.tools; let i = index">
 					<div class="panel-heading btn-panel-heading">
 						<div class="btn-group panel-heading-btn-group pull-right">
-							<button class="btn btn-default" title="Edit tool" (click)="onEditDtpItem(entry)" *ngIf="!entry.value">
-								<span class="glyphicon glyphicon-edit"></span>
-							</button>
-							<button class="btn btn-default" title="Save tool" (click)="onSaveDtpItem(entry)" *ngIf="entry.value" [disabled]="!form.get('tools').at(i).valid">
-								<span class="glyphicon glyphicon-floppy-saved"></span>
-							</button>
-							<button class="btn btn-default" title="Remove tool" (click)="removeDtpItem(entry.key)">
+							<button class="btn btn-default" title="Remove tool" (click)="removeDtpItem(tool)">
 								<span class="glyphicon glyphicon-remove"></span>
 							</button>
 						</div>
 					</div>
 					<div class="panel-body">
-						<tool [tool]="entry.key" [editing] = "entry.value" [formGroup]="form.get('tools').at(i)"></tool>		
+						<tool [tool]="tool" [config] = "config" [formGroup]="form.get('tools').at(i)"></tool>		
 					</div>
 				</div>
 			</div>
@@ -51,22 +45,17 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let entry of serversWithEditing | keyvalue; let i = index">
+				<div class="panel panel-default constraint-panel" *ngFor="let server of config.servers; let i = index">
 					<div class="panel-heading btn-panel-heading">
 						<div class="btn-group panel-heading-btn-group pull-right">
-							<button class="btn btn-default" title="Edit server" (click)="onEditDtpItem(entry)" *ngIf="!entry.value">
-								<span class="glyphicon glyphicon-edit"></span>
-							</button>
-							<button class="btn btn-default" title="Save server" (click)="onSaveDtpItem(entry)" *ngIf="entry.value" [disabled]="!form.get('servers').at(i).valid">
-								<span class="glyphicon glyphicon-floppy-saved"></span>
-							</button>
-							<button class="btn btn-default" title="Remove server" (click)="removeDtpItem(entry.key)">
+
+							<button class="btn btn-default" title="Remove server" (click)="removeDtpItem(server)">
 								<span class="glyphicon glyphicon-remove"></span>
 							</button>
 						</div>
 					</div>
 					<div class="panel-body">
-						<server [server]="entry.key" [editing] = "entry.value" [formGroup]="form.get('servers').at(i)"></server>			
+						<server [server]="server" [config] = "config" [formGroup]="form.get('servers').at(i)"></server>			
 					</div>
 				</div>
 			</div>
@@ -88,22 +77,16 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default dtp-outer-constraint-panel" *ngFor="let entry of configurationsWithEditing | keyvalue; let i = index">
+				<div class="panel panel-default constraint-panel" *ngFor="let configuration of config.configurations; let i = index">
 					<div class="panel-heading btn-panel-heading">
 						<div class="btn-group panel-heading-btn-group pull-right">
-							<button class="btn btn-default" title="Edit configuration" (click)="onEditDtpItem(entry)" *ngIf="!entry.value">
-								<span class="glyphicon glyphicon-edit"></span>
-							</button>
-							<button class="btn btn-default" title="Save configuration" (click)="onSaveDtpItem(entry)" *ngIf="entry.value" [disabled]="!form.get('configurations').at(i).valid">
-								<span class="glyphicon glyphicon-floppy-saved"></span>
-							</button>
-							<button class="btn btn-default" title="Remove configuration" (click)="removeDtpItem(entry.key)">
+							<button class="btn btn-default" title="Remove configuration" (click)="removeDtpItem(configuration)">
 								<span class="glyphicon glyphicon-remove"></span>
 							</button>
 						</div>
 					</div>
 					<div class="panel-body">
-						<task-configuration [configuration]="entry.key" [editing] = "entry.value" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
+						<task-configuration [configuration]="configuration" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
 					</div>
 				</div>
 			</div>

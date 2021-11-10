@@ -69,7 +69,7 @@
         </div>
 
         <div class="constraint-container">
-            <div class="panel panel-default dtp-inner-constraint-panel" *ngFor="let signal of datarepeater.signals; let i = index">
+            <div class="panel panel-default constraint-panel" *ngFor="let signal of datarepeater.signals; let i = index">
                 <div class="panel-heading btn-panel-heading">
                     <button class="btn btn-default btn-sm pull-right" title="Remove signal" (click)="removeSignal(signal)" *ngIf="editing">
                         <span class="glyphicon glyphicon-remove"></span>

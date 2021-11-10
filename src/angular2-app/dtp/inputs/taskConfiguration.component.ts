@@ -33,6 +33,7 @@ import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
 import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
 import * as fs from "fs";
+import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
 @Component({
     selector: 'task-configuration',
@@ -53,10 +54,9 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     @Input()
     config: DTPConfig;
     
-    @Input()
     editing: boolean = true;
 
-    constructor() {
+    constructor(private dtpToolingService: DtpDtToolingService) {
         console.log("Configuration component constructor");
     }
 
@@ -64,13 +64,9 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
         this.editing = this.configuration.name == "";
     }
 
-    onSaveTask(entry: any) {
-        if (!entry.value) return;
-        entry.value = false;
-        this.config.save().catch(error => console.error("error when saving: " + error));
-    }
-
-    taskFilter = (idtpType:IDtpItem) => { return idtpType.type == DtpTypes.DataRepeater || idtpType.type == DtpTypes.Maestro}
+    isTaskMaestro = (task: IDtpItem) => task instanceof MaestroDtpItem;
+    isTaskDatarepeater = (task: IDtpItem) => task instanceof DataRepeaterDtpType;
+    taskFilter = (item: IDtpItem) => { return this.isTaskMaestro(item) || this.isTaskDatarepeater(item)}
 
     getTaskName(dtpType: any): string {
         if (dtpType === MaestroDtpItem || dtpType instanceof MaestroDtpItem) {
@@ -82,6 +78,8 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
         }
     }
 
+
+
     addNewTask() {
         if (!this.newTask) return;
         const task = new this.newTask();
@@ -90,13 +88,29 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     }
 
     removeTask(task: IDtpItem) {
-        if (task.type == DtpTypes.Maestro) {
+        if (task instanceof MaestroDtpItem) {
             const maestroType = task as MaestroDtpItem;
             fs.unlink(maestroType.multiModelPath, err => { if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`) });
+            this.config.removeMMPathMapping(task.name);
         }
         const index = this.configuration.tasks.indexOf(task);
         this.configuration.tasks.splice(index, 1);
         (this.formGroup.get("tasks") as FormArray).removeAt(index);
-        this.config.save().catch(error => console.error("error when saving: " + error));
+    }
+
+    onSaveConfiguration() {
+        this.editing = false;
+        this.configuration.toYamlObject().then(confYamlObj => {
+            if(!this.configuration.id){
+                this.dtpToolingService.addConfigurationToProject(confYamlObj, this.config.projectName).then((configurationYamlObj: any) => this.configuration.id = configurationYamlObj['id']);
+            } else {
+                this.dtpToolingService.updateConfigurationInProject(this.configuration.id, confYamlObj, this.config.projectName);
+            }
+        })
+        this.configuration.tasks.forEach(task => {
+            if(task instanceof MaestroDtpItem){
+                this.config.addMMPathMapping(task.name, task.multiModelPath);
+            }
+        })
     }
 }

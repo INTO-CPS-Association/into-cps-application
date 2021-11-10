@@ -1,2 +1,8 @@
-<h3>DTP page</h3>
-<dtp-configuration [path]="path"></dtp-configuration>
+<div *ngIf="configIsLoaded">
+    <h3>Configure</h3>
+    <dtp-configuration [config] = "config"></dtp-configuration>
+    
+    <h3>Execute</h3>
+    <dtp-execute [config] = "config"></dtp-execute>
+</div>
+<h3 *ngIf="!configIsLoaded">Loading configuration...</h3>

@@ -31,7 +31,7 @@
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpType, DTPConfig, IDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpType, DTPConfig, IDtpItem, ServerDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from 'path';
@@ -84,20 +84,14 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         this.datarepeater.tool = availableTools.length > 0 ? availableTools[0] : "";
     }
 
-    onSaveSignal(entry: any) {
-        if (!entry.value) return;
-        entry.value = false;
-        this.config.save().catch(error => console.error("error when saving: " + error));
-    }
-
     ngOnDestroy() {
         this.isToolingServerOnlineSub.unsubscribe();
     }
 
     getAvailableServersNames(servers: IDtpItem[]): string[] {
-        return servers.reduce((serverNames: string[], server: IDtpItem) => {
-            if(this.datarepeater.server_source != server.name && this.datarepeater.server_target != server.name){
-                serverNames.push(server.name);
+        return servers.reduce((serverNames: string[], server: ServerDtpItem) => {
+            if(this.datarepeater.server_source != server.id && this.datarepeater.server_target != server.id){
+                serverNames.push(server.id);
             }
             return serverNames;
         }, []);
@@ -105,34 +99,34 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
 
     rabbitMqNamesFromTools(tools: IDtpItem[]): string[] {
         return tools.reduce((rabbitMqToolNames: string[], tool: ToolDtpItem) => {
-            if(tool.toolType == ToolTypes.rabbitmq){
-                rabbitMqToolNames.push(tool.name);
+            if(tool.type == ToolTypes.rabbitmq){
+                rabbitMqToolNames.push(tool.id);
             }
             return rabbitMqToolNames;
         }, []);
     }
 
     createFMU() {
-        let dataRepeaterIndex: number;
-        const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => {
-            const index = configuration.tasks.findIndex((task: IDtpItem) => task.name == this.datarepeater.name);
-            if(index > -1){
-                dataRepeaterIndex = index;
-                return true;
-            }
-            return false;
-        }) as TaskConfigurationDtpItem;
+        // let dataRepeaterIndex: number;
+        // const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => {
+        //     const index = configuration.tasks.findIndex((task: IDtpItem) => task.name == this.datarepeater.name);
+        //     if(index > -1){
+        //         dataRepeaterIndex = index;
+        //         return true;
+        //     }
+        //     return false;
+        // }) as TaskConfigurationDtpItem;
 
-        parentConfiguration.toYaml().then(yamlObj => {
-            const confObjArr: any[] = [];
-            confObjArr.push(yamlObj);
-            const parentConfigurationIndex = this.config.configurations.indexOf(parentConfiguration);
-            this.dtpToolingService.addConfigurationToProject(confObjArr, this.config.projectName).then(() => {
-                this.dtpToolingService.createFmuFromDataRepeater(parentConfigurationIndex.toString(), dataRepeaterIndex.toString(), this.config.projectName).then(relativeFmuPath => {
-                    this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath);
-                }, err => console.log(err));
-            });
-        });
+        // parentConfiguration.toYaml().then(yamlObj => {
+        //     const confObjArr: any[] = [];
+        //     confObjArr.push(yamlObj);
+        //     const parentConfigurationIndex = this.config.configurations.indexOf(parentConfiguration);
+        //     this.dtpToolingService.addConfigurationToProject(confObjArr, this.config.projectName).then(() => {
+        //         this.dtpToolingService.createFmuFromDataRepeater(parentConfigurationIndex.toString(), dataRepeaterIndex.toString(), this.config.projectName).then(relativeFmuPath => {
+        //             this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath);
+        //         }, err => console.log(err));
+        //     });
+        // });
     }
 
     addNewSignal() {
@@ -145,7 +139,6 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         const index = this.datarepeater.signals.indexOf(signal);
         this.datarepeater.signals.splice(index, 1);
         (this.formGroup.get("signals") as FormArray).removeAt(index);
-        this.config.save().catch(error => console.error("error when saving: " + error));
     }
 }
 

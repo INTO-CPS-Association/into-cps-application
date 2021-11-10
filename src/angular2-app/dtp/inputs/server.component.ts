@@ -32,6 +32,7 @@
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
 import { DTPConfig, ServerDtpItem } from "../../../intocps-configurations/dtp-configuration";
+import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
 @Component({
     selector: 'server',
@@ -44,15 +45,21 @@ export class DtpServerComponent implements AfterContentInit {
     @Input()
     formGroup:FormGroup;
     
-    @Input()
     editing: boolean = true;
 
-    constructor() {
+    @Input()
+    config: DTPConfig;
+
+    constructor(private dtpToolingService: DtpDtToolingService) {
         console.log("Server component constructor");
     }
 
     ngAfterContentInit(): void {
-        this.editing = this.server.name == "";
+        this.editing = this.server.id == "";
+    }
+
+    onSaveServer() {       
+        this.dtpToolingService.updateServerInProject(this.server.id, this.server.toYamlObject(), this.config.projectName).then(() => this.editing = false);
     }
 }
 

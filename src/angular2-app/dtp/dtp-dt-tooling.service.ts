@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Subject } from "rxjs";
 import { exec, spawn } from 'child_process';
 
@@ -20,7 +20,7 @@ export class DtpDtToolingService implements OnDestroy {
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.isServerOnline(), 2000);
-        this.url = "http://127.0.0.1:5000" //"http://localhost";
+        this.url = "http://127.0.0.1:5000"; //  "http://localhost"
     }
 
     ngOnDestroy() {
@@ -34,16 +34,16 @@ export class DtpDtToolingService implements OnDestroy {
             return;
         }
 
-        this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${projectDir}`]);
-        console.log("DT tooling webserver PID: " + this.serverProcess.pid);
+        // this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${projectDir}`]);
+        // console.log("DT tooling webserver PID: " + this.serverProcess.pid);
 
-        this.projectPath = projectDir;
-        window.addEventListener('beforeunload', this.stopServer); //TODO: Doesn't terminate the webserver on app close
+        // this.projectPath = projectDir;
+        // window.addEventListener('beforeunload', this.stopServer); //TODO: Doesn't terminate the webserver on app close
     }
 
-    public stopServer() {
-        if(process.platform == "win32") exec(`taskkill /PID ${this.serverProcess.pid} /T /F`); else process.kill(-this.serverProcess.pid); 
-        console.log("Stopping DT tooling webserver with PID: " + this.serverProcess.pid);
+    private stopServer() {
+        // if(process.platform == "win32") exec(`taskkill /PID ${this.serverProcess.pid} /T /F`); else process.kill(-this.serverProcess.pid); 
+        // console.log("Stopping DT tooling webserver with PID: " + this.serverProcess.pid);
     }
 
     isServerOnline() {
@@ -56,132 +56,173 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public getProjects(): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            this.httpClient.get(`${this.url}/project`).toPromise().then(res => {
-                resolve(res as string[]);
-            }, (err) => {
-                reject(err);
-            })
-        });
-    }
-
+    /*
+        GET, CREATE, REMOVE PROJECT
+    */
     public getProject(projectName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.httpClient.get(`${this.url}/project/${projectName}`).toPromise().then(res => {
+            this.httpClient.get(`${this.url}/projects/${projectName}`).toPromise().then(res => {
                 resolve(res);
-            }, (err) => {
-                reject(err);
-            })
-        });
-    }
-
-    public createProjectWithConfig(projectName: string, yamlConfig: object): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/project/${projectName}/config`, yamlConfig).toPromise().then(() => {
-                resolve();
-            }, (err) => {
-                reject(err);
-            })
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
     public createProject(projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const emptyConfiguration: any[] = [];
-            const emptyConfObj = {tools: {}, servers: {}, configurations: emptyConfiguration, version: "0.0.1"};
-            this.httpClient.post(`${this.url}/project/${projectName}`, "").toPromise().then(() => {
-                this.httpClient.post(`${this.url}/project/${projectName}/config`, emptyConfObj).toPromise().then(() => {
-                    resolve();
-                }, (err) => {
-                    reject(err);
-                });
-            }, (err) => {
-                reject(err);
+            this.httpClient.post(`${this.url}/projects/${projectName}`, "").toPromise().then(() => {
+                resolve();
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
             });
         });
     }
 
     public deleteProject(projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/project/${projectName}`).toPromise().then(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}`).toPromise().then(() => {
                 resolve();
-            }, (err) => {
-                reject(err);
-            })
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
-    public createFmuFromDataRepeater(configIndex: string, dataRepeaterIndex: string, projectName: string): Promise<string> {
+
+    /*
+        ADDING NEW ITEMS 
+    */
+    public addToolToProject(toolYamlObj: any, projectName: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/project/${projectName}/prepare/config/configurations/${configIndex}/tasks/${dataRepeaterIndex}`, "").subscribe(res => {
-                resolve((res as IDataRepeaterResponse).file);
-            }, err => reject(err));
+            this.httpClient.post(`${this.url}/projects/${projectName}/config/tools`, toolYamlObj).subscribe((id: string) => {
+                resolve(id);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
-    public addToolToProject(toolName: string, toolYamlObj: any, projectName: string): Promise<void> {
+    public addServerToProject(serverYamlObj: any, projectName: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/config/servers`, serverYamlObj).subscribe((id: string) => {
+                resolve(id);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    public addConfigurationToProject(configurationYamlObj: any, projectName: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/config/configurations`, configurationYamlObj).subscribe((id: string) => {
+                resolve(id);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    /*
+        UPDATING ITEMS 
+    */
+    public updateConfigurationInProject(id: string, configurationYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/project/${projectName}/config/tools/${toolName}`, toolYamlObj).subscribe(() => {
+            this.httpClient.put(`${this.url}/projects/${projectName}/config/configurations/${id}`, configurationYamlObj).subscribe(() => {
                 resolve();
-            }, err => reject(err));
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
-    public addServerToProject(serverName: string, serverYamlObj: any, projectName: string): Promise<void> {
+    public updateToolInProject(id: string, toolYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/project/${projectName}/config/servers/${serverName}`, serverYamlObj).subscribe(() => {
+            this.httpClient.put(`${this.url}/projects/${projectName}/config/tools/${id}`, toolYamlObj).subscribe(() => {
                 resolve();
-            }, err => reject(err));
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
-
-    public addConfigurationToProject(configurationYamlObj: any, projectName: string): Promise<void> {
+    public updateServerInProject(id: string, serverYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/project/${projectName}/config/configurations`, configurationYamlObj).subscribe(() => {
+            this.httpClient.put(`${this.url}/projects/${projectName}/config/servers/${id}`, serverYamlObj).subscribe(() => {
                 resolve();
-            }, err => reject(err));
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
-    public addTaskToConfiguration(taskYamlObj: any, configurationIndex: string, taskIndex: string, projectName: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/project/${projectName}/config/configurations/${configurationIndex}/tasks/${taskIndex}`, taskYamlObj).subscribe(() => {
-                resolve();
-            }, err => reject(err));
-        });
-    }
 
+    /*
+        REMOVING ITEMS 
+    */
     public removeToolInProject(index: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/project/${projectName}/config/tools/${index}`).subscribe(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/tools/${index}`).subscribe(() => {
                 resolve();
-            }, err => reject(err));
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
     public removeServerInProject(index: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/project/${projectName}/config/servers/${index}`).subscribe(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/servers/${index}`).subscribe(() => {
                 resolve();
-            }, err => reject(err));
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
     public removeConfigurationInProject(index: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/project/${projectName}/config/configurations/${index}`).subscribe(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/configurations/${index}`).subscribe(() => {
                 resolve();
-            }, err => reject(err));
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 
-    public removeTaskFromConfiguration(configurationIndex: string, taskIndex: string, projectName: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/project/${projectName}/config/configurations/${configurationIndex}/tasks/${taskIndex}`).subscribe(() => {
-                resolve();
-            }, err => reject(err));
+    /*
+        RUNNING CONFIGURATIONS 
+    */
+    public runConfiguration(index: string, projectName: string): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/execution/configurations/${index}/run`, "").subscribe(res => {
+                resolve(res);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    /*
+        OTHER API CALLS
+    */
+    public createFmuFromDataRepeater(configIndex: string, dataRepeaterIndex: string, projectName: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/prepare/config/configurations/${configIndex}/tasks/${dataRepeaterIndex}`, "").subscribe(res => {
+                resolve((res as IDataRepeaterResponse).file);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    public getProjects(): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
+            this.httpClient.get(`${this.url}/projects`).toPromise().then(res => {
+                resolve(res as string[]);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
         });
     }
 }

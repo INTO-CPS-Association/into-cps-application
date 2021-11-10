@@ -41,9 +41,10 @@ import { DtpDataRepeaterComponent } from "./inputs/datarepeater.component";
 import { DtpToolComponent } from "./inputs/tool.component";
 import { DtpTaskConfigurationComponent } from "./inputs/taskConfiguration.component";
 import { MmModule } from "../mm/mm.module";
+import { DtpExecuteComponent } from "./dtp-execute.component";
 @NgModule({
     imports: [ FormsModule, ReactiveFormsModule, SharedModule, CommonModule , MmModule], // module dependencies
-    declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent, DtpServerComponent, DtpSignalComponent, DtpDataRepeaterComponent, DtpToolComponent, DtpTaskConfigurationComponent], // components and directives
+    declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent, DtpServerComponent, DtpSignalComponent, DtpDataRepeaterComponent, DtpToolComponent, DtpTaskConfigurationComponent, DtpExecuteComponent], // components and directives
     exports: [DtpPageComponent]
   })
   export class DtpModule {

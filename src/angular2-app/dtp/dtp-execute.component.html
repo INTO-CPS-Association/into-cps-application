@@ -1,0 +1,24 @@
+<style>
+    .dtp-bounding-box {
+        border-radius: 5px;
+        border: 1px solid lightgray;
+        padding: 10px;
+        width: 100%;
+        height: fit-content;
+        margin-top: 10px;
+    }
+</style>
+<div class="dtp-bounding-box">
+    <div class="input-group" *ngIf="!isRunning">
+        <select [(ngModel)]="_configuration" [ngModelOptions]="{ standalone: true }" class="form-control">
+            <option *ngFor="let conf of config.configurations" [ngValue]="conf">{{conf.name}}</option>
+        </select>
+        <span class="input-group-btn">
+            <button type="button" (click)="execute()" class="btn btn-default" [disabled]="isRunning">
+                <span class="glyphicon glyphicon-play-circle"></span>
+                Run
+            </button>
+        </span>
+    </div>
+    <p *ngIf="isRunning">Running...</p>
+</div>
