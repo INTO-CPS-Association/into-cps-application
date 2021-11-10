@@ -91,6 +91,9 @@ let topBarNameId: string = "activeTabTitle";
         if (this.settings.getValue(SettingKeys.DEVELOPMENT_MODE)) {
             this.settings.setValue(SettingKeys.UPDATE_SITE, this.settings.getValue(SettingKeys.DEV_UPDATE_SITE));
             this.settings.setValue(SettingKeys.EXAMPLE_REPO, this.settings.getValue(SettingKeys.DEV_EXAMPLE_REPO));
+        } else {
+            this.settings.setValue(SettingKeys.UPDATE_SITE, defaultValues[SettingKeys.UPDATE_SITE]);
+            this.settings.setValue(SettingKeys.EXAMPLE_REPO, defaultValues[SettingKeys.EXAMPLE_REPO]);
         }
     }
 
