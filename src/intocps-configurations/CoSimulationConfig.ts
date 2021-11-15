@@ -49,6 +49,7 @@ export class CoSimulationConfig implements ISerializable {
     projectRoot: string;
 
     multiModel: MultiModelConfig;
+    masterModel: string = "";
     sourcePath: string;
     multiModelCrc: string;
 
@@ -106,7 +107,8 @@ export class CoSimulationConfig implements ISerializable {
             stabalizationEnabled: this.stabalization,
             global_absolute_tolerance: Number(this.global_absolute_tolerance),
             global_relative_tolerance: Number(this.global_relative_tolerance),
-            simulationProgramDelay: this.simulationProgramDelay
+            simulationProgramDelay: this.simulationProgramDelay,
+            masterModel: this.masterModel
         };
     }
 
@@ -191,6 +193,7 @@ export class CoSimulationConfig implements ISerializable {
 
                     config.projectRoot = projectRoot;
                     config.multiModel = multiModel;
+                    config.masterModel = parser.parseSimpleTagDefault(data, "masterModel", "");
                     config.sourcePath = path;
                     config.startTime = parser.parseStartTime(data) || 0;
                     config.endTime = parser.parseEndTime(data) || 10;

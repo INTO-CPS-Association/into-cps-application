@@ -5,9 +5,6 @@ import * as fs from 'fs';
 
 @Injectable()
 export class SigverConfigurationService {
-    private readonly SCENARIOVERIFIER_TAG: string = "sigver";
-    private readonly VERIFICATION_TAG: string = "verification";
-    private readonly TRACEVISUALIZATION_TAG: string = "traceVisualization";
     private _configuration: SigverConfiguration = new SigverConfiguration;
     private _configurationChanged = new Subject<boolean>();
 
@@ -16,7 +13,7 @@ export class SigverConfigurationService {
     automaticallySaveOnChanges: boolean = true;
     isDefaultConfiguration: boolean = true;
 
-    setConfigurationFromPath(path: string = ""): Promise<boolean> {
+    loadConfigurationFromPath(path: string = ""): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             let filePath = path == "" ? this.configurationPath : path;
             fs.readFile(filePath, (fileErr, fileData) => {
@@ -25,8 +22,6 @@ export class SigverConfigurationService {
                 }
                 SigverConfiguration.createFromJsonString(fileData.toString()).then(res => {
                     this._configuration = res;
-                    this.isDefaultConfiguration = this._configuration.experimentPath == "";
-                    this.configurationChanged();
                     resolve(true);
                 }).catch(err => {
                     reject(`Unable to set configuration from file: ${filePath} due to: ${err}`);
@@ -55,6 +50,7 @@ export class SigverConfigurationService {
             }
         }
         this._configuration = sigverConfiguration;
+        this.isDefaultConfiguration = this._configuration.experimentPath == "";
         if (!this.isConfigValid() || resetMasterModel) {
             this._configuration.masterModel = "";
         }
@@ -101,10 +97,10 @@ export class SigverConfigurationService {
 
         const scenarioVerifierDTO: any = {}
         scenarioVerifierDTO[SigverConfiguration.REACTIVITY_TAG] = reactivity;
-        scenarioVerifierDTO[this.VERIFICATION_TAG] = verify;
-        scenarioVerifierDTO[this.TRACEVISUALIZATION_TAG] = false;
+        scenarioVerifierDTO["verification"] = verify;
+        scenarioVerifierDTO["traceVisualization"] = false;
 
-        extendedMultiModelDTO[this.SCENARIOVERIFIER_TAG] = scenarioVerifierDTO;
+        extendedMultiModelDTO["sigver"] = scenarioVerifierDTO;
 
         return extendedMultiModelDTO
     }

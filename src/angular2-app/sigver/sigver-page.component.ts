@@ -49,7 +49,7 @@ export class SigverPageComponent {
     set path(path: string) {
         this._path = path;
         this.sigverConfigurationService.configurationPath = this._path;
-        this.sigverConfigurationService.setConfigurationFromPath().catch(err => console.error(err));
+        this.sigverConfigurationService.loadConfigurationFromPath().catch(err => console.error(err));
     }
     get path(): string {
         return this._path;
