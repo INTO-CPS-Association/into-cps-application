@@ -5,6 +5,10 @@ import { Subscription } from 'rxjs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
+import { shell } from "electron";
+
+let yauzl = require("yauzl");
+let mkdirp = require("mkdirp");
 
 @Component({
     selector: "sigver-coe-interaction",
@@ -116,13 +120,21 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         this.sigverCoeService.execute(this.sigverConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
             this.isExecutionSuccess = true;
             this.ensureResultPaths();
-            this.writeFileToDir(zipFile, this.executionResultsPath);
+
+            zipFile.arrayBuffer().then(arrBuff => {
+                this.unzipResults(Buffer.from(arrBuff), this.executionResultsPath);
+            });
+
         }, errMsg => {
             this.isExecutionSuccess = false;
             console.error(`Error occurred when executing the master model: ${errMsg}`);
         }).finally(() => {
             this.isExecuting = false;
         });
+    }
+
+    onOpenResultsFolder() {
+        shell.openPath(this.executionResultsPath);
     }
 
     ensureResultPaths() {
@@ -162,11 +174,58 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         });
     }
 
-    writeFileToDir(file: File, dirPath: string) {
-        file.arrayBuffer().then(arrBuff => {
-            const writeStream = fs.createWriteStream(path.join(dirPath, file.name));
-            writeStream.write(Buffer.from(arrBuff));
-            writeStream.close();
-        }).catch(err => console.error(`Error occurred when writing file to path ${dirPath}: ${err}`));
+    writeFileToDir(file: File, dirPath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            file.arrayBuffer().then(arrBuff => {
+                const writeStream = fs.createWriteStream(path.join(dirPath, file.name));
+                writeStream.write(Buffer.from(arrBuff));
+                writeStream.close();
+                resolve();
+            }).catch(err => reject(`Error occurred when writing file to path ${dirPath}: ${err}`));
+        });
+    }
+
+    unzipResults(buffer: Buffer, targetDirectory: string) {
+        return new Promise((resolve, reject) => {
+            yauzl.fromBuffer(buffer, { lazyEntries: true }, function (err: any, zipfile: any) {
+                if (err) {
+                    reject(Error(err));
+                    throw err
+                }
+    
+                zipfile.readEntry();
+                zipfile.on("entry", function (entry: any) {
+                    let desiredPath = path.join(targetDirectory, entry.fileName);
+                    if (/\/$/.test(entry.fileName)) {
+                        // directory file names end with '/'
+                        mkdirp(desiredPath)
+                            .then(() => {
+                                zipfile.readEntry();
+                            })
+                            .catch((err: any) => {
+                                reject(err);
+                                throw err
+                            });
+                    } else {
+                        // file entry
+                        zipfile.openReadStream(entry, function (err: any, readStream: any) {
+                            if (err) reject(err);
+                            // ensure parent directory exists
+                            mkdirp(path.dirname(desiredPath))
+                                .then(() => {
+                                    readStream.pipe(fs.createWriteStream(desiredPath));
+                                    readStream.on("end", function () {
+                                        zipfile.readEntry();
+                                    });
+                                })
+                                .catch((err: any) => {
+                                    reject(Error(err));
+                                    throw err
+                                });
+                        });
+                    }
+                });
+            });
+        });
     }
 }

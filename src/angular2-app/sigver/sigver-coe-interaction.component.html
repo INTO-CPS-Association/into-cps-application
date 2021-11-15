@@ -63,14 +63,17 @@
 
   <panel [title]="'Execution'" [open]="!sigverConfigurationService.isDefaultConfiguration">
     <div>
+      <button type="button" class="btn btn-sm btn-default" (click)="onOpenResultsFolder()" [disabled] = "!isExecutionSuccess">
+        <span class="glyphicon glyphicon-folder-open"></span> Open results folder
+      </button>
+    </div>
+    
+    <div>
       <button type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "!isCoeOnline || !isConfigValid || isExecuting || isVerificationFailed">
         <span *ngIf="!isExecuting">Execute</span>
         <span *ngIf="isExecuting">Executing... </span>
         <span *ngIf="isExecuting" class="glyphicon glyphicon-refresh spinning"></span>
       </button>
-    </div>
-
-    <div>
       <p *ngIf="isExecutionSuccess" style="color: green; margin-top: 10px;">Successfully executed</p>
     </div>
   </panel>
