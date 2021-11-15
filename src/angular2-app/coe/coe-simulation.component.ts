@@ -43,6 +43,7 @@ import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 // needs an alternativ!!
 /* import { openCOEServerStatusWindow } from "../../menus"; */
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
+import { shell } from "electron";
 
 @Component({
   selector: "coe-simulation",
@@ -52,6 +53,7 @@ import { CoeProcess } from "../../coe-server-status/CoeProcess";
 })
 export class CoeSimulationComponent implements OnInit, OnDestroy {
   private _path: string;
+  private _resultsDir: string;
 
   @Input()
   set path(path: string) {
@@ -149,6 +151,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       },
       () => {
         this.zone.run(() => {
+          this._resultsDir = this.coeSimulation.getResultsDir();
           this.simulating = false;
         });
       },
@@ -159,6 +162,10 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       }
     );
   }
+
+  onOpenResultsFolder() {
+    shell.openPath(this._resultsDir);
+}
 
   stopSimulation() {
     this.zone.run(() => {
