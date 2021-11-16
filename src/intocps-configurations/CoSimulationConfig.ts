@@ -168,10 +168,10 @@ export class CoSimulationConfig implements ISerializable {
     *  That is the new approach. To maintain compatibility with the old naming
     *  we still allow projects using Name.mm.json
     */
-    static create(path: string, projectRoot: string, fmuRootPath: string, data: any): Promise<CoSimulationConfig> {
+    static create(path: string, projectRoot: string, fmuRootPath: string, data: any, multiModelPath: string = ""): Promise<CoSimulationConfig> {
         return new Promise<CoSimulationConfig>((resolve, reject) => {
             let parser: Parser = new Parser();
-            var mmPath: string = Path.join(path, "..", "..", "mm.json");
+            let mmPath: string = multiModelPath == "" ? Path.join(path, "..", "..", "mm.json"): multiModelPath;
             if (!fs.existsSync(mmPath)) {
                 console.warn("Could not find mm.json at: " + mmPath + " Searching for old style...")
                 //no we have the old style
@@ -183,7 +183,6 @@ export class CoSimulationConfig implements ISerializable {
                         return;
                     }
                 });
-
             }
 
             MultiModelConfig
@@ -222,7 +221,7 @@ export class CoSimulationConfig implements ISerializable {
         });
     }
 
-    static parse(path: string, projectRoot: string, fmuRootPath: string): Promise<CoSimulationConfig> {
+    static parse(path: string, projectRoot: string, fmuRootPath: string, multiModelPath: string = ""): Promise<CoSimulationConfig> {
         return new Promise<CoSimulationConfig>((resolve, reject) => {
             fs.access(path, fs.constants.R_OK, error => {
                 if (error) return reject(error);
@@ -230,7 +229,7 @@ export class CoSimulationConfig implements ISerializable {
                 fs.readFile(path, (error, content) => {
                     if (error) return reject(error);
 
-                    this.create(path, projectRoot, fmuRootPath, JSON.parse(content.toString()))
+                    this.create(path, projectRoot, fmuRootPath, JSON.parse(content.toString()), multiModelPath)
                         .then(multiModel => resolve(multiModel))
                         .catch(error => reject(error));
                 });

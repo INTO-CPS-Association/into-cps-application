@@ -143,7 +143,6 @@ export class SigverConfigurationComponent implements OnDestroy {
 
         // Set changes from the view models in the configuration
         updatedSigverConfiguration.experimentPath = this.experimentPath;
-        updatedSigverConfiguration.fmuRootPath = IntoCpsApp.getInstance().getActiveProject().getFmusPath();
         updatedSigverConfiguration.masterModel = this.sigverConfigurationService.configuration.masterModel;
         updatedSigverConfiguration.priorExperimentPath = !this.usePriorExperiment ? "" : this.priorExperimentPath;
         updatedSigverConfiguration.simulationEnvironmentParameters = Object.assign(new SimulationEnvironmentParameters(), this.simEnvParams);

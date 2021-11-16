@@ -1,17 +1,19 @@
 import { Parser } from "./Parser";
 import { MultiModelConfig } from "./MultiModelConfig";
 import * as Path from 'path';
+import { IntoCpsApp } from "../IntoCpsApp";
+import { CoSimulationConfig } from "./CoSimulationConfig";
 
 export class SigverConfiguration implements ISerializable {
     public multiModel: MultiModelConfig = new MultiModelConfig();
     public simulationEnvironmentParameters: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
     public masterModel: string = "";
-    public fmuRootPath: string = "";
     public experimentPath: string = "";
     public priorExperimentPath: string = "";
     public reactivity: Map<string, Reactivity> = new Map();
+    public coeConfig: CoSimulationConfig = new CoSimulationConfig();
+    public coePath: string = "";
 
-    public static readonly FMUROOTPATH_TAG: string = "fmuRootPath";
     public static readonly MULTIMODEL_TAG: string = "multiModel";
     public static readonly EXECUTIONPARAMETERS_TAG: string = "executionParameters";
     public static readonly MASTERMODEL_TAG: string = "masterModel";
@@ -20,7 +22,7 @@ export class SigverConfiguration implements ISerializable {
     public static readonly SIGVER_TAG: string = "sigver";
     public static readonly REACTIVITY_TAG: string = "reactivity";
 
-    static async createFromJsonString(savedData: string): Promise<SigverConfiguration> {
+    static async parseFromJson(savedData: string): Promise<SigverConfiguration> {
         return new Promise<SigverConfiguration>((resolve, reject) => {
             const sigverConfiguration = new SigverConfiguration();
             if(savedData == "{}"){
@@ -28,9 +30,11 @@ export class SigverConfiguration implements ISerializable {
             }
             try{
                 const jsonObj = JSON.parse(savedData);
+                
+                const project = IntoCpsApp.getInstance().getActiveProject();
+                CoSimulationConfig.parse(jsonObj["coePath"], project.getRootFilePath(), project.getFmusPath(), jsonObj["mmPath"])
+                
 
-                sigverConfiguration.fmuRootPath = jsonObj[this.FMUROOTPATH_TAG];
-    
                 const multiModelObj = jsonObj[this.MULTIMODEL_TAG];
                 let parser = new Parser();
                 sigverConfiguration.reactivity = new Map(Object.entries(jsonObj[SigverConfiguration.REACTIVITY_TAG]));
@@ -48,7 +52,7 @@ export class SigverConfiguration implements ISerializable {
                 sigverConfiguration.simulationEnvironmentParameters.startTime = execParamObjs[SimulationEnvironmentParameters.STARTTIME_TAG];
                 sigverConfiguration.simulationEnvironmentParameters.stepSize = execParamObjs[SimulationEnvironmentParameters.STEPSIZE_TAG];
     
-                parser.parseFmus(multiModelObj, Path.normalize(sigverConfiguration.fmuRootPath)).then(async fmus => {
+                parser.parseFmus(multiModelObj, Path.normalize(IntoCpsApp.getInstance().getActiveProject().getFmusPath())).then(async fmus => {
                     sigverConfiguration.multiModel.fmus = fmus;
                     parser.parseConnections(multiModelObj, sigverConfiguration.multiModel);
                     parser.parseParameters(multiModelObj, sigverConfiguration.multiModel);
@@ -74,10 +78,11 @@ export class SigverConfiguration implements ISerializable {
         objToReturn[SigverConfiguration.MASTERMODEL_TAG] = this.masterModel;
         objToReturn[SigverConfiguration.EXECUTIONPARAMETERS_TAG] = this.simulationEnvironmentParameters.toObject();
         objToReturn[SigverConfiguration.MULTIMODEL_TAG] = mmObject;
-        objToReturn[SigverConfiguration.FMUROOTPATH_TAG] = this.fmuRootPath;
         objToReturn[SigverConfiguration.EXPERIMENTPATH_TAG] = this.experimentPath;
         objToReturn[SigverConfiguration.PRIOREXPERIMENTPATH_TAG] = this.priorExperimentPath;
         objToReturn[SigverConfiguration.REACTIVITY_TAG] = reactivity;
+        objToReturn["coePath"] = this.priorExperimentPath;
+        objToReturn["mmPath"] = this.multiModel.sourcePath;
         return objToReturn;
     }
 }

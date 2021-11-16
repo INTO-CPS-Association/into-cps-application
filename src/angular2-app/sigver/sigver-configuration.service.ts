@@ -13,16 +13,16 @@ export class SigverConfigurationService {
     automaticallySaveOnChanges: boolean = true;
     isDefaultConfiguration: boolean = true;
 
-    loadConfigurationFromPath(path: string = ""): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
+    loadConfigurationFromPath(path: string = ""): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
             let filePath = path == "" ? this.configurationPath : path;
             fs.readFile(filePath, (fileErr, fileData) => {
                 if (fileErr) {
                     reject(`Unable to read configuration file from: ${filePath} due to: ${fileErr}`);
                 }
-                SigverConfiguration.createFromJsonString(fileData.toString()).then(res => {
-                    this._configuration = res;
-                    resolve(true);
+                SigverConfiguration.parseFromJson(fileData.toString()).then(res => {
+                    this.configuration = res;
+                    resolve();
                 }).catch(err => {
                     reject(`Unable to set configuration from file: ${filePath} due to: ${err}`);
                 });
