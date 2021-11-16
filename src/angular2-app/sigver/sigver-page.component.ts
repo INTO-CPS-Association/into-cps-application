@@ -29,7 +29,8 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
+import { Component, Input, OnDestroy } from "@angular/core";
+import { Subscription } from "rxjs";
 import { SigverConfigurationService } from "./sigver-configuration.service";
 
 @Component({
@@ -37,13 +38,10 @@ import { SigverConfigurationService } from "./sigver-configuration.service";
     templateUrl: "./angular2-app/sigver/sigver-page.component.html",
     providers: [SigverConfigurationService]
 })
-export class SigverPageComponent {
-
-    @Input()
+export class SigverPageComponent implements OnDestroy {
+    private _configurationChangedSub: Subscription;
     private _path: string;
-    isNewConfiguration: boolean = true;
-
-    constructor(private sigverConfigurationService: SigverConfigurationService) { }
+    private _masterModel: string;
 
     @Input()
     set path(path: string) {
@@ -54,4 +52,18 @@ export class SigverPageComponent {
     get path(): string {
         return this._path;
     }
+
+    cosConfPath: string = "";
+
+    constructor(private sigverConfigurationService: SigverConfigurationService) { 
+        this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
+            this.cosConfPath = sigverConfigurationService.configuration.coePath;
+            this._masterModel = sigverConfigurationService.configuration.masterModel;
+        });
+    }
+
+    ngOnDestroy(): void {
+        this._configurationChangedSub.unsubscribe();
+    }
+    
 }

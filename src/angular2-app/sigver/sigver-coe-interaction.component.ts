@@ -62,14 +62,14 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     onGenerateMasterModelClick() {
         this.isGeneratingMasterModel = true;
-        this.sigverCoeService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(scenarioFile => {
-            scenarioFile.text().then(txt => {
-                this.sigverConfigurationService.configuration.masterModel = txt;
+        this.sigverCoeService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(masterModelFile => {
+            masterModelFile.text().then(masterModel => {
+                this.sigverConfigurationService.configuration.masterModel = masterModel;
+                this.sigverConfigurationService.configurationChanged();
                 this.sigverConfigurationService.saveConfiguration();
                 this.isMasterModelValid = true;
             });
-            this.ensureResultPaths();
-            this.writeFileToDir(scenarioFile, this.generationResultsPath);
+            this.writeFileToDir(masterModelFile, this.generationResultsPath);
         }, errMsg => {
             console.error(`Error occurred when generating the master model: ${errMsg}`);
         }).finally(() => {
@@ -87,7 +87,6 @@ export class SigverCoeInteractionComponent implements OnDestroy {
             }
             const blob = new Blob([res.uppaalModel], { type: 'text/plain' });
             const uppaalFile = new File([blob], "uppaalModel.xml", { type: blob.type });
-            this.ensureResultPaths();
             this.writeFileToDir(uppaalFile, this.verificationResultsPath);
         }, errMsg => {
             console.error(`Error occurred when verifying the master model: ${errMsg}`);
@@ -100,7 +99,6 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         this.isGeneratingTraces = true;
         this.sigverCoeService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
             this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(window.URL.createObjectURL(videoFile));
-            this.ensureResultPaths();
             this.writeFileToDir(videoFile, this.verificationResultsPath);
         }, errMsg => {
             console.error(`Error occurred when visualizing traces: ${errMsg}`);
@@ -124,21 +122,26 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         // });
     }
 
-    ensureResultPaths() {
-        if (this.rootrResultsPath == "") {
-            this.rootrResultsPath = path.join(this.sigverConfigurationService.configurationPath, "..", "results", path.sep);
+    ensureResultPaths(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.rootrResultsPath == "") {
+                this.rootrResultsPath = path.join(this.sigverConfigurationService.configurationPath, "..", "results", path.sep);
 
-            this.verificationResultsPath = path.join(this.rootrResultsPath, "verification");
-            this.executionResultsPath = path.join(this.rootrResultsPath, "execution");
-            this.generationResultsPath = path.join(this.rootrResultsPath, "generation");
+                this.verificationResultsPath = path.join(this.rootrResultsPath, "verification");
+                this.executionResultsPath = path.join(this.rootrResultsPath, "execution");
+                this.generationResultsPath = path.join(this.rootrResultsPath, "generation");
 
-            this.ensureDirectoryExistence(this.verificationResultsPath).catch(err => console.log(err));
-            this.ensureDirectoryExistence(this.executionResultsPath).catch(err => console.log(err));
-            this.ensureDirectoryExistence(this.generationResultsPath).catch(err => console.log(err));
-        }
+                Promise.all([
+                    this.ensureDirectoryExistence(this.verificationResultsPath).catch(err => reject(err)), 
+                    this.ensureDirectoryExistence(this.executionResultsPath).catch(err => reject(err)), 
+                    this.ensureDirectoryExistence(this.generationResultsPath).catch(err => console.log(err))
+                ]).then(() => resolve()).catch(err => reject(err));
+            }
+        });
     }
 
     handleConfigurationChanges() {
+        this.ensureResultPaths();
         this.isMasterModelValid = this.sigverConfigurationService.configuration.masterModel != "";
         this.isVerified = this.isMasterModelValid && this.isVerified;
         this.isVerificationFailed = this.isVerified ? this.isVerificationFailed : false;

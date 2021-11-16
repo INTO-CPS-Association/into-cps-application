@@ -8,9 +8,7 @@ export class SigverConfiguration implements ISerializable {
     public reactivity: Map<string, Reactivity> = new Map();
     public coeConfig: CoSimulationConfig = new CoSimulationConfig();
     public coePath: string = "";
-    public mmPath: string = "";
 
-    public static readonly MMPATH_TAG: string = "mmPath";
     public static readonly COEPATH_TAG: string = "coePath";
     public static readonly MASTERMODEL_TAG: string = "masterModel";
     public static readonly EXPERIMENTPATH_TAG: string = "experimentPath";
@@ -25,18 +23,15 @@ export class SigverConfiguration implements ISerializable {
             } else {
                 try{
                     sigverConfiguration.reactivity = new Map(Object.entries(jsonObj[SigverConfiguration.REACTIVITY_TAG]));
-        
                     sigverConfiguration.experimentPath = jsonObj[this.EXPERIMENTPATH_TAG];
                     sigverConfiguration.priorExperimentPath = jsonObj[this.PRIOREXPERIMENTPATH_TAG];
                     sigverConfiguration.masterModel = jsonObj[this.MASTERMODEL_TAG];
-                    if(jsonObj[this.COEPATH_TAG] && jsonObj[this.MMPATH_TAG]){
-                        const project = IntoCpsApp.getInstance().getActiveProject();
-                        CoSimulationConfig.parse(jsonObj[this.COEPATH_TAG], project.getRootFilePath(), project.getFmusPath(), jsonObj[this.MMPATH_TAG]).then(config => {
+                    sigverConfiguration.coePath = jsonObj[this.COEPATH_TAG];
+                    const project = IntoCpsApp.getInstance().getActiveProject();
+                        CoSimulationConfig.parse(sigverConfiguration.coePath, project.getRootFilePath(), project.getFmusPath()).then(config => {
                             sigverConfiguration.coeConfig = config;
                             resolve(sigverConfiguration);
                         });
-                    }
-                    
                 }
                 catch(ex){
                     reject(`Unable parse the configuration: ${ex}`);
@@ -55,7 +50,6 @@ export class SigverConfiguration implements ISerializable {
         objToReturn[SigverConfiguration.PRIOREXPERIMENTPATH_TAG] = this.priorExperimentPath;
         objToReturn[SigverConfiguration.REACTIVITY_TAG] = reactivity;
         objToReturn[SigverConfiguration.COEPATH_TAG] = this.coePath;
-        objToReturn[SigverConfiguration.MMPATH_TAG] = this.mmPath;
         return objToReturn;
     }
 }

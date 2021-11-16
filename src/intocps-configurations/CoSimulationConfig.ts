@@ -43,6 +43,7 @@ import {
 import * as Path from 'path';
 
 import { checksum } from "../proj/Project";
+import IntoCpsApp from "../IntoCpsApp";
 
 export class CoSimulationConfig implements ISerializable {
     //project root required to resolve multimodel path
@@ -168,15 +169,18 @@ export class CoSimulationConfig implements ISerializable {
     *  That is the new approach. To maintain compatibility with the old naming
     *  we still allow projects using Name.mm.json
     */
-    static create(path: string, projectRoot: string, fmuRootPath: string, data: any, multiModelPath: string = ""): Promise<CoSimulationConfig> {
+    static create(path: string, projectRoot: string, fmuRootPath: string, data: any): Promise<CoSimulationConfig> {
         return new Promise<CoSimulationConfig>((resolve, reject) => {
-            let parser: Parser = new Parser();
-            let mmPath: string = multiModelPath == "" ? Path.join(path, "..", "..", "mm.json"): multiModelPath;
+            const parser: Parser = new Parser();
+            let mmPath: string = Path.join(path, "..", "..", "mm.json");
+            let locatedMM: boolean = true;
             if (!fs.existsSync(mmPath)) {
                 console.warn("Could not find mm.json at: " + mmPath + " Searching for old style...")
+                locatedMM = false;
                 //no we have the old style
                 fs.readdirSync(Path.join(path, "..", "..")).forEach(file => {
                     if (file.endsWith("mm.json")) {
+                        locatedMM = true;
                         mmPath = Path.join(path, "..", "..", file);
                         console.warn("Found deprecated style mm at: " + mmPath);
                         console.warn("Consider renaming:" + file + " to: mm.json");
@@ -184,6 +188,17 @@ export class CoSimulationConfig implements ISerializable {
                     }
                 });
             }
+            // Could not locate mm from path so try the relative saved mm path.
+            if(!locatedMM){
+                console.warn("Unable to locate the multi-model configuration two levels above the co-simulation configuration path. Trying the saved relative multi-model path..");
+                const savedPath = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), parser.parseSimpleTagDefault(data, "multimodel_path", ""));
+                if(!savedPath || !fs.existsSync(savedPath)){
+                    console.warn("Unable to load multi model for co-simulation configuration!");
+                } else {
+                    mmPath = savedPath;
+                }
+            }
+        
 
             MultiModelConfig
                 .parse(mmPath, fmuRootPath)
@@ -221,7 +236,7 @@ export class CoSimulationConfig implements ISerializable {
         });
     }
 
-    static parse(path: string, projectRoot: string, fmuRootPath: string, multiModelPath: string = ""): Promise<CoSimulationConfig> {
+    static parse(path: string, projectRoot: string, fmuRootPath: string): Promise<CoSimulationConfig> {
         return new Promise<CoSimulationConfig>((resolve, reject) => {
             fs.access(path, fs.constants.R_OK, error => {
                 if (error) return reject(error);
@@ -229,7 +244,7 @@ export class CoSimulationConfig implements ISerializable {
                 fs.readFile(path, (error, content) => {
                     if (error) return reject(error);
 
-                    this.create(path, projectRoot, fmuRootPath, JSON.parse(content.toString()), multiModelPath)
+                    this.create(path, projectRoot, fmuRootPath, JSON.parse(content.toString()))
                         .then(multiModel => resolve(multiModel))
                         .catch(error => reject(error));
                 });

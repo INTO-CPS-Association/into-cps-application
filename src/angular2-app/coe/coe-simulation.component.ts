@@ -52,6 +52,16 @@ import { CoeProcess } from "../../coe-server-status/CoeProcess";
 })
 export class CoeSimulationComponent implements OnInit, OnDestroy {
   private _path: string;
+  private _masterModel: string = "";
+
+  @Input()
+  set masterModel(masterModel: string) {
+    this._masterModel = masterModel;
+  }
+
+  get masterModel(): string {
+    return this._masterModel;
+  }
 
   @Input()
   set path(path: string) {
@@ -142,6 +152,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
     this.coeSimulation.run(
       this.config,
+      this._masterModel,
       (e, m, w, s) => {
         this.zone.run(() => {
           this.errorHandler(e, m, w, s);

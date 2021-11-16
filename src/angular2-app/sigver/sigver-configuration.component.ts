@@ -3,7 +3,6 @@ import IntoCpsApp from "../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
 import { Project } from "../../proj/Project";
-import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
 import { Reactivity, SigverConfiguration } from "../../intocps-configurations/sigver-configuration";
 import { SigverConfigurationService } from "./sigver-configuration.service";
 import { Subscription } from 'rxjs';
@@ -14,9 +13,8 @@ import { CoSimulationConfig, FixedStepAlgorithm, VariableStepAlgorithm } from ".
     templateUrl: "./angular2-app/sigver/sigver-configuration.component.html"
 })
 export class SigverConfigurationComponent implements OnDestroy {
-    private mmPath: string = "";
     private coePath: string = "";
-    private _configurationChangedSub: Subscription;
+    private _configurationLoadedSub: Subscription;
 
     reactivityKeys = Object.keys(Reactivity);
     editing: boolean = false;
@@ -26,39 +24,38 @@ export class SigverConfigurationComponent implements OnDestroy {
     priorExperimentPath: string = "";
     experimentsPaths: string[] = this.getExperimentsPaths(Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS));
     priorExperimentsPaths: string[] = [];
-    isMMWarnings: boolean = false;
-    mMWarnings: string[] = [];
-    multiModelConfig: MultiModelConfig;
+    coeConfig: CoSimulationConfig;
     portsToReactivity: Map<string, Reactivity> = new Map();
-
     simEnvParams: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
 
     constructor(private sigverConfigurationService: SigverConfigurationService) {
-        this._configurationChangedSub = this.sigverConfigurationService.configurationLoadedObservable.subscribe(() => {
+        this._configurationLoadedSub = this.sigverConfigurationService.configurationLoadedObservable.subscribe(() => {
             this.setViewModelItemsFromConfig();
         });
     }
 
     ngOnDestroy(): void {
-        this._configurationChangedSub.unsubscribe();
+        this._configurationLoadedSub.unsubscribe();
     }
 
     setViewModelItemsFromConfig() {
         this.experimentPath = this.sigverConfigurationService.configuration.experimentPath;
         let coeFolderPath = this.experimentPath;
-        let mmFolderPath = this.experimentPath != "" ? Path.join(this.experimentPath, "..") : "";
         this.usePriorExperiment = this.sigverConfigurationService.configuration.priorExperimentPath != "";
+
         if (this.experimentPath != "") {
             this.loadPriorExperimentsPaths();
         }
+
         if (this.usePriorExperiment) {
             this.priorExperimentPath = this.sigverConfigurationService.configuration.priorExperimentPath;
             this.cantLocatePriorExperiment = this.priorExperimentsPaths.findIndex(p => p.includes(this.priorExperimentPath)) == -1;
             coeFolderPath = this.priorExperimentPath;
-            mmFolderPath = this.priorExperimentPath;
         }
 
-        this.locateAndSetMMAndCoeFiles(mmFolderPath, coeFolderPath).then(() => this.setMultimodelFromPath(this.mmPath)).catch(err => { console.error(err) });
+        if(coeFolderPath){
+            this.locateAndsetCoePath(coeFolderPath).then(() => this.parseAndSetCoeConfig(this.coePath)).catch(err => { console.error(err) });
+        }
 
         this.simEnvParams = new SimulationEnvironmentParameters(
             this.sigverConfigurationService.configuration.coeConfig.global_relative_tolerance,
@@ -71,17 +68,16 @@ export class SigverConfigurationComponent implements OnDestroy {
         this.portsToReactivity = new Map(this.sigverConfigurationService.configuration.reactivity);
     }
 
-    setMultimodelFromPath(mmPath: string): Promise<void> {
-        let project = IntoCpsApp.getInstance().getActiveProject();
+    parseAndSetCoeConfig(coePath: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            MultiModelConfig
-                .parse(mmPath, project.getFmusPath()).then((multiModel: MultiModelConfig) => {
-                    this.multiModelConfig = multiModel;
-                    resolve();
-                }, err => {
-                    console.error(`Error during parsing of config: ${err}`)
-                    reject();
-                });
+            const project = IntoCpsApp.getInstance().getActiveProject();
+            CoSimulationConfig.parse(coePath, project.getRootFilePath(), project.getFmusPath()).then(coeConf => {
+                this.coeConfig = coeConf;
+                resolve();
+            }, err => {
+                console.error(`Error during parsing of coe config: ${err}`)
+                reject();
+            });
         });
     }
 
@@ -124,8 +120,8 @@ export class SigverConfigurationComponent implements OnDestroy {
         this.usePriorExperiment = false;
         this.priorExperimentPath = "";
         this.cantLocatePriorExperiment = false;
-        this.locateAndSetMMAndCoeFiles(Path.join(experimentPath, ".."), Path.join(experimentPath)).then(() => {
-            this.setMultimodelFromPath(this.mmPath).then(() =>
+        this.locateAndsetCoePath(experimentPath).then(() => {
+            this.parseAndSetCoeConfig(this.coePath).then(() =>
                 this.resetConfigurationOptionsViewElements());
         }).catch(err => console.error(err));
     }
@@ -133,8 +129,8 @@ export class SigverConfigurationComponent implements OnDestroy {
     onPriorExperimentPathChanged(experimentPath: string) {
         this.priorExperimentPath = experimentPath;
         this.usePriorExperiment = true;
-        this.locateAndSetMMAndCoeFiles(Path.join(experimentPath), Path.join(experimentPath)).then(() => {
-            this.setMultimodelFromPath(this.mmPath).then(() =>
+        this.locateAndsetCoePath(experimentPath).then(() => {
+            this.parseAndSetCoeConfig(this.coePath).then(() =>
                 this.resetConfigurationOptionsViewElements());
         }).catch(err => console.error(err));
     }
@@ -159,12 +155,15 @@ export class SigverConfigurationComponent implements OnDestroy {
         if(coeFileChanged) {
             await this.updateCoeFileInConfPath().then(async () => {
                 updatedSigverConfiguration.coePath = this.coePath;
-                let project = IntoCpsApp.getInstance().getActiveProject();
+                const project = IntoCpsApp.getInstance().getActiveProject();
 
-                await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath(), this.mmPath).then(coeConfig => {
+                await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath()).then(coeConfig => {
                     updatedSigverConfiguration.coeConfig = coeConfig;
                 })
             }).catch(err => console.warn(err));
+        }
+        else {
+            updatedSigverConfiguration.coeConfig = this.sigverConfigurationService.configuration.coeConfig;
         }
         updatedSigverConfiguration.coeConfig.convergenceAttempts = this.simEnvParams.convergenceAttempts;
         updatedSigverConfiguration.coeConfig.global_absolute_tolerance = this.simEnvParams.convergenceAbsoluteTolerance;
@@ -179,7 +178,6 @@ export class SigverConfigurationComponent implements OnDestroy {
             const algo = updatedSigverConfiguration.coeConfig.algorithm as VariableStepAlgorithm;
             algo.initSize = this.simEnvParams.stepSize;
         }
-        updatedSigverConfiguration.mmPath = this.mmPath;
         updatedSigverConfiguration.coePath = this.coePath;
         this.sigverConfigurationService.configuration = updatedSigverConfiguration;
         this.sigverConfigurationService.saveConfiguration();
@@ -226,7 +224,7 @@ export class SigverConfigurationComponent implements OnDestroy {
 
     resetConfigurationOptionsViewElements() {
         // Set port reactivities to delayed
-        let inputPorts: string[] = Object.values(this.multiModelConfig.toObject().connections as Map<string, string[]>).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
+        let inputPorts: string[] = Object.values(this.coeConfig.multiModel.toObject().connections as Map<string, string[]>).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
         this.portsToReactivity = new Map(inputPorts.map(p => [p, Reactivity.Delayed]));
 
         this.sigverConfigurationService.configuration.coeConfig.global_absolute_tolerance
@@ -239,33 +237,23 @@ export class SigverConfigurationComponent implements OnDestroy {
         this.simEnvParams.stepSize = this.sigverConfigurationService.configuration.coeConfig.algorithm.getStepSize();
     }
 
-    locateAndSetMMAndCoeFiles(mmDir: string, coeDir: string): Promise<void> {
+    locateAndsetCoePath(coeDir: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            if (!fs.existsSync(mmDir) || !fs.lstatSync(mmDir).isDirectory()) {
-                reject(`"${mmDir}" is not a valid directory`)
+            if(!coeDir){
+                resolve();
             }
             if (!fs.existsSync(coeDir) || !fs.lstatSync(coeDir).isDirectory()) {
                 reject(`"${coeDir}" is not a valid directory`)
             }
-            fs.promises.readdir(mmDir).then(filesInMMDir => {
-                var mmFileName = filesInMMDir.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
-                if (mmFileName) {
-                    this.mmPath = Path.join(mmDir, mmFileName);
-                    fs.promises.readdir(coeDir).then(filesInCOEDir => {
-                        var coeFileName = filesInCOEDir.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
-                        if (coeFileName) {
-                            this.coePath = Path.join(coeDir, coeFileName);
-                            this.sigverConfigurationService.configurationPath
-
-                            resolve();
-                        } else {
-                            reject("Unable to locate coe file in directory: " + coeDir);
-                        }
-
-                    }).catch(err => reject(err));
+            fs.promises.readdir(coeDir).then(filesInCOEDir => {
+                var coeFileName = filesInCOEDir.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
+                if (coeFileName) {
+                    this.coePath = Path.join(coeDir, coeFileName);
+                    resolve();
                 } else {
-                    reject("Unable to locate multi model file in directory: " + mmDir);
+                    reject("Unable to locate coe file in directory: " + coeDir);
                 }
+
             }).catch(err => reject(err));
         });
     }

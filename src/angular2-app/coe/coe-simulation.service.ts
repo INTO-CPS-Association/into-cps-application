@@ -57,7 +57,7 @@ export class CoeSimulationService {
     simulationCompletedHandler: () => void = function () { };
     postProcessingOutputReport: (hasError: boolean, message: string) => void = function () { };
 
-    private webSocket: WebSocket;
+    private masterModel: string;
     private sessionId: string;
     private remoteCoe: boolean;
     private coe: CoeProcess; 
@@ -93,11 +93,12 @@ export class CoeSimulationService {
         if (!this.coe.isRunning()) IntoCpsApp.getInstance().getCoeProcess().start();
       }
 
-    run(config: CoSimulationConfig, errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
+    run(config: CoSimulationConfig, masterModel: string = "", errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
         this.coe = IntoCpsApp.getInstance().getCoeProcess();
         this.errorReport = errorReport;
         this.simulationCompletedHandler = simCompleted;
         this.config = config;
+        this.masterModel = masterModel;
         this.postProcessingOutputReport = postScriptOutputReport;
         this.remoteCoe = this.settings.get(SettingKeys.COE_REMOTE_HOST);
         this.url = this.settings.get(SettingKeys.COE_URL);
@@ -200,7 +201,8 @@ export class CoeSimulationService {
                 startTime: this.config.startTime,
                 endTime: this.config.endTime,
                 reportProgress: true,
-                liveLogInterval: this.config.livestreamInterval
+                liveLogInterval: this.config.livestreamInterval,
+                masterModel: this.masterModel
             };
 
             // enable logging for all log categories        
