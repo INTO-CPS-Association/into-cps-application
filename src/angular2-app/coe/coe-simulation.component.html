@@ -54,6 +54,11 @@
       <span class="glyphicon glyphicon-stop"></span>Stop
     </button>
   </div>
+  <div>
+    <button type="button" (click)="onOpenResultsFolder()" class="btn btn-default" [disabled] = "!_resultsDir || simulating">
+      <span class="glyphicon glyphicon-folder-open"></span> Open results folder
+    </button>
+  </div>
 </div>
 
 <div class="progress">

@@ -5,6 +5,10 @@ import { Subscription } from 'rxjs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
+import { shell } from "electron";
+
+let yauzl = require("yauzl");
+let mkdirp = require("mkdirp");
 
 @Component({
     selector: "sigver-coe-interaction",
@@ -163,11 +167,14 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         });
     }
 
-    writeFileToDir(file: File, dirPath: string) {
-        file.arrayBuffer().then(arrBuff => {
-            const writeStream = fs.createWriteStream(path.join(dirPath, file.name));
-            writeStream.write(Buffer.from(arrBuff));
-            writeStream.close();
-        }).catch(err => console.error(`Error occurred when writing file to path ${dirPath}: ${err}`));
+    writeFileToDir(file: File, dirPath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            file.arrayBuffer().then(arrBuff => {
+                const writeStream = fs.createWriteStream(path.join(dirPath, file.name));
+                writeStream.write(Buffer.from(arrBuff));
+                writeStream.close();
+                resolve();
+            }).catch(err => reject(`Error occurred when writing file to path ${dirPath}: ${err}`));
+        });
     }
 }
