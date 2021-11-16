@@ -39,6 +39,14 @@
 </div>
 
 <div class="form-group">
+  <div>
+    <button type="button" (click)="onOpenResultsFolder()" class="btn btn-default" [disabled] = "!_resultsDir || simulating">
+      <span class="glyphicon glyphicon-folder-open"></span> Open results folder
+    </button>
+  </div>
+
+  <hr>
+
   <div *ngIf="!simulating">
     <button
       type="button"
@@ -52,11 +60,6 @@
   <div *ngIf="simulating">
     <button type="button" (click)="stopSimulation()" class="btn btn-default">
       <span class="glyphicon glyphicon-stop"></span>Stop
-    </button>
-  </div>
-  <div>
-    <button type="button" (click)="onOpenResultsFolder()" class="btn btn-default" [disabled] = "!_resultsDir || simulating">
-      <span class="glyphicon glyphicon-folder-open"></span> Open results folder
     </button>
   </div>
 </div>
