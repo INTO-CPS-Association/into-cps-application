@@ -7,8 +7,10 @@ import * as fs from 'fs';
 export class SigverConfigurationService {
     private _configuration: SigverConfiguration = new SigverConfiguration;
     private _configurationChanged = new Subject<boolean>();
+    private _configurationLoaded = new Subject<boolean>();
 
     configurationChangedObservable = this._configurationChanged.asObservable();
+    configurationLoadedObservable = this._configurationLoaded.asObservable();
     configurationPath: string;
     automaticallySaveOnChanges: boolean = true;
     isDefaultConfiguration: boolean = true;
@@ -20,8 +22,9 @@ export class SigverConfigurationService {
                 if (fileErr) {
                     reject(`Unable to read configuration file from: ${filePath} due to: ${fileErr}`);
                 }
-                SigverConfiguration.parseFromJson(fileData.toString()).then(res => {
+                SigverConfiguration.parse(JSON.parse(fileData.toString())).then(res => {
                     this.configuration = res;
+                    this.configurationLoaded();
                     resolve();
                 }).catch(err => {
                     reject(`Unable to set configuration from file: ${filePath} due to: ${err}`);
@@ -34,8 +37,8 @@ export class SigverConfigurationService {
         this._configurationChanged.next(true);
     }
 
-    isConfigValid(): boolean {
-        return this._configuration.multiModel.fmus.length > 0;
+    configurationLoaded() {
+        this._configurationLoaded.next(true);
     }
 
     set configuration(sigverConfiguration: SigverConfiguration) {
@@ -51,12 +54,8 @@ export class SigverConfigurationService {
         }
         this._configuration = sigverConfiguration;
         this.isDefaultConfiguration = this._configuration.experimentPath == "";
-        if (!this.isConfigValid() || resetMasterModel) {
+        if (resetMasterModel) {
             this._configuration.masterModel = "";
-        }
-
-        if (this.automaticallySaveOnChanges) {
-            this.saveConfiguration();
         }
 
         this.configurationChanged();
@@ -68,7 +67,8 @@ export class SigverConfigurationService {
 
     saveConfiguration(path: string = ""): boolean {
         try {
-            fs.writeFileSync(path == "" ? this.configurationPath : path, this._configuration.toJsonString());
+            fs.writeFileSync(path == "" ? this.configurationPath : path, JSON.stringify(this._configuration.toObject()));
+            fs.writeFileSync(this.configuration.coePath, JSON.stringify(this._configuration.coeConfig.toObject()));
         }
         catch (err) {
             console.error(`Unable to write configuration to file: ${err}`)
@@ -78,9 +78,9 @@ export class SigverConfigurationService {
     }
 
     configurationToExtendedMultiModelDTO(verify: boolean = false): any {
-        const extendedMultiModelDTO = this._configuration.multiModel.toObject();
+        const extendedMultiModelDTO = this._configuration.coeConfig.multiModel.toObject();
         let fmus: any = {};
-        this._configuration.multiModel.fmus.forEach(fmu => {
+        this._configuration.coeConfig.multiModel.fmus.forEach(fmu => {
             let fmuPath;
             if (fmu.isNested()) {
                 fmuPath = "coe:/" + fmu.path;
@@ -103,13 +103,5 @@ export class SigverConfigurationService {
         extendedMultiModelDTO["sigver"] = scenarioVerifierDTO;
 
         return extendedMultiModelDTO
-    }
-
-    configurationToExecutableMMDTO(verify: boolean = false): any {
-        const executableMMDTO: any = {}
-        executableMMDTO[SigverConfiguration.MASTERMODEL_TAG] = this._configuration.masterModel;
-        executableMMDTO[SigverConfiguration.MULTIMODEL_TAG] = this.configurationToExtendedMultiModelDTO(verify);
-        executableMMDTO[SigverConfiguration.EXECUTIONPARAMETERS_TAG] = this._configuration.simulationEnvironmentParameters;
-        return executableMMDTO;
     }
 }

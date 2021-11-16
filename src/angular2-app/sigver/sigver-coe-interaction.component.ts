@@ -26,7 +26,6 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     // View state bools
     isVerificationFailed: boolean = false;
-    isConfigValid: boolean = false;
     isCoeOnline: boolean = false;
     isGeneratingTraces: boolean = false;
     isMasterModelValid: boolean = false;
@@ -111,18 +110,18 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     }
 
     onExecuteClick() {
-        this.isExecuting = true;
-        this.isExecutionSuccess = false;
-        this.sigverCoeService.execute(this.sigverConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
-            this.isExecutionSuccess = true;
-            this.ensureResultPaths();
-            this.writeFileToDir(zipFile, this.executionResultsPath);
-        }, errMsg => {
-            this.isExecutionSuccess = false;
-            console.error(`Error occurred when executing the master model: ${errMsg}`);
-        }).finally(() => {
-            this.isExecuting = false;
-        });
+        // this.isExecuting = true;
+        // this.isExecutionSuccess = false;
+        // this.sigverCoeService.execute(this.sigverConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
+        //     this.isExecutionSuccess = true;
+        //     this.ensureResultPaths();
+        //     this.writeFileToDir(zipFile, this.executionResultsPath);
+        // }, errMsg => {
+        //     this.isExecutionSuccess = false;
+        //     console.error(`Error occurred when executing the master model: ${errMsg}`);
+        // }).finally(() => {
+        //     this.isExecuting = false;
+        // });
     }
 
     ensureResultPaths() {
@@ -140,7 +139,6 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     }
 
     handleConfigurationChanges() {
-        this.isConfigValid = this.sigverConfigurationService.isConfigValid();
         this.isMasterModelValid = this.sigverConfigurationService.configuration.masterModel != "";
         this.isVerified = this.isMasterModelValid && this.isVerified;
         this.isVerificationFailed = this.isVerified ? this.isVerificationFailed : false;

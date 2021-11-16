@@ -49,7 +49,6 @@ export class CoSimulationConfig implements ISerializable {
     projectRoot: string;
 
     multiModel: MultiModelConfig;
-    masterModel: string = "";
     sourcePath: string;
     multiModelCrc: string;
 
@@ -72,6 +71,7 @@ export class CoSimulationConfig implements ISerializable {
     stabalization: boolean = false;
     global_absolute_tolerance: number = 0.0;
     global_relative_tolerance: number = 0.0;
+    convergenceAttempts: number = 5;
     simulationProgramDelay: boolean = false;
 
     public getProjectRelativePath(path: string): string {
@@ -108,7 +108,7 @@ export class CoSimulationConfig implements ISerializable {
             global_absolute_tolerance: Number(this.global_absolute_tolerance),
             global_relative_tolerance: Number(this.global_relative_tolerance),
             simulationProgramDelay: this.simulationProgramDelay,
-            masterModel: this.masterModel
+            convergenceAttempts: this.convergenceAttempts
         };
     }
 
@@ -192,7 +192,6 @@ export class CoSimulationConfig implements ISerializable {
 
                     config.projectRoot = projectRoot;
                     config.multiModel = multiModel;
-                    config.masterModel = parser.parseSimpleTagDefault(data, "masterModel", "");
                     config.sourcePath = path;
                     config.startTime = parser.parseStartTime(data) || 0;
                     config.endTime = parser.parseEndTime(data) || 10;
@@ -213,6 +212,7 @@ export class CoSimulationConfig implements ISerializable {
                     config.stabalization = parser.parseSimpleTagDefault(data, "stabalizationEnabled", false);
                     config.global_absolute_tolerance = parseFloat(parser.parseSimpleTagDefault(data, "global_absolute_tolerance", 0.0));
                     config.global_relative_tolerance = parseFloat(parser.parseSimpleTagDefault(data, "global_relative_tolerance", 0.01));
+                    config.convergenceAttempts = parseInt(parser.parseSimpleTagDefault(data, "convergenceAttempts", 5));
 
 
                     resolve(config);
@@ -241,8 +241,10 @@ export class CoSimulationConfig implements ISerializable {
 export interface ICoSimAlgorithm {
     toFormGroup(): FormGroup;
     toObject(): { [key: string]: any };
+    getStepSize(): number;
     type: string;
     name: string;
+
 }
 
 export class LiveGraph {
@@ -308,6 +310,9 @@ export class FixedStepAlgorithm implements ICoSimAlgorithm {
     constructor(public size: number = 0.1) {
 
     }
+    getStepSize(): number {
+        return this.size;
+    }
 
     toFormGroup() {
         return new FormGroup({
@@ -334,6 +339,9 @@ export class VariableStepAlgorithm implements ICoSimAlgorithm {
         public constraints: Array<VariableStepConstraint> = []
     ) {
 
+    }
+    getStepSize(): number {
+        return this.initSize;
     }
 
     toFormGroup() {

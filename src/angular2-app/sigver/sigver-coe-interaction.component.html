@@ -18,7 +18,7 @@
     </div>
 
     <div>
-      <button type="button" class="btn btn-sm btn-default" (click)="onGenerateMasterModelClick()" [disabled] = "!isCoeOnline || !isConfigValid || isGeneratingMasterModel">
+      <button type="button" class="btn btn-sm btn-default" (click)="onGenerateMasterModelClick()" [disabled] = "!isCoeOnline || isGeneratingMasterModel">
         <span>Generate master model</span>
         <span *ngIf="isGeneratingMasterModel">Generating... </span>
         <span *ngIf="isGeneratingMasterModel" class="glyphicon glyphicon-refresh spinning"></span>
@@ -63,7 +63,7 @@
 
   <panel [title]="'Execution'" [open]="!sigverConfigurationService.isDefaultConfiguration">
     <div>
-      <button type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "!isCoeOnline || !isConfigValid || isExecuting || isVerificationFailed">
+      <button type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "!isCoeOnline || isExecuting || isVerificationFailed">
         <span *ngIf="!isExecuting">Execute</span>
         <span *ngIf="isExecuting">Executing... </span>
         <span *ngIf="isExecuting" class="glyphicon glyphicon-refresh spinning"></span>

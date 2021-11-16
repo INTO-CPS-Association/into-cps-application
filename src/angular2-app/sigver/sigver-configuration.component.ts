@@ -4,9 +4,10 @@ import * as Path from 'path';
 import * as fs from 'fs';
 import { Project } from "../../proj/Project";
 import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
-import { SimulationEnvironmentParameters, Reactivity, SigverConfiguration } from "../../intocps-configurations/sigver-configuration";
+import { Reactivity, SigverConfiguration } from "../../intocps-configurations/sigver-configuration";
 import { SigverConfigurationService } from "./sigver-configuration.service";
 import { Subscription } from 'rxjs';
+import { CoSimulationConfig, FixedStepAlgorithm, VariableStepAlgorithm } from "../../intocps-configurations/CoSimulationConfig";
 
 @Component({
     selector: "sigver-configuration",
@@ -33,9 +34,8 @@ export class SigverConfigurationComponent implements OnDestroy {
     simEnvParams: SimulationEnvironmentParameters = new SimulationEnvironmentParameters();
 
     constructor(private sigverConfigurationService: SigverConfigurationService) {
-        this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
+        this._configurationChangedSub = this.sigverConfigurationService.configurationLoadedObservable.subscribe(() => {
             this.setViewModelItemsFromConfig();
-            this.validateMultiModel();
         });
     }
 
@@ -58,9 +58,16 @@ export class SigverConfigurationComponent implements OnDestroy {
             mmFolderPath = this.priorExperimentPath;
         }
 
-        this.locateMMAndCoeFiles(mmFolderPath, coeFolderPath).then(() => this.setMultimodelFromPath(this.mmPath)).catch(err => { console.error(err) });
+        this.locateAndSetMMAndCoeFiles(mmFolderPath, coeFolderPath).then(() => this.setMultimodelFromPath(this.mmPath)).catch(err => { console.error(err) });
 
-        this.simEnvParams = Object.assign(new SimulationEnvironmentParameters(), this.sigverConfigurationService.configuration.simulationEnvironmentParameters);
+        this.simEnvParams = new SimulationEnvironmentParameters(
+            this.sigverConfigurationService.configuration.coeConfig.global_relative_tolerance,
+            this.sigverConfigurationService.configuration.coeConfig.global_absolute_tolerance,
+            this.sigverConfigurationService.configuration.coeConfig.convergenceAttempts,
+            this.sigverConfigurationService.configuration.coeConfig.startTime,
+            this.sigverConfigurationService.configuration.coeConfig.endTime,
+            this.sigverConfigurationService.configuration.coeConfig.algorithm.getStepSize()
+        );
         this.portsToReactivity = new Map(this.sigverConfigurationService.configuration.reactivity);
     }
 
@@ -117,7 +124,7 @@ export class SigverConfigurationComponent implements OnDestroy {
         this.usePriorExperiment = false;
         this.priorExperimentPath = "";
         this.cantLocatePriorExperiment = false;
-        this.locateMMAndCoeFiles(Path.join(experimentPath, ".."), Path.join(experimentPath)).then(() => {
+        this.locateAndSetMMAndCoeFiles(Path.join(experimentPath, ".."), Path.join(experimentPath)).then(() => {
             this.setMultimodelFromPath(this.mmPath).then(() =>
                 this.resetConfigurationOptionsViewElements());
         }).catch(err => console.error(err));
@@ -126,7 +133,7 @@ export class SigverConfigurationComponent implements OnDestroy {
     onPriorExperimentPathChanged(experimentPath: string) {
         this.priorExperimentPath = experimentPath;
         this.usePriorExperiment = true;
-        this.locateMMAndCoeFiles(Path.join(experimentPath), Path.join(experimentPath)).then(() => {
+        this.locateAndSetMMAndCoeFiles(Path.join(experimentPath), Path.join(experimentPath)).then(() => {
             this.setMultimodelFromPath(this.mmPath).then(() =>
                 this.resetConfigurationOptionsViewElements());
         }).catch(err => console.error(err));
@@ -136,7 +143,7 @@ export class SigverConfigurationComponent implements OnDestroy {
         this.portsToReactivity.set(key, Reactivity[reactivity as keyof typeof Reactivity]);
     }
 
-    onSubmit() {
+    async onSubmit() {
         if (!this.editing) return;
 
         const updatedSigverConfiguration = new SigverConfiguration;
@@ -145,18 +152,76 @@ export class SigverConfigurationComponent implements OnDestroy {
         updatedSigverConfiguration.experimentPath = this.experimentPath;
         updatedSigverConfiguration.masterModel = this.sigverConfigurationService.configuration.masterModel;
         updatedSigverConfiguration.priorExperimentPath = !this.usePriorExperiment ? "" : this.priorExperimentPath;
-        updatedSigverConfiguration.simulationEnvironmentParameters = Object.assign(new SimulationEnvironmentParameters(), this.simEnvParams);
-        updatedSigverConfiguration.multiModel.sourcePath = this.multiModelConfig.sourcePath;
-        updatedSigverConfiguration.multiModel.fmusRootPath = this.multiModelConfig.fmusRootPath;
-        updatedSigverConfiguration.multiModel.fmus = Object.assign([], this.multiModelConfig.fmus);
-        updatedSigverConfiguration.multiModel.fmuInstances = Object.assign([], this.multiModelConfig.fmuInstances);
-        updatedSigverConfiguration.multiModel.instanceScalarPairs = Object.assign([], this.multiModelConfig.instanceScalarPairs);
         updatedSigverConfiguration.reactivity = new Map(this.portsToReactivity);
+        const relative = Path.relative(Path.dirname(this.sigverConfigurationService.configurationPath), this.coePath);
+        const coeFileChanged = Path.basename(this.coePath) != relative;
 
+        if(coeFileChanged) {
+            await this.updateCoeFileInConfPath().then(async () => {
+                updatedSigverConfiguration.coePath = this.coePath;
+                let project = IntoCpsApp.getInstance().getActiveProject();
+
+                await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath(), this.mmPath).then(coeConfig => {
+                    updatedSigverConfiguration.coeConfig = coeConfig;
+                })
+            }).catch(err => console.warn(err));
+        }
+        updatedSigverConfiguration.coeConfig.convergenceAttempts = this.simEnvParams.convergenceAttempts;
+        updatedSigverConfiguration.coeConfig.global_absolute_tolerance = this.simEnvParams.convergenceAbsoluteTolerance;
+        updatedSigverConfiguration.coeConfig.global_relative_tolerance = this.simEnvParams.convergenceRelativeTolerance;
+        updatedSigverConfiguration.coeConfig.endTime = this.simEnvParams.endTime;
+        updatedSigverConfiguration.coeConfig.startTime = this.simEnvParams.startTime;
+
+        if(updatedSigverConfiguration.coeConfig.algorithm instanceof FixedStepAlgorithm ){
+            const algo = updatedSigverConfiguration.coeConfig.algorithm as FixedStepAlgorithm;
+            algo.size = this.simEnvParams.stepSize;
+        } else {
+            const algo = updatedSigverConfiguration.coeConfig.algorithm as VariableStepAlgorithm;
+            algo.initSize = this.simEnvParams.stepSize;
+        }
+        updatedSigverConfiguration.mmPath = this.mmPath;
+        updatedSigverConfiguration.coePath = this.coePath;
         this.sigverConfigurationService.configuration = updatedSigverConfiguration;
-        this.validateMultiModel();
+        this.sigverConfigurationService.saveConfiguration();
 
         this.editing = false;
+    }
+
+    private updateCoeFileInConfPath(): Promise<void>  {
+        return new Promise<void>((resolve, reject) => {
+            fs.promises.readdir(Path.dirname(this.sigverConfigurationService.configurationPath)).then(filesInDir => {
+                const existingCoeFile = filesInDir.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
+                if(existingCoeFile) {
+                    fs.unlink(existingCoeFile, () => {
+                        this.copyCoeToConfigPath().then(newCoePath => {
+                            this.coePath = newCoePath;
+                            resolve();
+                        });
+
+                    });
+                } else {
+                    this.copyCoeToConfigPath().then(newCoePath => {
+                        this.coePath = newCoePath;
+                        resolve();
+                    });
+
+                }
+                
+            }).catch(err => reject(err));
+        });
+    }
+
+    private copyCoeToConfigPath(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const expName = this.experimentPath.split(Path.sep);
+
+            const newCoeFileName = "sigver_" + expName[expName.length-2] + "_" + expName[expName.length-1]+ "_" + "cos.json";
+            const destinationPath = Path.join(Path.dirname(this.sigverConfigurationService.configurationPath), newCoeFileName);
+            fs.copyFile(this.coePath, destinationPath, (err) => {
+                if (err) reject(err);
+                resolve(destinationPath);
+            });
+        });
     }
 
     resetConfigurationOptionsViewElements() {
@@ -164,24 +229,17 @@ export class SigverConfigurationComponent implements OnDestroy {
         let inputPorts: string[] = Object.values(this.multiModelConfig.toObject().connections as Map<string, string[]>).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
         this.portsToReactivity = new Map(inputPorts.map(p => [p, Reactivity.Delayed]));
 
-        // Set environment parameters from the coe json file
-        fs.readFile(this.coePath, (error, data) => {
-            if (error) {
-                console.error(`Unable to read coe file and set simulation environment parameters: ${error}`)
-            }
-            else {
-                const jsonObj = JSON.parse(data.toString());
-                this.simEnvParams.convergenceAbsoluteTolerance = jsonObj["global_absolute_tolerance"] ?? 0;
-                this.simEnvParams.convergenceRelativeTolerance = jsonObj["global_relative_tolerance"] ?? 0;
-                this.simEnvParams.convergenceAttempts = 5;
-                this.simEnvParams.endTime = jsonObj["endTime"] ?? 0;
-                this.simEnvParams.startTime = jsonObj["startTime"] ?? 0;
-                this.simEnvParams.stepSize = (jsonObj["algorithm"]["type"] == "fixed-step" ? jsonObj["algorithm"]["size"] : jsonObj["algorithm"]["initsize"]) ?? 0;
-            }
-        });
+        this.sigverConfigurationService.configuration.coeConfig.global_absolute_tolerance
+
+        this.simEnvParams.convergenceAbsoluteTolerance = this.sigverConfigurationService.configuration.coeConfig.global_absolute_tolerance;
+        this.simEnvParams.convergenceRelativeTolerance = this.sigverConfigurationService.configuration.coeConfig.global_relative_tolerance;
+        this.simEnvParams.convergenceAttempts = 5;
+        this.simEnvParams.endTime = this.sigverConfigurationService.configuration.coeConfig.endTime;
+        this.simEnvParams.startTime = this.sigverConfigurationService.configuration.coeConfig.startTime;
+        this.simEnvParams.stepSize = this.sigverConfigurationService.configuration.coeConfig.algorithm.getStepSize();
     }
 
-    locateMMAndCoeFiles(mmDir: string, coeDir: string): Promise<void> {
+    locateAndSetMMAndCoeFiles(mmDir: string, coeDir: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (!fs.existsSync(mmDir) || !fs.lstatSync(mmDir).isDirectory()) {
                 reject(`"${mmDir}" is not a valid directory`)
@@ -197,6 +255,8 @@ export class SigverConfigurationComponent implements OnDestroy {
                         var coeFileName = filesInCOEDir.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
                         if (coeFileName) {
                             this.coePath = Path.join(coeDir, coeFileName);
+                            this.sigverConfigurationService.configurationPath
+
                             resolve();
                         } else {
                             reject("Unable to locate coe file in directory: " + coeDir);
@@ -210,12 +270,6 @@ export class SigverConfigurationComponent implements OnDestroy {
         });
     }
 
-
-    validateMultiModel() {
-        this.mMWarnings = this.sigverConfigurationService.configuration.multiModel.validate().map(w => w.message);
-        this.isMMWarnings = this.mMWarnings.length > 0;
-    }
-
     loadPriorExperimentsPaths() {
         let priorExperimentsPaths: string[] = []
         let files = fs.readdirSync(this.experimentPath);
@@ -227,4 +281,14 @@ export class SigverConfigurationComponent implements OnDestroy {
         }
         this.priorExperimentsPaths = priorExperimentsPaths;
     }
+}
+
+class SimulationEnvironmentParameters {
+    constructor(
+        public convergenceRelativeTolerance: number = 0,
+        public convergenceAbsoluteTolerance: number = 0,
+        public convergenceAttempts: number = 0,
+        public startTime: number = 0,
+        public endTime: number = 0,
+        public stepSize: number = 0) {}
 }
