@@ -1,7 +1,8 @@
 import { Component, OnDestroy } from "@angular/core";
 import IntoCpsApp from "../../IntoCpsApp";
 import * as Path from 'path';
-import * as fs from 'fs';
+import * as Fs from 'fs';
+import * as FsE from 'fs-extra';
 import { Project } from "../../proj/Project";
 import { Reactivity, SigverConfiguration } from "../../intocps-configurations/sigver-configuration";
 import { SigverConfigurationService } from "./sigver-configuration.service";
@@ -96,14 +97,15 @@ export class SigverConfigurationComponent implements OnDestroy {
 
     getExperimentsPaths(path: string): string[] {
         let experimentPaths: string[] = []
-        let files = fs.readdirSync(path);
-        if (files.findIndex(f => f.endsWith("coe.json")) != -1) {
+        const files = Fs.readdirSync(path);
+        const coeFileName = files.find(f => f.endsWith("coe.json"));
+        if (coeFileName && FsE.readJsonSync(Path.join(path, coeFileName)).algorithm.type != "var-step") {
             experimentPaths.push(path);
         }
         else {
             for (let i in files) {
                 let fileName = Path.join(path, files[i]);
-                if (fs.statSync(fileName).isDirectory()) {
+                if (Fs.statSync(fileName).isDirectory()) {
                     experimentPaths = experimentPaths.concat(this.getExperimentsPaths(fileName));
                 }
             }
@@ -190,12 +192,12 @@ export class SigverConfigurationComponent implements OnDestroy {
 
     private updateCoeFileInConfPath(): Promise<void>  {
         return new Promise<void>((resolve, reject) => {
-            fs.promises.readdir(Path.dirname(this.sigverConfigurationService.configurationPath)).then(filesInDir => {
+            Fs.promises.readdir(Path.dirname(this.sigverConfigurationService.configurationPath)).then(filesInDir => {
                 //Find the old co-simulation file and delete it if present.
                 const existingCoeFile = filesInDir.find(fileName => fileName.toLowerCase().endsWith("cos.json"));
                 if(existingCoeFile) {
                     const pathToFile = Path.join(Path.dirname(this.sigverConfigurationService.configurationPath), existingCoeFile);
-                    fs.unlinkSync(pathToFile);
+                    Fs.unlinkSync(pathToFile);
                 }
                 //Copy the new file to the sigver project
                 this.copyCoeToConfigPath().then(newCoePath => {
@@ -213,7 +215,7 @@ export class SigverConfigurationComponent implements OnDestroy {
 
             const newCoeFileName = "sigver_" + expName[expName.length-2] + "_" + expName[expName.length-1]+ "_" + "cos.json";
             const destinationPath = Path.join(Path.dirname(this.sigverConfigurationService.configurationPath), newCoeFileName);
-            fs.copyFile(this.coePath, destinationPath, (err) => {
+            Fs.copyFile(this.coePath, destinationPath, (err) => {
                 if (err) reject(err);
                 resolve(destinationPath);
             });
@@ -238,10 +240,10 @@ export class SigverConfigurationComponent implements OnDestroy {
             if(!coeDir){
                 resolve();
             }
-            if (!fs.existsSync(coeDir) || !fs.lstatSync(coeDir).isDirectory()) {
+            if (!Fs.existsSync(coeDir) || !Fs.lstatSync(coeDir).isDirectory()) {
                 reject(`"${coeDir}" is not a valid directory`)
             }
-            fs.promises.readdir(coeDir).then(filesInCOEDir => {
+            Fs.promises.readdir(coeDir).then(filesInCOEDir => {
                 var coeFileName = filesInCOEDir.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
                 if (coeFileName) {
                     this.coePath = Path.join(coeDir, coeFileName);
@@ -256,10 +258,10 @@ export class SigverConfigurationComponent implements OnDestroy {
 
     loadPriorExperimentsPaths() {
         let priorExperimentsPaths: string[] = []
-        let files = fs.readdirSync(this.experimentPath);
+        let files = Fs.readdirSync(this.experimentPath);
         for (let i in files) {
             let fileName = Path.join(this.experimentPath, files[i]);
-            if (fs.statSync(fileName).isDirectory()) {
+            if (Fs.statSync(fileName).isDirectory()) {
                 priorExperimentsPaths = priorExperimentsPaths.concat(this.getExperimentsPaths(fileName));
             }
         }
