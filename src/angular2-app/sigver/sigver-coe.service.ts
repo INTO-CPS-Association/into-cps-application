@@ -53,16 +53,6 @@ export class SigverCoeService implements OnDestroy {
         });
     }
 
-    execute(executionDTOObj: Object) {
-        return new Promise<File>((resolve, reject) => {
-            this.httpClient.post(`http://${this.coeUrl}/executeAlgorithm`, executionDTOObj, { responseType: 'blob' }).toPromise().then(response => {
-                resolve(new File([response], "execution_results.zip", { lastModified: new Date().getTime(), type: response.type }));
-            }, (errorResponse: HttpErrorResponse) => {
-                this.errorToJsonMsg(errorResponse).then(msg => reject(msg)).catch(err => { console.log(err); reject(errorResponse.message) });
-            })
-        });
-    }
-
     verifyAlgorithm(masterModelAsString: string) {
         return new Promise<IVerificationDTO>((resolve, reject) => {
             this.httpClient.post(`http://${this.coeUrl}/verifyAlgorithm`, masterModelAsString).toPromise().then(response => {

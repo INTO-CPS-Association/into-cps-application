@@ -32,6 +32,8 @@
 import { Component, Input, OnDestroy } from "@angular/core";
 import { Subscription } from "rxjs";
 import { SigverConfigurationService } from "./sigver-configuration.service";
+import * as Path from 'path';
+import * as Fs from 'fs';
 
 @Component({
     selector: "sv-page",
@@ -40,30 +42,61 @@ import { SigverConfigurationService } from "./sigver-configuration.service";
 })
 export class SigverPageComponent implements OnDestroy {
     private _configurationChangedSub: Subscription;
-    private _path: string;
-    private _masterModel: string;
+    private _path: string = "";
+    masterModel: string = "";
+    cosConfPath: string = "";
+    generationResultsPath: string = "";
+    verificationResultsPath: string = "";
+    executionResultsPath: string = "";
 
     @Input()
     set path(path: string) {
         this._path = path;
         this.sigverConfigurationService.configurationPath = this._path;
-        this.sigverConfigurationService.loadConfigurationFromPath().catch(err => console.error(err));
+        this.sigverConfigurationService.loadConfigurationFromPath().then(
+            () => this.ensureResultPaths(Path.join(this.sigverConfigurationService.configurationPath, "..", "results", Path.sep))
+        ).catch(err => console.error(err));
     }
     get path(): string {
         return this._path;
     }
 
-    cosConfPath: string = "";
-
-    constructor(private sigverConfigurationService: SigverConfigurationService) { 
+    constructor(private sigverConfigurationService: SigverConfigurationService) {
         this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.cosConfPath = sigverConfigurationService.configuration.coePath;
-            this._masterModel = sigverConfigurationService.configuration.masterModel;
+            this.masterModel = sigverConfigurationService.configuration.masterModel;
         });
     }
 
     ngOnDestroy(): void {
         this._configurationChangedSub.unsubscribe();
     }
-    
+
+
+    ensureResultPaths(rootResultsPath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.verificationResultsPath = Path.join(rootResultsPath, "verification");
+            this.executionResultsPath = Path.join(rootResultsPath, "execution");
+            this.generationResultsPath = Path.join(rootResultsPath, "generation");
+
+            Promise.all([
+                this.ensureDirectoryExistence(this.verificationResultsPath).catch(err => reject(err)),
+                this.ensureDirectoryExistence(this.executionResultsPath).catch(err => reject(err)),
+                this.ensureDirectoryExistence(this.generationResultsPath).catch(err => console.log(err))
+            ]).then(() => resolve()).catch(err => reject(err));
+        });
+    }
+
+    ensureDirectoryExistence(filePath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (Fs.existsSync(filePath)) {
+                resolve();
+            }
+            Fs.promises.mkdir(filePath, { recursive: true }).then(() => {
+                resolve();
+            }, err => {
+                reject(err);
+            });
+        });
+    }
 }

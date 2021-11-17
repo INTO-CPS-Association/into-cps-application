@@ -39,6 +39,7 @@ export class SigverConfigurationComponent implements OnDestroy {
     }
 
     setViewModelItemsFromConfig() {
+        // Set view element values from the configuration
         this.experimentPath = this.sigverConfigurationService.configuration.experimentPath;
         let coeFolderPath = this.experimentPath;
         this.usePriorExperiment = this.sigverConfigurationService.configuration.priorExperimentPath != "";
@@ -144,7 +145,7 @@ export class SigverConfigurationComponent implements OnDestroy {
 
         const updatedSigverConfiguration = new SigverConfiguration;
 
-        // Set changes from the view models in the configuration
+        // Set changes from the view models in a new configuration
         updatedSigverConfiguration.experimentPath = this.experimentPath;
         updatedSigverConfiguration.masterModel = this.sigverConfigurationService.configuration.masterModel;
         updatedSigverConfiguration.priorExperimentPath = !this.usePriorExperiment ? "" : this.priorExperimentPath;
@@ -179,6 +180,8 @@ export class SigverConfigurationComponent implements OnDestroy {
             algo.initSize = this.simEnvParams.stepSize;
         }
         updatedSigverConfiguration.coePath = this.coePath;
+
+        //Update and save the configuration - this also triggers a configuration updated event
         this.sigverConfigurationService.configuration = updatedSigverConfiguration;
         this.sigverConfigurationService.saveConfiguration();
 
@@ -188,22 +191,17 @@ export class SigverConfigurationComponent implements OnDestroy {
     private updateCoeFileInConfPath(): Promise<void>  {
         return new Promise<void>((resolve, reject) => {
             fs.promises.readdir(Path.dirname(this.sigverConfigurationService.configurationPath)).then(filesInDir => {
-                const existingCoeFile = filesInDir.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
+                //Find the old co-simulation file and delete it if present.
+                const existingCoeFile = filesInDir.find(fileName => fileName.toLowerCase().endsWith("cos.json"));
                 if(existingCoeFile) {
-                    fs.unlink(existingCoeFile, () => {
-                        this.copyCoeToConfigPath().then(newCoePath => {
-                            this.coePath = newCoePath;
-                            resolve();
-                        });
-
-                    });
-                } else {
-                    this.copyCoeToConfigPath().then(newCoePath => {
-                        this.coePath = newCoePath;
-                        resolve();
-                    });
-
+                    const pathToFile = Path.join(Path.dirname(this.sigverConfigurationService.configurationPath), existingCoeFile);
+                    fs.unlinkSync(pathToFile);
                 }
+                //Copy the new file to the sigver project
+                this.copyCoeToConfigPath().then(newCoePath => {
+                    this.coePath = newCoePath;
+                    resolve();
+                });
                 
             }).catch(err => reject(err));
         });
@@ -227,14 +225,12 @@ export class SigverConfigurationComponent implements OnDestroy {
         let inputPorts: string[] = Object.values(this.coeConfig.multiModel.toObject().connections as Map<string, string[]>).reduce((prevVal, currVal) => prevVal.concat(currVal), []);
         this.portsToReactivity = new Map(inputPorts.map(p => [p, Reactivity.Delayed]));
 
-        this.sigverConfigurationService.configuration.coeConfig.global_absolute_tolerance
-
-        this.simEnvParams.convergenceAbsoluteTolerance = this.sigverConfigurationService.configuration.coeConfig.global_absolute_tolerance;
-        this.simEnvParams.convergenceRelativeTolerance = this.sigverConfigurationService.configuration.coeConfig.global_relative_tolerance;
-        this.simEnvParams.convergenceAttempts = 5;
-        this.simEnvParams.endTime = this.sigverConfigurationService.configuration.coeConfig.endTime;
-        this.simEnvParams.startTime = this.sigverConfigurationService.configuration.coeConfig.startTime;
-        this.simEnvParams.stepSize = this.sigverConfigurationService.configuration.coeConfig.algorithm.getStepSize();
+        this.simEnvParams.convergenceAbsoluteTolerance = this.coeConfig.global_absolute_tolerance
+        this.simEnvParams.convergenceRelativeTolerance = this.coeConfig.global_relative_tolerance;
+        this.simEnvParams.convergenceAttempts = this.coeConfig.convergenceAttempts;
+        this.simEnvParams.endTime = this.coeConfig.endTime;
+        this.simEnvParams.startTime = this.coeConfig.startTime;
+        this.simEnvParams.stepSize = this.coeConfig.algorithm.getStepSize();
     }
 
     locateAndsetCoePath(coeDir: string): Promise<void> {

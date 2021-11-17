@@ -1,5 +1,5 @@
 <panel [title]="'Configuration'" [open]="sigverConfigurationService.isDefaultConfiguration">
     <sigver-configuration></sigver-configuration>
 </panel>
-<sigver-coe-interaction></sigver-coe-interaction>
-<coe-simulation #sim [path]="cosConfPath" [masterModel] = "_masterModel"></coe-simulation>
+<sigver-coe-interaction [generationresultspath] = "generationResultsPath" [verificationresultspath] = "verificationResultsPath"></sigver-coe-interaction>
+<coe-simulation [path]="cosConfPath" [mastermodel] = "masterModel" [resultsdir] = "executionResultsPath"></coe-simulation>

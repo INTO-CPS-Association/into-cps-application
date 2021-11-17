@@ -1,14 +1,10 @@
-import { Component, OnDestroy } from "@angular/core";
+import { Component, Input, OnDestroy } from "@angular/core";
 import { SigverCoeService as SigverCoeService } from "./sigver-coe.service";
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as Fs from 'fs';
+import * as Path from 'path';
 import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
-import { shell } from "electron";
-
-let yauzl = require("yauzl");
-let mkdirp = require("mkdirp");
 
 @Component({
     selector: "sigver-coe-interaction",
@@ -22,10 +18,13 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     coeUrl: string = "";
     coeVersion: string = "";
     videoUrl: any;
-    rootrResultsPath: string = "";
-    generationResultsPath: string = "";
-    verificationResultsPath: string = "";
-    executionResultsPath: string = "";
+
+    @Input()
+    generationresultspath: string = "";
+
+    @Input()
+    verificationresultspath: string = "";
+
     verificationErrMsg: string = "";
 
     // View state bools
@@ -33,9 +32,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     isCoeOnline: boolean = false;
     isGeneratingTraces: boolean = false;
     isMasterModelValid: boolean = false;
-    isExecutionSuccess: boolean = false;
     isVerified: boolean = false;
-    isExecuting: boolean = false;
     isGeneratingMasterModel: boolean = false;
     isVerifying: boolean = false;
 
@@ -60,10 +57,6 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         this._configurationChangedSub.unsubscribe();
     }
 
-    onCoeLaunchClick() {
-        this.sigverCoeService.launchCOE();
-    }
-
     onGenerateMasterModelClick() {
         this.isGeneratingMasterModel = true;
         this.sigverCoeService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(masterModelFile => {
@@ -73,7 +66,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
                 this.sigverConfigurationService.saveConfiguration();
                 this.isMasterModelValid = true;
             });
-            this.writeFileToDir(masterModelFile, this.generationResultsPath);
+            this.writeFileToDir(masterModelFile, this.generationresultspath);
         }, errMsg => {
             console.error(`Error occurred when generating the master model: ${errMsg}`);
         }).finally(() => {
@@ -91,7 +84,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
             }
             const blob = new Blob([res.uppaalModel], { type: 'text/plain' });
             const uppaalFile = new File([blob], "uppaalModel.xml", { type: blob.type });
-            this.writeFileToDir(uppaalFile, this.verificationResultsPath);
+            this.writeFileToDir(uppaalFile, this.verificationresultspath);
         }, errMsg => {
             console.error(`Error occurred when verifying the master model: ${errMsg}`);
         }).finally(() => {
@@ -103,7 +96,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         this.isGeneratingTraces = true;
         this.sigverCoeService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
             this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(window.URL.createObjectURL(videoFile));
-            this.writeFileToDir(videoFile, this.verificationResultsPath);
+            this.writeFileToDir(videoFile, this.verificationresultspath);
         }, errMsg => {
             console.error(`Error occurred when visualizing traces: ${errMsg}`);
         }).finally(() => this.isGeneratingTraces = false).finally(() => {
@@ -111,41 +104,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         });
     }
 
-    onExecuteClick() {
-        // this.isExecuting = true;
-        // this.isExecutionSuccess = false;
-        // this.sigverCoeService.execute(this.sigverConfigurationService.configurationToExecutableMMDTO(!this.isVerified)).then(zipFile => {
-        //     this.isExecutionSuccess = true;
-        //     this.ensureResultPaths();
-        //     this.writeFileToDir(zipFile, this.executionResultsPath);
-        // }, errMsg => {
-        //     this.isExecutionSuccess = false;
-        //     console.error(`Error occurred when executing the master model: ${errMsg}`);
-        // }).finally(() => {
-        //     this.isExecuting = false;
-        // });
-    }
-
-    ensureResultPaths(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (this.rootrResultsPath == "") {
-                this.rootrResultsPath = path.join(this.sigverConfigurationService.configurationPath, "..", "results", path.sep);
-
-                this.verificationResultsPath = path.join(this.rootrResultsPath, "verification");
-                this.executionResultsPath = path.join(this.rootrResultsPath, "execution");
-                this.generationResultsPath = path.join(this.rootrResultsPath, "generation");
-
-                Promise.all([
-                    this.ensureDirectoryExistence(this.verificationResultsPath).catch(err => reject(err)), 
-                    this.ensureDirectoryExistence(this.executionResultsPath).catch(err => reject(err)), 
-                    this.ensureDirectoryExistence(this.generationResultsPath).catch(err => console.log(err))
-                ]).then(() => resolve()).catch(err => reject(err));
-            }
-        });
-    }
-
     handleConfigurationChanges() {
-        this.ensureResultPaths();
         this.isMasterModelValid = this.sigverConfigurationService.configuration.masterModel != "";
         this.isVerified = this.isMasterModelValid && this.isVerified;
         this.isVerificationFailed = this.isVerified ? this.isVerificationFailed : false;
@@ -154,23 +113,10 @@ export class SigverCoeInteractionComponent implements OnDestroy {
         }
     }
 
-    ensureDirectoryExistence(filePath: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (fs.existsSync(filePath)) {
-                resolve();
-            }
-            fs.promises.mkdir(filePath, { recursive: true }).then(() => {
-                resolve();
-            }, err => {
-                reject(err);
-            });
-        });
-    }
-
     writeFileToDir(file: File, dirPath: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             file.arrayBuffer().then(arrBuff => {
-                const writeStream = fs.createWriteStream(path.join(dirPath, file.name));
+                const writeStream = Fs.createWriteStream(Path.join(dirPath, file.name));
                 writeStream.write(Buffer.from(arrBuff));
                 writeStream.close();
                 resolve();
