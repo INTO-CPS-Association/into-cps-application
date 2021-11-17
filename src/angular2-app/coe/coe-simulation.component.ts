@@ -59,6 +59,9 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
   private parsing: boolean = false;
 
   @Input()
+  external_disable_simulation: boolean = false;
+
+  @Input()
   set resultsdir(resultsDir: string) {
     this._resultsDir = resultsDir;
   }
@@ -147,7 +150,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       this.mmWarnings.length === 0 &&
       this.coeWarnings.length === 0 &&
       !this.parsing &&
-      !this.simulating
+      !this.simulating && !this.external_disable_simulation
     );
   }
 

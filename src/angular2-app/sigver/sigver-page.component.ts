@@ -48,6 +48,7 @@ export class SigverPageComponent implements OnDestroy {
     generationResultsPath: string = "";
     verificationResultsPath: string = "";
     executionResultsPath: string = "";
+    disableSimulationBtn: boolean = true;
 
     @Input()
     set path(path: string) {
@@ -65,6 +66,7 @@ export class SigverPageComponent implements OnDestroy {
         this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.cosConfPath = sigverConfigurationService.configuration.coePath;
             this.masterModel = sigverConfigurationService.configuration.masterModel;
+            this.disableSimulationBtn = this.masterModel == "";
         });
     }
 
