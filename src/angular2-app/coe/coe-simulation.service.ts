@@ -31,8 +31,7 @@
 
 import { FileSystemService } from "../shared/file-system.service";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
-import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Serializer } from "../../intocps-configurations/Parser";
+import { HttpClient } from '@angular/common/http';
 import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
 import * as Path from "path";
@@ -48,7 +47,6 @@ import { Graph } from "../shared/graph"
 import { Deferred } from "../../deferred"
 import { CoeProcess } from "../../coe-server-status/CoeProcess"
 import { IntoCpsApp } from "../../IntoCpsApp";
-import { tap } from "rxjs/operators";
 
 
 @Injectable()

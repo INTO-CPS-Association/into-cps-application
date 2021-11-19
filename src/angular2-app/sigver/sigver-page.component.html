@@ -3,4 +3,4 @@
 </panel>
 <sigver-coe-interaction [generationresultspath] = "generationResultsPath" [verificationresultspath] = "verificationResultsPath"></sigver-coe-interaction>
 <h5 *ngIf="!masterModel" class="text-warning">Cannot run simulation without a master model</h5>
-<coe-simulation [path]="cosConfPath" [mastermodel] = "masterModel" [resultsdir] = "executionResultsPath" [external_disable_simulation] = "disableSimulationBtn"></coe-simulation>
+<coe-simulation *ngIf="cosConfPath" [path]="cosConfPath" [mastermodel] = "masterModel" [resultsdir] = "executionResultsPath" [external_disable_simulation] = "disableSimulationBtn"></coe-simulation>
