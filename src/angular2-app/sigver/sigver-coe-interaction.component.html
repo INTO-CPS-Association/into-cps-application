@@ -11,6 +11,7 @@
 
 <form class="form-horizontal">
   <panel [title]="'Generation'">
+    <h5 *ngIf="!isCoeOnline" class="text-warning">Generation requires that the Co-Simulation Engine is running</h5>
     <div>
       <h4 style="margin-bottom: 5px;">Master model</h4>
       <pre *ngIf="isMasterModelValid" style="max-width: fit-content;">{{sigverConfigurationService.configuration.masterModel}}</pre>
@@ -18,7 +19,7 @@
     </div>
 
     <div>
-      <button type="button" class="btn btn-sm btn-default" (click)="onGenerateMasterModelClick()" [disabled] = "!isCoeOnline || !isConfigValid || isGeneratingMasterModel">
+      <button type="button" class="btn btn-sm btn-default" (click)="onGenerateMasterModelClick()" [disabled] = "!isCoeOnline || isGeneratingMasterModel">
         <span>Generate master model</span>
         <span *ngIf="isGeneratingMasterModel">Generating... </span>
         <span *ngIf="isGeneratingMasterModel" class="glyphicon glyphicon-refresh spinning"></span>
@@ -27,7 +28,7 @@
   </panel>
 
   <panel [title]="'Verification'">
-
+    <h5 *ngIf="!isCoeOnline" class="text-warning">Verification requires that the Co-Simulation Engine is running</h5>
     <div>
       <label style="margin-right: 5px;">Successfully verified: </label>
       <span *ngIf="isVerified && !isVerificationFailed" class="glyphicon glyphicon-ok" style="color: green;"></span>
@@ -60,31 +61,6 @@
     </div>
 
   </panel>
-
-  <panel [title]="'Execution'" [open]="!sigverConfigurationService.isDefaultConfiguration">
-    <div>
-      <button type="button" class="btn btn-sm btn-default" (click)="onExecuteClick()" [disabled] = "!isCoeOnline || !isConfigValid || isExecuting || isVerificationFailed">
-        <span *ngIf="!isExecuting">Execute</span>
-        <span *ngIf="isExecuting">Executing... </span>
-        <span *ngIf="isExecuting" class="glyphicon glyphicon-refresh spinning"></span>
-      </button>
-    </div>
-
-    <div>
-      <p *ngIf="isExecutionSuccess" style="color: green; margin-top: 10px;">Successfully executed</p>
-    </div>
-  </panel>
-
-  <div *ngIf="!isCoeOnline" class="alert alert-danger">
-    Co-Simulation Engine offline. No connection at {{ coeUrl }}.
-    <button type="button" class="btn btn-sm btn-default" (click)="onCoeLaunchClick()">
-      <span class="glyphicon glyphicon-link"></span> Launch
-    </button>
-  </div>
-
-  <div *ngIf="isCoeOnline" class="alert alert-success">
-    Co-Simulation Engine, version {{ coeVersion }}, online at {{ coeUrl }}.
-  </div>
 </form>
 
 

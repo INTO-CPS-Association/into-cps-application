@@ -29,29 +29,76 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input } from "@angular/core";
+import { Component, Input, OnDestroy } from "@angular/core";
+import { Subscription } from "rxjs";
 import { SigverConfigurationService } from "./sigver-configuration.service";
+import * as Path from 'path';
+import * as Fs from 'fs';
 
 @Component({
     selector: "sv-page",
     templateUrl: "./angular2-app/sigver/sigver-page.component.html",
     providers: [SigverConfigurationService]
 })
-export class SigverPageComponent {
-
-    @Input()
-    private _path: string;
-    isNewConfiguration: boolean = true;
-
-    constructor(private sigverConfigurationService: SigverConfigurationService) { }
+export class SigverPageComponent implements OnDestroy {
+    private _configurationChangedSub: Subscription;
+    private _path: string = "";
+    masterModel: string = "";
+    cosConfPath: string = "";
+    generationResultsPath: string = "";
+    verificationResultsPath: string = "";
+    executionResultsPath: string = "";
+    disableSimulationBtn: boolean = true;
 
     @Input()
     set path(path: string) {
         this._path = path;
         this.sigverConfigurationService.configurationPath = this._path;
-        this.sigverConfigurationService.setConfigurationFromPath().catch(err => console.error(err));
+        this.sigverConfigurationService.loadConfigurationFromPath().then(
+            () => this.ensureResultPaths(Path.join(this.sigverConfigurationService.configurationPath, "..", "results", Path.sep))
+        ).catch(err => console.error(err));
     }
     get path(): string {
         return this._path;
+    }
+
+    constructor(private sigverConfigurationService: SigverConfigurationService) {
+        this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
+            this.cosConfPath = sigverConfigurationService.configuration.coePath;
+            this.masterModel = sigverConfigurationService.configuration.masterModel;
+            this.disableSimulationBtn = this.masterModel == "";
+        });
+    }
+
+    ngOnDestroy(): void {
+        this._configurationChangedSub.unsubscribe();
+    }
+
+
+    ensureResultPaths(rootResultsPath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.verificationResultsPath = Path.join(rootResultsPath, "verification");
+            this.executionResultsPath = Path.join(rootResultsPath, "execution");
+            this.generationResultsPath = Path.join(rootResultsPath, "generation");
+
+            Promise.all([
+                this.ensureDirectoryExistence(this.verificationResultsPath).catch(err => reject(err)),
+                this.ensureDirectoryExistence(this.executionResultsPath).catch(err => reject(err)),
+                this.ensureDirectoryExistence(this.generationResultsPath).catch(err => console.log(err))
+            ]).then(() => resolve()).catch(err => reject(err));
+        });
+    }
+
+    ensureDirectoryExistence(filePath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (Fs.existsSync(filePath)) {
+                resolve();
+            }
+            Fs.promises.mkdir(filePath, { recursive: true }).then(() => {
+                resolve();
+            }, err => {
+                reject(err);
+            });
+        });
     }
 }

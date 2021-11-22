@@ -1,112 +1,150 @@
-const Application = require('spectron').Application
-const assert = require('assert')
-const expect = require('chai').expect;
-const electronPath = require('electron') // Require Electron from the binaries included in node_modules.
-const path = require('path')
-const fakeMenu = require('spectron-fake-menu')
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const chaiWaitFor = require('chai-wait-for');
+// needed so we can use as promised
+chai.should();
+chai.use(chaiAsPromised);
+chai.use(chaiWaitFor);
 
+const waitFor = chaiWaitFor.bindWaitFor({
+  timeout: 5000,
+  retryInterval: 100
+});
 
-describe.skip('In Tutorial 9', function () {
+const app = require("./TestHelpers").app();
+const path = require("path");
+const testDataZipPath = path.resolve("test/TestData/test9_data.zip");
+const testDataPath = path.resolve("test/TestData/test9_data");
+
+describe('In Tutorial 9', function () {
   this.timeout(120000)
 
+  before(async function () {
+    await app.start();
+    await app.client.waitUntilWindowLoaded();
+    require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
+    await app.electron.remote.app.loadProject(testDataPath + "/project/.project.json");
 
+    return app;
+  });
 
-  beforeEach(async function () {
-
-    this.app = new Application({
-      path: electronPath,
-      env: { RUNNING_IN_SPECTRON: '1' },
-      args: [path.join(__dirname, '..')]
-    })
-
-    fakeMenu.apply(this.app);
-
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
-
-    return this.app;
-
-  })
-
-  afterEach(function () {
-
-    if (this.app && this.app.isRunning()) {
-
-      return this.app.stop()
-        .then(() => {
-          if (this.currentTest.state === 'failed' && this.currentTest.title === 'Should have tutorial 9 loaded')
-            throw Error("Tutorial 9 project is not loaded!")
-        })
-    }
-  })
-
-  //Step 2. To open a project, select File > Open Project
-  it('File->Open Project Menu Click', function () {
-    fakeMenu.clickMenu('File', 'Open Project');
-    return this.app;
-  })
+  after(function () {
+    return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
+  });
 
   // This should be done before as soon as we solve the programmatic project load problem
   it('Should have tutorial 9 loaded', function () {
-    return this.app.client.waitUntilWindowLoaded()
-      .then(function () {
-        return this.electron.remote.app.getActiveProject().then(r => { expect(r).contain('tutorial_9'); })
-
-      })
+    return app.electron.remote.app.getActiveProject()
+        .should
+        .eventually
+        .equal(testDataPath + "/project/.project.json");
   })
 
-  //Step 10
-  it('co-simulate with the lfr-3d multi-model', function () {
-    return this.app.client
-      .waitForVisible('#node_ProjectBrowserItem_44')
-      .waitForVisible('.w2ui-expand')
-      .$('#node_ProjectBrowserItem_44').$('.w2ui-expand').click()
+  it("Should have the correct name", function () {
+    return app.electron.remote.app.getIProject()
+        .then(n => n.name)
+        .should
+        .eventually
+        .equal("")
+  });
 
-      .waitForVisible('#node_ProjectBrowserItem_45')
-      .$('#node_ProjectBrowserItem_45').doubleClick()
+  it("Should be able to start COE from lfr-3d multi-model", function () {
+    return app.client.$("#node_ProjectBrowserItem_11 .w2ui-expand")
+        .then(n => n.click())
+        .then(() => app.client.$("#node_ProjectBrowserItem_12"))
+        .then(n => n.doubleClick())
+        .then(() => app.client.$("#Simulation"))
+        .then(n => n.click())
+        .then(() => app.client.$("coe-simulation .btn.btn-sm.btn-default"))
+        .then(n => n.click())
+        .then(() => app.client.$("coe-simulation"))
+        .then(n => n.$(".alert.alert-success"))
+        .then(async n => {
+          return waitFor(await n.getText())
+              .to
+              .match(/Co-Simulation Engine, .+, online at .+\./);
+        });
+  });
 
-      .waitForVisible('#Simulation')
-      .$('#Simulation').click()
-      .$('coe-simulation').$('.btn.btn-sm.btn-default').click().pause(3000)
-      .$('.alert.alert-success').click().pause(3000)
-      .$('.alert.alert-success').getText()
-      .then(function (text) {
-        expect(text).contain('online')
-      })
-  })
+  it("Should open lfr-non3d", function () {
+    return app.client.$("#node_ProjectBrowserItem_14")
+        .then(n => n.doubleClick())
+        .then(() => app.client.$("#activeTabTitle"))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .equal("lfr-non3d");
+  });
 
+  it("Should open edit mode of the mm", function () {
+    return app.client.$('#Configuration')
+        .then(n => n.click())
+        .then(() => app.client.$('mm-configuration button.btn.btn-default'))
+        .then(n => n.click())
+        .then(() => app.client.$('button.btn.btn-default'))
+        .then(n => n.getText())
+        .should
+        .eventually
+        .contain("Save");
+  });
 
-  //Step 15 and Step 20
-  it('setting the sensor noise value to 4 and ambient light to 25', function () {
-    return this.app.client
-      .waitForVisible('#node_ProjectBrowserItem_47')
-      .$('#node_ProjectBrowserItem_47').doubleClick()
-      .$('mm-page').$('#Configuration').click().pause(3000)
+  it("Should set ambient light for sensor 1", function () {
+    return sleep(100)
+        .then(() => app.client.$("#initialvalsensor1"))
+        .then(n => n.click())
+        .then(() => sleep(100))
+        .then(() => app.client.$("#ambient_light"))
+        .then(n => n.addValue(25))
+        .then(() => app.client.$("#ambient_light"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .contain("25");
+  });
 
-      .waitForVisible('.btn.btn-default')
-      .$('.btn.btn-default').click().pause(3000)
+  it("Should set ambient light for sensor 2", function () {
+    return sleep(100)
+        .then(() => app.client.$("#initialvalsensor2"))
+        .then(n => n.click())
+        .then(() => sleep(100))
+        .then(() => app.client.$("#ambient_light"))
+        .then(n => n.addValue(25))
+        .then(() => app.client.$("#ambient_light"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .contain("25");
+  });
 
-      .waitForVisible('#initialvalsensor1')
-      .$('#initialvalsensor1').click().pause(2000)
-      .$('#ambient_light').addValue(25)
+  it("Should set noise for sensor 1", function () {
+    return sleep(100)
+        .then(() => app.client.$("#initialvalsensor1"))
+        .then(n => n.click())
+        .then(() => sleep(100))
+        .then(() => app.client.$("#noise_level"))
+        .then(n => n.addValue(4))
+        .then(() => app.client.$("#noise_level"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .contain("4");
+  });
 
-      .waitForVisible('#initialvalsensor2')
-      .$('#initialvalsensor2').click().pause(2000)
-      .$('#ambient_light').addValue(25)
+  it("Should set noise for sensor 2", function () {
+    return sleep(100)
+        .then(() => app.client.$("#initialvalsensor2"))
+        .then(n => n.click())
+        .then(() => sleep(100))
+        .then(() => app.client.$("#noise_level"))
+        .then(n => n.addValue(4))
+        .then(() => app.client.$("#noise_level"))
+        .then(n => n.getValue())
+        .should
+        .eventually
+        .contain("4");
+  });
+});
 
-      .waitForVisible('#initialvalsensor1')
-      .$('#initialvalsensor1').click().pause(2000)
-      .$('#noise_level').addValue(4)
-
-      .waitForVisible('#initialvalsensor2')
-      .$('#initialvalsensor2').click().pause(2000)
-      .$('#noise_level').addValue(4)
-
-
-      .$('.btn.btn-default').click()
-      .$('.btn.btn-default').getText()
-      .then(function (ButtonText) {
-        assert.equal(ButtonText, "Edit")
-      })
-  })
-})
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { OnInit, Component, ViewChild, ElementRef, Input } from "@angular/core";
+import { OnInit, Component, ElementRef, Input, OnDestroy } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 var Plotly = require('plotly.js-dist')
 
@@ -37,9 +37,10 @@ var Plotly = require('plotly.js-dist')
     selector: 'line-chart',
     template: ''
 })
-export class LineChartComponent implements OnInit {
+export class LineChartComponent implements OnInit, OnDestroy {
     private loading: boolean = true;
     private redrawCooldown: boolean = false;
+    private _resizeNode: any;
 
     private lastUpdateTime: number = 0;
     private lastDatasets: Array<any>;
@@ -72,6 +73,10 @@ export class LineChartComponent implements OnInit {
 
     constructor(private element: ElementRef) {
 
+    }
+
+    ngOnDestroy(): void {
+        window.removeEventListener('resize', this.resizeEventListener);
     }
 
     @Input()
@@ -117,20 +122,20 @@ export class LineChartComponent implements OnInit {
         if (rows < 1)
             rows = 1;
         this.visibleRows = rows;
-        let node = Plotly.d3
-            .select(this.element.nativeElement)
-            .style({
-                width: '100%',
-                height: this.visibleRows + 'vh',
-                display: 'block',
+        // let node = Plotly.d3
+        //     .select(this.element.nativeElement)
+        //     .style({
+        //         width: '100%',
+        //         height: this.visibleRows + 'vh',
+        //         display: 'block',
 
-            })
-            .node();
+        //     })
+        //     .node();
         this.redrawLayoutChange();
     }
 
     ngOnInit() {
-        let node = Plotly.d3
+        this._resizeNode = Plotly.d3
             .select(this.element.nativeElement)
             .style({
                 width: '100%',
@@ -141,11 +146,15 @@ export class LineChartComponent implements OnInit {
             .node();
 
         Plotly
-            .newPlot(node, [], this.layout, this.options)
+            .newPlot(this._resizeNode, [], this.layout, this.options)
             .then(() => this.loading = false);
 
-        window.addEventListener('resize', e => Plotly.Plots.resize(node));
+        window.addEventListener('resize',  this.resizeEventListener);
     }
+
+    private resizeEventListener = () => {
+        Plotly.Plots.resize(this._resizeNode)
+    };
 
     private draw(datasets: Array<any>)
     {

@@ -1,7 +1,7 @@
 {
   "name": "into-cps-app",
   "productName": "INTO-CPS APP",
-  "version": "4.0.4-dev",
+  "version": "4.0.4-rc",
   "description": "User interface for the INTO-CPS Toolchain",
   "license": "MIT",
   "repository": {
@@ -38,7 +38,11 @@
       "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
     },
     "win": {
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico"
+      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -106,7 +110,10 @@
     "@types/bunyan": "0.0.35",
     "@types/node": "^12.12.29",
     "@types/xml2js": "0.0.32",
+    "adm-zip": "^0.5.4",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-wait-for": "^1.0.4",
     "del": "~2.2.0",
     "electron": "^10.2.0",
     "electron-builder": "^22.9.1",
@@ -133,10 +140,7 @@
     "readable-stream": "^3.6.0",
     "run-sequence": "~1.2.2",
     "semver": "~5.3.0",
-    "spectron": "^6.0.0",
-    "spectron-fake-dialog": "0.0.1",
-    "spectron-fake-menu": "0.0.1",
-    "spectron-menu-addon": "^0.4.1",
+    "spectron": "^12.0.0",
     "terser-webpack-plugin": "^2.3.5",
     "ts-loader": "^8.0.2",
     "typescript": "^3.9.7",

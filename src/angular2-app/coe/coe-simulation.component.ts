@@ -37,12 +37,13 @@ import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationCon
 import { CoeSimulationService } from "./coe-simulation.service";
 import { HttpClient } from '@angular/common/http';
 /* import { Http } from "@angular/http"; */
-import { SettingsService, SettingKeys } from "../shared/settings.service";
+
 import IntoCpsApp from "../../IntoCpsApp";
 import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 // needs an alternativ!!
 /* import { openCOEServerStatusWindow } from "../../menus"; */
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
+import { shell } from "electron";
 
 @Component({
   selector: "coe-simulation",
@@ -52,6 +53,31 @@ import { CoeProcess } from "../../coe-server-status/CoeProcess";
 })
 export class CoeSimulationComponent implements OnInit, OnDestroy {
   private _path: string;
+  private _masterModel: string = "";
+  private _resultsDir: string = "";
+  private onlineInterval: number;
+  private parsing: boolean = false;
+
+  @Input()
+  external_disable_simulation: boolean = false;
+
+  @Input()
+  set resultsdir(resultsDir: string) {
+    this._resultsDir = resultsDir;
+  }
+
+  get resultsdir(): string {
+    return this._resultsDir;
+  }
+
+  @Input()
+  set mastermodel(masterModel: string) {
+    this._masterModel = masterModel;
+  }
+
+  get mastermodel(): string {
+    return this._masterModel;
+  }
 
   @Input()
   set path(path: string) {
@@ -80,15 +106,12 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
   hasPostScriptOutputError = false;
   postScriptOutput = "";
   simulating: boolean = false;
-
-  private onlineInterval: number;
-  private parsing: boolean = false;
+  hasRunSimulation: boolean = false;
 
   constructor(
     private coeSimulation: CoeSimulationService,
     private http: HttpClient,
-    private zone: NgZone,
-    private settings: SettingsService
+    private zone: NgZone
   ) {}
 
   ngOnInit() {
@@ -127,7 +150,7 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       this.mmWarnings.length === 0 &&
       this.coeWarnings.length === 0 &&
       !this.parsing &&
-      !this.simulating
+      !this.simulating && !this.external_disable_simulation
     );
   }
 
@@ -140,24 +163,27 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       this.simulating = true;
     });
 
-    this.coeSimulation.run(
-      this.config,
-      (e, m, w, s) => {
-        this.zone.run(() => {
-          this.errorHandler(e, m, w, s);
-        });
-      },
-      () => {
-        this.zone.run(() => {
-          this.simulating = false;
-        });
-      },
-      (e, m) => {
-        this.zone.run(() => {
-          this.postScriptOutputHandler(e, m);
-        });
-      }
-    );
+    if(this._masterModel){
+      this.coeSimulation.runSigverSimulation(
+        this.config,
+        this.mastermodel,
+        this._resultsDir,
+        this.errorReportCB,
+        this.simCompletedCB,
+        this.postScriptOutputReportCB
+      );
+    } else {
+      this.coeSimulation.runSimulation(
+        this.config,
+        this.errorReportCB,
+        this.simCompletedCB,
+        this.postScriptOutputReportCB
+      );
+    }
+  }
+
+  onOpenResultsFolder() {
+    shell.openPath(this.coeSimulation.getResultsDir());
   }
 
   stopSimulation() {
@@ -212,5 +238,22 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
   onCoeLaunchClick() {
    this.coeSimulation.
     openCOEServerStatusWindow("autolaunch", false);
+  }
+
+  private errorReportCB = (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => {
+    this.zone.run(() => {
+      this.errorHandler(hasError, message, hasWarning, stopped);
+    });
+  }
+  private simCompletedCB = () => {
+    this.zone.run(() => {
+      this.hasRunSimulation = true;
+      this.simulating = false;
+    });
+  }
+  private postScriptOutputReportCB = (hasError: boolean, message: string) => {
+    this.zone.run(() => {
+      this.postScriptOutputHandler(hasError, message);
+    });
   }
 }

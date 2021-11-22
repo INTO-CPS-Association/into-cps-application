@@ -47,11 +47,9 @@ app.allowRendererProcessReuse = false;
 let intoCpsApp = new IntoCpsApp(app, process.platform);
 
 global.intoCpsApp = intoCpsApp;
+global.test = 1;
 let devMode = intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.DEVELOPMENT_MODE);
 console.info("Running in development mode: " + devMode);
-
-
-
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -148,7 +146,26 @@ app.on('activate', function () {
 
 if(process.env.RUNNING_IN_SPECTRON) {
   app.getActiveProject = () => { 
-    return intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.ACTIVE_PROJECT)};
+    return intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.ACTIVE_PROJECT)
+  };
+  app.getIProject = () => {
+    return intoCpsApp.getActiveProject();
+  };
+  app.loadProject = (path) => { 
+      let project = intoCpsApp.loadProject(path);
+      return IntoCpsApp.getInstance().setActiveProject(project);
+  };
+  app.stopCoe = () =>
+  {
+    const coe = IntoCpsApp.getInstance().getCoeProcess();
+    if (coe.isRunning()) {
+      coe.stop();
+    }
+  };
+  app.getCOEDownloadPath = () =>
+  {
+    return intoCpsApp.getSettings().getSetting(SettingKeys.SettingKeys.INSTALL_TMP_DIR);
+  };
 }
 
 
