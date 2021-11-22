@@ -43,6 +43,7 @@ import {
 import * as Path from 'path';
 
 import { checksum } from "../proj/Project";
+import IntoCpsApp from "../IntoCpsApp";
 
 export class CoSimulationConfig implements ISerializable {
     //project root required to resolve multimodel path
@@ -71,6 +72,7 @@ export class CoSimulationConfig implements ISerializable {
     stabalization: boolean = false;
     global_absolute_tolerance: number = 0.0;
     global_relative_tolerance: number = 0.0;
+    convergenceAttempts: number = 5;
     simulationProgramDelay: boolean = false;
 
     public getProjectRelativePath(path: string): string {
@@ -106,7 +108,8 @@ export class CoSimulationConfig implements ISerializable {
             stabalizationEnabled: this.stabalization,
             global_absolute_tolerance: Number(this.global_absolute_tolerance),
             global_relative_tolerance: Number(this.global_relative_tolerance),
-            simulationProgramDelay: this.simulationProgramDelay
+            simulationProgramDelay: this.simulationProgramDelay,
+            convergenceAttempts: this.convergenceAttempts
         };
     }
 
@@ -168,21 +171,34 @@ export class CoSimulationConfig implements ISerializable {
     */
     static create(path: string, projectRoot: string, fmuRootPath: string, data: any): Promise<CoSimulationConfig> {
         return new Promise<CoSimulationConfig>((resolve, reject) => {
-            let parser: Parser = new Parser();
-            var mmPath: string = Path.join(path, "..", "..", "mm.json");
+            const parser: Parser = new Parser();
+            let mmPath: string = Path.join(path, "..", "..", "mm.json");
+            let locatedMM: boolean = true;
             if (!fs.existsSync(mmPath)) {
                 console.warn("Could not find mm.json at: " + mmPath + " Searching for old style...")
+                locatedMM = false;
                 //no we have the old style
                 fs.readdirSync(Path.join(path, "..", "..")).forEach(file => {
                     if (file.endsWith("mm.json")) {
+                        locatedMM = true;
                         mmPath = Path.join(path, "..", "..", file);
                         console.warn("Found deprecated style mm at: " + mmPath);
                         console.warn("Consider renaming:" + file + " to: mm.json");
                         return;
                     }
                 });
-
             }
+            // Could not locate mm from path so try the relative saved mm path.
+            if(!locatedMM){
+                console.warn("Unable to locate the multi-model configuration two levels above the co-simulation configuration path. Trying the saved relative multi-model path..");
+                const savedPath = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), parser.parseSimpleTagDefault(data, "multimodel_path", ""));
+                if(!savedPath || !fs.existsSync(savedPath)){
+                    console.warn("Unable to load multi model for co-simulation configuration!");
+                } else {
+                    mmPath = savedPath;
+                }
+            }
+        
 
             MultiModelConfig
                 .parse(mmPath, fmuRootPath)
@@ -211,6 +227,7 @@ export class CoSimulationConfig implements ISerializable {
                     config.stabalization = parser.parseSimpleTagDefault(data, "stabalizationEnabled", false);
                     config.global_absolute_tolerance = parseFloat(parser.parseSimpleTagDefault(data, "global_absolute_tolerance", 0.0));
                     config.global_relative_tolerance = parseFloat(parser.parseSimpleTagDefault(data, "global_relative_tolerance", 0.01));
+                    config.convergenceAttempts = parseInt(parser.parseSimpleTagDefault(data, "convergenceAttempts", 5));
 
 
                     resolve(config);
@@ -239,8 +256,10 @@ export class CoSimulationConfig implements ISerializable {
 export interface ICoSimAlgorithm {
     toFormGroup(): FormGroup;
     toObject(): { [key: string]: any };
+    getStepSize(): number;
     type: string;
     name: string;
+
 }
 
 export class LiveGraph {
@@ -306,6 +325,9 @@ export class FixedStepAlgorithm implements ICoSimAlgorithm {
     constructor(public size: number = 0.1) {
 
     }
+    getStepSize(): number {
+        return this.size;
+    }
 
     toFormGroup() {
         return new FormGroup({
@@ -332,6 +354,9 @@ export class VariableStepAlgorithm implements ICoSimAlgorithm {
         public constraints: Array<VariableStepConstraint> = []
     ) {
 
+    }
+    getStepSize(): number {
+        return this.initSize;
     }
 
     toFormGroup() {
