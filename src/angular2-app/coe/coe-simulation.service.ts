@@ -262,36 +262,37 @@ export class CoeSimulationService {
             // Do not start the simulation before the websocket is open.
             this.graph.webSocketOnOpenCallback = () => this.fileSystem.writeFile(Path.join(this.resultDir, "config-simulation.json"), JSON.stringify(simulationData))
             .then(() => {
-                this.http.post(`http://${this.url}/${simulationEndpoint}/${this.sessionId}`, simulationData)
-                    .subscribe(() => {this.downloadResults(); this.graph.setFinished()}, (err: Response) => this.errorHandler(err));
+                this.http.post(`http://${this.url}/${simulationEndpoint}/${this.sessionId}`, simulationData).toPromise().then(async () => {
+                    this.graph.closeSocket();
+                    let markedForDeletionExternalGraphs : DialogHandler[]= [];
+                    this.externalGraphs.forEach((eg) => {
+                        if (!eg.win.isDestroyed()){
+                            eg.win.webContents.send("close");
+                        } else{
+                            // The window have been destroyed, remove it from external graphs
+                            markedForDeletionExternalGraphs.push(eg);
+                        }
+                    });
+                    markedForDeletionExternalGraphs.forEach((eg) => {
+                        this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0),1);
+                    });
+                    this.graph.setFinished();
+                    this.simulationCompletedHandler();
+                    await this.retrievePlainResults(this.resultDir).catch(err => console.error("Error when retrieving plain results: " + err));
+                }).catch((err: Response) => this.errorHandler(err)).finally(() => this.retrieveZipResults(this.resultDir).then(() => this.endSession()).catch(err => console.log("Unable to retrieve simulation results: " + err)));
             });
 
             this.graph.launchWebSocket(`ws://${this.url}/attachSession/${this.sessionId}`);
         });
     }
 
-    private downloadResults() {
-        this.graph.closeSocket();
-        let markedForDeletionExternalGraphs : DialogHandler[]= [];
-        this.externalGraphs.forEach((eg) => {
-            if (!eg.win.isDestroyed()){
-                eg.win.webContents.send("close");
-            } else{
-                // The window have been destroyed, remove it from external graphs
-                markedForDeletionExternalGraphs.push(eg);
-            }
-        });
-        markedForDeletionExternalGraphs.forEach((eg) => {
-            this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0),1);
-        });
-        this.simulationCompletedHandler();
+    private retrievePlainResults(resultDir: string,): Promise<void> {
+        let resultPath = Path.normalize(`${resultDir}/outputs.csv`);
+        let coeConfigPath = Path.normalize(`${resultDir}/coe.json`);
+        let mmConfigPath = Path.normalize(`${resultDir}/mm.json`);
 
-        let resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
-        let coeConfigPath = Path.normalize(`${this.resultDir}/coe.json`);
-        let mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
-        let logPath = Path.normalize(`${this.resultDir}/log.zip`);
-
-        this.http.get(`http://${this.url}/result/${this.sessionId}/plain`, {responseType: 'text'})
+        return new Promise<void> ((resolve, reject) => {
+            this.http.get(`http://${this.url}/result/${this.sessionId}/plain`, {responseType: 'text'})
             .subscribe(response => {
                 // Write results to disk and save a copy of the multi model and coe configs
                 Promise.all([
@@ -301,45 +302,33 @@ export class CoeSimulationService {
                 ]).then(() => {
                     this.coe.simulationFinished();
                     this.progress = 100;
-                    storeResultCrc(resultPath, this.config);
+                    storeResultCrc(resultPath, this.config).then(() => resolve());
                     this.executePostProcessingScript(resultPath);
-                }).catch(error => console.error("Error when writing results: " + error));
-            });
-
-
-        var logStream = fs.createWriteStream(logPath);
-        let url = `http://${this.url}/result/${this.sessionId}/zip`;
-        var request = http.get(url, (response: http.IncomingMessage) => {
-            response.pipe(logStream);
-            response.on('end', () => {
-
-                // simulation completed + result
-                let destroySessionUrl = `http://${this.url}/destroy/${this.sessionId}`;
-                http.get(destroySessionUrl, (response: any) => {
-                    let statusCode = response.statusCode;
-                    if (statusCode != 200)
-                        console.error("Destroy session returned statuscode: " + statusCode)
-                });
+                }).catch(error => reject(error));
             });
         });
     }
 
-    private createPanel(title: string, content: HTMLElement): HTMLElement {
-        var divPanel = document.createElement("div");
-        divPanel.className = "panel panel-default";
+    private endSession() {
+        http.get(`http://${this.url}/destroy/${this.sessionId}`, (response: any) => {
+            let statusCode = response.statusCode;
+            if (statusCode != 200)
+                console.error("Destroy session returned statuscode: " + statusCode)
+        });
+    }
 
-        var divTitle = document.createElement("div");
-        divTitle.className = "panel-heading";
-        divTitle.innerText = title;
-
-        var divBody = document.createElement("div");
-        divBody.className = "panel-body";
-        divBody.appendChild(content);
-
-        divPanel.appendChild(divTitle);
-        divPanel.appendChild(divBody);
-
-        return divPanel;
+    private retrieveZipResults(resultsPath: string): Promise<void> {
+        return new Promise<void> ((resolve, reject) => {
+            http.get(`http://${this.url}/result/${this.sessionId}/zip`, (response: http.IncomingMessage) => {
+                if (response.statusCode != 200){
+                    reject(response.statusMessage);
+                } else {
+                    response.pipe(fs.createWriteStream(Path.normalize(`${resultsPath}/simulation_results.zip`)));
+                    response.on('end', () => resolve());
+                }
+            });
+        });
+       
     }
 
     private executePostProcessingScript(outputFile: string) {
