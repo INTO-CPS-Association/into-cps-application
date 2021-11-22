@@ -57,6 +57,13 @@ jobs:
           name: INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
         if: startsWith(matrix.os, 'windows')
 
+      - name: Upload Portable Windows Version
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application ${{ steps.get_version.outputs.VERSION }}.exe
+          name: INTO-CPS-Application ${{ steps.get_version.outputs.VERSION }}.exe
+        if: startsWith(matrix.os, 'windows')
+        
       - name: Upload Dmg
         uses: actions/upload-artifact@v2
         with:

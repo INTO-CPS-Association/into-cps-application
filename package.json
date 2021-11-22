@@ -38,7 +38,11 @@
       "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
     },
     "win": {
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico"
+      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "nsis": {
       "oneClick": false,
