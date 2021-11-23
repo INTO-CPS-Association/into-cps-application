@@ -107,26 +107,18 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     }
 
     createFMU() {
-        // let dataRepeaterIndex: number;
-        // const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => {
-        //     const index = configuration.tasks.findIndex((task: IDtpItem) => task.name == this.datarepeater.name);
-        //     if(index > -1){
-        //         dataRepeaterIndex = index;
-        //         return true;
-        //     }
-        //     return false;
-        // }) as TaskConfigurationDtpItem;
+        const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => configuration.tasks.findIndex((task: IDtpItem) => task.id == this.datarepeater.id) > -1) as TaskConfigurationDtpItem;
 
-        // parentConfiguration.toYaml().then(yamlObj => {
-        //     const confObjArr: any[] = [];
-        //     confObjArr.push(yamlObj);
-        //     const parentConfigurationIndex = this.config.configurations.indexOf(parentConfiguration);
-        //     this.dtpToolingService.addConfigurationToProject(confObjArr, this.config.projectName).then(() => {
-        //         this.dtpToolingService.createFmuFromDataRepeater(parentConfigurationIndex.toString(), dataRepeaterIndex.toString(), this.config.projectName).then(relativeFmuPath => {
-        //             this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath);
-        //         }, err => console.log(err));
-        //     });
-        // });
+        parentConfiguration.toYamlObject().then(async yamlObj => {
+            if(!parentConfiguration.id){
+                await this.dtpToolingService.addConfigurationToProject(yamlObj, this.config.projectName).then((configurationYamlObj: any) => parentConfiguration.id = configurationYamlObj['id']);
+            } else {
+                await this.dtpToolingService.updateConfigurationInProject(parentConfiguration.id, yamlObj, this.config.projectName);
+            }
+            this.dtpToolingService.createFmuFromDataRepeater(parentConfiguration.id, this.datarepeater.name, this.config.projectName).then(relativeFmuPath => {
+                this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath);
+            }, err => console.log(err));
+        });
     }
 
     addNewSignal() {

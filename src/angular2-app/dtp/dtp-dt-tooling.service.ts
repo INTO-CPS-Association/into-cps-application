@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Subject } from "rxjs";
-import { exec, spawn } from 'child_process';
+import { exec, spawn } from "child_process";
 
 export interface IDataRepeaterResponse {
     file: string;
@@ -20,7 +20,7 @@ export class DtpDtToolingService implements OnDestroy {
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.isServerOnline(), 2000);
-        this.url = "http://127.0.0.1:5000"; //  "http://localhost"
+        this.url = "http://127.0.0.1:5000"; //"http://localhost"
     }
 
     ngOnDestroy() {
@@ -30,9 +30,9 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     public async startServer(projectDir: string) {
-        if (this.serverIsOnline) {
-            return;
-        }
+        // if (this.serverIsOnline) {
+        //     return;
+        // }
 
         // this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${projectDir}`]);
         // console.log("DT tooling webserver PID: " + this.serverProcess.pid);

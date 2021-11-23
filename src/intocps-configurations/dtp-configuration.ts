@@ -47,7 +47,7 @@ export class DTPConfig {
         const mappings =  JSON.parse(fs.readFileSync(mappingsFilePath, {encoding:'utf8', flag:'r'}));
 
         const configurations = DTPConfig.configurationsIndex in yamlConfig ? yamlConfig[DTPConfig.configurationsIndex].map((configuration: any) => {
-            return TaskConfigurationDtpItem.parse(configuration, mappings[DTPConfig.mmMappingsIndex], mappings[DTPConfig.datarepeaterMappingsIndex]);
+            return TaskConfigurationDtpItem.parse(configuration, mappings[DTPConfig.mmMappingsIndex] ?? {}, mappings[DTPConfig.datarepeaterMappingsIndex] ?? {});
         }): [];
        
         return new DTPConfig(configurations, tools, servers, projectName, projectPath, mappingsFilePath);

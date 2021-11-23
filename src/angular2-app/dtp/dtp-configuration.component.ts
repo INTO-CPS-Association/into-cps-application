@@ -29,9 +29,9 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input, NgZone } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpType, IDtpItem, DtpTypes, ToolDtpItem, TaskConfigurationDtpItem, ToolTypes } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpType, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolTypes } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";

@@ -49,7 +49,7 @@ export class DtpPageComponent {
         this._path = path;
         
         if (path) {
-            //this.dtpToolingService.startServer(Path.dirname(this._path));
+            this.dtpToolingService.startServer(Path.dirname(this._path));
             const projectPath = Path.dirname(path);
             this.parseConfig(Path.basename(projectPath), projectPath);
         }
