@@ -30,19 +30,16 @@
  *
  * See the CONTRIBUTORS file for author and contributor information.
  */
-import {map, timeout} from 'rxjs/operators';
-import { Component, Input, NgZone, OnInit, OnDestroy } from "@angular/core";
+import { Component, Input, NgZone, OnDestroy } from "@angular/core";
 import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationConfig";
 /* import { LineChartComponent } from "../shared/line-chart.component"; */
 import { CoeSimulationService } from "./coe-simulation.service";
-import { HttpClient } from '@angular/common/http';
 /* import { Http } from "@angular/http"; */
 
 import IntoCpsApp from "../../IntoCpsApp";
 import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 // needs an alternativ!!
 /* import { openCOEServerStatusWindow } from "../../menus"; */
-import { CoeProcess } from "../../coe-server-status/CoeProcess";
 import { shell } from "electron";
 import { Subscription } from 'rxjs';
 
@@ -184,9 +181,9 @@ export class CoeSimulationComponent implements OnDestroy {
     this.coeSimulation.setSimulationCallBacks(errorReportCB, simCompletedCB, postScriptOutputReportCB);
 
     if(this._masterModel){
-      this.coeSimulation.runSigverSimulation(this.config, this.mastermodel, this._resultsDir);
+      this.coeSimulation.startSigverSimulation(this.config, this.mastermodel, this._resultsDir);
     } else {
-      this.coeSimulation.runSimulation(this.config);
+      this.coeSimulation.startSimulation(this.config);
     }
   }
 
