@@ -44,6 +44,7 @@ import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 /* import { openCOEServerStatusWindow } from "../../menus"; */
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
 import { shell } from "electron";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: "coe-simulation",
@@ -51,15 +52,18 @@ import { shell } from "electron";
   directives: [LineChartComponent], */
   templateUrl: "./angular2-app/coe/coe-simulation.component.html"
 })
-export class CoeSimulationComponent implements OnInit, OnDestroy {
+export class CoeSimulationComponent implements OnDestroy {
   private _path: string;
   private _masterModel: string = "";
   private _resultsDir: string = "";
-  private onlineInterval: number;
   private parsing: boolean = false;
+  private _coeIsOnlineSub: Subscription;
 
   @Input()
   external_disable_simulation: boolean = false;
+
+  @Input()
+  required_coe_version: number = undefined;
 
   @Input()
   set resultsdir(resultsDir: string) {
@@ -110,18 +114,13 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
 
   constructor(
     private coeSimulation: CoeSimulationService,
-    private http: HttpClient,
     private zone: NgZone
-  ) {}
-
-  ngOnInit() {
-    this.url = CoeProcess.getCoeVersionUrl();
-    this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
-    this.isCoeOnline();
+  ) {
+    this._coeIsOnlineSub = coeSimulation.coeIsOnlineObservable.subscribe(isOnline => this.online = isOnline);
   }
 
   ngOnDestroy() {
-    clearInterval(this.onlineInterval);
+    this._coeIsOnlineSub.unsubscribe();
   }
 
   parseConfig() {
@@ -150,7 +149,9 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       this.mmWarnings.length === 0 &&
       this.coeWarnings.length === 0 &&
       !this.parsing &&
-      !this.simulating && !this.external_disable_simulation
+      !this.simulating && 
+      !this.external_disable_simulation &&
+      (this.required_coe_version == undefined ? true : this.required_coe_version == this.coeSimulation.getCoeVersion())
     );
   }
 
@@ -163,22 +164,29 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
       this.simulating = true;
     });
 
+    const errorReportCB = (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => {
+      this.zone.run(() => {
+        this.errorHandler(hasError, message, hasWarning, stopped);
+      });
+    }
+    const simCompletedCB = () => {
+      this.zone.run(() => {
+        this.hasRunSimulation = true;
+        this.simulating = false;
+      });
+    }
+    const postScriptOutputReportCB = (hasError: boolean, message: string) => {
+      this.zone.run(() => {
+        this.postScriptOutputHandler(hasError, message);
+      });
+    }
+
+    this.coeSimulation.setSimulationCallBacks(errorReportCB, simCompletedCB, postScriptOutputReportCB);
+
     if(this._masterModel){
-      this.coeSimulation.runSigverSimulation(
-        this.config,
-        this.mastermodel,
-        this._resultsDir,
-        this.errorReportCB,
-        this.simCompletedCB,
-        this.postScriptOutputReportCB
-      );
+      this.coeSimulation.runSigverSimulation(this.config, this.mastermodel, this._resultsDir);
     } else {
-      this.coeSimulation.runSimulation(
-        this.config,
-        this.errorReportCB,
-        this.simCompletedCB,
-        this.postScriptOutputReportCB
-      );
+      this.coeSimulation.runSimulation(this.config);
     }
   }
 
@@ -221,39 +229,8 @@ export class CoeSimulationComponent implements OnInit, OnDestroy {
     this.postScriptOutput = message;
   }
 
-  isCoeOnline() {
-    this.http
-      .get(this.url).pipe(
-      timeout(2000),
-      map(response => response),)
-      .subscribe(
-        (data: any) => {
-          this.online = true;
-          this.version = data.version;
-        },
-        () => (this.online = false)
-      );
-  }
-
   onCoeLaunchClick() {
    this.coeSimulation.
     openCOEServerStatusWindow("autolaunch", false);
-  }
-
-  private errorReportCB = (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => {
-    this.zone.run(() => {
-      this.errorHandler(hasError, message, hasWarning, stopped);
-    });
-  }
-  private simCompletedCB = () => {
-    this.zone.run(() => {
-      this.hasRunSimulation = true;
-      this.simulating = false;
-    });
-  }
-  private postScriptOutputReportCB = (hasError: boolean, message: string) => {
-    this.zone.run(() => {
-      this.postScriptOutputHandler(hasError, message);
-    });
   }
 }

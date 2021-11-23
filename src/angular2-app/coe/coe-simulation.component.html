@@ -1,5 +1,5 @@
 <div *ngIf="!online" class="alert alert-danger">
-  Co-Simulation Engine offline. No connection at {{ url }}.
+  Co-Simulation Engine offline. No connection at {{ coeSimulation.coeUrl }}.
   <button
     type="button"
     class="btn btn-sm btn-default"
@@ -9,7 +9,7 @@
   </button>
 </div>
 <div *ngIf="online" class="alert alert-success">
-  Co-Simulation Engine, version {{ version }}, online at {{ url }}.
+  Co-Simulation Engine, version {{ coeSimulation.coeVersionNumber }}, online at {{ coeSimulation.coeUrl }}.
 </div>
 
 <div *ngIf="mmWarnings.length > 0">
