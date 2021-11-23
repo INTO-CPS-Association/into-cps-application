@@ -45,6 +45,7 @@ import DialogHandler from "../../DialogHandler"
 import { Graph } from "../shared/graph"
 import { Deferred } from "../../deferred"
 import { CoeApiService, simulationEndpoints } from "../shared/coe-api.service";
+import { reject, resolve } from "bluebird";
 
 
 @Injectable()
@@ -92,12 +93,12 @@ export class CoeSimulationService extends CoeApiService {
 
     stop(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.stopSimulation().then(() => resolve()).catch((res:Response) => reject(res.statusText));
+            this.stopSimulation().then(() => resolve()).catch((res: Response) => reject(res.statusText));
         });
 
     }
 
-    runSigverSimulation(config: CoSimulationConfig, masterModel: string, resultsDir: string) {
+    startSigverSimulation(config: CoSimulationConfig, masterModel: string, resultsDir: string) {
         this.config = config;
         this.masterModel = masterModel;
         this.resultDir = Path.normalize(`${resultsDir}/R_${this.getDateString()}`);
@@ -110,11 +111,12 @@ export class CoeSimulationService extends CoeApiService {
                 masterModel: this.masterModel
             };
 
-            this.prepareAndRunSimulation(simulationEndpoints.simulate, simulationData);
+            this.getSimulationResults(this.runSimulation(simulationEndpoints.simulate, simulationData)).finally(
+                () => this.destroySession().catch((err: Response) => console.error("Could not destroy session: " + err.statusText)));
         }).catch(err => this.errorHandler(err));
     }
 
-    runSimulation(config: CoSimulationConfig) {
+    startSimulation(config: CoSimulationConfig) {
         this.config = config;
         const currentDir = Path.dirname(this.config.sourcePath);
         this.resultDir = Path.normalize(`${currentDir}/R_${this.getDateString()}`);
@@ -138,16 +140,17 @@ export class CoeSimulationService extends CoeApiService {
             });
             Object.assign(simulationData, { logLevels: logCategories });
 
-            this.prepareAndRunSimulation(simulationEndpoints.simulate, simulationData);
+            this.getSimulationResults(this.runSimulation(simulationEndpoints.simulate, simulationData)).finally(
+                () => this.destroySession().catch((err: Response) => console.error("Could not destroy session: " + err.statusText)));
         }).catch(err => this.errorHandler(err));
     }
 
     errorHandler(err: Response, stopped?: boolean) {
         console.warn(err);
-        if(stopped) {
+        if (stopped) {
             this.progress = 0;
             this.errorReport(false, "Error: " + err.statusText, true, true)
-        } else if(!stopped && err.status == 200) {
+        } else if (!stopped && err.status == 200) {
             this.progress = 0;
             this.errorReport(false, "Error: " + err.statusText, true)
         } else {
@@ -162,6 +165,31 @@ export class CoeSimulationService extends CoeApiService {
         this.postProcessingOutputReport = postScriptOutputReport;
     }
 
+    private getSimulationResults(simulationPromise: Promise<void>): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            simulationPromise.then(() => {
+                let resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
+                let coeConfigPath = Path.normalize(`${this.resultDir}/coe.json`);
+                let mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
+
+                this.getPlainResult().then((resultsString: string) => {
+                    Promise.all([
+                        this.fileSystem.writeFile(resultPath, resultsString),
+                        this.fileSystem.copyFile(this.config.sourcePath, coeConfigPath),
+                        this.fileSystem.copyFile(this.config.multiModel.sourcePath, mmConfigPath)
+                    ]).then(() => {
+                        storeResultCrc(resultPath, this.config);
+                    }).catch(err => console.log("Unable to write plain results to file: " + err));
+                }).catch((err: Response) => this.errorHandler(err));
+            }).finally(() => this.getResults(Path.normalize(`${this.resultDir}/simulation_results.zip`)).then(() => resolve())
+                .catch((err: Response) => {
+                    console.error("Could retrieve results: " + err.statusText);
+                    reject();
+                })
+            );
+        });
+    }
+
     private getDateString(): string {
         const now = new Date();
         const nowAsUTC = new Date(Date.UTC(now.getFullYear(),
@@ -173,10 +201,10 @@ export class CoeSimulationService extends CoeApiService {
             now.getMilliseconds())
         );
         return nowAsUTC.toISOString().replace(/-/gi, "_")
-        .replace(/T/gi, "-")
-        .replace(/Z/gi, "")
-        .replace(/:/gi, "_")
-        .replace(/\./gi, "_");
+            .replace(/T/gi, "-")
+            .replace(/Z/gi, "")
+            .replace(/:/gi, "_")
+            .replace(/\./gi, "_");
     }
 
     private async initialize(): Promise<void> {
@@ -195,9 +223,9 @@ export class CoeSimulationService extends CoeApiService {
     }
 
     private prepareAndUploadFmus(): Promise<void> {
-        return new Promise<void> ((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             let formData = new FormData();
-    
+
             this.config.multiModel.fmus.forEach((value: Fmu) => {
                 this.fileSystem.readFile(value.path).then(content => {
                     formData.append(
@@ -213,7 +241,7 @@ export class CoeSimulationService extends CoeApiService {
     }
 
     private prepareAndInitializeCoe(): Promise<void> {
-        return new Promise<void> ((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             let data = new CoeConfig(this.config, this.isRemoteCoe()).toJSON();
 
             this.fileSystem.mkdir(this.resultDir)
@@ -222,7 +250,7 @@ export class CoeSimulationService extends CoeApiService {
         });
     }
 
-    private prepareAndRunSimulation(simulationEndpoint: simulationEndpoints, simulationData: any) {
+    private runSimulation(simulationEndpoint: simulationEndpoints, simulationData: any): Promise<void> {
         let deferreds = new Array<Promise<any>>();
 
         this.graph.graphMap.forEach((value: BehaviorSubject<any[]>, key: LiveGraph) => {
@@ -242,57 +270,41 @@ export class CoeSimulationService extends CoeApiService {
                 });
             }
         });
+        return new Promise<void>((resolve, reject) => {
+            Promise.all(deferreds).then(() => {
+                // Do not start the simulation before the websocket is open.
+                this.graph.webSocketOnOpenCallback = () => this.fileSystem.writeFile(Path.join(this.resultDir, "config-simulation.json"), JSON.stringify(simulationData))
+                    .then(() => {
+                        const simulationPromise = simulationEndpoint == simulationEndpoints.simulate ? this.simulate(simulationData, simulationEndpoints.simulate) : this.simulate(simulationData, simulationEndpoints.sigverSimulate);
+                        simulationPromise.then(() => {
+                            this.graph.closeSocket();
+                            let markedForDeletionExternalGraphs: DialogHandler[] = [];
+                            this.externalGraphs.forEach((eg) => {
+                                if (!eg.win.isDestroyed()) {
+                                    eg.win.webContents.send("close");
+                                } else {
+                                    // The window have been destroyed, remove it from external graphs
+                                    markedForDeletionExternalGraphs.push(eg);
+                                }
+                            });
+                            markedForDeletionExternalGraphs.forEach((eg) => {
+                                this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0), 1);
+                            });
+                            this.graph.setFinished();
+                            this.getCoeProcess().simulationFinished();
+                            this.progress = 100;
+                            this.simulationCompletedHandler();
+                            resolve();
+                        })
+                            .catch((err: Response) => {
+                                this.errorHandler(err);
+                                reject(err.statusText);
+                            });
+                    });
 
-        Promise.all(deferreds).then(() => {
-            // Do not start the simulation before the websocket is open.
-            this.graph.webSocketOnOpenCallback = () => this.fileSystem.writeFile(Path.join(this.resultDir, "config-simulation.json"), JSON.stringify(simulationData))
-            .then(() => {
-                const simulationPromise = simulationEndpoint == simulationEndpoints.simulate ? this.simulate(simulationData, simulationEndpoints.simulate) : this.simulate(simulationData, simulationEndpoints.sigverSimulate);
-                simulationPromise.then(() => {
-                    this.downloadResults(); 
-                    this.graph.setFinished();
-                }).catch((err: Response) => this.errorHandler(err));
+                this.graph.launchWebSocket(this.getWebSocketSessionUrl());
             });
-
-            this.graph.launchWebSocket(this.getWebSocketSessionUrl());
         });
-    }
-
-    private downloadResults() {
-        this.graph.closeSocket();
-        let markedForDeletionExternalGraphs : DialogHandler[]= [];
-        this.externalGraphs.forEach((eg) => {
-            if (!eg.win.isDestroyed()){
-                eg.win.webContents.send("close");
-            } else{
-                // The window have been destroyed, remove it from external graphs
-                markedForDeletionExternalGraphs.push(eg);
-            }
-        });
-        markedForDeletionExternalGraphs.forEach((eg) => {
-            this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0),1);
-        });
-        this.simulationCompletedHandler();
-
-        let resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
-        let coeConfigPath = Path.normalize(`${this.resultDir}/coe.json`);
-        let mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
-        let logPath = Path.normalize(`${this.resultDir}/log.zip`);
-
-        this.getPlainResult().then((resultsString: string) => {
-            Promise.all([
-                this.fileSystem.writeFile(resultPath, resultsString),
-                this.fileSystem.copyFile(this.config.sourcePath, coeConfigPath),
-                this.fileSystem.copyFile(this.config.multiModel.sourcePath, mmConfigPath)
-            ]).then(() => {
-                this.getCoeProcess().simulationFinished();
-                this.progress = 100;
-                storeResultCrc(resultPath, this.config);
-                this.executePostProcessingScript(resultPath);
-            }).catch(error => console.error("Error when writing results: " + error));
-        }).catch((err: Response) => this.errorHandler(err));
-
-        this.getResults(logPath).then(() => this.destroySession().catch((err: Response) => console.error("Could not destroy session: " + err.statusText))).catch((err: Response) => console.error("Could retrieve results: " + err.statusText));
     }
 
     private executePostProcessingScript(outputFile: string) {
