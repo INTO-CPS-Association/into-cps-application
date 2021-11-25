@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpType, DTPConfig, DtpTypes, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, DtpTypes, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
 import * as fs from "fs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
@@ -40,7 +40,7 @@ import { DtpDtToolingService } from "../dtp-dt-tooling.service";
     templateUrl: "./angular2-app/dtp/inputs/taskConfiguration.component.html"
 })
 export class DtpTaskConfigurationComponent implements AfterContentInit {
-    private taskConstructors = [DataRepeaterDtpType, MaestroDtpItem];
+    private taskConstructors = [DataRepeaterDtpItem, MaestroDtpItem];
     dtpTypesEnum = DtpTypes;
     
     newTask: new (...args: any[]) => IDtpItem;
@@ -65,20 +65,18 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     }
 
     isTaskMaestro = (task: IDtpItem) => task instanceof MaestroDtpItem;
-    isTaskDatarepeater = (task: IDtpItem) => task instanceof DataRepeaterDtpType;
+    isTaskDatarepeater = (task: IDtpItem) => task instanceof DataRepeaterDtpItem;
     taskFilter = (item: IDtpItem) => { return this.isTaskMaestro(item) || this.isTaskDatarepeater(item)}
 
     getTaskName(dtpType: any): string {
         if (dtpType === MaestroDtpItem || dtpType instanceof MaestroDtpItem) {
             return "Maestro"
-        } else if (dtpType === DataRepeaterDtpType || dtpType instanceof DataRepeaterDtpType) {
+        } else if (dtpType === DataRepeaterDtpItem || dtpType instanceof DataRepeaterDtpItem) {
             return "Data-Repeater"
         } else {
             console.log("Unknown task type");
         }
     }
-
-
 
     addNewTask() {
         if (!this.newTask) return;
@@ -88,10 +86,10 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     }
 
     removeTask(task: IDtpItem) {
-        if (task instanceof MaestroDtpItem) {
-            const maestroType = task as MaestroDtpItem;
-            fs.unlink(maestroType.multiModelPath, err => { if (err) console.error(`Unable to delete multimodel file for ${maestroType.name}: ${err}`) });
-            this.config.removeMMPathMapping(task.name);
+        const pathToRemove = task instanceof MaestroDtpItem ? task.multiModelPath : task instanceof DataRepeaterDtpItem ? task.fmu_path : "";
+        if(pathToRemove){
+            fs.unlink(pathToRemove, err => { if (err) console.error(`Unable to delete file linked with task: ${err}`) });
+            this.config.removeMappingPath(task);
         }
         const index = this.configuration.tasks.indexOf(task);
         this.configuration.tasks.splice(index, 1);
@@ -108,8 +106,8 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
             }
         })
         this.configuration.tasks.forEach(task => {
-            if(task instanceof MaestroDtpItem){
-                this.config.addMMPathMapping(task.name, task.multiModelPath);
+            if(task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem){
+                this.config.addMappingPath(task);
             }
         })
     }

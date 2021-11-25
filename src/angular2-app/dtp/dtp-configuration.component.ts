@@ -31,7 +31,7 @@
 
 import { Component, Input } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpType, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolTypes } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolTypes } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
@@ -49,7 +49,7 @@ export class DtpConfigurationComponent {
     private readonly formkey_configurations = "configurations";
     private readonly formkey_tools = "tools";
     private _config: DTPConfig;
-    private dtpTypeConstructors = [MaestroDtpItem, ServerDtpItem, SignalDtpType, DataRepeaterDtpType, ToolDtpItem, TaskConfigurationDtpItem];
+    private dtpTypeConstructors = [MaestroDtpItem, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, ToolDtpItem, TaskConfigurationDtpItem];
 
     @Input()
     set config(config: DTPConfig) {
@@ -127,23 +127,17 @@ export class DtpConfigurationComponent {
             formArray = <FormArray>this.form.get(this.formkey_servers);
             index = this.config.servers.indexOf(item);
             this.config.servers.splice(index, 1);
-            if(formArray.dirty){
-                this.dtpToolingService.removeServerInProject(item.id, this.config.projectName);
-            }
+            this.dtpToolingService.removeServerInProject(item.id, this.config.projectName);
         } else if (item instanceof TaskConfigurationDtpItem) {
             formArray = <FormArray>this.form.get(this.formkey_configurations);
             index = this.config.configurations.indexOf(item);
             this.config.configurations.splice(index, 1);
-            if(formArray.dirty){
-                this.dtpToolingService.removeConfigurationInProject(item.id, this.config.projectName);
-            }
+            this.dtpToolingService.removeConfigurationInProject(item.id, this.config.projectName);
         } else if (item instanceof ToolDtpItem) {
             formArray = <FormArray>this.form.get(this.formkey_tools);
             index = this.config.tools.indexOf(item);
             this.config.tools.splice(index, 1);
-            if(formArray.dirty){
-                this.dtpToolingService.removeToolInProject(item.id, this.config.projectName);
-            }
+            this.dtpToolingService.removeToolInProject(item.id, this.config.projectName);
         } else {
             console.log("Unknown DTPType");
             return;
