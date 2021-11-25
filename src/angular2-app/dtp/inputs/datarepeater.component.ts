@@ -31,7 +31,7 @@
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpType, DTPConfig, IDtpItem, ServerDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, IDtpItem, ServerDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from 'path';
@@ -47,7 +47,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     private _editing: boolean = true;
 
     @Input()
-    datarepeater: DataRepeaterDtpType
+    datarepeater: DataRepeaterDtpItem
 
     @Input()
     formGroup: FormGroup;
@@ -88,13 +88,8 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         this.isToolingServerOnlineSub.unsubscribe();
     }
 
-    getAvailableServersNames(servers: IDtpItem[]): string[] {
-        return servers.reduce((serverNames: string[], server: ServerDtpItem) => {
-            if(this.datarepeater.server_source != server.id && this.datarepeater.server_target != server.id){
-                serverNames.push(server.id);
-            }
-            return serverNames;
-        }, []);
+    getServerNames(servers: IDtpItem[]): string[] {
+        return servers.map(server => server.id);
     }
 
     rabbitMqNamesFromTools(tools: IDtpItem[]): string[] {

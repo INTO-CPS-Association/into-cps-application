@@ -40,12 +40,12 @@ bounded-difference select {
     min-width: 200px;
 }
 
-coe-configuration,dtp-configuration .constraint-container {
+coe-configuration .constraint-container {
     display: flex;
     flex-wrap: wrap;
 }
 
-coe-configuration,dtp-configuration .constraint-panel {
+coe-configuration .constraint-panel {
     width: 45%;
     min-width: 300px;
     margin-left: 2.5%;
@@ -55,10 +55,6 @@ coe-configuration,dtp-configuration .constraint-panel {
 dtp-configuration .btn-panel-heading {
     overflow: hidden;
     padding: 0px;
-}
-
-dtp-configuration .panel-heading-btn-group {
-    margin: 0px;
 }
 
 coe-configuration a {

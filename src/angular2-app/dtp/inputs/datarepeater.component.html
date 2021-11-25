@@ -13,7 +13,7 @@
         <label class="col-sm-3 control-label">Server Source</label>
         <div class="col-sm-9">
             <select *ngIf="editing" [(ngModel)]="datarepeater.server_source" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
-                <option *ngFor="let serverName of getAvailableServersNames(config.servers)" [ngValue]="serverName">{{serverName}}</option>
+                <option *ngFor="let server of config.servers" [ngValue]="server.id">{{server.id}}</option>
             </select>
             <p *ngIf="!editing" class="form-control-static">{{datarepeater.server_source}}</p>
         </div>
@@ -24,7 +24,7 @@
         <label class="col-sm-3 control-label">Server Target</label>
         <div class="col-sm-9">
             <select *ngIf="editing" [(ngModel)]="datarepeater.server_target" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
-                <option *ngFor="let serverName of getAvailableServersNames(config.servers)" [ngValue]="serverName">{{serverName}}</option>
+                <option *ngFor="let server of config.servers" [ngValue]="server.id">{{server.id}}</option>
             </select>
             <p *ngIf="!editing" class="form-control-static">{{datarepeater.server_target}}</p>
         </div>

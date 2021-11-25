@@ -1,3 +1,9 @@
+<style>
+	.server-panel {
+		width: fit-content;
+	}
+</style>
+
 <form *ngIf="isLoaded" [formGroup]="form">
 	<div class="form-horizontal">
 		<panel id="tools" [title]="'Tools'" [open]="false">
@@ -17,11 +23,9 @@
 			<div class="constraint-container">
 				<div class="panel panel-default constraint-panel" *ngFor="let tool of config.tools; let i = index">
 					<div class="panel-heading btn-panel-heading">
-						<div class="btn-group panel-heading-btn-group pull-right">
-							<button class="btn btn-default" title="Remove tool" (click)="removeDtpItem(tool)">
-								<span class="glyphicon glyphicon-remove"></span>
-							</button>
-						</div>
+						<button class="btn btn-default pull-right" title="Remove tool" (click)="removeDtpItem(tool)">
+							<span class="glyphicon glyphicon-remove"></span>
+						</button>
 					</div>
 					<div class="panel-body">
 						<tool [tool]="tool" [config] = "config" [formGroup]="form.get('tools').at(i)"></tool>		
@@ -45,14 +49,11 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let server of config.servers; let i = index">
+				<div class="panel panel-default server-panel" *ngFor="let server of config.servers; let i = index">
 					<div class="panel-heading btn-panel-heading">
-						<div class="btn-group panel-heading-btn-group pull-right">
-
-							<button class="btn btn-default" title="Remove server" (click)="removeDtpItem(server)">
-								<span class="glyphicon glyphicon-remove"></span>
-							</button>
-						</div>
+						<button class="btn btn-default pull-right" title="Remove server" (click)="removeDtpItem(server)">
+							<span class="glyphicon glyphicon-remove"></span>
+						</button>
 					</div>
 					<div class="panel-body">
 						<server [server]="server" [config] = "config" [formGroup]="form.get('servers').at(i)"></server>			
@@ -79,11 +80,9 @@
 			<div class="constraint-container">
 				<div class="panel panel-default constraint-panel" *ngFor="let configuration of config.configurations; let i = index">
 					<div class="panel-heading btn-panel-heading">
-						<div class="btn-group panel-heading-btn-group pull-right">
-							<button class="btn btn-default" title="Remove configuration" (click)="removeDtpItem(configuration)">
-								<span class="glyphicon glyphicon-remove"></span>
-							</button>
-						</div>
+						<button class="btn btn-default pull-right" title="Remove configuration" (click)="removeDtpItem(configuration)">
+							<span class="glyphicon glyphicon-remove"></span>
+						</button>
 					</div>
 					<div class="panel-body">
 						<task-configuration [configuration]="configuration" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
