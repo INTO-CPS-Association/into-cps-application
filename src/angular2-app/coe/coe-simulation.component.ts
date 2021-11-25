@@ -42,6 +42,7 @@ import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 /* import { openCOEServerStatusWindow } from "../../menus"; */
 import { shell } from "electron";
 import { Subscription } from 'rxjs';
+import { maestroVersions } from "../shared/coe-api.service";
 
 @Component({
   selector: "coe-simulation",
@@ -55,12 +56,13 @@ export class CoeSimulationComponent implements OnDestroy {
   private _resultsDir: string = "";
   private parsing: boolean = false;
   private _coeIsOnlineSub: Subscription;
+  private _correctCoeVersion: boolean = true;
 
   @Input()
   external_disable_simulation: boolean = false;
 
   @Input()
-  required_coe_version: number = undefined;
+  required_coe_version: maestroVersions = undefined;
 
   @Input()
   set resultsdir(resultsDir: string) {
@@ -94,6 +96,7 @@ export class CoeSimulationComponent implements OnDestroy {
     return this._path;
   }
 
+  coeVersions = maestroVersions;
   online: boolean = false;
   hasHttpError: boolean = false;
   httpErrorMessage: string = "";
@@ -113,7 +116,12 @@ export class CoeSimulationComponent implements OnDestroy {
     private coeSimulation: CoeSimulationService,
     private zone: NgZone
   ) {
-    this._coeIsOnlineSub = coeSimulation.coeIsOnlineObservable.subscribe(isOnline => this.online = isOnline);
+    this._coeIsOnlineSub = coeSimulation.coeIsOnlineObservable.subscribe(isOnline => {
+      if(this.required_coe_version) {
+        this._correctCoeVersion = this.required_coe_version == this.coeSimulation.getMaestroVersion();
+      }
+      this.online = isOnline;
+    } );
   }
 
   ngOnDestroy() {
@@ -148,7 +156,7 @@ export class CoeSimulationComponent implements OnDestroy {
       !this.parsing &&
       !this.simulating && 
       !this.external_disable_simulation &&
-      (this.required_coe_version == undefined ? true : this.required_coe_version == this.coeSimulation.getCoeVersion())
+      this._correctCoeVersion
     );
   }
 

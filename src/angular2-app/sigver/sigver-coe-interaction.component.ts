@@ -4,12 +4,11 @@ import { Subscription } from 'rxjs';
 import * as Fs from 'fs';
 import * as Path from 'path';
 import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
-import { CoeApiService } from "../shared/coe-api.service";
+import { CoeApiService, maestroVersions } from "../shared/coe-api.service";
 
 @Component({
     selector: "sigver-coe-interaction",
-    templateUrl: "./angular2-app/sigver/sigver-coe-interaction.component.html",
-    providers: [CoeApiService]
+    templateUrl: "./angular2-app/sigver/sigver-coe-interaction.component.html"
 })
 export class SigverCoeInteractionComponent implements OnDestroy {
     private _configurationChangedSub: Subscription;
@@ -35,7 +34,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     isVerifying: boolean = false;
 
     constructor(private coeApiService: CoeApiService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
-        this._coeIsOnlineSub = coeApiService.coeIsOnlineObservable.subscribe(isOnline => this.isCoeOnline = isOnline);
+        this._coeIsOnlineSub = coeApiService.coeIsOnlineObservable.subscribe(isOnline => this.isCoeOnline = isOnline && coeApiService.getMaestroVersion() == maestroVersions.maestroV2);
 
         this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.handleConfigurationChanges();
