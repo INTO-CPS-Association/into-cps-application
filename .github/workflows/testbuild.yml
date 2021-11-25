@@ -1,0 +1,80 @@
+name: Build Release Artifacts
+
+on: 
+   push:
+     branches: 
+       - dtp-alt-ui
+
+jobs:
+  package:
+    runs-on: ${{ matrix.os }}
+  
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+        with: 
+          ref: dtp-alt-ui
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+  
+      - name: Get App Version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(node -p -e "require('./package.json').version")
+        shell: bash
+  
+      - name: Install Dependencies
+        run: npm install  
+
+      - name: Install Gulp In Mac
+        run: npm install -g gulp 
+        if: startsWith(matrix.os, 'mac')
+
+      - name: Build
+        run: gulp prep-pkg
+
+      - name: Package
+        run: npm run dist
+
+      - name: Upload Linux Version
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.AppImage
+          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.AppImage
+        if: startsWith(matrix.os, 'ubuntu')
+
+      - name: Upload Windows Version
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
+          name: INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
+        if: startsWith(matrix.os, 'windows')
+
+      - name: Upload Portable Windows Version
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application ${{ steps.get_version.outputs.VERSION }}.exe
+          name: INTO-CPS-Application ${{ steps.get_version.outputs.VERSION }}.exe
+        if: startsWith(matrix.os, 'windows')
+        
+      - name: Upload Dmg
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.dmg
+          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.dmg
+        if: startsWith(matrix.os, 'mac')
+
+      - name: Upload Darwin Zip
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}-mac.zip
+          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}-mac.zip
+        if: startsWith(matrix.os, 'mac')
+
