@@ -56,13 +56,6 @@ jobs:
           path: ./release/INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
           name: INTO-CPS-Application Setup ${{ steps.get_version.outputs.VERSION }}.exe
         if: startsWith(matrix.os, 'windows')
-
-      - name: Upload Portable Windows Version
-        uses: actions/upload-artifact@v2
-        with:
-          path: ./release/INTO-CPS-Application ${{ steps.get_version.outputs.VERSION }}.exe
-          name: INTO-CPS-Application ${{ steps.get_version.outputs.VERSION }}.exe
-        if: startsWith(matrix.os, 'windows')
         
       - name: Upload Dmg
         uses: actions/upload-artifact@v2
@@ -70,11 +63,3 @@ jobs:
           path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.dmg
           name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}.dmg
         if: startsWith(matrix.os, 'mac')
-
-      - name: Upload Darwin Zip
-        uses: actions/upload-artifact@v2
-        with:
-          path: ./release/INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}-mac.zip
-          name: INTO-CPS-Application-${{ steps.get_version.outputs.VERSION }}-mac.zip
-        if: startsWith(matrix.os, 'mac')
-
