@@ -34,12 +34,11 @@ export enum maestroVersions {
 
 @Injectable({
     providedIn: 'root',
-  })
+})
 export class MaestroApiService implements OnDestroy {
     private _coe: CoeProcess;
     private _onlineInterval: number;
     private _coeIsOnline = new Subject<boolean>();
-    private inferedMaestroVersion: maestroVersions;
 
     coeVersionNumber: string = "";
     coeUrl: string = "";
@@ -50,7 +49,6 @@ export class MaestroApiService implements OnDestroy {
         this._coe = IntoCpsApp.getInstance().getCoeProcess();
         this.isCoeOnline();
         this._onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
-        this.inferMaestroVersionFromJarContent().then(version => this.inferedMaestroVersion = version).catch(err => console.warn(err));
     }
 
     /* 
@@ -162,7 +160,7 @@ export class MaestroApiService implements OnDestroy {
 
     visualizeTrace(masterModelAsString: string): Promise<File> {
         return new Promise<File>((resolve, reject) => {
-            this.httpClient.post(`http://${this.coeUrl}/visualizeTrace`, masterModelAsString).toPromise().then(response => { //, {responseType:'blob'}
+            this.httpClient.post(`http://${this.coeUrl}/visualizeTrace`, masterModelAsString).toPromise().then(response => {
                 resolve(new File([response as Blob], "trace_visualization.mp4", { lastModified: new Date().getTime(), type: 'blob' }));
             }, (errorResponse: HttpErrorResponse) => {
                 this.errorJsonToMsg(errorResponse).then(msg => reject(msg)).catch(err => { console.log(err); reject(errorResponse.message) });
@@ -180,7 +178,7 @@ export class MaestroApiService implements OnDestroy {
 
     getMaestroVersion(): maestroVersions {
         if(!this.coeVersionNumber) {
-            return this.inferedMaestroVersion;
+            return undefined;
         }
 
         let version: maestroVersions;
@@ -223,16 +221,15 @@ export class MaestroApiService implements OnDestroy {
             );
     }
 
-    private inferMaestroVersionFromJarContent(): Promise<maestroVersions> {
-        const path = this._coe.getCoePath();
-        // read a zip file
+    inferMaestroVersionFromJarContent(): Promise<maestroVersions> {
         return new Promise<maestroVersions> (async (resolve, reject) => {
-            fs.readFile(path, (err, data) => {
+            // read the contents of the maestro jar
+            fs.readFile(this._coe.getCoePath(), (err, data) => {
                 if (err) {
                     reject("Unable to infer maestro version from jar: " + err);
                 } else {
                     JSZip.loadAsync(data).then((zip: any) => {
-                        if(Object.keys(zip.files).findIndex(file => file.toLowerCase().endsWith(".mabl")) > -1){
+                        if(Object.keys(zip.files).findIndex(file => file.toLowerCase().endsWith(".mabl")) > -1){  
                             resolve(maestroVersions.maestroV2);
                         } else {
                             resolve(maestroVersions.maestroV1);
