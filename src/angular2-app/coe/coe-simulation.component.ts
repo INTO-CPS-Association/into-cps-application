@@ -42,7 +42,7 @@ import { Message, WarningMessage } from "../../intocps-configurations/Messages";
 /* import { openCOEServerStatusWindow } from "../../menus"; */
 import { shell } from "electron";
 import { Subscription } from 'rxjs';
-import { maestroVersions } from "../shared/coe-api.service";
+import { maestroVersions } from "../shared/maestro-api.service";
 
 @Component({
   selector: "coe-simulation",

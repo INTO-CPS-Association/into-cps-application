@@ -5,8 +5,9 @@ import { IntoCpsApp } from "../../IntoCpsApp";
 import { map, timeout } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import * as http from "http"
-import { SettingsService, SettingKeys } from "../shared/settings.service";
+import { SettingsService, SettingKeys } from "./settings.service";
 import * as fs from 'fs'
+const JSZip = require("jszip");
 
 // Verificaiton DTO utilised by Maestro
 interface IVerificationDTO {
@@ -34,10 +35,11 @@ export enum maestroVersions {
 @Injectable({
     providedIn: 'root',
   })
-export class CoeApiService implements OnDestroy {
+export class MaestroApiService implements OnDestroy {
     private _coe: CoeProcess;
     private _onlineInterval: number;
     private _coeIsOnline = new Subject<boolean>();
+    private inferedMaestroVersion: maestroVersions;
 
     coeVersionNumber: string = "";
     coeUrl: string = "";
@@ -45,8 +47,10 @@ export class CoeApiService implements OnDestroy {
 
     constructor(private httpClient: HttpClient, private settings: SettingsService) {
         this.coeUrl = this.settings.get(SettingKeys.COE_URL);
+        this._coe = IntoCpsApp.getInstance().getCoeProcess();
         this.isCoeOnline();
         this._onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
+        this.inferMaestroVersionFromJarContent().then(version => this.inferedMaestroVersion = version).catch(err => console.warn(err));
     }
 
     /* 
@@ -61,7 +65,6 @@ export class CoeApiService implements OnDestroy {
     }
 
     launchCOE() {
-        this._coe = IntoCpsApp.getInstance().getCoeProcess();
         if (!this._coe.isRunning()) IntoCpsApp.getInstance().getCoeProcess().start();
     }
 
@@ -126,6 +129,12 @@ export class CoeApiService implements OnDestroy {
         });
     }
 
+    executeViaCLI(simulationSessionId: string): Promise<void>  {
+        return new Promise<void> ((resolve, reject) => {
+            this.httpClient.post(`http://${this.coeUrl}/executeViaCLI/${simulationSessionId}`, {"executeViaCLI": true}).subscribe(() => resolve(), (err: Response) => reject(err));
+        });
+    }
+
     /* 
         Scenario verifier API entry points methods
     */
@@ -171,16 +180,20 @@ export class CoeApiService implements OnDestroy {
 
     getMaestroVersion(): maestroVersions {
         if(!this.coeVersionNumber) {
-            return -1;
+            return this.inferedMaestroVersion;
         }
 
+        let version: maestroVersions;
+
         switch(Number.parseInt(this.coeVersionNumber.split('.')[0])) {
-            case 1: return maestroVersions.maestroV1;
-            case 2: return maestroVersions.maestroV2;
-            default: 
-                console.warn("Unknown Maestro version: " + this.coeVersionNumber);
-                return undefined;
+            case 1: version = maestroVersions.maestroV1;
+            case 2: version = maestroVersions.maestroV2;
         }
+
+        if(!version){
+            console.warn("Unknown Maestro version: " + this.coeVersionNumber);
+        } 
+        return version;
     }
 
     isRemoteCoe(): boolean {
@@ -208,6 +221,26 @@ export class CoeApiService implements OnDestroy {
                 },
                 () => (this._coeIsOnline.next(false))
             );
+    }
+
+    private inferMaestroVersionFromJarContent(): Promise<maestroVersions> {
+        const path = this._coe.getCoePath();
+        // read a zip file
+        return new Promise<maestroVersions> (async (resolve, reject) => {
+            fs.readFile(path, (err, data) => {
+                if (err) {
+                    reject("Unable to infer maestro version from jar: " + err);
+                } else {
+                    JSZip.loadAsync(data).then((zip: any) => {
+                        if(Object.keys(zip.files).findIndex(file => file.toLowerCase().endsWith(".mabl")) > -1){
+                            resolve(maestroVersions.maestroV2);
+                        } else {
+                            resolve(maestroVersions.maestroV1);
+                        }
+                    });
+                }
+            });
+        });
     }
 
     private formatErrorMessage(statusCode: number, IVndErrors: IVndError[]): string {

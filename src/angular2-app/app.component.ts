@@ -36,7 +36,7 @@ import { HttpClient } from '@angular/common/http';
 import {SettingsService} from "./shared/settings.service";
 import {CoeSimulationService} from "./coe/coe-simulation.service";
 import {NavigationService} from "./shared/navigation.service";
-import { CoeApiService } from './shared/coe-api.service';
+import { MaestroApiService } from './shared/maestro-api.service';
 
 
 
@@ -78,7 +78,7 @@ export class AppComponent implements OnInit {
 
     // Allows accessing the coe simulation service outside of Angular.
     makeCoeSimulationService() {
-        return new CoeSimulationService(this.settings, this.fileSystem, this.zone, new CoeApiService(this.http, this.settings));
+        return new CoeSimulationService(this.settings, this.fileSystem, this.zone, new MaestroApiService(this.http, this.settings));
     }
 
     openCOE(path: string):void {

@@ -43,7 +43,7 @@ import * as child_process from 'child_process'
 import DialogHandler from "../../DialogHandler"
 import { Graph } from "../shared/graph"
 import { Deferred } from "../../deferred"
-import { CoeApiService, simulationEndpoints } from "../shared/coe-api.service";
+import { MaestroApiService, simulationEndpoints } from "../shared/maestro-api.service";
 
 
 @Injectable()
@@ -82,7 +82,7 @@ export class CoeSimulationService {
         settings: SettingsService,
         private fileSystem: FileSystemService,
         private zone: NgZone,
-        private coeApiService: CoeApiService) {
+        private coeApiService: MaestroApiService) {
 
         this.graphMaxDataPoints = settings.get(SettingKeys.GRAPH_MAX_DATA_POINTS);
         this.graph.setProgressCallback((progress: number) => { this.progress = progress });

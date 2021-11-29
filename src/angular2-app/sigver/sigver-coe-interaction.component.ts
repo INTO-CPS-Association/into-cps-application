@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import * as Fs from 'fs';
 import * as Path from 'path';
 import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
-import { CoeApiService, maestroVersions } from "../shared/coe-api.service";
+import { MaestroApiService, maestroVersions } from "../shared/maestro-api.service";
 
 @Component({
     selector: "sigver-coe-interaction",
@@ -33,7 +33,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     isGeneratingMasterModel: boolean = false;
     isVerifying: boolean = false;
 
-    constructor(private coeApiService: CoeApiService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
+    constructor(private coeApiService: MaestroApiService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
         this._coeIsOnlineSub = coeApiService.coeIsOnlineObservable.subscribe(isOnline => this.isCoeOnline = isOnline && coeApiService.getMaestroVersion() == maestroVersions.maestroV2);
 
         this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
