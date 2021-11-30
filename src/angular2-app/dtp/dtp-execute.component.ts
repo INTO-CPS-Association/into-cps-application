@@ -9,14 +9,14 @@ import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 export class DtpExecuteComponent {
     public isRunning: boolean = false;
     private _config: DTPConfig;
-    private _configuration: TaskConfigurationDtpItem;
+    private selectedConfiguration: TaskConfigurationDtpItem;
 
     @Input()
     set config(config: DTPConfig){
         this._config = config;
 
         if (config && this._config.configurations.length > 0)  {
-            this._configuration = this._config.configurations[0] as TaskConfigurationDtpItem;
+            this.selectedConfiguration = this._config.configurations[0] as TaskConfigurationDtpItem;
         }
        
     }
@@ -29,8 +29,7 @@ export class DtpExecuteComponent {
     }
 
     private execute(){
-        const configurationIndex = this._config.configurations.indexOf(this._configuration).toString();
-        this.dtpToolingService.runConfiguration(configurationIndex, this._config.projectName).then(() => console.log("Finished excuting!")).catch(err => console.warn(err));
+        this.dtpToolingService.runConfiguration(this.selectedConfiguration.name, this._config.projectName).then(() => console.log("Finished excuting!")).catch(err => console.warn(err));
         console.log("EXECUTING!");
     }
 

@@ -28,20 +28,16 @@
 
     <!-- CO-SIMULATION EXPERIMENT -->
     <div class="form-group">
-        <div *ngIf="showInitialSetupBtns && editing" class="col-sm-9">
-            <span class="input-group-btn">
-                <button type="button" (click)="doInitialSetup(false)" class="btn btn-default" [disabled] = "this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name">
-                    New setup
-                    <span class="glyphicon glyphicon-edit"></span>
-                </button>
-            </span>
-            <span class="input-group-btn">
-                <button type="button" (click)="doInitialSetup(true)" class="btn btn-default" [disabled] = "this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name">
-                    Setup from experiment
-                    <span class="glyphicon glyphicon-edit"></span>
-                </button>
-            </span>   
-        </div>
+        <div *ngIf="showInitialSetupBtns && editing" class="btn-group col-sm-9">
+            <button type="button" (click)="doInitialSetup(false)" class="btn btn-default" [disabled] = "!this.maestro || this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name">
+                New setup
+                <span class="glyphicon glyphicon-edit"></span>
+            </button>
+            <button type="button" (click)="doInitialSetup(true)" class="btn btn-default" [disabled] = "!this.maestro || this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name">
+                Setup from experiment
+                <span class="glyphicon glyphicon-edit"></span>
+            </button>
+        </div>   
         <div *ngIf="showExperimentSelect && editing">
             <label class="col-sm-3 control-label">Choose experiment: </label>
             <select [(ngModel)]="baseExperimentPath" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9" (change)="onBaseExperimentSet()">

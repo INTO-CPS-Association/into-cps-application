@@ -121,28 +121,31 @@ export class DtpConfigurationComponent {
     }
 
     removeDtpItem(item: IDtpItem) {
-        let formArray: FormArray;
-        let index;
         if (item instanceof ServerDtpItem) {
-            formArray = <FormArray>this.form.get(this.formkey_servers);
-            index = this.config.servers.indexOf(item);
-            this.config.servers.splice(index, 1);
-            this.dtpToolingService.removeServer(item.name, this.config.projectName);
+            this.dtpToolingService.removeServer(item.name, this.config.projectName).then(() => {
+                const index = this.config.servers.indexOf(item);
+                this.config.servers.splice(index, 1);
+                (<FormArray>this.form.get(this.formkey_servers)).removeAt(index);
+            });
         } else if (item instanceof TaskConfigurationDtpItem) {
-            formArray = <FormArray>this.form.get(this.formkey_configurations);
-            index = this.config.configurations.indexOf(item);
-            this.config.configurations.splice(index, 1);
-            this.dtpToolingService.removeConfiguration(item.name, this.config.projectName);
+            this.dtpToolingService.removeConfiguration(item.name, this.config.projectName).then(() => {
+                item.tasks.forEach(task => {
+                    this.config.removeMappingPath(task, true);
+                })
+                const index = this.config.configurations.indexOf(item);
+                this.config.configurations.splice(index, 1);
+                (<FormArray>this.form.get(this.formkey_configurations)).removeAt(index);
+            })
         } else if (item instanceof ToolDtpItem) {
-            formArray = <FormArray>this.form.get(this.formkey_tools);
-            index = this.config.tools.indexOf(item);
-            this.config.tools.splice(index, 1);
-            this.dtpToolingService.removeTool(item.name, this.config.projectName);
+            this.dtpToolingService.removeTool(item.name, this.config.projectName).then(() => {
+                const index = this.config.tools.indexOf(item);
+                this.config.tools.splice(index, 1);
+                (<FormArray>this.form.get(this.formkey_tools)).removeAt(index);
+            });
         } else {
             console.log("Unknown DTPType");
             return;
         }
-        formArray.removeAt(index);
     }
 
     validateConfig() {

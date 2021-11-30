@@ -222,9 +222,9 @@ export class DtpDtToolingService implements OnDestroy {
     /*
         RUNNING CONFIGURATIONS 
     */
-    public runConfiguration(index: string, projectName: string): Promise<any> {
+    public runConfiguration(configurationId: string, projectName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.httpClient.post(`${this.url}/projects/${projectName}/execution/configurations/${index}/run`, "").subscribe(res => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/execution/configurations/${configurationId}/run`, "").subscribe(res => {
                 resolve(res);
             }, (err: HttpErrorResponse) => {
                 reject(err.error);

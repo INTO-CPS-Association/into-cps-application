@@ -6,6 +6,7 @@ import { IntoCpsApp } from "../../IntoCpsApp";
 import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
 import * as fs from "fs";
 import * as Path from 'path';
+import { CoSimulationConfig } from "../../intocps-configurations/CoSimulationConfig";
 
 export class DTPConfig {
     private static readonly toolsIndex = "tools";
@@ -137,6 +138,7 @@ export class TaskConfigurationDtpItem implements IDtpItem {
                 ).then(tasks => {
                     const yamlObj: any = {};
                     yamlObj.id = this.name;
+                    yamlObj.name = this.name;
                     yamlObj[TaskConfigurationDtpItem.tasksIndex] = tasks;
                     resolve(yamlObj);
             }).catch(err => reject(err));
@@ -210,9 +212,16 @@ export class MaestroDtpItem implements IDtpItem {
     constructor(public name: string = "", public multiModelPath: string = "", public coePath: string = "", public capture_output: boolean = false, public tool: string = "", public isCreatedOnServer: boolean = false) { }
     async toYamlObject() {
         let project = IntoCpsApp.getInstance().getActiveProject();
-        const multiModel: MultiModelConfig = await MultiModelConfig.parse(this.multiModelPath, project.getFmusPath());
+        const coeConfig: CoSimulationConfig = await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath());
+        // Insert absolute path to fmus
+        const mmObj = coeConfig.multiModel.toObject();
+        const url = require('url');
+        Object.keys(mmObj.fmus).forEach(key => {
+            mmObj.fmus[key] = url.fileURLToPath(Path.join(project.getFmusPath(), mmObj.fmus[key]));
+        })
+        const configObj = Object.assign(coeConfig.toObject(), mmObj);
         const maestroYamlObj: any = {};
-        maestroYamlObj[MaestroDtpItem.objectIdentifier] = { name: this.name, execution: { tool: this.tool, capture_output: this.capture_output }, prepare: { tool: this.tool }, config: multiModel.toObject() };
+        maestroYamlObj[MaestroDtpItem.objectIdentifier] = { name: this.name, execution: { tool: this.tool, capture_output: this.capture_output }, prepare: { tool: this.tool }, config: configObj };
         maestroYamlObj.id = this.name;
         return maestroYamlObj;
     }

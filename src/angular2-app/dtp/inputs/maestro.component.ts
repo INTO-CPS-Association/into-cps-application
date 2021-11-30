@@ -42,6 +42,8 @@ import { Project } from "../../../proj/Project";
     templateUrl: "./angular2-app/dtp/inputs/maestro.component.html"
 })
 export class DtpMaestroComponent implements AfterContentInit{
+    private _maestroConfName: string;
+    private _coeConfName: string;
 
     @Input()
     maestro: MaestroDtpItem
@@ -100,9 +102,11 @@ export class DtpMaestroComponent implements AfterContentInit{
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
+                this._maestroConfName = this.maestro.name + "_multiModel.json";
+        this._coeConfName = this.maestro.name + "_simConf.json";
         const destinationPath =  this.config.projectPath;
-        const mm_destinationName = Path.join(destinationPath, this.maestro.name + "_multiModel.json");
-        const coe_destinationName = Path.join(destinationPath, this.maestro.name + "_simConf.json");
+        const mm_destinationName = Path.join(destinationPath, this._maestroConfName);
+        const coe_destinationName = Path.join(destinationPath, this._coeConfName);
         const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
         const coe_sourcePath = this.baseExperimentPath;
 
@@ -111,8 +115,7 @@ export class DtpMaestroComponent implements AfterContentInit{
             const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
             if (mm_name) {
                 const mm_sourceName = Path.join(mm_sourcePath, mm_name);
-                await fs.promises.copyFile(mm_sourceName, mm_destinationName)
-                .then(() => this.maestro.multiModelPath = mm_destinationName)
+                await fs.promises.copyFile(mm_sourceName, mm_destinationName).then(() => this.maestro.multiModelPath = mm_destinationName)
                 .catch(err => console.warn(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`))
             }
             else {
@@ -124,14 +127,19 @@ export class DtpMaestroComponent implements AfterContentInit{
             if (coe_name) {
                 const coe_sourceName = Path.join(coe_sourcePath, coe_name);
                 await fs.promises.copyFile(coe_sourceName, coe_destinationName)
-                .then(() => this.maestro.coePath = coe_destinationName)
+                .then(() => {
+                    this.maestro.coePath = coe_destinationName;
+                    // Change the relative mmPath to the copied mm file.
+                    const coeObj = JSON.parse(fs.readFileSync(coe_destinationName, { encoding: 'utf8', flag: 'r' }));
+                    coeObj["multimodel_path"] = Path.relative(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), mm_destinationName);
+                    fs.writeFileSync(coe_destinationName, JSON.stringify(coeObj));
+                })
                 .catch(err => console.warn(`Unable to copy coe file from: ${coe_sourceName} to ${coe_destinationName}: "${err}"`));
             }
             else {
                 console.warn(`Unable to locate coe file in: ${coe_sourcePath}.`);
             }
         }) 
-
         this.showExperimentSelect = false;
     }
 
@@ -139,8 +147,10 @@ export class DtpMaestroComponent implements AfterContentInit{
         this.showInitialSetupBtns = false;
         this.showExperimentSelect = setupFromExperiment;
         if(!setupFromExperiment){
-            this.maestro.multiModelPath = Path.join(Path.dirname(this.config.projectPath), this.maestro.name + "_multiModel.json");
+            this.maestro.multiModelPath = Path.join(Path.dirname(this.config.projectPath), this._maestroConfName);
+            this.maestro.coePath = Path.join(Path.dirname(this.config.projectPath), this._coeConfName);
             fs.writeFileSync(this.maestro.multiModelPath, "{}", 'utf-8');
+            fs.writeFileSync(this.maestro.coePath, "{}", 'utf-8');
         }
     }
 

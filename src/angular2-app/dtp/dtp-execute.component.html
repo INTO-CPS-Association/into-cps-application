@@ -10,7 +10,7 @@
 </style>
 <div class="dtp-bounding-box">
     <div class="input-group" *ngIf="!isRunning">
-        <select [(ngModel)]="_configuration" [ngModelOptions]="{ standalone: true }" class="form-control">
+        <select [(ngModel)]="selectedConfiguration" [ngModelOptions]="{ standalone: true }" class="form-control">
             <option *ngFor="let conf of config.configurations" [ngValue]="conf">{{conf.name}}</option>
         </select>
         <span class="input-group-btn">
