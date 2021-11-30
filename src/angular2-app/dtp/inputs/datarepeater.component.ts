@@ -31,7 +31,7 @@
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpItem, DTPConfig, IDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolType } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, IDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from 'path';
@@ -104,14 +104,13 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => configuration.tasks.findIndex((task: IDtpItem) => task.name == this.datarepeater.name) > -1) as TaskConfigurationDtpItem;
 
         parentConfiguration.toYamlObject().then(async yamlObj => {
-            if(!parentConfiguration.name){
-                await this.dtpToolingService.addConfiguration(yamlObj, this.config.projectName).then((configurationYamlObj: any) => parentConfiguration.name = configurationYamlObj['id']);
-            } else {
-                await this.dtpToolingService.updateConfiguration(parentConfiguration.name, yamlObj, this.config.projectName);
-            }
-            this.dtpToolingService.createFmuFromDataRepeater(parentConfiguration.name, this.datarepeater.name, this.config.projectName).then(relativeFmuPath => {
-                this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath);
-            }, err => console.log(err));
+            // Create or update the configuration in the server
+            parentConfiguration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(parentConfiguration.name, yamlObj, this.config.projectName) : 
+                await this.dtpToolingService.addConfiguration(yamlObj, this.config.projectName).then(() => parentConfiguration.isCreatedOnServer = true);
+            // When the configuraiton is up-to-date in the server, create the datareapter FMU
+            this.dtpToolingService.createFmuFromDataRepeater(parentConfiguration.name, this.datarepeater.name, this.config.projectName).then(relativeFmuPath => 
+                this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath), err => console.log(err)
+            )
         });
     }
 

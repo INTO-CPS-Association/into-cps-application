@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { DTPConfig, IDtpItem, MaestroDtpItem, ToolDtpItem, ToolType } from "../../../intocps-configurations/dtp-configuration";
+import { DTPConfig, IDtpItem, MaestroDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
@@ -96,16 +96,17 @@ export class DtpMaestroComponent implements AfterContentInit{
         return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name;
     }
 
-    async onBaseExperimentChanged(){
+    async onBaseExperimentSet(){
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-        const destinationPath =  this.config.projectPath;//Path.dirname(this.config.projectPath);
+        const destinationPath =  this.config.projectPath;
         const mm_destinationName = Path.join(destinationPath, this.maestro.name + "_multiModel.json");
-        const coe_destinationName = Path.join(destinationPath, this.maestro.name + "_coe.json");
+        const coe_destinationName = Path.join(destinationPath, this.maestro.name + "_simConf.json");
         const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
         const coe_sourcePath = this.baseExperimentPath;
 
+        // Make a copy of the multi model and coe file so that changes can be reflected in these.
         await fs.promises.readdir(mm_sourcePath).then(async files => {
             const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
             if (mm_name) {

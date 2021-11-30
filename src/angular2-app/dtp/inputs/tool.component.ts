@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
-import { DTPConfig, ToolDtpItem, ToolType } from "../../../intocps-configurations/dtp-configuration";
+import { DTPConfig, ToolDtpItem, ToolType } from "../dtp-configuration";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
 @Component({

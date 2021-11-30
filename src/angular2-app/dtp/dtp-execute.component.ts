@@ -1,5 +1,5 @@
 import { Component, Input } from "@angular/core";
-import { DTPConfig, TaskConfigurationDtpItem } from "../../intocps-configurations/dtp-configuration";
+import { DTPConfig, TaskConfigurationDtpItem } from "./dtp-configuration";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 
 @Component({

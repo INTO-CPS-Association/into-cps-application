@@ -1,12 +1,11 @@
 import {
     integerValidator, uniqueGroupPropertyValidator
-} from "../angular2-app/shared/validators";
+} from "../shared/validators";
 import { FormGroup, FormControl, Validators, FormArray } from "@angular/forms";
-import { IntoCpsApp } from "../IntoCpsApp";
-import { MultiModelConfig } from "./MultiModelConfig";
+import { IntoCpsApp } from "../../IntoCpsApp";
+import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
 import * as fs from "fs";
 import * as Path from 'path';
-import { data } from "jquery";
 
 export class DTPConfig {
     private static readonly toolsIndex = "tools";
@@ -17,6 +16,9 @@ export class DTPConfig {
     private static readonly datarepeaterMappingsIndex = "dataRepeaterFmuMappings";
     private static readonly coeMappingsIndex = "coePathMappings";
     private readonly mappingsFilePath: string;
+
+    public toolTypes: string[] = [];
+
     constructor(public configurations: Array<TaskConfigurationDtpItem> = [], public tools: Array<ToolDtpItem> = [], public servers: Array<ServerDtpItem> = [], public projectName: string = "", public projectPath: string = "", mappingsFilePath: string = "") {
         this.mappingsFilePath = mappingsFilePath;
     }
@@ -37,29 +39,28 @@ export class DTPConfig {
         } else {
             return;
         }
-        fs.writeFile(this.mappingsFilePath, JSON.stringify(obj), err => console.warn(err));
+        fs.writeFile(this.mappingsFilePath, JSON.stringify(obj), err => {if(err) console.warn(err)});
     }
 
-    public removeMappingPath(item: IDtpItem) {
+    public removeMappingPath(item: IDtpItem, removeLinkedFile: boolean) {
         const obj = JSON.parse(fs.readFileSync(this.mappingsFilePath, { encoding: 'utf8', flag: 'r' }));
         if (item instanceof MaestroDtpItem) {
-            if (obj[DTPConfig.mmMappingsIndex][item.name]) {
-                delete obj[DTPConfig.mmMappingsIndex][item.name];
-            }
-            if (obj[DTPConfig.coeMappingsIndex][item.name]) {
-                delete obj[DTPConfig.coeMappingsIndex][item.name];
+            delete obj[DTPConfig.mmMappingsIndex][item.name];
+            delete obj[DTPConfig.coeMappingsIndex][item.name];
+            if(removeLinkedFile) {
+                fs.unlink(item.multiModelPath, err => { if (err) console.warn(`Unable to delete mm file linked with maestro: ${err}`) });
+                fs.unlink(item.coePath, err => { if (err) console.warn(`Unable to delete coe file linked with maestro: ${err}`) });
             }
         } else if (item instanceof DataRepeaterDtpItem) {
-            if (obj[DTPConfig.datarepeaterMappingsIndex][item.name]) {
-                delete obj[DTPConfig.datarepeaterMappingsIndex][item.name];
-            }
+            delete obj[DTPConfig.datarepeaterMappingsIndex][item.name];
+            fs.unlink(item.fmu_path, err => { if (err) console.warn(`Unable to delete fmu linked with datarepeater: ${err}`) });
         } else {
             return;
         }
-        fs.writeFile(this.mappingsFilePath, JSON.stringify(obj), err => console.warn(err));
+        fs.writeFile(this.mappingsFilePath, JSON.stringify(obj), err => {if(err) console.warn(err)});
     }
 
-    public static createFromYamlConfig(yamlConfig: any, projectName: string, projectPath: string): DTPConfig {
+    public static createFromYamlObj(yamlConfig: any, projectName: string, projectPath: string): DTPConfig {
         const tools = DTPConfig.toolsIndex in yamlConfig ? Object.keys(yamlConfig[DTPConfig.toolsIndex]).map(toolId => {
             return ToolDtpItem.parse(yamlConfig[DTPConfig.toolsIndex][toolId], toolId);
         }) : [];
@@ -102,6 +103,7 @@ export class DTPConfig {
 }
 
 export interface IDtpItem {
+    isCreatedOnServer: boolean;
     name: string;
     toFormGroup(): FormGroup;
     toYamlObject(): {};
@@ -126,7 +128,7 @@ export enum ServerType {
 }
 
 export class TaskConfigurationDtpItem implements IDtpItem {
-    constructor(public name: string = "", public tasks: Array<IDtpItem> = []) { }
+    constructor(public name: string = "", public tasks: Array<IDtpItem> = [], public isCreatedOnServer: boolean = false) { }
     private static readonly tasksIndex = "tasks";
     async toYamlObject(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
@@ -155,12 +157,12 @@ export class TaskConfigurationDtpItem implements IDtpItem {
             }
             return MaestroDtpItem.parse(task, mmPathMappingsObj, coeMappingsObj);
         }) : [];
-        return new TaskConfigurationDtpItem(yaml["id"], tasks);
+        return new TaskConfigurationDtpItem(yaml["id"], tasks, true);
     }
 }
 
 export class ToolDtpItem implements IDtpItem {
-    constructor(public name: string, public path: string = "", public url: string = "", public type: ToolType) { }
+    constructor(public name: string, public path: string = "", public url: string = "", public type: ToolType, public isCreatedOnServer: boolean = false) { }
 
     toYamlObject(): {} {
         return { path: this.path, url: this.url, type: this.type };
@@ -176,12 +178,12 @@ export class ToolDtpItem implements IDtpItem {
     }
 
     static parse(yaml: any, name: string): ToolDtpItem {
-        return new ToolDtpItem(name, yaml["path"], yaml["url"], yaml["type"]);
+        return new ToolDtpItem(name, yaml["path"], yaml["url"], yaml["type"], true);
     }
 }
 
 export class ServerDtpItem implements IDtpItem {
-    constructor(public name: string, public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: ServerType = ServerType.amqp) { }
+    constructor(public name: string, public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: ServerType = ServerType.amqp, public isCreatedOnServer: boolean = false) { }
 
     toYamlObject(): {} {
         return { name: this.name, user: this.username, password: this.password, host: this.host, port: this.port, type: this.servertype, embedded: this.embedded }
@@ -199,13 +201,13 @@ export class ServerDtpItem implements IDtpItem {
     }
 
     static parse(yaml: any, name: string): ServerDtpItem {
-        return new ServerDtpItem(name, yaml["username"], yaml["password"], yaml["host"], yaml["port"], yaml["embedded"], yaml["servertype"]);
+        return new ServerDtpItem(name, yaml["username"], yaml["password"], yaml["host"], yaml["port"], yaml["embedded"], yaml["servertype"], true);
     }
 }
 
 export class MaestroDtpItem implements IDtpItem {
     private static readonly objectIdentifier: string = "simulation";
-    constructor(public name: string = "", public multiModelPath: string = "", public coePath: string = "", public capture_output: boolean = false, public tool: string = "") { }
+    constructor(public name: string = "", public multiModelPath: string = "", public coePath: string = "", public capture_output: boolean = false, public tool: string = "", public isCreatedOnServer: boolean = false) { }
     async toYamlObject() {
         let project = IntoCpsApp.getInstance().getActiveProject();
         const multiModel: MultiModelConfig = await MultiModelConfig.parse(this.multiModelPath, project.getFmusPath());
@@ -228,7 +230,7 @@ export class MaestroDtpItem implements IDtpItem {
         const name = yaml["id"];
         const multiModelPath: string = mmPathMappingsObj[name] ?? "";
         const coePath: string = coeMappingsObj[name] ?? "";
-        return new MaestroDtpItem(name, multiModelPath, coePath, maestroYamlObj["execution"]["capture_output"], maestroYamlObj["execution"]["tool"])
+        return new MaestroDtpItem(name, multiModelPath, coePath, maestroYamlObj["execution"]["capture_output"], maestroYamlObj["execution"]["tool"], true)
     }
 }
 
@@ -259,7 +261,7 @@ export class SignalTarget {
 }
 
 export class SignalDtpType implements IDtpItem {
-    constructor(public name: string = "", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget) { }
+    constructor(public name: string = "", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget, public isCreatedOnServer: boolean = false) { }
 
     toYamlObject(): {} {
         return {
@@ -286,13 +288,13 @@ export class SignalDtpType implements IDtpItem {
     static parse(yaml: any, name: string): SignalDtpType {
         return new SignalDtpType(name,
             new SignalSource(yaml["source"]["exchange"], yaml["source"]["datatype"], yaml["source"]["routing_key"]),
-            new SignalTarget(yaml["target"]["exchange"], yaml["target"]["pack"], yaml["target"]["path"], yaml["target"]["datatype"], yaml["target"]["routing_key"]));
+            new SignalTarget(yaml["target"]["exchange"], yaml["target"]["pack"], yaml["target"]["path"], yaml["target"]["datatype"], yaml["target"]["routing_key"]), true);
     }
 }
 
 export class DataRepeaterDtpItem implements IDtpItem {
     private static readonly objectIdentifier: string = "amqp-repeater";
-    constructor(public name: string = "", public tool: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<IDtpItem> = [], public fmu_path: string = "") { }
+    constructor(public name: string = "", public tool: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<IDtpItem> = [], public fmu_path: string = "", public isCreatedOnServer: boolean = false) { }
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, [Validators.required]),
@@ -321,6 +323,6 @@ export class DataRepeaterDtpItem implements IDtpItem {
         const signals: SignalDtpType[] = Object.keys(dataRepeaterYamlObj["signals"]).map((yamlSigObj: any) => SignalDtpType.parse(dataRepeaterYamlObj["signals"][yamlSigObj], yamlSigObj));
         const name = yaml["id"];
         const fmuPath: string = dataRepeaterFmuMappingsObj[name] ?? "";
-        return new DataRepeaterDtpItem(name, dataRepeaterYamlObj["prepare"]["tool"], dataRepeaterYamlObj["servers"]["source"], dataRepeaterYamlObj["servers"]["target"], signals, fmuPath);
+        return new DataRepeaterDtpItem(name, dataRepeaterYamlObj["prepare"]["tool"], dataRepeaterYamlObj["servers"]["source"], dataRepeaterYamlObj["servers"]["target"], signals, fmuPath, true);
     }
 }

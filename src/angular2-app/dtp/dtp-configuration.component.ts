@@ -31,7 +31,7 @@
 
 import { Component, Input } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolType } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolType } from "./dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";

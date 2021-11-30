@@ -30,7 +30,7 @@
  */
 
 import { Component, Input} from "@angular/core";
-import { DTPConfig } from "../../intocps-configurations/dtp-configuration";
+import { DTPConfig } from "./dtp-configuration";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 import * as Path from 'path';
 
@@ -62,7 +62,7 @@ export class DtpPageComponent {
     constructor(private dtpToolingService: DtpDtToolingService) {
     }
 
-    private ensureProjectEsists(projectName: string): Promise<void> {
+    private ensureProjectExsists(projectName: string): Promise<void> {
         return new Promise<void> ((resolve, reject) => {
             this.dtpToolingService.getProjects().then((projectNames: string[]) => {
                 if(projectNames.findIndex(name => projectName == name) == -1){
@@ -75,13 +75,13 @@ export class DtpPageComponent {
     }
 
     private parseConfig(projectName: string, projectPath: string) {
-        this.ensureProjectEsists(projectName).then(() => {
+        this.ensureProjectExsists(projectName).then(() => {
             this.dtpToolingService.getProject(projectName).then(yamlConf => {
                 // Create a form group for each DTPType
-                this.config = DTPConfig.createFromYamlConfig(yamlConf, projectName, projectPath);
+                this.config = DTPConfig.createFromYamlObj(yamlConf, projectName, projectPath);
                 this.configIsLoaded = true;
-                console.log("Parsed DTP config!");
-            }).catch(err => console.warn(err));
-        }).catch(err => console.warn(err));
+                console.log("Parsed DTP config from server");
+            }).catch(err => console.error("Unable to fetch project from server: " + err));
+        }).catch(err => console.warn("Unable to determine if project exists: " + err));
     }
 }

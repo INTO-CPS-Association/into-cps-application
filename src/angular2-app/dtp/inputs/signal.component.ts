@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { SignalDtpType } from "../../../intocps-configurations/dtp-configuration";
+import { SignalDtpType } from "../dtp-configuration";
 
 @Component({
     selector: 'signal',

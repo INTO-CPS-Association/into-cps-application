@@ -44,7 +44,7 @@
         </div>
         <div *ngIf="showExperimentSelect && editing">
             <label class="col-sm-3 control-label">Choose experiment: </label>
-            <select [(ngModel)]="baseExperimentPath" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9" (change)="onBaseExperimentChanged()">
+            <select [(ngModel)]="baseExperimentPath" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9" (change)="onBaseExperimentSet()">
                 <option *ngFor="let path of experimentsPaths" [ngValue]="path">{{getExperimentNameFromPath(path, '2')}}</option>
             </select>
         </div>

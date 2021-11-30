@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpItem, DTPConfig, DtpType, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, DtpType, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../dtp-configuration";
 import * as fs from "fs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
@@ -58,6 +58,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
 
     constructor(private dtpToolingService: DtpDtToolingService) {
         console.log("Configuration component constructor");
+
     }
 
     ngAfterContentInit(): void {
@@ -87,11 +88,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
 
     removeTask(task: IDtpItem) {
         this.dtpToolingService.removeTaskFromConfiguration(this.configuration.name, task.name, this.config.projectName).then(() => {
-            const pathToRemove = task instanceof MaestroDtpItem ? task.multiModelPath : task instanceof DataRepeaterDtpItem ? task.fmu_path : "";
-            if(pathToRemove){
-                fs.unlink(pathToRemove, err => { if (err) console.warn(`Unable to delete file linked with task: ${err}`) });
-                this.config.removeMappingPath(task);
-            }
+            this.config.removeMappingPath(task, true);
             const index = this.configuration.tasks.indexOf(task);
             this.configuration.tasks.splice(index, 1);
             (this.formGroup.get("tasks") as FormArray).removeAt(index);
@@ -100,18 +97,15 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
 
     onSaveConfiguration() {
         this.editing = false;
-        this.configuration.toYamlObject().then(confYamlObj => {
-            if(!this.configuration.name){
-                this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then((configurationYamlObj: any) => this.configuration.name = configurationYamlObj['id']);
-            } else {
-                this.dtpToolingService.updateConfiguration(this.configuration.name, confYamlObj, this.config.projectName);
-            }
-        });
-        
-        this.configuration.tasks.forEach(task => {
+        this.configuration.toYamlObject().then(async confYamlObj => {
+            // Create or update the task configuration in the server
+            this.configuration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(this.configuration.name, confYamlObj, this.config.projectName) : 
+                await this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then(() => this.configuration.isCreatedOnServer = true);
+        }).then(() => this.configuration.tasks.forEach(task => {
+            // Add mapping for tasks. e.g.: maestro task item maps to the path of the (copied) multi-model file and coe file.
             if(task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem){
                 this.config.addMappingPath(task);
             }
-        });
+        }));
     }
 }

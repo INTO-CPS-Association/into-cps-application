@@ -235,6 +235,15 @@ export class DtpDtToolingService implements OnDestroy {
     /*
         OTHER API CALLS
     */
+    public getSchemaDefinition(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.httpClient.get(`${this.url}//project/schemas`).subscribe(res => {
+                resolve(res);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
     public createFmuFromDataRepeater(configIndex: string, dataRepeaterIndex: string, projectName: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.httpClient.post(`${this.url}/projects/${projectName}/prepare/config/configurations/${configIndex}/tasks/${dataRepeaterIndex}`, "").subscribe(res => {
