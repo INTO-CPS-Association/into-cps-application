@@ -1,9 +1,3 @@
-<style>
-	.server-panel {
-		width: fit-content;
-	}
-</style>
-
 <form *ngIf="isLoaded" [formGroup]="form">
 	<div class="form-horizontal">
 		<panel id="tools" [title]="'Tools'" [open]="false">
@@ -49,7 +43,7 @@
 			</div>
 
 			<div class="constraint-container">
-				<div class="panel panel-default server-panel" *ngFor="let server of config.servers; let i = index">
+				<div class="panel panel-default constraint-panel" *ngFor="let server of config.servers; let i = index">
 					<div class="panel-heading btn-panel-heading">
 						<button class="btn btn-default pull-right" title="Remove server" (click)="removeDtpItem(server)">
 							<span class="glyphicon glyphicon-remove"></span>

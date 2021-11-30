@@ -42,8 +42,9 @@ import { DtpToolComponent } from "./inputs/tool.component";
 import { DtpTaskConfigurationComponent } from "./inputs/taskConfiguration.component";
 import { MmModule } from "../mm/mm.module";
 import { DtpExecuteComponent } from "./dtp-execute.component";
+import { COEModule } from "../coe/coe.module";
 @NgModule({
-    imports: [ FormsModule, ReactiveFormsModule, SharedModule, CommonModule , MmModule], // module dependencies
+    imports: [ FormsModule, ReactiveFormsModule, SharedModule, CommonModule , MmModule, COEModule], // module dependencies
     declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent, DtpServerComponent, DtpSignalComponent, DtpDataRepeaterComponent, DtpToolComponent, DtpTaskConfigurationComponent, DtpExecuteComponent], // components and directives
     exports: [DtpPageComponent]
   })

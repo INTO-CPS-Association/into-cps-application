@@ -55,8 +55,12 @@
             <mm-overview #overview [(path)]="maestro.multiModelPath"></mm-overview>
         </panel>
         
-        <panel *ngIf="editing" id="Configuration" [title]="'Configuration'" [open]="false">
+        <panel *ngIf="editing" id="MultiModelConfiguration" [title]="'Multi-Model Configuration'" [open]="false">
             <mm-configuration [(path)]="maestro.multiModelPath" (change)="overview.parseConfig()"></mm-configuration>
+        </panel>
+
+        <panel *ngIf="editing" id="SimulationConfiguration" [title]="'Simulation Configuration'" [open]="false">
+            <coe-configuration [path]="maestro.coePath"></coe-configuration>
         </panel>
     </div>
 </div>

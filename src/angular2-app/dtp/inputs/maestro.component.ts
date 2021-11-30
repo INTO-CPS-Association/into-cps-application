@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { DTPConfig, IDtpItem, MaestroDtpItem, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
+import { DTPConfig, IDtpItem, MaestroDtpItem, ToolDtpItem, ToolType } from "../../../intocps-configurations/dtp-configuration";
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
@@ -65,14 +65,12 @@ export class DtpMaestroComponent implements AfterContentInit{
 
     showExperimentSelect: boolean = false;
 
-    constructor() {
-        console.log("Maestro component constructor");
-    }
+    constructor() {}
 
     simulationNamesFromTools(tools: IDtpItem[]): string[] {
         return tools.reduce((maestroToolNames: string[], tool: ToolDtpItem) => {
-            if(tool.type == ToolTypes.maestro){
-                maestroToolNames.push(tool.id);
+            if(tool.type == ToolType.maestroV2){
+                maestroToolNames.push(tool.name);
             }
             return maestroToolNames;
         }, []);
@@ -98,33 +96,41 @@ export class DtpMaestroComponent implements AfterContentInit{
         return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name;
     }
 
-    onBaseExperimentChanged(){
+    async onBaseExperimentChanged(){
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-        const mm_destinationName = Path.join(Path.dirname(this.config.projectPath), this.maestro.name + "_multiModel.json");
+        const destinationPath =  this.config.projectPath;//Path.dirname(this.config.projectPath);
+        const mm_destinationName = Path.join(destinationPath, this.maestro.name + "_multiModel.json");
+        const coe_destinationName = Path.join(destinationPath, this.maestro.name + "_coe.json");
         const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
-        fs.readdir(mm_sourcePath, (err, files) => {
-            if (files) {
-                const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
-                if (mm_name) {
-                    const mm_sourceName = Path.join(mm_sourcePath, mm_name);
-                    fs.copyFile(mm_sourceName, mm_destinationName, (err) => {
-                        if (err) {
-                            console.error(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`);
-                        }
-                        else {
-                            this.maestro.multiModelPath = mm_destinationName;
-                        }
-                    });
-                }
-                else {
-                    console.error(`Unable to locate multi model in: ${mm_sourcePath}.`);
-                }
-            } else {
-                console.error(`Unable to read directory: ${mm_sourcePath}: "${err}."`);
+        const coe_sourcePath = this.baseExperimentPath;
+
+        await fs.promises.readdir(mm_sourcePath).then(async files => {
+            const mm_name = files.find(fileName => fileName.toLowerCase().endsWith("mm.json"));
+            if (mm_name) {
+                const mm_sourceName = Path.join(mm_sourcePath, mm_name);
+                await fs.promises.copyFile(mm_sourceName, mm_destinationName)
+                .then(() => this.maestro.multiModelPath = mm_destinationName)
+                .catch(err => console.warn(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`))
             }
-        });
+            else {
+                console.warn(`Unable to locate multi model in: ${mm_sourcePath}.`);
+            }
+        })
+        await fs.promises.readdir(coe_sourcePath).then(async files =>{
+            const coe_name = files.find(fileName => fileName.toLowerCase().endsWith("coe.json"));
+            if (coe_name) {
+                const coe_sourceName = Path.join(coe_sourcePath, coe_name);
+                await fs.promises.copyFile(coe_sourceName, coe_destinationName)
+                .then(() => this.maestro.coePath = coe_destinationName)
+                .catch(err => console.warn(`Unable to copy coe file from: ${coe_sourceName} to ${coe_destinationName}: "${err}"`));
+            }
+            else {
+                console.warn(`Unable to locate coe file in: ${coe_sourcePath}.`);
+            }
+        }) 
+
         this.showExperimentSelect = false;
     }
 

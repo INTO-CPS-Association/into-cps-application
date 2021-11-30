@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpItem, DTPConfig, DtpTypes, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, DtpType, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../../../intocps-configurations/dtp-configuration";
 import * as fs from "fs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
@@ -41,7 +41,7 @@ import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 })
 export class DtpTaskConfigurationComponent implements AfterContentInit {
     private taskConstructors = [DataRepeaterDtpItem, MaestroDtpItem];
-    dtpTypesEnum = DtpTypes;
+    dtpTypesEnum = DtpType;
     
     newTask: new (...args: any[]) => IDtpItem;
 
@@ -86,29 +86,32 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     }
 
     removeTask(task: IDtpItem) {
-        const pathToRemove = task instanceof MaestroDtpItem ? task.multiModelPath : task instanceof DataRepeaterDtpItem ? task.fmu_path : "";
-        if(pathToRemove){
-            fs.unlink(pathToRemove, err => { if (err) console.error(`Unable to delete file linked with task: ${err}`) });
-            this.config.removeMappingPath(task);
-        }
-        const index = this.configuration.tasks.indexOf(task);
-        this.configuration.tasks.splice(index, 1);
-        (this.formGroup.get("tasks") as FormArray).removeAt(index);
+        this.dtpToolingService.removeTaskFromConfiguration(this.configuration.name, task.name, this.config.projectName).then(() => {
+            const pathToRemove = task instanceof MaestroDtpItem ? task.multiModelPath : task instanceof DataRepeaterDtpItem ? task.fmu_path : "";
+            if(pathToRemove){
+                fs.unlink(pathToRemove, err => { if (err) console.warn(`Unable to delete file linked with task: ${err}`) });
+                this.config.removeMappingPath(task);
+            }
+            const index = this.configuration.tasks.indexOf(task);
+            this.configuration.tasks.splice(index, 1);
+            (this.formGroup.get("tasks") as FormArray).removeAt(index);
+        }).catch(err => console.error("Unable to remove task from configuration: " + err));
     }
 
     onSaveConfiguration() {
         this.editing = false;
         this.configuration.toYamlObject().then(confYamlObj => {
-            if(!this.configuration.id){
-                this.dtpToolingService.addConfigurationToProject(confYamlObj, this.config.projectName).then((configurationYamlObj: any) => this.configuration.id = configurationYamlObj['id']);
+            if(!this.configuration.name){
+                this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then((configurationYamlObj: any) => this.configuration.name = configurationYamlObj['id']);
             } else {
-                this.dtpToolingService.updateConfigurationInProject(this.configuration.id, confYamlObj, this.config.projectName);
+                this.dtpToolingService.updateConfiguration(this.configuration.name, confYamlObj, this.config.projectName);
             }
-        })
+        });
+        
         this.configuration.tasks.forEach(task => {
             if(task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem){
                 this.config.addMappingPath(task);
             }
-        })
+        });
     }
 }

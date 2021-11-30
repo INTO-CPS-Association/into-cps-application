@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
-import { DTPConfig, ToolDtpItem, ToolTypes } from "../../../intocps-configurations/dtp-configuration";
+import { DTPConfig, ToolDtpItem, ToolType } from "../../../intocps-configurations/dtp-configuration";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
 @Component({
@@ -50,7 +50,7 @@ export class DtpToolComponent implements AfterContentInit{
     
     editing: boolean = true;
 
-    toolTypes = ToolTypes
+    toolTypes = ToolType
 
     keys: string[];
 
@@ -71,6 +71,6 @@ export class DtpToolComponent implements AfterContentInit{
     }
 
     onSaveTool() {
-        this.dtpToolingService.updateToolInProject(this.tool.id, this.tool.toYamlObject(), this.config.projectName).then(() => this.editing = false);
+        this.dtpToolingService.updateTool(this.tool.name, this.tool.toYamlObject(), this.config.projectName).then(() => this.editing = false);
     }
 }

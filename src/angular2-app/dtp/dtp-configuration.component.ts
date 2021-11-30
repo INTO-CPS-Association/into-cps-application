@@ -31,7 +31,7 @@
 
 import { Component, Input } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolTypes } from "../../intocps-configurations/dtp-configuration";
+import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolType } from "../../intocps-configurations/dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
@@ -71,8 +71,8 @@ export class DtpConfigurationComponent {
 
     private handleConfigurationUpdated(){
         const groupObj: any = {};
-        groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id"));
-        groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("id"));
+        groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
+        groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
         groupObj[this.formkey_configurations] = new FormArray(this.config.configurations.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
 
         this.form = new FormGroup(groupObj);
@@ -109,7 +109,7 @@ export class DtpConfigurationComponent {
             formArray = <FormArray>this.form.get(this.formkey_configurations);
         }
         else if (typeName == "tool") {
-            item = new ToolDtpItem("", "", "", ToolTypes.maestro);
+            item = new ToolDtpItem("", "", "", ToolType.maestroV2);
             this.config.tools.push(item);
             formArray = <FormArray>this.form.get(this.formkey_tools);
         }
@@ -127,17 +127,17 @@ export class DtpConfigurationComponent {
             formArray = <FormArray>this.form.get(this.formkey_servers);
             index = this.config.servers.indexOf(item);
             this.config.servers.splice(index, 1);
-            this.dtpToolingService.removeServerInProject(item.id, this.config.projectName);
+            this.dtpToolingService.removeServer(item.name, this.config.projectName);
         } else if (item instanceof TaskConfigurationDtpItem) {
             formArray = <FormArray>this.form.get(this.formkey_configurations);
             index = this.config.configurations.indexOf(item);
             this.config.configurations.splice(index, 1);
-            this.dtpToolingService.removeConfigurationInProject(item.id, this.config.projectName);
+            this.dtpToolingService.removeConfiguration(item.name, this.config.projectName);
         } else if (item instanceof ToolDtpItem) {
             formArray = <FormArray>this.form.get(this.formkey_tools);
             index = this.config.tools.indexOf(item);
             this.config.tools.splice(index, 1);
-            this.dtpToolingService.removeToolInProject(item.id, this.config.projectName);
+            this.dtpToolingService.removeTool(item.name, this.config.projectName);
         } else {
             console.log("Unknown DTPType");
             return;

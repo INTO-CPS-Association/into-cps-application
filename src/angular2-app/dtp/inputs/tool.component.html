@@ -11,10 +11,10 @@
 	<hr>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">ID</label>
+        <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <p *ngIf="!editing" class="form-control-static">{{tool.id}}</p>
-            <input *ngIf="editing" [(ngModel)]="tool.id"  formControlName="id" class="form-control">
+            <p *ngIf="!editing" class="form-control-static">{{tool.name}}</p>
+            <input *ngIf="editing" [(ngModel)]="tool.name"  formControlName="name" class="form-control">
         </div>
     </div>
 

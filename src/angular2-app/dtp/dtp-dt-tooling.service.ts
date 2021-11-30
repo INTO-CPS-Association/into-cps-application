@@ -93,7 +93,7 @@ export class DtpDtToolingService implements OnDestroy {
     /*
         ADDING NEW ITEMS 
     */
-    public addToolToProject(toolYamlObj: any, projectName: string): Promise<string> {
+    public addTool(toolYamlObj: any, projectName: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.httpClient.post(`${this.url}/projects/${projectName}/config/tools`, toolYamlObj).subscribe((id: string) => {
                 resolve(id);
@@ -103,7 +103,7 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public addServerToProject(serverYamlObj: any, projectName: string): Promise<string> {
+    public addServer(serverYamlObj: any, projectName: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.httpClient.post(`${this.url}/projects/${projectName}/config/servers`, serverYamlObj).subscribe((id: string) => {
                 resolve(id);
@@ -113,7 +113,7 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public addConfigurationToProject(configurationYamlObj: any, projectName: string): Promise<string> {
+    public addConfiguration(configurationYamlObj: any, projectName: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.httpClient.post(`${this.url}/projects/${projectName}/config/configurations`, configurationYamlObj).subscribe((id: string) => {
                 resolve(id);
@@ -123,10 +123,20 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
+    public addTaskToConfiguration(configId: string, taskYamlObj: any, projectName: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/config/configurations/${configId}/tasks`, taskYamlObj).subscribe(() => {
+                resolve();
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
     /*
         UPDATING ITEMS 
     */
-    public updateConfigurationInProject(id: string, configurationYamlObj: any, projectName: string): Promise<void> {
+    public updateConfiguration(id: string, configurationYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.httpClient.put(`${this.url}/projects/${projectName}/config/configurations/${id}`, configurationYamlObj).subscribe(() => {
                 resolve();
@@ -136,7 +146,17 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public updateToolInProject(id: string, toolYamlObj: any, projectName: string): Promise<void> {
+    public updateTask(configurationId: string, taskId: string, taskYamlObj: any, projectName: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.httpClient.put(`${this.url}/projects/${projectName}/config/configurations/${configurationId}/tasks/${taskId}`, taskYamlObj).subscribe(() => {
+                resolve();
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    public updateTool(id: string, toolYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.httpClient.put(`${this.url}/projects/${projectName}/config/tools/${id}`, toolYamlObj).subscribe(() => {
                 resolve();
@@ -146,7 +166,7 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public updateServerInProject(id: string, serverYamlObj: any, projectName: string): Promise<void> {
+    public updateServer(id: string, serverYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.httpClient.put(`${this.url}/projects/${projectName}/config/servers/${id}`, serverYamlObj).subscribe(() => {
                 resolve();
@@ -156,13 +176,12 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-
     /*
         REMOVING ITEMS 
     */
-    public removeToolInProject(index: string, projectName: string): Promise<void> {
+    public removeTool(id: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/projects/${projectName}/config/tools/${index}`).subscribe(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/tools/${id}`).subscribe(() => {
                 resolve();
             }, (err: HttpErrorResponse) => {
                 reject(err.error);
@@ -170,9 +189,9 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public removeServerInProject(index: string, projectName: string): Promise<void> {
+    public removeServer(id: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/projects/${projectName}/config/servers/${index}`).subscribe(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/servers/${id}`).subscribe(() => {
                 resolve();
             }, (err: HttpErrorResponse) => {
                 reject(err.error);
@@ -180,9 +199,19 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public removeConfigurationInProject(index: string, projectName: string): Promise<void> {
+    public removeConfiguration(id: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient.delete(`${this.url}/projects/${projectName}/config/configurations/${index}`).subscribe(() => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/configurations/${id}`).subscribe(() => {
+                resolve();
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    public removeTaskFromConfiguration(configurationId: string, taskId: string,projectName: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.httpClient.delete(`${this.url}/projects/${projectName}/config/configurations/${configurationId}/tasks/${taskId}`).subscribe(() => {
                 resolve();
             }, (err: HttpErrorResponse) => {
                 reject(err.error);

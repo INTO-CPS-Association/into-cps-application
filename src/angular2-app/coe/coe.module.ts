@@ -56,7 +56,7 @@ import { LineChartComponent } from "../shared/line-chart.component";
         LiveGraphComponent,
         CoeSimulationComponent,
         LineChartComponent],
-    exports: [CoePageComponent, CoeSimulationComponent],
+    exports: [CoePageComponent, CoeSimulationComponent, CoeConfigurationComponent],
     providers: [CoeSimulationService]
 })
 export class COEModule {
