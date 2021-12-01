@@ -55,11 +55,14 @@ export class DtpServerComponent implements AfterContentInit {
     }
 
     ngAfterContentInit(): void {
-        this.editing = this.server.name == "";
+        this.editing = !this.server.isCreatedOnServer;
     }
 
     onSaveServer() {       
-        this.dtpToolingService.updateServer(this.server.name, this.server.toYamlObject(), this.config.projectName).then(() => this.editing = false);
+        this.dtpToolingService.updateServer(this.server.id, this.server.toYamlObject(), this.config.projectName).then(() => {
+            this.editing = false;
+            this.server.isCreatedOnServer = true;
+        });
     }
 }
 

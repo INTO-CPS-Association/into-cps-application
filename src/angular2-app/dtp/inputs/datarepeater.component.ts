@@ -31,7 +31,7 @@
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpItem, DTPConfig, IDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, dtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from 'path';
@@ -79,38 +79,41 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     }
 
     ngAfterContentInit(): void {
-        const availableTools = this.rabbitMqNamesFromTools(this.config.tools);
-        this.datarepeater.tool = availableTools.length > 0 ? availableTools[0] : "";
+        if(!this.datarepeater.isCreatedOnServer){
+            const availableTools = this.getRabbitMqTools();
+            this.datarepeater.toolId = availableTools.length > 0 ? availableTools[0].id : "";
+        }
     }
 
     ngOnDestroy() {
         this.isToolingServerOnlineSub.unsubscribe();
     }
 
-    getServerNames(servers: IDtpItem[]): string[] {
-        return servers.map(server => server.name);
+    toolIdToName(toolId: string): string {
+        return this.getRabbitMqTools().find(tool => tool.id == toolId)?.name ?? "";
     }
 
-    rabbitMqNamesFromTools(tools: IDtpItem[]): string[] {
-        return tools.reduce((rabbitMqToolNames: string[], tool: ToolDtpItem) => {
+    getRabbitMqTools(): ToolDtpItem[] {
+        return this.config.tools.reduce((rabbitMqToolNames: ToolDtpItem[], tool: ToolDtpItem) => {
             if(tool.type == ToolType.rabbitmq){
-                rabbitMqToolNames.push(tool.name);
+                rabbitMqToolNames.push(tool);
             }
             return rabbitMqToolNames;
         }, []);
     }
 
     createFMU() {
-        const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => configuration.tasks.findIndex((task: IDtpItem) => task.name == this.datarepeater.name) > -1) as TaskConfigurationDtpItem;
+        const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => configuration.tasks.findIndex((task: dtpItem) => task.id == this.datarepeater.id) > -1) as TaskConfigurationDtpItem;
 
         parentConfiguration.toYamlObject().then(async yamlObj => {
             // Create or update the configuration in the server
-            parentConfiguration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(parentConfiguration.name, yamlObj, this.config.projectName) : 
+            parentConfiguration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(parentConfiguration.id, yamlObj, this.config.projectName) : 
                 await this.dtpToolingService.addConfiguration(yamlObj, this.config.projectName).then(() => parentConfiguration.isCreatedOnServer = true);
             // When the configuraiton is up-to-date in the server, create the datareapter FMU
-            this.dtpToolingService.createFmuFromDataRepeater(parentConfiguration.name, this.datarepeater.name, this.config.projectName).then(relativeFmuPath => 
-                this.datarepeater.fmu_path = Path.join(this.dtpToolingService.projectPath, relativeFmuPath), err => console.log(err)
-            )
+            this.dtpToolingService.createFmuFromDataRepeater(parentConfiguration.id, this.datarepeater.id, this.config.projectName).then(relativeFmuPath => {
+                this.datarepeater.fmu_path = Path.join(this.config.projectPath, relativeFmuPath);
+                this.datarepeater.addLinkToFMU(this.config.fileLinksPath);
+            }).catch(err => console.log(err));
         });
     }
 
@@ -120,7 +123,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         (this.formGroup.get("signals") as FormArray).push(signal.toFormGroup());
     }
 
-    removeSignal(signal: IDtpItem) {
+    removeSignal(signal: dtpItem) {
         const index = this.datarepeater.signals.indexOf(signal);
         this.datarepeater.signals.splice(index, 1);
         (this.formGroup.get("signals") as FormArray).removeAt(index);

@@ -400,8 +400,8 @@ menuHandler.createDtpPlain = (path: string) => {
             callBack: function (value: String) {
                 try {
                     if (!value) { return; }
-                    let coePath = project.createDtpConfig(value, null).toString();
-                    menuHandler.openDtpView(coePath);
+                    let dtpPath = project.createDtpConfig(value).toString();
+                    menuHandler.openDtpView(dtpPath);
                 } catch (error) {
                     return;
                 }
@@ -510,7 +510,7 @@ menuHandler.deletePath = (path) => {
            //  IntoCpsApp.getInstance().emit(IntoCpsAppEvents.PROJECT_CHANGED);
         });
 
-    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith(".sigverConfig.json") || name.endsWith("dtp.json")) {
+    } else if (name.endsWith("coe.json") || name.endsWith("mm.json") || name.endsWith(".dse.json") || name.endsWith(".sigverConfig.json") || name.endsWith("dtp.json") || name.endsWith("project.yml")) {
         let dir = Path.dirname(path);
         console.info("Deleting " + dir);
         CustomFs.getCustomFs().removeRecursive(dir, function (err: any, v: any) {

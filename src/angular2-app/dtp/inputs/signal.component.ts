@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information. 
  */
 
-import { Component, Input, AfterContentInit } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { FormGroup } from "@angular/forms";
 import { SignalDtpType } from "../dtp-configuration";
 
@@ -37,7 +37,7 @@ import { SignalDtpType } from "../dtp-configuration";
     selector: 'signal',
     templateUrl: "./angular2-app/dtp/inputs/signal.component.html"
 })
-export class DtpSignalComponent implements AfterContentInit {
+export class DtpSignalComponent {
     @Input()
     signal: SignalDtpType
 
@@ -51,8 +51,5 @@ export class DtpSignalComponent implements AfterContentInit {
         console.log("Signal component constructor");
     }
 
-    ngAfterContentInit(): void {
-        this.editing = this.signal.name == "";
-    }
 }
 

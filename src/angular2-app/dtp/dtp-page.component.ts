@@ -49,7 +49,7 @@ export class DtpPageComponent {
         this._path = path;
         
         if (path) {
-            this.dtpToolingService.startServer(Path.dirname(this._path));
+            this.dtpToolingService.startServer(Path.join(Path.dirname(this._path), ".."));
             const projectPath = Path.dirname(path);
             this.parseConfig(Path.basename(projectPath), projectPath);
         }
@@ -59,8 +59,7 @@ export class DtpPageComponent {
         return this._path;
     }
     
-    constructor(private dtpToolingService: DtpDtToolingService) {
-    }
+    constructor(private dtpToolingService: DtpDtToolingService) {}
 
     private ensureProjectExsists(projectName: string): Promise<void> {
         return new Promise<void> ((resolve, reject) => {

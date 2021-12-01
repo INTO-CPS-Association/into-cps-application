@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpItem, DTPConfig, DtpType, IDtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, DtpType, dtpItem, MaestroDtpItem, TaskConfigurationDtpItem } from "../dtp-configuration";
 import * as fs from "fs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
@@ -43,7 +43,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     private taskConstructors = [DataRepeaterDtpItem, MaestroDtpItem];
     dtpTypesEnum = DtpType;
     
-    newTask: new (...args: any[]) => IDtpItem;
+    newTask: new (...args: any[]) => dtpItem;
 
     @Input()
     configuration: TaskConfigurationDtpItem
@@ -62,12 +62,11 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     }
 
     ngAfterContentInit(): void {
-        this.editing = this.configuration.name == "";
+        this.editing = !this.configuration.isCreatedOnServer;
     }
 
-    isTaskMaestro = (task: IDtpItem) => task instanceof MaestroDtpItem;
-    isTaskDatarepeater = (task: IDtpItem) => task instanceof DataRepeaterDtpItem;
-    taskFilter = (item: IDtpItem) => { return this.isTaskMaestro(item) || this.isTaskDatarepeater(item)}
+    isTaskMaestro = (task: dtpItem) => task instanceof MaestroDtpItem;
+    isTaskDatarepeater = (task: dtpItem) => task instanceof DataRepeaterDtpItem;
 
     getTaskName(dtpType: any): string {
         if (dtpType === MaestroDtpItem || dtpType instanceof MaestroDtpItem) {
@@ -86,26 +85,26 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
         (this.formGroup.get("tasks") as FormArray).push(task.toFormGroup());
     }
 
-    removeTask(task: IDtpItem) {
-        this.dtpToolingService.removeTaskFromConfiguration(this.configuration.name, task.name, this.config.projectName).then(() => {
-            this.config.removeMappingPath(task, true);
-            const index = this.configuration.tasks.indexOf(task);
-            this.configuration.tasks.splice(index, 1);
-            (this.formGroup.get("tasks") as FormArray).removeAt(index);
-        }).catch(err => console.error("Unable to remove task from configuration: " + err));
+    async removeTask(task: dtpItem) {
+        if(task.isCreatedOnServer){
+            await this.dtpToolingService.removeTaskFromConfiguration(this.configuration.id, task.id, this.config.projectName).catch(err => {
+                console.error("Unable to remove task from configuration: " + err);
+                return;
+            });
+        }
+        if(task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem){
+            task.removeFileLinks(this.config.fileLinksPath, true);
+        }
+        const index = this.configuration.tasks.indexOf(task);
+        this.configuration.tasks.splice(index, 1);
+        (this.formGroup.get("tasks") as FormArray).removeAt(index);
     }
 
     onSaveConfiguration() {
         this.configuration.toYamlObject().then(async confYamlObj => {
             // Create or update the task configuration in the server
-            this.configuration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(this.configuration.name, confYamlObj, this.config.projectName) : 
+            this.configuration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(this.configuration.id, confYamlObj, this.config.projectName) : 
                 await this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then(() => this.configuration.isCreatedOnServer = true);
-        }).then(() => this.configuration.tasks.forEach(task => {
-            // Add mapping for tasks. e.g.: maestro task item maps to the path of the (copied) multi-model file and coe file.
-            if(task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem){
-                this.config.addMappingPath(task);
-            }
-            this.editing = false;
-        })).catch(err => console.warn("Unable to save configuration: " + err));
+        }).then(() => this.configuration.tasks.forEach(() => this.editing = false)).catch(err => console.warn("Unable to save configuration: " + err));
     }
 }

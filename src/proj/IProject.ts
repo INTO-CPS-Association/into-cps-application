@@ -47,7 +47,7 @@ export interface IProject {
     createSigVer(name: String): String;
     createSysMLDSEConfig(name: String, jsonContent: String): String;
     createCoSimConfig(multimodelConfigPath: string, name: String, jsonContent: String): string;
-    createDtpConfig(name: String, jsonContent: string): string;
+    createDtpConfig(name: String): string;
 
     getSettings(): ProjectSettings;
 

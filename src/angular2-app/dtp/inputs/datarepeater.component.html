@@ -39,10 +39,10 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">RabbitMQ Tool</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" [(ngModel)]="datarepeater.tool" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
-                <option *ngFor="let toolName of rabbitMqNamesFromTools(config.tools)" [ngValue]="toolName">{{toolName}}</option>
+            <select *ngIf="editing" [(ngModel)]="datarepeater.toolId" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
+                <option *ngFor="let rabbitMqTool of getRabbitMqTools(config.tools)" [ngValue]="rabbitMqTool.id">{{rabbitMqTool.name}}</option>
             </select>
-            <p *ngIf="!editing" class="form-control-static">{{datarepeater.tool}}</p>
+            <p *ngIf="!editing" class="form-control-static">{{toolIdToName(datarepeater.toolId)}}</p>
         </div>
     </div>
 

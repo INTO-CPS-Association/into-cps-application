@@ -19,10 +19,10 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Simulation tool</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" [(ngModel)]="maestro.tool" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
-                <option *ngFor="let toolName of simulationNamesFromTools(config.tools)" [ngValue]="toolName">{{toolName}}</option>
+            <select *ngIf="editing" [(ngModel)]="maestro.toolId" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
+                <option *ngFor="let simulationTool of getSimulationTools()" [ngValue]="simulationTool.id">{{simulationTool.name}}</option>
             </select>
-            <p *ngIf="!editing" class="form-control-static">{{maestro.tool}}</p>
+            <p *ngIf="!editing" class="form-control-static">{{toolIdToName(maestro.toolId)}}</p>
         </div>
     </div>
 

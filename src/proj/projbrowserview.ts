@@ -455,7 +455,7 @@ export class BrowserController {
                 parent.refresh();
                 return null;
             }
-            else if (path.endsWith("dtp.json")){
+            else if (path.endsWith("project.yml")){
                 parent.opensInMainWindow = true;
                 (<any>parent).dtpConfig = path;
                 parent.dblClickHandler = function(item: ProjectBrowserItem){

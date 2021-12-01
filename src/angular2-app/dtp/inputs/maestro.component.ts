@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { DTPConfig, IDtpItem, MaestroDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
+import { DTPConfig, dtpItem, MaestroDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
@@ -69,13 +69,17 @@ export class DtpMaestroComponent implements AfterContentInit{
 
     constructor() {}
 
-    simulationNamesFromTools(tools: IDtpItem[]): string[] {
-        return tools.reduce((maestroToolNames: string[], tool: ToolDtpItem) => {
+    getSimulationTools(): ToolDtpItem[] {
+        return this.config.tools.reduce((maestroToolNames: ToolDtpItem[], tool: ToolDtpItem) => {
             if(tool.type == ToolType.maestroV2){
-                maestroToolNames.push(tool.name);
+                maestroToolNames.push(tool);
             }
             return maestroToolNames;
         }, []);
+    }
+
+    toolIdToName(toolId: string): string {
+        return this.getSimulationTools().find(tool => tool.id == toolId)?.name ?? "";
     }
 
     ngAfterContentInit(): void {
@@ -88,22 +92,21 @@ export class DtpMaestroComponent implements AfterContentInit{
             }
         }
         this.showInitialSetupBtns = true;
-        this.editing = this.maestro.name == "";
 
-        const availableTools = this.simulationNamesFromTools(this.config.tools);
-        this.maestro.tool = availableTools.length > 0 ? availableTools[0] : "";
+        const availableTools = this.getSimulationTools();
+        this.maestro.toolId = availableTools.length > 0 ? availableTools[0].id : "";
     }
 
     hasUniqueName(): boolean {
-        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name;
+        return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.id;
     }
 
     async onBaseExperimentSet(){
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-                this._maestroConfName = this.maestro.name + "_multiModel.json";
-        this._coeConfName = this.maestro.name + "_simConf.json";
+                this._maestroConfName = this.maestro.id + "_multiModel.json";
+        this._coeConfName = this.maestro.id + "_simConf.json";
         const destinationPath =  this.config.projectPath;
         const mm_destinationName = Path.join(destinationPath, this._maestroConfName);
         const coe_destinationName = Path.join(destinationPath, this._coeConfName);
@@ -139,7 +142,8 @@ export class DtpMaestroComponent implements AfterContentInit{
             else {
                 console.warn(`Unable to locate coe file in: ${coe_sourcePath}.`);
             }
-        }) 
+        })
+        this.maestro.linkToCoeAndMMPath(this.config.fileLinksPath); 
         this.showExperimentSelect = false;
     }
 

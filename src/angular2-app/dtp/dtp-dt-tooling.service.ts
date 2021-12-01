@@ -14,13 +14,12 @@ export class DtpDtToolingService implements OnDestroy {
     private _onlineInterval: number;
     public isOnlineObservable = this._isOnline.asObservable();
     public serverIsOnline: boolean = false;
-    public projectPath: string = "";
     private serverProcess: any;
     private url: string = "";
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.isServerOnline(), 2000);
-        this.url = "http://127.0.0.1:5000"; //"http://localhost"
+        this.url = "http://127.0.0.1:5000"; // "http://localhost";
     }
 
     ngOnDestroy() {
@@ -29,15 +28,14 @@ export class DtpDtToolingService implements OnDestroy {
         this.stopServer();
     }
 
-    public async startServer(projectDir: string) {
-        // if (this.serverIsOnline) {
-        //     return;
-        // }
+    public async startServer(baseDir: string) {
+        if (this.serverIsOnline) {
+            return;
+        }
 
-        // this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${projectDir}`]);
+        // this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${baseDir}`]);
         // console.log("DT tooling webserver PID: " + this.serverProcess.pid);
 
-        // this.projectPath = projectDir;
         // window.addEventListener('beforeunload', this.stopServer); //TODO: Doesn't terminate the webserver on app close
     }
 

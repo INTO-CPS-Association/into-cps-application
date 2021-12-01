@@ -196,16 +196,16 @@ export class Project implements IProject {
 
         return fullpath;
     }
-    public createDtpConfig(name: String, jsonContent: string): string{
+    public createDtpConfig(name: String): string{
         let path = Path.normalize(this.rootPath + "/" + Project.PATH_DTP + "/" + name);
         
         if (fs.existsSync(path)) throw new Error('DTP ' + name + ' already exists!');
         
         fs.mkdirSync(path);
 
-        let fullpath = Path.normalize(path + "/dtp.json");
+        let fullpath = Path.normalize(path + "/project.yml");
 
-        fs.writeFileSync(fullpath, jsonContent == null ? "{}" : jsonContent, "UTF-8");
+        fs.writeFileSync(fullpath, "version': '0.0.2'", "UTF-8");
 
         return fullpath;
     }

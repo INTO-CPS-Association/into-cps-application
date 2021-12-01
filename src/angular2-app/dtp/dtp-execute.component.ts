@@ -29,7 +29,7 @@ export class DtpExecuteComponent {
     }
 
     private execute(){
-        this.dtpToolingService.runConfiguration(this.selectedConfiguration.name, this._config.projectName).then(() => console.log("Finished excuting!")).catch(err => console.warn(err));
+        this.dtpToolingService.runConfiguration(this.selectedConfiguration.id, this._config.projectName).then(() => console.log("Finished excuting!")).catch(err => console.warn(err));
         console.log("EXECUTING!");
     }
 

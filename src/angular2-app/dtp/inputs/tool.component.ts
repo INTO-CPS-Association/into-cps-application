@@ -60,7 +60,7 @@ export class DtpToolComponent implements AfterContentInit{
     }
 
     ngAfterContentInit(): void {
-        this.editing = this.tool.path == "";
+        this.editing = !this.tool.isCreatedOnServer;
     }
 
     setPath(path: string) {
@@ -71,6 +71,9 @@ export class DtpToolComponent implements AfterContentInit{
     }
 
     onSaveTool() {
-        this.dtpToolingService.updateTool(this.tool.name, this.tool.toYamlObject(), this.config.projectName).then(() => this.editing = false);
+        this.dtpToolingService.updateTool(this.tool.id, this.tool.toYamlObject(), this.config.projectName).then(() => {
+            this.editing = false;
+            this.tool.isCreatedOnServer = true;
+        })
     }
 }

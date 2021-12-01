@@ -31,7 +31,7 @@
 
 import { Component, Input } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, IDtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolType } from "./dtp-configuration";
+import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, dtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolType } from "./dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
 import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
@@ -99,7 +99,7 @@ export class DtpConfigurationComponent {
         let item;
         let formArray;
         if (typeName == "server") {
-            item = new ServerDtpItem("");
+            item = new ServerDtpItem();
             this.config.servers.push(item);
             formArray = <FormArray>this.form.get(this.formkey_servers);
         }
@@ -109,7 +109,7 @@ export class DtpConfigurationComponent {
             formArray = <FormArray>this.form.get(this.formkey_configurations);
         }
         else if (typeName == "tool") {
-            item = new ToolDtpItem("", "", "", ToolType.maestroV2);
+            item = new ToolDtpItem();
             this.config.tools.push(item);
             formArray = <FormArray>this.form.get(this.formkey_tools);
         }
@@ -120,28 +120,38 @@ export class DtpConfigurationComponent {
         formArray.push(item.toFormGroup());
     }
 
-    removeDtpItem(item: IDtpItem) {
+    async removeDtpItem(item: dtpItem) {
         if (item instanceof ServerDtpItem) {
-            this.dtpToolingService.removeServer(item.name, this.config.projectName).then(() => {
-                const index = this.config.servers.indexOf(item);
-                this.config.servers.splice(index, 1);
-                (<FormArray>this.form.get(this.formkey_servers)).removeAt(index);
-            });
+            if(item.isCreatedOnServer){
+                await this.dtpToolingService.removeServer(item.id, this.config.projectName).catch(err => {
+                    console.error("Unable to remove server: " + err);
+                    return;
+                });
+            }
+            const index = this.config.servers.indexOf(item);
+            this.config.servers.splice(index, 1);
+            (<FormArray>this.form.get(this.formkey_servers)).removeAt(index);
         } else if (item instanceof TaskConfigurationDtpItem) {
-            this.dtpToolingService.removeConfiguration(item.name, this.config.projectName).then(() => {
-                item.tasks.forEach(task => {
-                    this.config.removeMappingPath(task, true);
-                })
-                const index = this.config.configurations.indexOf(item);
-                this.config.configurations.splice(index, 1);
-                (<FormArray>this.form.get(this.formkey_configurations)).removeAt(index);
-            })
+            if(item.isCreatedOnServer){
+                await this.dtpToolingService.removeConfiguration(item.id, this.config.projectName).catch(err => {
+                    console.error("Unable to remove task: " + err);
+                    return;
+                });
+            }
+            item.removeTasksFileLinks(this._config.fileLinksPath, true);
+            const index = this.config.configurations.indexOf(item);
+            this.config.configurations.splice(index, 1);
+            (<FormArray>this.form.get(this.formkey_configurations)).removeAt(index);
         } else if (item instanceof ToolDtpItem) {
-            this.dtpToolingService.removeTool(item.name, this.config.projectName).then(() => {
-                const index = this.config.tools.indexOf(item);
-                this.config.tools.splice(index, 1);
-                (<FormArray>this.form.get(this.formkey_tools)).removeAt(index);
-            });
+            if(item.isCreatedOnServer){
+                await this.dtpToolingService.removeTool(item.id, this.config.projectName).catch(err => {
+                    console.error("Unable to remove tool: " + err);
+                    return;
+                });
+            }
+            const index = this.config.tools.indexOf(item);
+            this.config.tools.splice(index, 1);
+            (<FormArray>this.form.get(this.formkey_tools)).removeAt(index);
         } else {
             console.log("Unknown DTPType");
             return;
