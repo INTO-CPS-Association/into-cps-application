@@ -54,7 +54,7 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Embedded</label>
         <div class="col-sm-9">
-            <input [disabled]="!editing" [(ngModel)]="server.embedded" formControlName="embedded" type="checkbox">
+            <input [disabled]="!editing" [(ngModel)]="server.embedded" [ngModelOptions]="{standalone: true}" type="checkbox">
         </div>
     </div>
 </div>

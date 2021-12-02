@@ -33,7 +33,7 @@ export class DTPConfig {
         const mappingsFilePath = Path.join(projectPath, DTPConfig.mappingsFile);
         DTPConfig.ensureMappingFileExists(mappingsFilePath);
         const configurations = DTPConfig.configurationsIndex in yamlConfig ? yamlConfig[DTPConfig.configurationsIndex].map((configuration: any) => {
-            return TaskConfigurationDtpItem.parse(configuration, mappingsFilePath);
+            return TaskConfigurationDtpItem.parse(configuration, mappingsFilePath, projectPath);
         }) : [];
 
         return new DTPConfig(configurations, tools, servers, projectName, projectPath, mappingsFilePath);
@@ -116,7 +116,7 @@ export class TaskConfigurationDtpItem extends dtpItem {
         });
     }
 
-    static parse(yaml: any, mappingsFilePath: string): TaskConfigurationDtpItem {
+    static parse(yaml: any, mappingsFilePath: string, projectPath: string): TaskConfigurationDtpItem {
         let mappings: any;
         try {
             mappings = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: 'utf8', flag: 'r' }));
@@ -124,14 +124,43 @@ export class TaskConfigurationDtpItem extends dtpItem {
             mappings = {};
             console.warn(`Unable to parse path mappings from file at: '${mappingsFilePath}' due to: ${ex}`);
         } finally {
-            const tasks: dtpItem[] = TaskConfigurationDtpItem.tasksIndex in yaml ? yaml[TaskConfigurationDtpItem.tasksIndex].map((task: any) => {
-                const mmPathMappingsObj = mappings[MaestroDtpItem.mmMappingsIndex] ?? {}; 
-                const coeMappingsObj = mappings[MaestroDtpItem.coeMappingsIndex] ?? {};
-                const dataRepeaterFmuMappingsObj = mappings[DataRepeaterDtpItem.datarepeaterMappingsIndex] ?? {};
-                if ('amqp-repeater' in task) {
-                    return DataRepeaterDtpItem.parse(task, dataRepeaterFmuMappingsObj);
-                }
-                return MaestroDtpItem.parse(task, mmPathMappingsObj, coeMappingsObj);
+            const tasks: dtpItem[] = TaskConfigurationDtpItem.tasksIndex in yaml ? yaml[TaskConfigurationDtpItem.tasksIndex].map((taskYamlObj: any) => {
+                if (DataRepeaterDtpItem.objectIdentifier in taskYamlObj) {
+                    const id = taskYamlObj["id"];
+                    let fmuPath: string = mappings[DataRepeaterDtpItem.datarepeaterMappingsIndex]?.[id] ?? "";
+                    if(fmuPath){
+                        // If path is not absolute then try relative to project.
+                        if(!Path.isAbsolute(fmuPath)) {
+                            fmuPath = Path.join(projectPath, fmuPath);
+                        }
+                        if(!fs.existsSync(fmuPath)) {
+                            console.warn(`Could not find linked data-repeater fmu in path: ${fmuPath}`)
+                        }
+                    }
+ 
+                    return DataRepeaterDtpItem.parse(taskYamlObj[DataRepeaterDtpItem.objectIdentifier], fmuPath, id);
+                } else if(MaestroDtpItem.objectIdentifier) {
+                    const id = taskYamlObj["id"];
+                    let coePath: string = mappings[MaestroDtpItem.coeMappingsIndex]?.[id] ?? "";
+                    let mmPath: string = mappings[MaestroDtpItem.mmMappingsIndex]?.[id] ?? "";
+                    // If the coe path exists so should the mm path.
+                    if(coePath){
+                        // If paths are not absolute then try relative to project.
+                        if(!Path.isAbsolute(coePath)) {
+                            coePath = Path.join(projectPath, coePath);
+                        }
+                        if(!Path.isAbsolute(mmPath)) {
+                            mmPath = Path.join(projectPath, mmPath);
+                        }
+                        if(!fs.existsSync(coePath)) {
+                            console.warn(`Could not load data from linked coe path: ${coePath}`)
+                        }
+                        if(!fs.existsSync(mmPath)) {
+                            console.warn(`Could not load data from linked multi-model path: ${mmPath}`)
+                        }
+                    }
+                    return MaestroDtpItem.parse(taskYamlObj, mmPath, coePath, id);
+                }           
             }) : [];
             return new TaskConfigurationDtpItem(yaml["name"], yaml["id"], tasks, true);
         }
@@ -182,12 +211,12 @@ export class ServerDtpItem extends dtpItem {
     }
 
     static parse(yaml: any, id: string): ServerDtpItem {
-        return new ServerDtpItem(yaml["name"], id, yaml["username"], yaml["password"], yaml["host"], yaml["port"], yaml["embedded"], yaml["servertype"], true);
+        return new ServerDtpItem(yaml["name"], id, yaml["user"], yaml["password"], yaml["host"], yaml["port"], yaml["embedded"], yaml["servertype"], true);
     }
 }
 
 export class MaestroDtpItem extends dtpItem {
-    private static readonly objectIdentifier: string = "simulation";
+    public static readonly objectIdentifier: string = "simulation";
     public static readonly mmMappingsIndex = "multiModelPathMappings";
     public static readonly coeMappingsIndex = "coePathMappings";
     constructor(public name: string = "", id: string = "", public multiModelPath: string = "", public coePath: string = "", public capture_output: boolean = false, public toolId: string = "", public isCreatedOnServer: boolean = false) { 
@@ -202,8 +231,8 @@ export class MaestroDtpItem extends dtpItem {
         if (!obj[MaestroDtpItem.coeMappingsIndex]) {
             obj[MaestroDtpItem.coeMappingsIndex] = {};
         }
-        obj[MaestroDtpItem.mmMappingsIndex][this.id] = this.multiModelPath;
-        obj[MaestroDtpItem.coeMappingsIndex][this.id] = this.coePath;
+        obj[MaestroDtpItem.mmMappingsIndex][this.id] = Path.basename(this.multiModelPath);
+        obj[MaestroDtpItem.coeMappingsIndex][this.id] = Path.basename(this.coePath);
         fs.writeFile(mappingsFilePath, JSON.stringify(obj), err => {if(err) console.warn(err)});
     }
 
@@ -240,12 +269,9 @@ export class MaestroDtpItem extends dtpItem {
         });
     }
 
-    static parse(yaml: any, mmPathMappingsObj: any, coeMappingsObj: any): MaestroDtpItem {
+    static parse(yaml: any, mmPath: string, coePath: string, id: string): MaestroDtpItem {
         const maestroYamlObj = yaml[this.objectIdentifier];
-        const name = maestroYamlObj["name"];
-        const multiModelPath: string = mmPathMappingsObj[name] ?? "";
-        const coePath: string = coeMappingsObj[name] ?? "";
-        return new MaestroDtpItem(name, yaml["id"], multiModelPath, coePath, maestroYamlObj["execution"]["capture_output"], maestroYamlObj["execution"]["tool"], true)
+        return new MaestroDtpItem(maestroYamlObj["name"], id, mmPath, coePath, maestroYamlObj["execution"]["capture_output"], maestroYamlObj["execution"]["tool"], true)
     }
 }
 
@@ -309,7 +335,7 @@ export class SignalDtpType extends dtpItem {
 }
 
 export class DataRepeaterDtpItem extends dtpItem {
-    private static readonly objectIdentifier: string = "amqp-repeater";
+    public static readonly objectIdentifier: string = "amqp-repeater";
     public static readonly datarepeaterMappingsIndex = "dataRepeaterFmuMappings";
     constructor(public name: string = "", id: string = "", public toolId: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<dtpItem> = [], public fmu_path: string = "", public isCreatedOnServer: boolean = false) { 
         super(isCreatedOnServer, id);
@@ -320,7 +346,7 @@ export class DataRepeaterDtpItem extends dtpItem {
         if (!obj[DataRepeaterDtpItem.datarepeaterMappingsIndex]) {
             obj[DataRepeaterDtpItem.datarepeaterMappingsIndex] = {};
         }
-        obj[DataRepeaterDtpItem.datarepeaterMappingsIndex][this.id] = this.fmu_path;
+        obj[DataRepeaterDtpItem.datarepeaterMappingsIndex][this.id] = Path.basename(this.fmu_path);
         fs.writeFile(mappingsFilePath, JSON.stringify(obj), err => {if(err) console.warn(err)});
     }
 
@@ -355,11 +381,8 @@ export class DataRepeaterDtpItem extends dtpItem {
         return dataRepeaterObject;
     }
 
-    static parse(yaml: any, dataRepeaterFmuMappingsObj: any): DataRepeaterDtpItem {
-        const dataRepeaterYamlObj = yaml[this.objectIdentifier];
+    static parse(dataRepeaterYamlObj: any, fmuPath: string, id: string): DataRepeaterDtpItem {
         const signals: SignalDtpType[] = Object.keys(dataRepeaterYamlObj["signals"]).map((yamlSigKey: any) => SignalDtpType.parse(dataRepeaterYamlObj["signals"][yamlSigKey], yamlSigKey));
-        const name = dataRepeaterYamlObj["name"];
-        const fmuPath: string = dataRepeaterFmuMappingsObj[name] ?? "";
-        return new DataRepeaterDtpItem(name, yaml["id"], dataRepeaterYamlObj["prepare"]["tool"], dataRepeaterYamlObj["servers"]["source"], dataRepeaterYamlObj["servers"]["target"], signals, fmuPath, true);
+        return new DataRepeaterDtpItem(dataRepeaterYamlObj["name"], id, dataRepeaterYamlObj["prepare"]["tool"], dataRepeaterYamlObj["servers"]["source"], dataRepeaterYamlObj["servers"]["target"], signals, fmuPath, true);
     }
 }

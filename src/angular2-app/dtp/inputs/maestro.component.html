@@ -12,7 +12,7 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Capture output</label>
         <div class="col-sm-9">
-            <input [disabled]="!editing" [(ngModel)]="maestro.capture_output" formControlName="capture_output" type="checkbox">
+            <input [disabled]="!editing" [(ngModel)]="maestro.capture_output" [ngModelOptions]="{standalone: true}" type="checkbox">
         </div>
     </div>
 

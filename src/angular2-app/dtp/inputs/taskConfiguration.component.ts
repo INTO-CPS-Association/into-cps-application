@@ -68,6 +68,10 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     isTaskMaestro = (task: dtpItem) => task instanceof MaestroDtpItem;
     isTaskDatarepeater = (task: dtpItem) => task instanceof DataRepeaterDtpItem;
 
+    onChangeName(name: string) {
+        this.configuration.name = name;
+    }
+
     getTaskName(dtpType: any): string {
         if (dtpType === MaestroDtpItem || dtpType instanceof MaestroDtpItem) {
             return "Maestro"
@@ -101,10 +105,10 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
     }
 
     onSaveConfiguration() {
-        this.configuration.toYamlObject().then(async confYamlObj => {
+        this.configuration.toYamlObject().then(async confYamlObj => 
             // Create or update the task configuration in the server
             this.configuration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(this.configuration.id, confYamlObj, this.config.projectName) : 
-                await this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then(() => this.configuration.isCreatedOnServer = true);
-        }).then(() => this.configuration.tasks.forEach(() => this.editing = false)).catch(err => console.warn("Unable to save configuration: " + err));
+                await this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then(() => this.configuration.isCreatedOnServer = true)
+        ).then(() => this.editing = false).catch(err => console.warn("Unable to save configuration: " + err));
     }
 }
