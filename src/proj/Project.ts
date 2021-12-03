@@ -205,7 +205,7 @@ export class Project implements IProject {
 
         let fullpath = Path.normalize(path + "/project.yml");
 
-        fs.writeFileSync(fullpath, "version': '0.0.2'", "UTF-8");
+        fs.writeFileSync(fullpath, "version: '0.0.2'", "UTF-8");
 
         return fullpath;
     }

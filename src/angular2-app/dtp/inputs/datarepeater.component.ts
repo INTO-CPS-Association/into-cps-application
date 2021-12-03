@@ -31,10 +31,11 @@
 
 import { Component, Input, OnDestroy, AfterContentInit } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
-import { DataRepeaterDtpItem, DTPConfig, dtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
+import { DataRepeaterDtpItem, DTPConfig, dtpItem, ServerDtpItem, SignalDtpType, TaskConfigurationDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from 'path';
+import { DtpServerComponent } from "./server.component";
 
 @Component({
     selector: 'data-repeater',
@@ -45,6 +46,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     private isToolingServerOnlineSub: Subscription;
     private isToolingServerOnline: boolean = false;
     private _editing: boolean = true;
+    private isCreatingFMU: boolean = false;
 
     @Input()
     datarepeater: DataRepeaterDtpItem
@@ -93,6 +95,10 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         return this.getRabbitMqTools().find(tool => tool.id == toolId)?.name ?? "";
     }
 
+    serverIdToName(serverId: string): string {
+        return this.config.servers.find(server => server.id == serverId)?.name ?? "";
+    }
+
     getRabbitMqTools(): ToolDtpItem[] {
         return this.config.tools.reduce((rabbitMqToolNames: ToolDtpItem[], tool: ToolDtpItem) => {
             if(tool.type == ToolType.rabbitmq){
@@ -102,7 +108,24 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
         }, []);
     }
 
-    createFMU() {
+    onChangeName(name: string) {
+        this.datarepeater.name = name;
+    }
+
+    onChangeServerSource(id: string) {
+        this.datarepeater.server_source = id;
+    }
+
+    onChangeServerTarget(id: string) {
+        this.datarepeater.server_target = id;
+    }
+
+    onChangeTool(id: string) {
+        this.datarepeater.toolId = id;
+    }
+
+    generateFMU() {
+        this.isCreatingFMU = true;
         const parentConfiguration: TaskConfigurationDtpItem = this.config.configurations.find((configuration: TaskConfigurationDtpItem) => configuration.tasks.findIndex((task: dtpItem) => task.id == this.datarepeater.id) > -1) as TaskConfigurationDtpItem;
 
         parentConfiguration.toYamlObject().then(async yamlObj => {
@@ -113,7 +136,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
             this.dtpToolingService.createFmuFromDataRepeater(parentConfiguration.id, this.datarepeater.id, this.config.projectName).then(relativeFmuPath => {
                 this.datarepeater.fmu_path = Path.join(this.config.projectPath, relativeFmuPath);
                 this.datarepeater.addLinkToFMU(this.config.fileLinksPath);
-            }).catch(err => console.log(err));
+            }).catch(err => console.log(err)).finally(() => this.isCreatingFMU = false);
         });
     }
 

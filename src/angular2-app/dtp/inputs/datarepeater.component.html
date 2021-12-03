@@ -2,6 +2,14 @@
 	.signal-panel {
 		width: fit-content;
 	}
+    .glyphicon.spinning {
+      animation: spin 2s infinite linear;
+    }
+  
+    @keyframes spin {
+      from { transform: scale(1) rotate(0deg); }
+      to { transform: scale(1.1) rotate(360deg); }
+    }
 </style>
 
 <div class="form-horizontal" [formGroup]="formGroup">
@@ -9,40 +17,38 @@
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{datarepeater.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="datarepeater.name"  formControlName="name" class="form-control">
+            <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
-            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === datarepeater.name" class="alert alert-danger">Name is not unique.</div>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Source</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" [(ngModel)]="datarepeater.server_source" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
-                <option *ngFor="let server of config.servers" [ngValue]="server.name">{{server.name}}</option>
+            <select *ngIf="editing" (change)="onChangeServerSource($event.target.value)" formControlName="server_source" class="form-control col-sm-9">
+                <option *ngFor="let server of config.servers" [ngValue]="server.id">{{server.name}}</option>
             </select>
-            <p *ngIf="!editing" class="form-control-static">{{datarepeater.server_source}}</p>
+            <p *ngIf="!editing" class="form-control-static">{{serverIdToName(datarepeater.server_source)}}</p>
         </div>
     </div>
-    
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Target</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" [(ngModel)]="datarepeater.server_target" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
-                <option *ngFor="let server of config.servers" [ngValue]="server.name">{{server.name}}</option>
+            <select *ngIf="editing" (change)="onChangeServerTarget($event.target.value)" formControlName="server_target" class="form-control col-sm-9">
+                <option *ngFor="let server of config.servers" [ngValue]="server.id">{{server.name}}</option>
             </select>
-            <p *ngIf="!editing" class="form-control-static">{{datarepeater.server_target}}</p>
+            <p *ngIf="!editing" class="form-control-static">{{serverIdToName(datarepeater.server_target)}}</p>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">RabbitMQ Tool</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" [(ngModel)]="datarepeater.toolId" [ngModelOptions]="{standalone:true}" class="form-control col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="datarepeater.tool" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
                 <option *ngFor="let rabbitMqTool of getRabbitMqTools(config.tools)" [ngValue]="rabbitMqTool.id">{{rabbitMqTool.name}}</option>
             </select>
-            <p *ngIf="!editing" class="form-control-static">{{toolIdToName(datarepeater.toolId)}}</p>
+            <p *ngIf="!editing" class="form-control-static">{{toolIdToName(datarepeater.tool)}}</p>
         </div>
     </div>
 
@@ -50,8 +56,10 @@
         <label class="col-sm-3 control-label">FMU Path </label>
         <div *ngIf="!datarepeater.fmu_path">
             <span class="input-group-btn">
-                <button type="button" (click)="createFMU()" class="btn btn-default" [disabled] = "!isToolingServerOnline">
-                    Create FMU
+                <button type="button" (click)="generateFMU()" class="btn btn-default" [disabled] = "!isToolingServerOnline || isCreatingFMU">
+                    <span *ngIf="!isCreatingFMU"> Generate FMU </span>
+                    <span *ngIf="isCreatingFMU"> Generating.. </span>
+                    <span *ngIf="isCreatingFMU" class="glyphicon glyphicon-refresh spinning"> </span>
                 </button>
             </span> 
         </div>
@@ -82,7 +90,7 @@
                     </button>
                 </div>
                 <div class="panel-body">
-                    <signal [signal]="signal" [editing] = "editing" [formGroup]="formGroup.get('signals').at(i)"></signal>			
+                    <signal [signal]="signal" [editing] = "editing" [formGroup]="formGroup.get('signals').at(i)" [signaltypes] = "config.signalDataTypes"></signal>			
                 </div>
             </div>
         </div>

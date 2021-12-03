@@ -94,18 +94,26 @@ export class DtpMaestroComponent implements AfterContentInit{
         this.showInitialSetupBtns = true;
 
         const availableTools = this.getSimulationTools();
-        this.maestro.toolId = availableTools.length > 0 ? availableTools[0].id : "";
+        this.maestro.tool = availableTools.length > 0 ? availableTools[0].id : "";
     }
 
     hasUniqueName(): boolean {
         return this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.id;
     }
 
+    onChangeName(name: string) {
+        this.maestro.name = name;
+    }
+
+    onChangeCaptureOutput(captureOutput: boolean) {
+        this.maestro.capture_output = captureOutput;
+    }
+
     async onBaseExperimentSet(){
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-                this._maestroConfName = this.maestro.id + "_multiModel.json";
+        this._maestroConfName = this.maestro.id + "_multiModel.json";
         this._coeConfName = this.maestro.id + "_simConf.json";
         const destinationPath =  this.config.projectPath;
         const mm_destinationName = Path.join(destinationPath, this._maestroConfName);

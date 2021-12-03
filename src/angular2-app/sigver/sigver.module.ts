@@ -8,7 +8,7 @@ import { SigverPageComponent } from "./sigver-page.component";
     declarations: [
         SigverPageComponent,
         SigverConfigurationComponent,
-        SigverCoeInteractionComponent,
+        SigverCoeInteractionComponent
     ],
     imports: [CoeSimulationComponent],
     exports: [SigverPageComponent]

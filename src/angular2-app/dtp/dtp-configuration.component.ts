@@ -71,9 +71,9 @@ export class DtpConfigurationComponent {
 
     private handleConfigurationUpdated(){
         const groupObj: any = {};
-        groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
-        groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
-        groupObj[this.formkey_configurations] = new FormArray(this.config.configurations.map(c => c.toFormGroup()), uniqueGroupPropertyValidator("name"));
+        groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()));
+        groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()));
+        groupObj[this.formkey_configurations] = new FormArray(this.config.configurations.map(c => c.toFormGroup()));
 
         this.form = new FormGroup(groupObj);
         this.isLoaded = true;

@@ -109,6 +109,9 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
             // Create or update the task configuration in the server
             this.configuration.isCreatedOnServer ? await this.dtpToolingService.updateConfiguration(this.configuration.id, confYamlObj, this.config.projectName) : 
                 await this.dtpToolingService.addConfiguration(confYamlObj, this.config.projectName).then(() => this.configuration.isCreatedOnServer = true)
-        ).then(() => this.editing = false).catch(err => console.warn("Unable to save configuration: " + err));
+        ).then(() => {
+            this.configuration.tasks.forEach(task => task.isCreatedOnServer = true);
+            this.editing = false
+        }).catch(err => console.warn("Unable to save configuration: " + err));
     }
 }

@@ -70,6 +70,14 @@ export class DtpToolComponent implements AfterContentInit{
         formControl.updateValueAndValidity();
     }
 
+    onChangeName(name: string) {
+        this.tool.name = name;
+    }
+
+    onChangeUrl(url: string) {
+        this.tool.url = url;
+    }
+
     onSaveTool() {
         this.dtpToolingService.updateTool(this.tool.id, this.tool.toYamlObject(), this.config.projectName).then(() => {
             this.editing = false;

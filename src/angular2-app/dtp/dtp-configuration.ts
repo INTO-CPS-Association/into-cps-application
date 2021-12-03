@@ -1,6 +1,4 @@
-import {
-    integerValidator, uniqueGroupPropertyValidator
-} from "../shared/validators";
+import { integerValidator } from "../shared/validators";
 import { FormGroup, FormControl, Validators, FormArray } from "@angular/forms";
 import { IntoCpsApp } from "../../IntoCpsApp";
 import * as fs from "fs";
@@ -15,9 +13,7 @@ export class DTPConfig {
     private static readonly mappingsFile = "PathMappings.json";
     public readonly fileLinksPath: string;
 
-    public toolTypes: string[] = [];
-
-    constructor(public configurations: Array<TaskConfigurationDtpItem> = [], public tools: Array<ToolDtpItem> = [], public servers: Array<ServerDtpItem> = [], public projectName: string = "", public projectPath: string = "", mappingsFilePath: string = "") {
+    constructor(public configurations: Array<TaskConfigurationDtpItem> = [], public tools: Array<ToolDtpItem> = [], public servers: Array<ServerDtpItem> = [], public projectName: string = "", public projectPath: string = "", mappingsFilePath: string = "", public signalDataTypes: string[] = [], public serverTypes: string[] = []) {
         this.fileLinksPath = mappingsFilePath;
     }
 
@@ -57,7 +53,7 @@ export class DTPConfig {
 
 export abstract class dtpItem {
     public readonly id: string;
-    constructor(public isCreatedOnServer: boolean = false, id: string = ""){
+    constructor(public isCreatedOnServer: boolean = false, id: string = "", public name: string){
         this.id = id ? id : uuidv4();
     }
     abstract toFormGroup(): FormGroup;
@@ -78,14 +74,10 @@ export enum ToolType {
     rabbitmq = "rabbitmq"
 }
 
-export enum ServerType {
-    amqp = "AMQP"
-}
-
 export class TaskConfigurationDtpItem extends dtpItem {
     private static readonly tasksIndex = "tasks";
-    constructor(public name: string = "", id: string = "", public tasks: Array<dtpItem> = [], public isCreatedOnServer: boolean = false) { 
-        super(isCreatedOnServer, id);
+    constructor(name: string = "", id: string = "", public tasks: Array<dtpItem> = [], public isCreatedOnServer: boolean = false) { 
+        super(isCreatedOnServer, id, name);
     }
     async toYamlObject(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
@@ -104,7 +96,7 @@ export class TaskConfigurationDtpItem extends dtpItem {
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
-            tasks: new FormArray(this.tasks.map(task => task.toFormGroup()), uniqueGroupPropertyValidator("name"))
+            tasks: new FormArray(this.tasks.map(task => task.toFormGroup()))
         })
     }
 
@@ -168,8 +160,8 @@ export class TaskConfigurationDtpItem extends dtpItem {
 }
 
 export class ToolDtpItem extends dtpItem {
-    constructor(public name: string = "", id: string = "", public path: string = "", public url: string = "", public type: ToolType = ToolType.maestroV2, public isCreatedOnServer: boolean = false) { 
-        super(isCreatedOnServer, id);
+    constructor(name: string = "", id: string = "", public path: string = "", public url: string = "", public type: ToolType = ToolType.maestroV2, public isCreatedOnServer: boolean = false) { 
+        super(isCreatedOnServer, id, name);
     }
 
     toYamlObject(): {} {
@@ -191,17 +183,17 @@ export class ToolDtpItem extends dtpItem {
 }
 
 export class ServerDtpItem extends dtpItem {
-    constructor(public name: string = "", id: string = "", public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public servertype: ServerType = ServerType.amqp, public isCreatedOnServer: boolean = false) { 
-        super(isCreatedOnServer, id);
+    constructor(name: string = "", id: string = "", public username: string = "", public password: string = "", public host: string = "", public port: number = 5672, public embedded: boolean = true, public type: string = "", public isCreatedOnServer: boolean = false) { 
+        super(isCreatedOnServer, id, name);
     }
 
     toYamlObject(): {} {
-        return { name: this.name, user: this.username, password: this.password, host: this.host, port: this.port, type: this.servertype, embedded: this.embedded }
+        return { name: this.name, user: this.username, password: this.password, host: this.host, port: this.port, type: this.type, embedded: this.embedded }
     }
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
-            servertype: new FormControl(this.servertype),
+            type: new FormControl(this.type),
             username: new FormControl(this.username),
             password: new FormControl(this.password),
             host: new FormControl(this.host),
@@ -211,7 +203,7 @@ export class ServerDtpItem extends dtpItem {
     }
 
     static parse(yaml: any, id: string): ServerDtpItem {
-        return new ServerDtpItem(yaml["name"], id, yaml["user"], yaml["password"], yaml["host"], yaml["port"], yaml["embedded"], yaml["servertype"], true);
+        return new ServerDtpItem(yaml["name"], id, yaml["user"], yaml["password"], yaml["host"], yaml["port"], yaml["embedded"], yaml["type"], true);
     }
 }
 
@@ -219,8 +211,8 @@ export class MaestroDtpItem extends dtpItem {
     public static readonly objectIdentifier: string = "simulation";
     public static readonly mmMappingsIndex = "multiModelPathMappings";
     public static readonly coeMappingsIndex = "coePathMappings";
-    constructor(public name: string = "", id: string = "", public multiModelPath: string = "", public coePath: string = "", public capture_output: boolean = false, public toolId: string = "", public isCreatedOnServer: boolean = false) { 
-        super(isCreatedOnServer, id);
+    constructor(name: string = "", id: string = "", public multiModelPath: string = "", public coePath: string = "", public capture_output: boolean = false, public tool: string = "", public isCreatedOnServer: boolean = false) { 
+        super(isCreatedOnServer, id, name);
     }
 
     public linkToCoeAndMMPath(mappingsFilePath: string) {
@@ -238,8 +230,12 @@ export class MaestroDtpItem extends dtpItem {
 
     public removeFileLinks(mappingsFilePath: string, removeLinkedFile: boolean) {
         const obj = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: 'utf8', flag: 'r' }));
-        delete obj[MaestroDtpItem.mmMappingsIndex][this.id];
+        // If one of the mappings are not present the other is also missing..
+        if(obj[MaestroDtpItem.mmMappingsIndex]?.[this.id]){
+            return;
+        }
         delete obj[MaestroDtpItem.coeMappingsIndex][this.id];
+        delete obj[MaestroDtpItem.mmMappingsIndex][this.id];
         if(removeLinkedFile) {
             fs.unlink(this.multiModelPath, err => { if (err) console.warn(`Unable to delete mm file linked with maestro: ${err}`) });
             fs.unlink(this.coePath, err => { if (err) console.warn(`Unable to delete coe file linked with maestro: ${err}`) });
@@ -249,23 +245,27 @@ export class MaestroDtpItem extends dtpItem {
 
     async toYamlObject() {
         let project = IntoCpsApp.getInstance().getActiveProject();
-        const coeConfig: CoSimulationConfig = await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath());
-        // Insert absolute path to fmus
-        const mmConfigObj = coeConfig.multiModel.toObject();
-        coeConfig.multiModel.fmus.forEach(fmu => 
-            mmConfigObj["fmus"][fmu.name] = (fmu.isNested() ? "coe:/" : "file:///" + fmu.path).replace(/\\/g, "/").replace(/ /g, "%20")
-        );
-        const configObj = Object.assign(coeConfig.toObject(), mmConfigObj);
         const maestroYamlObj: any = {};
-        maestroYamlObj[MaestroDtpItem.objectIdentifier] = { name: this.name, execution: { tool: this.toolId, capture_output: this.capture_output }, prepare: { tool: this.toolId }, config: configObj };
+        let configObj: any = {};
+        maestroYamlObj[MaestroDtpItem.objectIdentifier] = { name: this.name, execution: { tool: this.tool, capture_output: this.capture_output }, prepare: { tool: this.tool }, config: configObj };
         maestroYamlObj.id = this.id;
+        if(this.coePath) {
+            const coeConfig: CoSimulationConfig = await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath());
+            // Insert absolute path to fmus
+            const mmConfigObj = coeConfig.multiModel.toObject();
+            coeConfig.multiModel.fmus.forEach(fmu => 
+                mmConfigObj["fmus"][fmu.name] = (fmu.isNested() ? "coe:/" : "file:///" + fmu.path).replace(/\\/g, "/").replace(/ /g, "%20")
+            );
+            configObj = Object.assign(coeConfig.toObject(), mmConfigObj);
+        }
         return maestroYamlObj;
     }
 
     toFormGroup() {
         return new FormGroup({
-            name: new FormControl(this.name, [Validators.required]),
+            name: new FormControl(this.name, Validators.required),
             capture_output: new FormControl(this.capture_output),
+            tool: new FormControl(this.tool)
         });
     }
 
@@ -301,8 +301,8 @@ export class SignalTarget {
 }
 
 export class SignalDtpType extends dtpItem {
-    constructor(public name: string = "", id: string = "", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget, public isCreatedOnServer: boolean = false) { 
-        super(isCreatedOnServer, id);
+    constructor(name: string = "", id: string = "", public source: SignalSource = new SignalSource(), public target: SignalTarget = new SignalTarget, public isCreatedOnServer: boolean = false) { 
+        super(isCreatedOnServer, id, name);
     }
 
     toYamlObject(): {} {
@@ -315,7 +315,7 @@ export class SignalDtpType extends dtpItem {
 
     toFormGroup() {
         return new FormGroup({
-            name: new FormControl(this.name, [Validators.required]),
+            name: new FormControl(this.name, Validators.required),
             source_exchange: new FormControl(this.source.exchange),
             source_datatype: new FormControl(this.source.datatype),
             source_routing_key: new FormControl(this.source.routing_key),
@@ -337,8 +337,8 @@ export class SignalDtpType extends dtpItem {
 export class DataRepeaterDtpItem extends dtpItem {
     public static readonly objectIdentifier: string = "amqp-repeater";
     public static readonly datarepeaterMappingsIndex = "dataRepeaterFmuMappings";
-    constructor(public name: string = "", id: string = "", public toolId: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<dtpItem> = [], public fmu_path: string = "", public isCreatedOnServer: boolean = false) { 
-        super(isCreatedOnServer, id);
+    constructor(name: string = "", id: string = "", public toolId: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<dtpItem> = [], public fmu_path: string = "", public isCreatedOnServer: boolean = false) { 
+        super(isCreatedOnServer, id, name);
     }
 
     public addLinkToFMU(mappingsFilePath: string) {
@@ -361,7 +361,7 @@ export class DataRepeaterDtpItem extends dtpItem {
 
     toFormGroup() {
         return new FormGroup({
-            name: new FormControl(this.name, [Validators.required]),
+            name: new FormControl(this.name, Validators.required),
             server_source: new FormControl(this.server_source),
             server_target: new FormControl(this.server_target),
             signals: new FormArray(this.signals.map(signal => signal.toFormGroup())),

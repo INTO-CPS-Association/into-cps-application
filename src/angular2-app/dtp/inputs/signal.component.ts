@@ -47,9 +47,43 @@ export class DtpSignalComponent {
     @Input()
     editing: boolean = true;
 
+    @Input()
+    signaltypes: string[] = [];
+
     constructor() {
         console.log("Signal component constructor");
     }
 
+    onChangeName(name: string) {
+        this.signal.name = name;
+    }
+
+    onChangeSourceExchange(exchange: string) {
+        this.signal.source.exchange = exchange;
+    }
+
+    onChangeSourceDataType(dataType: string) {
+        this.signal.source.datatype = dataType;
+    }
+
+    onChangeSourceRoutingKey(routingKey: string) {
+        this.signal.source.routing_key = routingKey;
+    }
+
+    onChangeTargetExchange(exchange: string) {
+        this.signal.target.exchange = exchange;
+    }
+
+    onChangeTargetDataType(dataType: string) {
+        this.signal.target.datatype = dataType;
+    }
+
+    onChangeTargetRoutingKey(routingKey: string) {
+        this.signal.target.routing_key = routingKey;
+    }
+
+    onChangeTargetPack(pack: string) {
+        this.signal.target.pack = pack;
+    }
 }
 

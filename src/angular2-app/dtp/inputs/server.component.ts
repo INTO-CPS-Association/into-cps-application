@@ -39,16 +39,24 @@ import { DtpDtToolingService } from "../dtp-dt-tooling.service";
     templateUrl: "./angular2-app/dtp/inputs/server.component.html"
 })
 export class DtpServerComponent implements AfterContentInit {
+    private _editing: boolean = true;
     @Input()
     server: ServerDtpItem
 
     @Input()
     formGroup:FormGroup;
-    
-    editing: boolean = true;
+    set editing(editing: boolean) {
+        this._editing = editing;
+    }
+    get editing(): boolean {
+        return this._editing;
+    }
 
     @Input()
     config: DTPConfig;
+
+    @Input()
+    servertypes: string[];
 
     constructor(private dtpToolingService: DtpDtToolingService) {
         console.log("Server component constructor");
@@ -56,6 +64,30 @@ export class DtpServerComponent implements AfterContentInit {
 
     ngAfterContentInit(): void {
         this.editing = !this.server.isCreatedOnServer;
+    }
+
+    onChangeName(name: string) {
+        this.server.name = name;
+    }
+
+    onChangeUsername(username: string) {
+        this.server.username = username;
+    }
+
+    onChangePassword(password: string) {
+        this.server.password = password;
+    }
+
+    onChangeHost(host: string) {
+        this.server.host = host;
+    }
+
+    onChangePort(port: string) {
+        this.server.port = +port;
+    }
+
+    onChangeEmbedded(embedded: boolean) {
+        this.server.embedded = embedded;
     }
 
     onSaveServer() {       

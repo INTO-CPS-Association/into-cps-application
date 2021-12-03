@@ -50,7 +50,7 @@
 						</button>
 					</div>
 					<div class="panel-body">
-						<server [server]="server" [config] = "config" [formGroup]="form.get('servers').at(i)"></server>			
+						<server [server]="server" [config] = "config" [formGroup]="form.get('servers').at(i)" [servertypes] = "config.serverTypes"></server>			
 					</div>
 				</div>
 			</div>

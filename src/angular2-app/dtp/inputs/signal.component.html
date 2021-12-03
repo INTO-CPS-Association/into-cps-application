@@ -3,9 +3,8 @@
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.name"  formControlName="name" class="form-control">
+            <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control">
             <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
-            <div *ngIf="formGroup._parent.hasError('notUnique') && formGroup._parent.errors.notUnique === signal.name" class="alert alert-danger">Name is not unique.</div>
         </div>
     </div>
 
@@ -13,15 +12,17 @@
         <label class="col-sm-3 control-label">Source Exchange</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.source.exchange}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.source.exchange"  formControlName="source_exchange" class="form-control">
+            <input *ngIf="editing" (change)="onChangeSourceExchange($event.target.value)" formControlName="source_exchange" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Source Data Type</label>
         <div class="col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="signal.source.datatype" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
+                <option *ngFor="let signalType of signaltypes" >{{signalType}}</option>
+            </select>
             <p *ngIf="!editing" class="form-control-static">{{signal.source.datatype}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.source.datatype"  formControlName="source_datatype" class="form-control">
         </div>
     </div>
 
@@ -29,7 +30,7 @@
         <label class="col-sm-3 control-label">Source Routing Key</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.source.routing_key}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.source.routing_key"  formControlName="source_routing_key" class="form-control">
+            <input *ngIf="editing" (change)="onChangeSourceRoutingKey($event.target.value)" formControlName="source_routing_key" class="form-control">
         </div>
     </div>
 
@@ -37,15 +38,17 @@
         <label class="col-sm-3 control-label">Target Exchange</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.target.exchange}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.target.exchange"  formControlName="target_exchange" class="form-control">
+            <input *ngIf="editing" (change)="onChangeTargetExchange($event.target.value)" formControlName="target_exchange" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Target Data Type</label>
         <div class="col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="signal.target.datatype" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
+                <option *ngFor="let signalType of signaltypes" >{{signalType}}</option>
+            </select>
             <p *ngIf="!editing" class="form-control-static">{{signal.target.datatype}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.target.datatype"  formControlName="target_datatype" class="form-control">
         </div>
     </div>
 
@@ -53,7 +56,7 @@
         <label class="col-sm-3 control-label">Target Routing Key</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.target.routing_key}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.target.routing_key"  formControlName="target_routing_key" class="form-control">
+            <input *ngIf="editing" (change)="onChangeTargetRoutingKey($event.target.value)" formControlName="target_routing_key" class="form-control">
         </div>
     </div>
 
@@ -62,7 +65,7 @@
         <label class="col-sm-3 control-label">Target Pack</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.target.pack}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.target.pack"  formControlName="target_pack" class="form-control">
+            <input *ngIf="editing" (change)="onChangeTargetPack($event.target.value)" formControlName="target_pack" class="form-control">
         </div>
     </div>
 
@@ -70,7 +73,7 @@
         <label class="col-sm-3 control-label">Target Path</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{signal.target.path}}</p>
-            <input *ngIf="editing" [(ngModel)]="signal.target.path"  formControlName="target_path" class="form-control">
+            <input *ngIf="editing" (change)="onChangeTargetPath($event.target.value)" formControlName="target_path" class="form-control">
         </div>
     </div>
 </div>

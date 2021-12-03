@@ -76,10 +76,13 @@ export class DtpPageComponent {
     private parseConfig(projectName: string, projectPath: string) {
         this.ensureProjectExsists(projectName).then(() => {
             this.dtpToolingService.getProject(projectName).then(yamlConf => {
-                // Create a form group for each DTPType
-                this.config = DTPConfig.createFromYamlObj(yamlConf, projectName, projectPath);
-                this.configIsLoaded = true;
-                console.log("Parsed DTP config from server");
+                this.dtpToolingService.getSchemaDefinition().then(schema => {
+                    this.config = DTPConfig.createFromYamlObj(yamlConf, projectName, projectPath);
+                    this.config.signalDataTypes = schema["$defs"]?.["signal_type"]?.["enum"] ?? [];
+                    this.config.serverTypes = schema["$defs"]?.["server_type"]?.["enum"] ?? [];
+                    this.configIsLoaded = true;
+                    console.log("Parsed DTP config from server");
+                });
             }).catch(err => console.error("Unable to fetch project from server: " + err));
         }).catch(err => console.warn("Unable to determine if project exists: " + err));
     }

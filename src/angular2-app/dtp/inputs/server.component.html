@@ -14,7 +14,8 @@
         <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{server.name}}</p>
-            <input *ngIf="editing" [(ngModel)]="server.name"  formControlName="name" class="form-control">
+            <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control">
+            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
         </div>
     </div>
 
@@ -22,7 +23,7 @@
         <label class="col-sm-3 control-label">Username</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{server.username}}</p>
-            <input *ngIf="editing" [(ngModel)]="server.username"  formControlName="username" class="form-control">
+            <input *ngIf="editing" (change)="onChangeUsername($event.target.value)" formControlName="username" class="form-control">
         </div>
     </div>
 
@@ -30,15 +31,15 @@
         <label class="col-sm-3 control-label">Password</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{server.password}}</p>
-            <input *ngIf="editing" [(ngModel)]="server.password"  formControlName="password" class="form-control">
+            <input *ngIf="editing" (change)="onChangePassword($event.target.value)" formControlName="password" class="form-control">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">host</label>
+        <label class="col-sm-3 control-label">Host</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{server.host}}</p>
-            <input *ngIf="editing" [(ngModel)]="server.host"  formControlName="host" class="form-control">
+            <input *ngIf="editing" (change)="onChangeHost($event.target.value)" formControlName="host" class="form-control">
         </div>
     </div>
 
@@ -46,7 +47,7 @@
         <label class="col-sm-3 control-label">Port</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{server.port}}</p>
-            <input *ngIf="editing" [(ngModel)]="server.port"  formControlName="port" class="form-control">
+            <input *ngIf="editing" (change)="onChangePort($event.target.value)" formControlName="port" class="form-control">
             <div *ngIf="formGroup.hasError('invalidInteger', 'port')" class="alert alert-danger">Only integers are allowed.</div>
         </div>
     </div>
@@ -54,7 +55,17 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Embedded</label>
         <div class="col-sm-9">
-            <input [disabled]="!editing" [(ngModel)]="server.embedded" [ngModelOptions]="{standalone: true}" type="checkbox">
+            <input [disablecontrol]="!editing" (change)="onChangeEmbedded($event.target.checked)" formControlName="embedded" type="checkbox">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Type</label>
+        <div class="col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="server.type" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
+                <option *ngFor="let serverType of servertypes" >{{serverType}}</option>
+            </select>
+            <p *ngIf="!editing" class="form-control-static">{{server.type}}</p>
         </div>
     </div>
 </div>
