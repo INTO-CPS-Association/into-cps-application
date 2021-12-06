@@ -25,10 +25,13 @@ describe('In Tutorial 9', function () {
     require("./TestHelpers").unZipTestData(testDataZipPath, testDataPath);
     await app.electron.remote.app.loadProject(testDataPath + "/project/.project.json");
 
+    await require("./TestHelpers").downloadCOE(app);
+
     return app;
   });
 
   after(function () {
+    require("./TestHelpers").deleteCOE(app);
     return require("./TestHelpers").commonShutdownTasks(app, testDataPath);
   });
 
@@ -57,6 +60,7 @@ describe('In Tutorial 9', function () {
         .then(n => n.click())
         .then(() => app.client.$("coe-simulation .btn.btn-sm.btn-default"))
         .then(n => n.click())
+        .then(() => sleep(100))
         .then(() => app.client.$("coe-simulation"))
         .then(n => n.$(".alert.alert-success"))
         .then(async n => {
@@ -78,9 +82,9 @@ describe('In Tutorial 9', function () {
 
   it("Should open edit mode of the mm", function () {
     return app.client.$('#Configuration')
-        .then(n => n.click())
+        .then(n => n.click()).then(() => sleep(100))
         .then(() => app.client.$('mm-configuration button.btn.btn-default'))
-        .then(n => n.click())
+        .then(n => n.click()).then(() => sleep(100))
         .then(() => app.client.$('button.btn.btn-default'))
         .then(n => n.getText())
         .should

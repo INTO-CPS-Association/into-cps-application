@@ -17,6 +17,8 @@ const path = require("path");
 const testDataZipPath = path.resolve("test/TestData/test4_data.zip");
 const testDataPath = path.resolve("test/TestData/test4_data");
 
+const sleep = require("./TestHelpers").sleep;
+
 describe('In Tutorial 4', function () {
 	this.timeout(120000)
 
@@ -57,8 +59,9 @@ describe('In Tutorial 4', function () {
 			.then(n => n.click())
 			.then(() => app.client.$("#node_ProjectBrowserItem_15 .w2ui-expand"))
 			.then(n => n.click())
+			.then(() => sleep(100))
 			.then(() => app.client.$("#node_ProjectBrowserItem_18"))
-			.then(n => n.doubleClick(3000)) // prevents right clicking on the wrong thing
+			.then(n => n.doubleClick()) // prevents right clicking on the wrong thing
 			.then(() => app.client.$("#node_ProjectBrowserItem_18"))
 			.then(n => n.click({button: "right"}))
 			.then(() => app.client.$("#w2ui-overlay tbody"))
@@ -74,6 +77,7 @@ describe('In Tutorial 4', function () {
 			.then(n => n[0].click())
 			.then(() => app.client.$(".w2ui-popup-title"))
 			.then(n => n.waitForExist(3000))
+			.then(() => sleep(100))
 			.then(() => app.client.$(".w2ui-popup-title"))
 			.then(async n => {
 				return waitFor(await n.getText())

@@ -16,6 +16,8 @@ const path = require("path");
 const testDataZipPath = path.resolve("test/TestData/test1_data.zip");
 const testDataPath = path.resolve("test/TestData/test1_data");
 
+const sleep = require("./TestHelpers").sleep;
+
 describe('In Tutorial 1', function () {
     this.timeout(120000)
 
@@ -124,6 +126,7 @@ describe('In Tutorial 1', function () {
         return app.client.$("coe-simulation")
             .then(() => app.client.$(".btn.btn-sm.btn-default"))
             .then(n => n.click())
+            .then(() => sleep(300))
             .then(() => app.client.$("coe-simulation"))
             .then(n => n.$(".alert.alert-success"))
             // .then(async () => {

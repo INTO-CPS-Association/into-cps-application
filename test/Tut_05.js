@@ -17,6 +17,8 @@ const path = require("path");
 const testDataZipPath = path.resolve("test/TestData/test5_data.zip");
 const testDataPath = path.resolve("test/TestData/test5_data");
 
+const sleep = require("./TestHelpers").sleep;
+
 describe('In Tutorial 5', function () {
 	this.timeout(120000)
 
@@ -57,6 +59,7 @@ describe('In Tutorial 5', function () {
 			.then(n => n.click())
 			.then(() => app.client.$("#node_ProjectBrowserItem_15 .w2ui-expand"))
 			.then(n => n.click())
+			.then(() => sleep(100))
 			.then(() => app.client.$("#node_ProjectBrowserItem_18"))
 			.then(n => n.click())
 			.then(() => app.client.$("#node_ProjectBrowserItem_18"))
