@@ -31,22 +31,19 @@
 
 import { FileSystemService } from "../shared/file-system.service";
 import { SettingsService, SettingKeys } from "../shared/settings.service";
-import { HttpClient } from '@angular/common/http';
 import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
 import * as Path from "path";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { Injectable, NgZone } from "@angular/core";
 import { CoSimulationConfig, LiveGraph } from "../../intocps-configurations/CoSimulationConfig";
 import { storeResultCrc } from "../../intocps-configurations/ResultConfig";
-import * as http from "http"
 import * as fs from 'fs'
 import * as child_process from 'child_process'
 import DialogHandler from "../../DialogHandler"
 import { Graph } from "../shared/graph"
 import { Deferred } from "../../deferred"
-import { CoeProcess } from "../../coe-server-status/CoeProcess"
-import { IntoCpsApp } from "../../IntoCpsApp";
+import { MaestroApiService, simulationEndpoints } from "../shared/maestro-api.service";
 
 
 @Injectable()
@@ -56,25 +53,51 @@ export class CoeSimulationService {
     simulationCompletedHandler: () => void = function () { };
     postProcessingOutputReport: (hasError: boolean, message: string) => void = function () { };
 
+    private _simulationSessionId: string = "";
+    private _resultDir: string;
+    private _resultPath: string;
+    private _coeConfigPath: string;
+    private _mmConfigPath: string;
     private masterModel: string;
-    private sessionId: string;
-    private remoteCoe: boolean;
-    private coe: CoeProcess; 
-    private url: string;
-    private resultDir: string;
     private config: CoSimulationConfig;
     private graphMaxDataPoints: number = 100;
+
     public graph: Graph = new Graph();
     public externalGraphs: Array<DialogHandler> = new Array<DialogHandler>();
+    public coeIsOnlineObservable: Observable<boolean>;
+    public coeUrl: string;
 
-    constructor(private http: HttpClient,
-        private settings: SettingsService,
+    set resultDir(resultsDir: string) {
+        this._resultDir = resultsDir;
+        this._resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
+        this._coeConfigPath = Path.normalize(`${this.resultDir}/coe.json`);
+        this._mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
+    }
+
+    get resultDir(): string {
+        return this._resultDir;
+    }
+
+    constructor(
+        settings: SettingsService,
         private fileSystem: FileSystemService,
-        private zone: NgZone) {
+        private zone: NgZone,
+        private coeApiService: MaestroApiService) {
 
         this.graphMaxDataPoints = settings.get(SettingKeys.GRAPH_MAX_DATA_POINTS);
         this.graph.setProgressCallback((progress: number) => { this.progress = progress });
         this.graph.setGraphMaxDataPoints(this.graphMaxDataPoints);
+
+        this.coeIsOnlineObservable = coeApiService.coeIsOnlineObservable;
+        this.coeUrl = coeApiService.coeUrl;
+    }
+
+    getCoeVersion() {
+        return this.coeApiService.coeVersionNumber;
+    }
+
+    getMaestroVersion() {
+        return this.coeApiService.getMaestroVersion();
     }
 
     reset() {
@@ -88,19 +111,24 @@ export class CoeSimulationService {
         data: string = "",
         show: boolean = true
     ) {
-        this.coe = IntoCpsApp.getInstance().getCoeProcess();
-        if (!this.coe.isRunning()) IntoCpsApp.getInstance().getCoeProcess().start();
+        this.coeApiService.launchCOE();
     }
 
     getResultsDir(): string {
         return this.resultDir;
     }
 
-    runSigverSimulation(config: CoSimulationConfig, masterModel: string, resultsDir: string, errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
+    stop(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.coeApiService.stopSimulation(this._simulationSessionId).then(() => resolve()).catch((res: Response) => reject(res.statusText));
+        });
+    }
+
+    startSigverSimulation(config: CoSimulationConfig, masterModel: string, resultsDir: string) {
         this.config = config;
         this.masterModel = masterModel;
         this.resultDir = Path.normalize(`${resultsDir}/R_${this.getDateString()}`);
-        this.initialize(errorReport, simCompleted, postScriptOutputReport).then(() => {
+        this.initialize().then(() => {
             const simulationData: any = {
                 startTime: this.config.startTime,
                 endTime: this.config.endTime,
@@ -109,15 +137,15 @@ export class CoeSimulationService {
                 masterModel: this.masterModel
             };
 
-            this.simulate("sigverSimulate", simulationData);
+            this.handleSimulationFinished(this.prepareGraphAndrunSimulation(simulationEndpoints.simulate, simulationData));
         }).catch(err => this.errorHandler(err));
     }
 
-    runSimulation(config: CoSimulationConfig, errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
+    startSimulation(config: CoSimulationConfig) {
         this.config = config;
         const currentDir = Path.dirname(this.config.sourcePath);
         this.resultDir = Path.normalize(`${currentDir}/R_${this.getDateString()}`);
-        this.initialize(errorReport, simCompleted, postScriptOutputReport).then(() => {
+        this.initialize().then(() => {
             const simulationData: any = {
                 startTime: this.config.startTime,
                 endTime: this.config.endTime,
@@ -137,27 +165,54 @@ export class CoeSimulationService {
             });
             Object.assign(simulationData, { logLevels: logCategories });
 
-            this.simulate("simulate", simulationData);
+            this.handleSimulationFinished(this.prepareGraphAndrunSimulation(simulationEndpoints.simulate, simulationData));
         }).catch(err => this.errorHandler(err));
-    }
-
-    stop() {
-        this.http.get(`http://${this.url}/stopsimulation/${this.sessionId}`)
-            .subscribe((response: Response) => { }, (err: Response) => this.errorHandler(err, true));
     }
 
     errorHandler(err: Response, stopped?: boolean) {
         console.warn(err);
-        if(stopped) {
+        if (stopped) {
             this.progress = 0;
             this.errorReport(false, "Error: " + err.statusText, true, true)
-        } else if(!stopped && err.status == 200) {
+        } else if (!stopped && err.status == 200) {
             this.progress = 0;
             this.errorReport(false, "Error: " + err.statusText, true)
         } else {
             this.progress = 0;
             this.errorReport(true, "Error: " + err.statusText);
         }
+    }
+
+    setSimulationCallBacks(errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void) {
+        this.errorReport = errorReport;
+        this.simulationCompletedHandler = simCompleted;
+        this.postProcessingOutputReport = postScriptOutputReport;
+    }
+
+    private handleSimulationFinished(simulationPromise: Promise<void>) {
+        simulationPromise.then(() => {
+            // If simulation finished successfully get the plain results
+            this.coeApiService.getPlainResult(this._simulationSessionId).then(async (resultsString: string) => {
+                await Promise.all([
+                    this.fileSystem.writeFile(this._resultPath, resultsString),
+                    this.fileSystem.copyFile(this.config.sourcePath, this._coeConfigPath),
+                    this.fileSystem.copyFile(this.config.multiModel.sourcePath, this._mmConfigPath)
+                ]).then(async () => {
+                    // Store the results and run the post processing script
+                    storeResultCrc(this._resultPath, this.config);
+                    this.executePostProcessingScript(this._resultPath);
+                }).catch(err => console.log("Unable to write plain results to file: " + err));
+            }).catch((err: Response) => this.errorHandler(err));
+        }).finally(() => 
+                // Always get whatever results have been generated
+                this.coeApiService.getResults(Path.normalize(`${this.resultDir}/simulation_results.zip`), this._simulationSessionId).finally(() => {
+                    // End the session
+                    this.coeApiService.destroySession(this._simulationSessionId).catch((err: Response) => console.error("Could not destroy session: " + err.statusText));
+                })
+            .catch((err: Response) => {
+                console.error("Could retrieve results: " + err.statusText);
+            })
+        );
     }
 
     private getDateString(): string {
@@ -171,43 +226,31 @@ export class CoeSimulationService {
             now.getMilliseconds())
         );
         return nowAsUTC.toISOString().replace(/-/gi, "_")
-        .replace(/T/gi, "-")
-        .replace(/Z/gi, "")
-        .replace(/:/gi, "_")
-        .replace(/\./gi, "_");
+            .replace(/T/gi, "-")
+            .replace(/Z/gi, "")
+            .replace(/:/gi, "_")
+            .replace(/\./gi, "_");
     }
 
-    private async initialize(errorReport: (hasError: boolean, message: string, hasWarning: boolean, stopped: boolean) => void, simCompleted: () => void, postScriptOutputReport: (hasError: boolean, message: string) => void): Promise<void> {
-        this.coe = IntoCpsApp.getInstance().getCoeProcess();
-        this.errorReport = errorReport;
-        this.simulationCompletedHandler = simCompleted;
-        this.postProcessingOutputReport = postScriptOutputReport;
-        this.remoteCoe = this.settings.get(SettingKeys.COE_REMOTE_HOST);
-        this.url = this.settings.get(SettingKeys.COE_URL);
+    private async initialize(): Promise<void> {
         this.reset();
         this.graph.setCoSimConfig(this.config);
         this.graph.initializeDatasets();
-        this.coe.prepareSimulation();
-        return this.createSession().then(async sessionId => {
-            this.sessionId = sessionId;
-            if (this.remoteCoe) {
-                await this.uploadFmus().catch(err => this.errorHandler(err));
+        this.coeApiService.getCoeProcess().prepareSimulation();
+        this.errorReport(false, "");
+        return this.coeApiService.createSimulationSession().then(async sessionId => {
+            this._simulationSessionId = sessionId;
+            if (this.coeApiService.isRemoteCoe()) {
+                await this.prepareAndUploadFmus().catch(err => this.errorHandler(err));
             }
-            return this.initializeCoe();
+            return this.prepareAndInitializeCoe();
         });
     }
 
-    private createSession(): Promise<string>  {
-        return new Promise<string> ((resolve, reject) => {
-            this.errorReport(false, "");
-            this.http.get(`http://${this.url}/createSession`).subscribe((response: any) => resolve(response.sessionId), (err: Response) => reject(err));
-        });
-    }
+    private prepareAndUploadFmus(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const formData = new FormData();
 
-    private uploadFmus(): Promise<void> {
-        return new Promise<void> ((resolve, reject) => {
-            let formData = new FormData();
-    
             this.config.multiModel.fmus.forEach((value: Fmu) => {
                 this.fileSystem.readFile(value.path).then(content => {
                     formData.append(
@@ -217,27 +260,25 @@ export class CoeSimulationService {
                     );
                 });
             });
-    
-            this.http.post(`http://${this.url}/upload/${this.sessionId}`, formData)
-                .subscribe(() => resolve(), (err: Response) => reject(err));
-        });
-        
-    }
 
-    private initializeCoe(): Promise<void> {
-        return new Promise<void> ((resolve, reject) => {
-            let data = new CoeConfig(this.config, this.remoteCoe).toJSON();
-
-            this.fileSystem.mkdir(this.resultDir)
-                .then(() => this.fileSystem.writeFile(Path.join(this.resultDir, "config.json"), data))
-                .then(() => {
-                    this.http.post(`http://${this.url}/initialize/${this.sessionId}`, data)
-                        .subscribe(() => resolve(), (err: Response) => reject(err));
-                });
+            this.coeApiService.uploadFmus(formData, this._simulationSessionId).then(() => resolve()).catch((err: Response) => reject(err));
         });
     }
 
-    private simulate(simulationEndpoint: string, simulationData: any) {
+    private prepareAndInitializeCoe(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const configJson = new CoeConfig(this.config, this.coeApiService.isRemoteCoe()).toJSON();
+            Promise.all([
+                this.fileSystem.mkdir(this.resultDir),
+                this.coeApiService.initializeCoe(configJson, this._simulationSessionId)
+            ]).catch(err => reject(err)).finally(() => {
+                this.fileSystem.writeFile(Path.join(this.resultDir, "config.json"), configJson);
+                resolve();
+            })
+        });
+    }
+
+    private prepareGraphAndrunSimulation(simulationEndpoint: simulationEndpoints, simulationData: any): Promise<void> {
         let deferreds = new Array<Promise<any>>();
 
         this.graph.graphMap.forEach((value: BehaviorSubject<any[]>, key: LiveGraph) => {
@@ -245,7 +286,7 @@ export class CoeSimulationService {
                 let deferred: Deferred<any> = new Deferred<any>();
                 deferreds.push(deferred.promise);
                 let graphObj = key.toObject();
-                graphObj.webSocket = "ws://" + this.url + "/attachSession/" + this.sessionId;
+                graphObj.webSocket = this.coeApiService.getWebSocketSessionUrl(this._simulationSessionId);
                 graphObj.graphMaxDataPoints = this.graphMaxDataPoints;
                 console.log(graphObj);
                 let dh = new DialogHandler("angular2-app/coe/graph-window/graph-window.html", 800, 600);
@@ -257,89 +298,42 @@ export class CoeSimulationService {
                 });
             }
         });
+        return new Promise<void>((resolve, reject) => {
+            Promise.all(deferreds).then(() => {
+                // Do not start the simulation before the websocket is open.
+                this.graph.webSocketOnOpenCallback = () => this.fileSystem.writeFile(Path.join(this.resultDir, "config-simulation.json"), JSON.stringify(simulationData))
+                    .then(() => {
+                        // Call the correct simulate endpoint
+                        const simulationPromise = this.coeApiService.simulate(simulationData, simulationEndpoint, this._simulationSessionId);
+                        simulationPromise.then(() => {
+                            this.graph.closeSocket();
+                            let markedForDeletionExternalGraphs: DialogHandler[] = [];
+                            this.externalGraphs.forEach((eg) => {
+                                if (!eg.win.isDestroyed()) {
+                                    eg.win.webContents.send("close");
+                                } else {
+                                    // The window have been destroyed, remove it from external graphs
+                                    markedForDeletionExternalGraphs.push(eg);
+                                }
+                            });
+                            markedForDeletionExternalGraphs.forEach((eg) => {
+                                this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0), 1);
+                            });
+                            this.graph.setFinished();
+                            this.coeApiService.getCoeProcess().simulationFinished();
+                            this.progress = 100;
+                            this.simulationCompletedHandler();
+                            resolve();
+                        })
+                            .catch((err: Response) => {
+                                this.errorHandler(err);
+                                reject(err.statusText);
+                            });
+                    });
 
-        Promise.all(deferreds).then(() => {
-            // Do not start the simulation before the websocket is open.
-            this.graph.webSocketOnOpenCallback = () => this.fileSystem.writeFile(Path.join(this.resultDir, "config-simulation.json"), JSON.stringify(simulationData))
-            .then(() => {
-                this.http.post(`http://${this.url}/${simulationEndpoint}/${this.sessionId}`, simulationData)
-                    .subscribe(() => {this.downloadResults(); this.graph.setFinished()}, (err: Response) => this.errorHandler(err));
-            });
-
-            this.graph.launchWebSocket(`ws://${this.url}/attachSession/${this.sessionId}`);
-        });
-    }
-
-    private downloadResults() {
-        this.graph.closeSocket();
-        let markedForDeletionExternalGraphs : DialogHandler[]= [];
-        this.externalGraphs.forEach((eg) => {
-            if (!eg.win.isDestroyed()){
-                eg.win.webContents.send("close");
-            } else{
-                // The window have been destroyed, remove it from external graphs
-                markedForDeletionExternalGraphs.push(eg);
-            }
-        });
-        markedForDeletionExternalGraphs.forEach((eg) => {
-            this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0),1);
-        });
-        this.simulationCompletedHandler();
-
-        let resultPath = Path.normalize(`${this.resultDir}/outputs.csv`);
-        let coeConfigPath = Path.normalize(`${this.resultDir}/coe.json`);
-        let mmConfigPath = Path.normalize(`${this.resultDir}/mm.json`);
-        let logPath = Path.normalize(`${this.resultDir}/log.zip`);
-
-        this.http.get(`http://${this.url}/result/${this.sessionId}/plain`, {responseType: 'text'})
-            .subscribe(response => {
-                // Write results to disk and save a copy of the multi model and coe configs
-                Promise.all([
-                    this.fileSystem.writeFile(resultPath, response),
-                    this.fileSystem.copyFile(this.config.sourcePath, coeConfigPath),
-                    this.fileSystem.copyFile(this.config.multiModel.sourcePath, mmConfigPath)
-                ]).then(() => {
-                    this.coe.simulationFinished();
-                    this.progress = 100;
-                    storeResultCrc(resultPath, this.config);
-                    this.executePostProcessingScript(resultPath);
-                }).catch(error => console.error("Error when writing results: " + error));
-            });
-
-
-        var logStream = fs.createWriteStream(logPath);
-        let url = `http://${this.url}/result/${this.sessionId}/zip`;
-        var request = http.get(url, (response: http.IncomingMessage) => {
-            response.pipe(logStream);
-            response.on('end', () => {
-
-                // simulation completed + result
-                let destroySessionUrl = `http://${this.url}/destroy/${this.sessionId}`;
-                http.get(destroySessionUrl, (response: any) => {
-                    let statusCode = response.statusCode;
-                    if (statusCode != 200)
-                        console.error("Destroy session returned statuscode: " + statusCode)
-                });
+                this.graph.launchWebSocket(this.coeApiService.getWebSocketSessionUrl(this._simulationSessionId));
             });
         });
-    }
-
-    private createPanel(title: string, content: HTMLElement): HTMLElement {
-        var divPanel = document.createElement("div");
-        divPanel.className = "panel panel-default";
-
-        var divTitle = document.createElement("div");
-        divTitle.className = "panel-heading";
-        divTitle.innerText = title;
-
-        var divBody = document.createElement("div");
-        divBody.className = "panel-body";
-        divBody.appendChild(content);
-
-        divPanel.appendChild(divTitle);
-        divPanel.appendChild(divBody);
-
-        return divPanel;
     }
 
     private executePostProcessingScript(outputFile: string) {
@@ -384,5 +378,4 @@ export class CoeSimulationService {
             self.postProcessingOutputReport(true, data + "");
         });
     }
-
 }

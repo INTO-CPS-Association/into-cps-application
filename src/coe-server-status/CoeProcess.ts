@@ -37,7 +37,6 @@ import fs = require("fs");
 import * as child_process from "child_process";
 import { CoeLogPrinter } from "./../coeLogPrinter";
 import { UICrtlType } from "./../CoeServerStatusUiController";
-import DialogHandler from "../DialogHandler";
 import { dependencyCheckJava } from "../angular2-app/dependencies/Dependencychecker";
 
 export class CoeProcess {
@@ -63,9 +62,6 @@ export class CoeProcess {
       IntoCpsApp.getInstance()
         .getSettings()
         .getSetting(SettingKeys.COE_URL) || "localhost:8082";
-
-    var request = require("request");
-
     return (url = `http://${url}/version`);
   }
 

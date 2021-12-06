@@ -34,6 +34,7 @@ import { Subscription } from "rxjs";
 import { SigverConfigurationService } from "./sigver-configuration.service";
 import * as Path from 'path';
 import * as Fs from 'fs';
+import { maestroVersions } from "../shared/maestro-api.service";
 
 @Component({
     selector: "sv-page",
@@ -49,6 +50,7 @@ export class SigverPageComponent implements OnDestroy {
     verificationResultsPath: string = "";
     executionResultsPath: string = "";
     disableSimulationBtn: boolean = true;
+    requiredMaestroVersion: maestroVersions = maestroVersions.maestroV2;
 
     @Input()
     set path(path: string) {
