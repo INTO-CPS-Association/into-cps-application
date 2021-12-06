@@ -56,7 +56,7 @@ export class CoeSimulationComponent implements OnDestroy {
   private _resultsDir: string = "";
   private parsing: boolean = false;
   private _coeIsOnlineSub: Subscription;
-  private _correctCoeVersion: boolean = true;
+  private correctCoeVersion: boolean = true;
 
   @Input()
   external_disable_simulation: boolean = false;
@@ -118,7 +118,7 @@ export class CoeSimulationComponent implements OnDestroy {
   ) {
     this._coeIsOnlineSub = coeSimulation.coeIsOnlineObservable.subscribe(isOnline => {
       if(this.required_coe_version) {
-        this._correctCoeVersion = this.required_coe_version == this.coeSimulation.getMaestroVersion();
+        this.correctCoeVersion = this.required_coe_version == this.coeSimulation.getMaestroVersion();
       }
       this.online = isOnline;
     } );
@@ -156,7 +156,7 @@ export class CoeSimulationComponent implements OnDestroy {
       !this.parsing &&
       !this.simulating && 
       !this.external_disable_simulation &&
-      this._correctCoeVersion
+      this.correctCoeVersion
     );
   }
 
