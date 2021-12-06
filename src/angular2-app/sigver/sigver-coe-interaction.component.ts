@@ -1,22 +1,19 @@
 import { Component, Input, OnDestroy } from "@angular/core";
-import { SigverCoeService as SigverCoeService } from "./sigver-coe.service";
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import * as Fs from 'fs';
 import * as Path from 'path';
 import { SigverConfigurationService as SigverConfigurationService } from "./sigver-configuration.service";
+import { MaestroApiService, maestroVersions } from "../shared/maestro-api.service";
 
 @Component({
     selector: "sigver-coe-interaction",
-    templateUrl: "./angular2-app/sigver/sigver-coe-interaction.component.html",
-    providers: [SigverCoeService]
+    templateUrl: "./angular2-app/sigver/sigver-coe-interaction.component.html"
 })
 export class SigverCoeInteractionComponent implements OnDestroy {
     private _configurationChangedSub: Subscription;
     private _coeIsOnlineSub: Subscription;
 
-    coeUrl: string = "";
-    coeVersion: string = "";
     videoUrl: any;
 
     @Input()
@@ -36,16 +33,8 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     isGeneratingMasterModel: boolean = false;
     isVerifying: boolean = false;
 
-    constructor(private sigverCoeService: SigverCoeService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
-        this.coeUrl = sigverCoeService.coeUrl;
-        this.coeVersion = sigverCoeService.coeVersion;
-        this._coeIsOnlineSub = sigverCoeService.coeIsOnlineObservable.subscribe(isOnline => {
-            this.isCoeOnline = isOnline;
-            if (isOnline) {
-                this.coeUrl = sigverCoeService.coeUrl;
-                this.coeVersion = sigverCoeService.coeVersion;
-            }
-        });
+    constructor(private coeApiService: MaestroApiService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
+        this._coeIsOnlineSub = coeApiService.coeIsOnlineObservable.subscribe(isOnline => this.isCoeOnline = isOnline && coeApiService.getMaestroVersion() == maestroVersions.maestroV2);
 
         this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.handleConfigurationChanges();
@@ -59,7 +48,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     onGenerateMasterModelClick() {
         this.isGeneratingMasterModel = true;
-        this.sigverCoeService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(masterModelFile => {
+        this.coeApiService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(masterModelFile => {
             masterModelFile.text().then(masterModel => {
                 this.sigverConfigurationService.configuration.masterModel = masterModel;
                 this.sigverConfigurationService.configurationChanged();
@@ -76,7 +65,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     onVerifyClick() {
         this.isVerifying = true;
-        this.sigverCoeService.verifyAlgorithm(this.sigverConfigurationService.configuration.masterModel).then(res => {
+        this.coeApiService.verifyAlgorithm(this.sigverConfigurationService.configuration.masterModel).then(res => {
             this.isVerified = true;
             this.isVerificationFailed = !res.verifiedSuccessfully;
             if (this.isVerificationFailed) {
@@ -94,7 +83,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     onVisualizeTracesClick() {
         this.isGeneratingTraces = true;
-        this.sigverCoeService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
+        this.coeApiService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
             this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(window.URL.createObjectURL(videoFile));
             this.writeFileToDir(videoFile, this.verificationresultspath);
         }, errMsg => {

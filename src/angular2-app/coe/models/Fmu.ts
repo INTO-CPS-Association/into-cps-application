@@ -93,7 +93,7 @@ export class Fmu {
         });
 
         let mdPath = Path.join(self.path, "modelDescription.xml")
-        let checkFileExists = new Promise<Buffer>(function (resolve, reject) {
+        let checkFileExists = new Promise<void>(function (resolve, reject) {
             try {
                 if (fs.accessSync(mdPath, fs.constants.R_OK) === null) {
                     reject();
