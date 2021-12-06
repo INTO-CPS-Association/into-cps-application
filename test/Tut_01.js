@@ -137,7 +137,7 @@ describe('In Tutorial 1', function () {
             .then(async n => {
                 return waitFor(await n.getText())
                     .to
-                    .match(/Co-Simulation Engine, .+, online at .+\./);
+                    .match(/maestroV.+, online at .+\./);
                 });
             
     });
