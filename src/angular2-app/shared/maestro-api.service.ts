@@ -184,8 +184,12 @@ export class MaestroApiService implements OnDestroy {
         let version: maestroVersions;
 
         switch(Number.parseInt(this.coeVersionNumber.split('.')[0])) {
-            case 1: version = maestroVersions.maestroV1;
-            case 2: version = maestroVersions.maestroV2;
+            case 1: 
+                version = maestroVersions.maestroV1;
+                break;
+            case 2: 
+                version = maestroVersions.maestroV2;
+                break;
         }
 
         if(!version){
