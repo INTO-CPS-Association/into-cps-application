@@ -231,7 +231,7 @@ export class MaestroDtpItem extends dtpItem {
     public removeFileLinks(mappingsFilePath: string, removeLinkedFile: boolean) {
         const obj = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: 'utf8', flag: 'r' }));
         // If one of the mappings are not present the other is also missing..
-        if(obj[MaestroDtpItem.mmMappingsIndex]?.[this.id]){
+        if(!obj[MaestroDtpItem.mmMappingsIndex]?.[this.id]){
             return;
         }
         delete obj[MaestroDtpItem.coeMappingsIndex][this.id];
@@ -240,14 +240,14 @@ export class MaestroDtpItem extends dtpItem {
             fs.unlink(this.multiModelPath, err => { if (err) console.warn(`Unable to delete mm file linked with maestro: ${err}`) });
             fs.unlink(this.coePath, err => { if (err) console.warn(`Unable to delete coe file linked with maestro: ${err}`) });
         }
-        fs.writeFile(mappingsFilePath, JSON.stringify(obj), err => {if(err) console.warn(err)});
+        fs.writeFile(mappingsFilePath, JSON.stringify(obj), err => {if(err) console.warn("Unable to remove coe/mm link from mappings file: " + err)});
     }
 
     async toYamlObject() {
         let project = IntoCpsApp.getInstance().getActiveProject();
         const maestroYamlObj: any = {};
         let configObj: any = {};
-        maestroYamlObj[MaestroDtpItem.objectIdentifier] = { name: this.name, execution: { tool: this.tool, capture_output: this.capture_output }, prepare: { tool: this.tool }, config: configObj };
+        maestroYamlObj[MaestroDtpItem.objectIdentifier] = { name: this.name, execution: { tool: this.tool, capture_output: this.capture_output }, prepare: { tool: this.tool } };
         maestroYamlObj.id = this.id;
         if(this.coePath) {
             const coeConfig: CoSimulationConfig = await CoSimulationConfig.parse(this.coePath, project.getRootFilePath(), project.getFmusPath());
@@ -258,6 +258,7 @@ export class MaestroDtpItem extends dtpItem {
             );
             configObj = Object.assign(coeConfig.toObject(), mmConfigObj);
         }
+        maestroYamlObj[MaestroDtpItem.objectIdentifier].config = configObj;
         return maestroYamlObj;
     }
 
@@ -352,6 +353,9 @@ export class DataRepeaterDtpItem extends dtpItem {
 
     public removeFileLinks(mappingsFilePath: string, removeLinkedFile: boolean) {
         const obj = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: 'utf8', flag: 'r' }));
+        if(!obj[DataRepeaterDtpItem.datarepeaterMappingsIndex]?.[this.id]){
+            return;
+        }
         delete obj[DataRepeaterDtpItem.datarepeaterMappingsIndex][this.id];
         if(removeLinkedFile) {
             fs.unlink(this.fmu_path, err => { if (err) console.warn(`Unable to delete fmu linked with datarepeater: ${err}`) });

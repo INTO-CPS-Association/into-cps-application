@@ -31,7 +31,7 @@
 
 import { Component, Input, AfterContentInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
-import { DTPConfig, dtpItem, MaestroDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
+import { DTPConfig, MaestroDtpItem, ToolDtpItem, ToolType } from "../dtp-configuration";
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from 'path';
 import * as fs from 'fs';
@@ -91,10 +91,12 @@ export class DtpMaestroComponent implements AfterContentInit{
                 console.error(`Unable to locate multi-model at: ${this.maestro.multiModelPath}.`);
             }
         }
-        this.showInitialSetupBtns = true;
 
-        const availableTools = this.getSimulationTools();
-        this.maestro.tool = availableTools.length > 0 ? availableTools[0].id : "";
+        if(!this.maestro.isCreatedOnServer){
+            const availableTools = this.getSimulationTools();
+            this.maestro.tool = availableTools.length > 0 ? availableTools[0].id : "";
+        }
+        this.showInitialSetupBtns = true;
     }
 
     hasUniqueName(): boolean {
@@ -113,8 +115,8 @@ export class DtpMaestroComponent implements AfterContentInit{
         if (!fs.existsSync(this.baseExperimentPath)) {
             return;
         }
-        this._maestroConfName = this.maestro.id + "_multiModel.json";
-        this._coeConfName = this.maestro.id + "_simConf.json";
+        this._maestroConfName = (this.maestro.name ? this.maestro.name + "_" : "" ) + this.maestro.id + "_multiModel.json";
+        this._coeConfName = (this.maestro.name ? this.maestro.name + "_" : "" ) + this.maestro.id + "_simConf.json";
         const destinationPath =  this.config.projectPath;
         const mm_destinationName = Path.join(destinationPath, this._maestroConfName);
         const coe_destinationName = Path.join(destinationPath, this._coeConfName);

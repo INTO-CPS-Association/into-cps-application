@@ -235,7 +235,7 @@ export class DtpDtToolingService implements OnDestroy {
     */
     public getSchemaDefinition(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.httpClient.get(`${this.url}//project/schemas`).subscribe(res => {
+            this.httpClient.get(`${this.url}//project/schema`).subscribe(res => {
                 resolve(res);
             }, (err: HttpErrorResponse) => {
                 reject(err.error);

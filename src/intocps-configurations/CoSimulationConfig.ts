@@ -175,7 +175,7 @@ export class CoSimulationConfig implements ISerializable {
             let mmPath: string = Path.join(path, "..", "..", "mm.json");
             let locatedMM: boolean = true;
             if (!fs.existsSync(mmPath)) {
-                console.warn("Could not find mm.json at: " + mmPath + " Searching for old style...")
+                console.log("Could not find mm.json at: " + mmPath + " Searching for old style...")
                 locatedMM = false;
                 //no we have the old style
                 fs.readdirSync(Path.join(path, "..", "..")).forEach(file => {
@@ -190,15 +190,14 @@ export class CoSimulationConfig implements ISerializable {
             }
             // Could not locate mm from path so try the relative saved mm path.
             if(!locatedMM){
-                console.warn("Unable to locate the multi-model configuration two levels above the co-simulation configuration path. Trying the saved relative multi-model path..");
+                console.log("Unable to locate the multi-model configuration two levels above the co-simulation configuration path. Trying the saved relative multi-model path..");
                 const savedPath = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), parser.parseSimpleTagDefault(data, "multimodel_path", ""));
                 if(!savedPath || !fs.existsSync(savedPath)){
-                    console.warn("Unable to load multi model for co-simulation configuration!");
+                    console.error("Unable to load multi model for co-simulation configuration!");
                 } else {
                     mmPath = savedPath;
                 }
             }
-        
 
             MultiModelConfig
                 .parse(mmPath, fmuRootPath)
