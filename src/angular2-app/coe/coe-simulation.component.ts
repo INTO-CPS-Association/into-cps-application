@@ -46,8 +46,8 @@ import { maestroVersions } from "../shared/maestro-api.service";
 
 @Component({
   selector: "coe-simulation",
-/*   providers: [CoeSimulationService],
-  directives: [LineChartComponent], */
+  providers: [CoeSimulationService],
+/* directives: [LineChartComponent], */
   templateUrl: "./angular2-app/coe/coe-simulation.component.html"
 })
 export class CoeSimulationComponent implements OnDestroy {

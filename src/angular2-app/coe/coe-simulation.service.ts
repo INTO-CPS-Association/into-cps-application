@@ -34,8 +34,8 @@ import { SettingsService, SettingKeys } from "../shared/settings.service";
 import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
 import * as Path from "path";
-import { BehaviorSubject, Observable } from "rxjs";
-import { Injectable, NgZone } from "@angular/core";
+import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
+import { Component, Injectable, NgZone, OnDestroy } from "@angular/core";
 import { CoSimulationConfig, LiveGraph } from "../../intocps-configurations/CoSimulationConfig";
 import { storeResultCrc } from "../../intocps-configurations/ResultConfig";
 import * as fs from 'fs'
@@ -47,7 +47,7 @@ import { MaestroApiService, simulationEndpoints } from "../shared/maestro-api.se
 
 
 @Injectable()
-export class CoeSimulationService {
+export class CoeSimulationService implements OnDestroy  {
     progress: number = 0;
     errorReport: (hasError: boolean, message: string, hasWarning?: boolean, stopped?: boolean) => void = function () { };
     simulationCompletedHandler: () => void = function () { };
@@ -61,10 +61,12 @@ export class CoeSimulationService {
     private masterModel: string;
     private config: CoSimulationConfig;
     private graphMaxDataPoints: number = 100;
+    private _coeIsOnlineSub: Subscription;
+    private _coeIsOnline = new Subject<boolean>();
 
     public graph: Graph = new Graph();
     public externalGraphs: Array<DialogHandler> = new Array<DialogHandler>();
-    public coeIsOnlineObservable: Observable<boolean>;
+    public coeIsOnlineObservable: Observable<boolean> = this._coeIsOnline.asObservable();
     public coeUrl: string;
 
     set resultDir(resultsDir: string) {
@@ -82,22 +84,26 @@ export class CoeSimulationService {
         settings: SettingsService,
         private fileSystem: FileSystemService,
         private zone: NgZone,
-        private coeApiService: MaestroApiService) {
+        private maestroApiService: MaestroApiService) {
 
         this.graphMaxDataPoints = settings.get(SettingKeys.GRAPH_MAX_DATA_POINTS);
         this.graph.setProgressCallback((progress: number) => { this.progress = progress });
         this.graph.setGraphMaxDataPoints(this.graphMaxDataPoints);
 
-        this.coeIsOnlineObservable = coeApiService.coeIsOnlineObservable;
-        this.coeUrl = coeApiService.coeUrl;
+        this.coeUrl = maestroApiService.coeUrl;
+        this._coeIsOnlineSub = this.maestroApiService.startMonitoringOnlineStatus(isOnline => this._coeIsOnline.next(isOnline));
+    }
+
+    ngOnDestroy(): void {
+        this.maestroApiService.stopMonitoringOnlineStatus(this._coeIsOnlineSub);
     }
 
     getCoeVersion() {
-        return this.coeApiService.coeVersionNumber;
+        return this.maestroApiService.coeVersionNumber;
     }
 
     getMaestroVersion() {
-        return this.coeApiService.getMaestroVersion();
+        return this.maestroApiService.getMaestroVersion();
     }
 
     reset() {
@@ -111,7 +117,7 @@ export class CoeSimulationService {
         data: string = "",
         show: boolean = true
     ) {
-        this.coeApiService.launchCOE();
+        this.maestroApiService.launchCOE();
     }
 
     getResultsDir(): string {
@@ -120,7 +126,7 @@ export class CoeSimulationService {
 
     stop(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.coeApiService.stopSimulation(this._simulationSessionId).then(() => resolve()).catch((res: Response) => reject(res.statusText));
+            this.maestroApiService.stopSimulation(this._simulationSessionId).then(() => resolve()).catch((res: Response) => reject(res.statusText));
         });
     }
 
@@ -192,7 +198,7 @@ export class CoeSimulationService {
     private handleSimulationFinished(simulationPromise: Promise<void>) {
         simulationPromise.then(() => {
             // If simulation finished successfully get the plain results
-            this.coeApiService.getPlainResult(this._simulationSessionId).then(async (resultsString: string) => {
+            this.maestroApiService.getPlainResult(this._simulationSessionId).then(async (resultsString: string) => {
                 await Promise.all([
                     this.fileSystem.writeFile(this._resultPath, resultsString),
                     this.fileSystem.copyFile(this.config.sourcePath, this._coeConfigPath),
@@ -205,9 +211,9 @@ export class CoeSimulationService {
             }).catch((err: Response) => this.errorHandler(err));
         }).finally(() => 
                 // Always get whatever results have been generated
-                this.coeApiService.getResults(Path.normalize(`${this.resultDir}/simulation_results.zip`), this._simulationSessionId).finally(() => {
+                this.maestroApiService.getResults(Path.normalize(`${this.resultDir}/simulation_results.zip`), this._simulationSessionId).finally(() => {
                     // End the session
-                    this.coeApiService.destroySession(this._simulationSessionId).catch((err: Response) => console.error("Could not destroy session: " + err.statusText));
+                    this.maestroApiService.destroySession(this._simulationSessionId).catch((err: Response) => console.error("Could not destroy session: " + err.statusText));
                 })
             .catch((err: Response) => {
                 console.error("Could retrieve results: " + err.statusText);
@@ -236,11 +242,11 @@ export class CoeSimulationService {
         this.reset();
         this.graph.setCoSimConfig(this.config);
         this.graph.initializeDatasets();
-        this.coeApiService.getCoeProcess().prepareSimulation();
+        this.maestroApiService.getCoeProcess().prepareSimulation();
         this.errorReport(false, "");
-        return this.coeApiService.createSimulationSession().then(async sessionId => {
+        return this.maestroApiService.createSimulationSession().then(async sessionId => {
             this._simulationSessionId = sessionId;
-            if (this.coeApiService.isRemoteCoe()) {
+            if (this.maestroApiService.isRemoteCoe()) {
                 await this.prepareAndUploadFmus().catch(err => this.errorHandler(err));
             }
             return this.prepareAndInitializeCoe();
@@ -261,16 +267,16 @@ export class CoeSimulationService {
                 });
             });
 
-            this.coeApiService.uploadFmus(formData, this._simulationSessionId).then(() => resolve()).catch((err: Response) => reject(err));
+            this.maestroApiService.uploadFmus(formData, this._simulationSessionId).then(() => resolve()).catch((err: Response) => reject(err));
         });
     }
 
     private prepareAndInitializeCoe(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const configJson = new CoeConfig(this.config, this.coeApiService.isRemoteCoe()).toJSON();
+            const configJson = new CoeConfig(this.config, this.maestroApiService.isRemoteCoe()).toJSON();
             Promise.all([
                 this.fileSystem.mkdir(this.resultDir),
-                this.coeApiService.initializeCoe(configJson, this._simulationSessionId)
+                this.maestroApiService.initializeCoe(configJson, this._simulationSessionId)
             ]).catch(err => reject(err)).finally(() => {
                 this.fileSystem.writeFile(Path.join(this.resultDir, "config.json"), configJson);
                 resolve();
@@ -286,7 +292,7 @@ export class CoeSimulationService {
                 let deferred: Deferred<any> = new Deferred<any>();
                 deferreds.push(deferred.promise);
                 let graphObj = key.toObject();
-                graphObj.webSocket = this.coeApiService.getWebSocketSessionUrl(this._simulationSessionId);
+                graphObj.webSocket = this.maestroApiService.getWebSocketSessionUrl(this._simulationSessionId);
                 graphObj.graphMaxDataPoints = this.graphMaxDataPoints;
                 console.log(graphObj);
                 let dh = new DialogHandler("angular2-app/coe/graph-window/graph-window.html", 800, 600);
@@ -304,7 +310,7 @@ export class CoeSimulationService {
                 this.graph.webSocketOnOpenCallback = () => this.fileSystem.writeFile(Path.join(this.resultDir, "config-simulation.json"), JSON.stringify(simulationData))
                     .then(() => {
                         // Call the correct simulate endpoint
-                        const simulationPromise = this.coeApiService.simulate(simulationData, simulationEndpoint, this._simulationSessionId);
+                        const simulationPromise = this.maestroApiService.simulate(simulationData, simulationEndpoint, this._simulationSessionId);
                         simulationPromise.then(() => {
                             this.graph.closeSocket();
                             let markedForDeletionExternalGraphs: DialogHandler[] = [];
@@ -320,7 +326,7 @@ export class CoeSimulationService {
                                 this.externalGraphs.splice(this.externalGraphs.indexOf(eg, 0), 1);
                             });
                             this.graph.setFinished();
-                            this.coeApiService.getCoeProcess().simulationFinished();
+                            this.maestroApiService.getCoeProcess().simulationFinished();
                             this.progress = 100;
                             this.simulationCompletedHandler();
                             resolve();
@@ -331,7 +337,7 @@ export class CoeSimulationService {
                             });
                     });
 
-                this.graph.launchWebSocket(this.coeApiService.getWebSocketSessionUrl(this._simulationSessionId));
+                this.graph.launchWebSocket(this.maestroApiService.getWebSocketSessionUrl(this._simulationSessionId));
             });
         });
     }
