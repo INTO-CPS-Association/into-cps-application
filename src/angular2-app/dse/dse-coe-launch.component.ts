@@ -23,9 +23,6 @@ export class SafePipe implements PipeTransform {
 
 @Component({
     selector: "dse-coe-launch",
-    providers: [
-        CoeSimulationService
-    ],
     templateUrl: "./angular2-app/dse/dse-coe-launch.component.html"  
 })
 export class DseCoeLaunchComponent implements OnInit, OnDestroy {
@@ -77,7 +74,7 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     online:boolean = false;
     url:string = '';
     version:string = '';
-    constructor(private coeSimulation:CoeSimulationService, private http:HttpClient,
+    constructor(private coeSimulation: CoeSimulationService, private http:HttpClient,
         private settings:SettingsService, private zone:NgZone,
         private sanitizer:DomSanitizer) {    }
 

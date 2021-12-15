@@ -1,5 +1,6 @@
 import { NgModule } from "@angular/core";
 import { CoeSimulationComponent } from "../coe/coe-simulation.component";
+import { CoeLaunchComponent } from "../shared/coe-launch.component";
 import { SigverCoeInteractionComponent } from "./sigver-coe-interaction.component";
 import { SigverConfigurationComponent } from "./sigver-configuration.component";
 import { SigverPageComponent } from "./sigver-page.component";
@@ -10,7 +11,7 @@ import { SigverPageComponent } from "./sigver-page.component";
         SigverConfigurationComponent,
         SigverCoeInteractionComponent,
     ],
-    imports: [CoeSimulationComponent],
+    imports: [CoeSimulationComponent, CoeLaunchComponent],
     exports: [SigverPageComponent]
 })
 export class SIGVERModule {

@@ -30,10 +30,14 @@
  */
 
 import {Component, Input} from "@angular/core";
+import { CoeSimulationService } from "../coe/coe-simulation.service";
 
 
 @Component({
     selector: "dse-page",
+    providers: [
+        CoeSimulationService
+    ],
     templateUrl: "./angular2-app/dse/dse-page.component.html"
 })
 export class DsePageComponent {

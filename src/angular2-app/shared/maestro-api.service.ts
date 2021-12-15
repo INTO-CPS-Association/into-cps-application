@@ -53,24 +53,9 @@ export class MaestroApiService implements OnDestroy {
         this._timerSubscription.unsubscribe();
     }
 
-    startMonitoringOnlineStatus(callback: (n: boolean) => void): Subscription {
-        if(!this._timerSubscription || this._timerSubscription.closed){
-            this._timerSubscription = timer(0, 2000).subscribe(() => this.isCoeOnline());
-        }
-        return this._coeIsOnline.asObservable().subscribe(callback);
-    }
-
-    stopMonitoringOnlineStatus(subscription: Subscription) {
-        subscription.unsubscribe();
-        if(this._coeIsOnline.observers.length < 1){
-            this._timerSubscription.unsubscribe();
-        }
-    }
-
     /* 
         Simulation API entry points methods
     */
-
     getCoeVersionNumber(): Promise<string> {
         return this.httpClient.get(`http://${this.coeUrl}/version`).pipe(timeout(2000), map((response: any) => {
             //This regex match expects the coe version number to have the format x.x.x
@@ -160,7 +145,6 @@ export class MaestroApiService implements OnDestroy {
     /* 
         Scenario verifier API entry points methods
     */
-
     generateScenario(extendedMultiModelObj: Object): Promise<File> {
         return new Promise<File>((resolve, reject) => {
             this.httpClient.post(`http://${this.coeUrl}/generateAlgorithmFromMultiModel`, extendedMultiModelObj, { responseType: 'text' }).toPromise().then(response => {
@@ -195,7 +179,20 @@ export class MaestroApiService implements OnDestroy {
     /* 
         Non API methods
     */
+    startMonitoringOnlineStatus(callback: (n: boolean) => void): Subscription {
+        if(!this._timerSubscription || this._timerSubscription.closed){
+            this._timerSubscription = timer(0, 2000).subscribe(() => this.isCoeOnline());
+        }
+        return this._coeIsOnline.asObservable().subscribe(callback);
+    }
 
+    stopMonitoringOnlineStatus(subscription: Subscription) {
+        subscription.unsubscribe();
+        if(this._coeIsOnline.observers.length < 1){
+            this._timerSubscription.unsubscribe();
+        }
+    }
+    
     getWebSocketSessionUrl(simulationSessionId: string): string {
         return `ws://${this.coeUrl}/attachSession/${simulationSessionId}`;
     }
@@ -233,10 +230,6 @@ export class MaestroApiService implements OnDestroy {
         return this._coe;
     }
 
-    private isCoeOnline() {
-        this.getCoeVersionNumber().then(() => this._coeIsOnline.next(true)).catch(() => this._coeIsOnline.next(false));
-    }
-
     inferMaestroVersionFromJarContent(): Promise<maestroVersions> {
         return new Promise<maestroVersions> (async (resolve, reject) => {
             // read the contents of the maestro jar
@@ -254,6 +247,10 @@ export class MaestroApiService implements OnDestroy {
                 }
             });
         });
+    }
+
+    private isCoeOnline() {
+        this.getCoeVersionNumber().then(() => this._coeIsOnline.next(true)).catch(() => this._coeIsOnline.next(false));
     }
 
     private formatErrorMessage(statusCode: number, IVndErrors: IVndError[]): string {

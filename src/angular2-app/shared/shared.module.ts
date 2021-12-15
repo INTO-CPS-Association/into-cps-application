@@ -34,12 +34,14 @@ import {PanelComponent} from "./panel.component"
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FileBrowserComponent } from '../mm/inputs/file-browser.component';
+import { CoeLaunchComponent } from './coe-launch.component';
 @NgModule({
     imports: [FormsModule, CommonModule],
     declarations: [ // components and directives
       PanelComponent, 
-      FileBrowserComponent],
-    exports: [PanelComponent, FileBrowserComponent]
+      FileBrowserComponent,
+      CoeLaunchComponent],
+    exports: [PanelComponent, FileBrowserComponent, CoeLaunchComponent]
   })
   export class SharedModule {
 

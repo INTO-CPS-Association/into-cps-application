@@ -35,7 +35,7 @@ import { Fmu } from "./models/Fmu";
 import { CoeConfig } from "./models/CoeConfig";
 import * as Path from "path";
 import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
-import { Component, Injectable, NgZone, OnDestroy } from "@angular/core";
+import { Injectable, NgZone, OnDestroy } from "@angular/core";
 import { CoSimulationConfig, LiveGraph } from "../../intocps-configurations/CoSimulationConfig";
 import { storeResultCrc } from "../../intocps-configurations/ResultConfig";
 import * as fs from 'fs'

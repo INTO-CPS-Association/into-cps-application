@@ -54,9 +54,6 @@ import * as fs from 'fs';
 
 @Component({
     selector: "dse-configuration",
-    providers: [
-        CoeSimulationService
-    ],
     templateUrl: "./angular2-app/dse/dse-configuration.component.html"  
 })
 export class DseConfigurationComponent implements OnInit, OnDestroy {
@@ -128,7 +125,7 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     private paretoDirections = ["-", "+"];
 
   
-    constructor(private coeSimulation:CoeSimulationService,
+    constructor(private coeSimulation: CoeSimulationService,
         private http:HttpClient,
         private zone:NgZone,
         private settings:SettingsService, private navigationService: NavigationService) {
