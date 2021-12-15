@@ -10,6 +10,8 @@ import * as Path from 'path';
 
 import {DomSanitizer} from '@angular/platform-browser';
 import { dependencyCheckPythonVersion } from "../dependencies/Dependencychecker";
+import { MaestroApiService } from '../shared/maestro-api.service';
+import { Subscription } from 'rxjs';
 // https://www.electronjs.org/docs/api/dialog dialog from main thread. If you want to use the dialog object from a renderer process, remember to access it using the remote: 
 const { dialog } = require('electron').remote;
 
@@ -26,11 +28,9 @@ export class SafePipe implements PipeTransform {
     templateUrl: "./angular2-app/dse/dse-coe-launch.component.html"  
 })
 export class DseCoeLaunchComponent implements OnInit, OnDestroy {
-
-    
-    private onlineInterval:number;
     private _path:string;
     private resultdir: string;
+    private _coeIsOnlineSub: Subscription;
     @Input()
     set path(path:string) {
         this._path = path;
@@ -39,9 +39,6 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
             let app: IntoCpsApp = IntoCpsApp.getInstance();
             let p: string = app.getActiveProject().getRootFilePath();
             this.cosimConfig = this.loadCosimConfigs(Path.join(p, Project.PATH_MULTI_MODELS));
-
-            if(this.coeSimulation)
-                this.coeSimulation.reset();
         }
     }
     get path():string {
@@ -72,21 +69,17 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
     coeconfig:string = '';
 
     online:boolean = false;
-    url:string = '';
-    version:string = '';
-    constructor(private coeSimulation: CoeSimulationService, private http:HttpClient,
-        private settings:SettingsService, private zone:NgZone,
-        private sanitizer:DomSanitizer) {    }
+
+    constructor(private maestroApiService: MaestroApiService, private zone:NgZone) {    
+            this._coeIsOnlineSub = this.maestroApiService.startMonitoringOnlineStatus(isOnline => this.online = isOnline);
+    }
 
     ngOnInit() {
-        this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8083";
-        this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
-        this.isCoeOnline();
         console.log(this.path);
     }
 
     ngOnDestroy() {
-        clearInterval(this.onlineInterval);
+        this.maestroApiService.stopMonitoringOnlineStatus(this._coeIsOnlineSub);
     }
 
     getFiles(path: string): string [] {
@@ -255,21 +248,5 @@ export class DseCoeLaunchComponent implements OnInit, OnDestroy {
 
     setGenerateCSVOutput() {
         this.generateCSVOutput = !this.generateCSVOutput;
-    }
-
-    isCoeOnline() {
-        this.http
-            .get(`http://${this.url}/version`).pipe(
-            timeout(2000),
-            map(response => response),)
-            .subscribe((data:any) => {
-                this.online = true;
-                this.version = data.version;
-            }, () => this.online = false);
-    }
-
-    onCoeLaunchClick() {
-        this.coeSimulation.
-    openCOEServerStatusWindow("autolaunch", false);
     }
 }

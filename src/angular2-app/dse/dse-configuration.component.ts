@@ -30,8 +30,7 @@
  *
  * See the CONTRIBUTORS file for author and contributor information. 
  */
-import {map, timeout} from 'rxjs/operators';
-import { Component, Input, NgZone, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
+import { Component, Input, NgZone, Output, EventEmitter, OnDestroy } from "@angular/core";
 import {Serializer} from "../../intocps-configurations/Parser";
 import {
     Instance, ScalarVariable, CausalityType, InstanceScalarPair, isCausalityCompatible, isTypeCompatiple,
@@ -49,6 +48,8 @@ import { FormGroup, FormArray, FormControl } from "@angular/forms";
 import {Project} from "../../proj/Project";
 import * as Path from 'path';
 import * as fs from 'fs';
+import { MaestroApiService } from "../shared/maestro-api.service";
+import { Subscription } from "rxjs";
 
 
 
@@ -56,8 +57,9 @@ import * as fs from 'fs';
     selector: "dse-configuration",
     templateUrl: "./angular2-app/dse/dse-configuration.component.html"  
 })
-export class DseConfigurationComponent implements OnInit, OnDestroy {
+export class DseConfigurationComponent implements OnDestroy {
     private _path:string;
+    private _coeIsOnlineSub: Subscription;
     @Input()
     set path(path:string) {
         this._path = path;
@@ -67,8 +69,6 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
             let p: string = app.getActiveProject().getRootFilePath();
             this.cosimConfig = this.loadCosimConfigs(Path.join(p, Project.PATH_MULTI_MODELS));
 
-            if(this.coeSimulation)
-                this.coeSimulation.reset();
         }
     }
     get path():string {
@@ -100,8 +100,6 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     coeconfig:string = '';
 
     online:boolean = false;
-    url:string = '';
-    version:string = '';
     dseWarnings:WarningMessage[] = [];
     coeWarnings:WarningMessage[] = [];
 
@@ -125,11 +123,14 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     private paretoDirections = ["-", "+"];
 
   
-    constructor(private coeSimulation: CoeSimulationService,
-        private http:HttpClient,
-        private zone:NgZone,
-        private settings:SettingsService, private navigationService: NavigationService) {
+    constructor(private maestroApiService: MaestroApiService, private zone:NgZone, private navigationService: NavigationService) {
         this.navigationService.registerComponent(this);
+        this._coeIsOnlineSub = this.maestroApiService.startMonitoringOnlineStatus(isOnline => this.online = isOnline);
+    }
+
+    ngOnDestroy() {
+        clearInterval(this.onlineInterval);
+        this.maestroApiService.stopMonitoringOnlineStatus(this._coeIsOnlineSub);
     }
 
     parseConfig(mmPath : string) {
@@ -793,18 +794,6 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
     }
 
 
-
-
-    ngOnInit() {
-        this.url = this.settings.get(SettingKeys.COE_URL) || "localhost:8082";
-        this.onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
-        this.isCoeOnline();
-    }
-
-    ngOnDestroy() {
-        clearInterval(this.onlineInterval);
-    }
-
     /*
      * Method to check if can run a DSE. Will check if the COE is online, if there are any warnings
      * and also some DSE-specific elements
@@ -853,21 +842,5 @@ export class DseConfigurationComponent implements OnInit, OnDestroy {
         child.stderr.on('data', function (data: any) {
             console.log('dse/stderr: ' + data);
         });
-    }
-
-    isCoeOnline() {
-        this.http
-            .get(`http://${this.url}/version`).pipe(
-            timeout(2000),
-            map(response => response),)
-            .subscribe((data:any) => {
-                this.online = true;
-                this.version = data.version;
-            }, () => this.online = false);
-    }
-
-    onCoeLaunchClick() {
-        this.coeSimulation.
-    openCOEServerStatusWindow("autolaunch", false);
     }
 }
