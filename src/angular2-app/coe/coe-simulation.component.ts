@@ -96,7 +96,6 @@ export class CoeSimulationComponent implements OnDestroy {
     return this._path;
   }
 
-  coeVersions = maestroVersions;
   online: boolean = false;
   hasHttpError: boolean = false;
   httpErrorMessage: string = "";
@@ -232,10 +231,5 @@ export class CoeSimulationComponent implements OnDestroy {
     this.hasPostScriptOutput = true;
     this.hasPostScriptOutputError = hasError;
     this.postScriptOutput = message;
-  }
-
-  onCoeLaunchClick() {
-   this.coeSimulation.
-    openCOEServerStatusWindow("autolaunch", false);
   }
 }
