@@ -10,10 +10,10 @@
  * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
  * THIS INTO-CPS ASSOCIATION PUBLIC LICENSE VERSION 1.0.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL 
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL
  * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The INTO-CPS toolchain  and the INTO-CPS Association Public License 
+ * The INTO-CPS toolchain  and the INTO-CPS Association Public License
  * are obtained from the INTO-CPS Association, either from the above address,
  * from the URLs: http://www.into-cps.org, and in the INTO-CPS toolchain distribution.
  * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
@@ -26,291 +26,298 @@
  *
  * See the full INTO-CPS Association Public License conditions for more details.
  *
- * See the CONTRIBUTORS file for author and contributor information. 
+ * See the CONTRIBUTORS file for author and contributor information.
  */
 
 import { Component, Input, EventEmitter, Output, NgZone } from "@angular/core";
 import { Validators, FormArray, FormControl, FormGroup } from "@angular/forms";
 import IntoCpsApp from "../../IntoCpsApp";
 import {
-    CoSimulationConfig, ICoSimAlgorithm, FixedStepAlgorithm,
-    VariableStepAlgorithm, ZeroCrossingConstraint, BoundedDifferenceConstraint, SamplingRateConstraint,
-    VariableStepConstraint, FmuMaxStepSizeConstraint, LiveGraph
+	CoSimulationConfig,
+	ICoSimAlgorithm,
+	FixedStepAlgorithm,
+	VariableStepAlgorithm,
+	ZeroCrossingConstraint,
+	BoundedDifferenceConstraint,
+	SamplingRateConstraint,
+	VariableStepConstraint,
+	FmuMaxStepSizeConstraint,
+	LiveGraph,
 } from "../../intocps-configurations/CoSimulationConfig";
 import { ScalarVariable, CausalityType, Instance, InstanceScalarPair, ScalarVariableType } from "./models/Fmu";
-import { lessThanValidator2, numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
+import { lessThanValidator2, numberValidator, uniqueGroupPropertyValidator } from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage } from "../../intocps-configurations/Messages";
-import { bind } from "bluebird";
 
 const dialog = require("electron").remote.dialog;
 
 @Component({
-    selector: "coe-configuration",
-    templateUrl: "./angular2-app/coe/coe-configuration.component.html"
+	selector: "coe-configuration",
+	templateUrl: "./angular2-app/coe/coe-configuration.component.html",
 })
 export class CoeConfigurationComponent {
-    private _path: string;
+	private _path: string;
+	private _allowChangingAlgorithm: boolean = true;
+	private _editing: boolean = false;
 
-    public Fmu_x = require("./models/Fmu");
+	public Fmu_x = require("./models/Fmu");
 
+	@Input()
+	public set allow_changing_algorithm(allowChangingAlgorithm: boolean) {
+		this._allowChangingAlgorithm = allowChangingAlgorithm;
+		this.editAlgorithm = allowChangingAlgorithm;
+	}
 
-    @Input()
-    set path(path: string) {
-        this._path = path;
+	public editAlgorithm: boolean = false;
 
-        if (path)
-            this.parseConfig();
-    }
-    get path(): string {
-        return this._path;
-    }
+	@Input()
+	set path(path: string) {
+		this._path = path;
 
-    @Output()
-    change = new EventEmitter<string>();
+		if (path) this.parseConfig();
+	}
+	get path(): string {
+		return this._path;
+	}
 
-    form: FormGroup;
-    algorithms: ICoSimAlgorithm[] = [];
-    algorithmFormGroups = new Map<ICoSimAlgorithm, FormGroup>();
-    outputPorts: Array<InstanceScalarPair> = [];
-    newConstraint: new (...args: any[]) => VariableStepConstraint;
-    editing: boolean = false;
-    isLoaded : boolean = false;
-    logVariablesSearchName: string = '';
-    parseError: string = null;
-    warnings: WarningMessage[] = [];
-    loglevels: string[] = ["Not set", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
+	@Output()
+	change = new EventEmitter<string>();
 
-    // liveGraphs: LiveGraph[];
-    //The variable zeroCrossings is necessary to give different names to the radiobutton groups in the different zeroCrossing constraints.
-    // Otherwise they will all be connected.
-    zeroCrossings: number = 0;
-
-    private config: CoSimulationConfig;
-
-    private algorithmConstructors = [
-        FixedStepAlgorithm,
-        VariableStepAlgorithm
-    ];
-
-    private constraintConstructors = [
-        ZeroCrossingConstraint,
-        BoundedDifferenceConstraint,
-        SamplingRateConstraint,
-        FmuMaxStepSizeConstraint
-    ];
-
-    constructor(private zone: NgZone, private navigationService: NavigationService) {
-        this.navigationService.registerComponent(this);
+	form: FormGroup;
+	algorithms: ICoSimAlgorithm[] = [];
+	algorithmFormGroups = new Map<ICoSimAlgorithm, FormGroup>();
+	outputPorts: Array<InstanceScalarPair> = [];
+	newConstraint: new (...args: any[]) => VariableStepConstraint;
+    
+    set editing(editing: boolean) {
+        this._editing = editing;
+        this.editAlgorithm = this._allowChangingAlgorithm && this.editing;
     }
 
-    private parseConfig() {
-        let project = IntoCpsApp.getInstance().getActiveProject();
-
-        CoSimulationConfig
-            .parse(this.path, project.getRootFilePath(), project.getFmusPath())
-            .then(config => {
-                    this.config = config;
-                    
-                    this.warnings = this.config.validate();
-
-                    this.parseError = null;
-
-                    // Create an array of the algorithm from the coe config and a new instance of all other algorithms
-                    this.algorithms = this.algorithmConstructors
-                        .map(constructor =>
-                            config.algorithm instanceof constructor
-                                ? config.algorithm
-                                : new constructor()
-                        );
-                    // Create an array of formGroups for the algorithms
-                    this.algorithms.forEach(algorithm => {
-                        this.algorithmFormGroups.set(algorithm, algorithm.toFormGroup());
-                    });
-                    // Create an array of all output ports on all instances
-                    this.outputPorts = this.config.multiModel.fmuInstances
-                        .map(instance => instance.fmu.scalarVariables
-                            .filter(sv => sv.type === ScalarVariableType.Real && (sv.causality === CausalityType.Output || sv.causality === CausalityType.Parameter))
-                            .map(sv => this.config.multiModel.getInstanceScalarPair(instance.fmu.name, instance.name, sv.name)))
-                        .reduce((a, b) => a.concat(...b), []);
-
-                      
-
-                    // Create a form group for validation
-                    this.form = new FormGroup({
-                        startTime: new FormControl(config.startTime, [Validators.required, numberValidator]),
-                        endTime: new FormControl(config.endTime, [Validators.required, numberValidator]),
-                        liveGraphs: new FormArray(config.liveGraphs.map(g => g.toFormGroup()), uniqueGroupPropertyValidator("id")),//, uniqueGroupPropertyValidator("id")
-                        livestreamInterval: new FormControl(config.livestreamInterval, [Validators.required, numberValidator]),
-                        liveGraphColumns: new FormControl(config.liveGraphColumns, [Validators.required, numberValidator]),
-                        liveGraphVisibleRowCount: new FormControl(config.liveGraphVisibleRowCount, [Validators.required, numberValidator]),
-                        algorithm: this.algorithmFormGroups.get(this.config.algorithm),
-                        global_absolute_tolerance: new FormControl(config.global_absolute_tolerance, [Validators.required, numberValidator]),
-                        global_relative_tolerance: new FormControl(config.global_relative_tolerance, [Validators.required, numberValidator])
-                    }, lessThanValidator2('startTime', 'endTime'), null);
-                    console.log("Parsing finished!");
-                    this.isLoaded = true;
-            }, error => this.zone.run(() => { this.parseError = error })).catch(error => console.error(`Error during parsing of config: ${error}`));
+    get editing(): boolean {
+        return this._editing;
     }
 
-    public setPostProcessingScript(config: CoSimulationConfig, path: string) {
-        config.postProcessingScript = config.getProjectRelativePath(path);
-    }
+	isLoaded: boolean = false;
+	logVariablesSearchName: string = "";
+	parseError: string = null;
+	warnings: WarningMessage[] = [];
+	loglevels: string[] = ["Not set", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
 
-    onNavigate(): boolean {
-        if (!this.editing)
-            return true;
+	// liveGraphs: LiveGraph[];
+	//The variable zeroCrossings is necessary to give different names to the radiobutton groups in the different zeroCrossing constraints.
+	// Otherwise they will all be connected.
+	zeroCrossings: number = 0;
 
-        if (this.form.valid) {
-            if (confirm("Save your work before leaving?"))
-                this.onSubmit();
+	private config: CoSimulationConfig;
 
-            return true;
-        } else {
-            return confirm("The changes to the configuration are invalid and can not be saved. Continue anyway?");
-        }
-    }
+	private algorithmConstructors = [FixedStepAlgorithm, VariableStepAlgorithm];
 
-    onAlgorithmChange(algorithm: ICoSimAlgorithm) {
-        this.zone.run(() => {
-            this.config.algorithm = algorithm;
+	private constraintConstructors = [ZeroCrossingConstraint, BoundedDifferenceConstraint, SamplingRateConstraint, FmuMaxStepSizeConstraint];
 
-        this.form.removeControl('algorithm');
-        this.form.addControl('algorithm', this.algorithmFormGroups.get(algorithm));
-        })
-        
-    }
+	constructor(private zone: NgZone, private navigationService: NavigationService) {
+		this.navigationService.registerComponent(this);
+	}
 
-    onSubmit() {
-        if (!this.editing) return;
+	private parseConfig() {
+		let project = IntoCpsApp.getInstance().getActiveProject();
 
-        this.warnings = this.config.validate();
+		CoSimulationConfig.parse(this.path, project.getRootFilePath(), project.getFmusPath())
+			.then(
+				(config) => {
+					this.config = config;
 
-        let override = false;
+					this.warnings = this.config.validate();
 
-        if (this.warnings.length > 0) {
+					this.parseError = null;
 
-            let res = dialog.showMessageBoxSync({ title: 'The multi-model for this configuration has changed!', message: 'Do you want to override it?', buttons: ["No", "Yes"] });
-            if (res == 1) {
-                override = true;
-                this.warnings = [];
-            }
-        }
+					// Create an array of the algorithm from the coe config and a new instance of all other algorithms
+					this.algorithms = this.algorithmConstructors.map((constructor) => (config.algorithm instanceof constructor ? config.algorithm : new constructor()));
+					// Create an array of formGroups for the algorithms
+					this.algorithms.forEach((algorithm) => {
+						this.algorithmFormGroups.set(algorithm, algorithm.toFormGroup());
+					});
+					// Create an array of all output ports on all instances
+					this.outputPorts = this.config.multiModel.fmuInstances
+						.map((instance) =>
+							instance.fmu.scalarVariables
+								.filter((sv) => sv.type === ScalarVariableType.Real && (sv.causality === CausalityType.Output || sv.causality === CausalityType.Parameter))
+								.map((sv) => this.config.multiModel.getInstanceScalarPair(instance.fmu.name, instance.name, sv.name))
+						)
+						.reduce((a, b) => a.concat(...b), []);
 
-        if (override) {
-            this.config.saveOverride()
-                .then(() => this.change.emit(this.path)).catch(error => console.error("error when overriding save: " + error));
-        } else {
-            this.config.save()
-                .then(() => this.change.emit(this.path)).catch(error => console.error("error when saving: " + error));
-        }
+					// Create a form group for validation
+					this.form = new FormGroup(
+						{
+							startTime: new FormControl(config.startTime, [Validators.required, numberValidator]),
+							endTime: new FormControl(config.endTime, [Validators.required, numberValidator]),
+							liveGraphs: new FormArray(
+								config.liveGraphs.map((g) => g.toFormGroup()),
+								uniqueGroupPropertyValidator("id")
+							), //, uniqueGroupPropertyValidator("id")
+							livestreamInterval: new FormControl(config.livestreamInterval, [Validators.required, numberValidator]),
+							liveGraphColumns: new FormControl(config.liveGraphColumns, [Validators.required, numberValidator]),
+							liveGraphVisibleRowCount: new FormControl(config.liveGraphVisibleRowCount, [Validators.required, numberValidator]),
+							algorithm: this.algorithmFormGroups.get(this.config.algorithm),
+							global_absolute_tolerance: new FormControl(config.global_absolute_tolerance, [Validators.required, numberValidator]),
+							global_relative_tolerance: new FormControl(config.global_relative_tolerance, [Validators.required, numberValidator]),
+						},
+						lessThanValidator2("startTime", "endTime"),
+						null
+					);
+					console.log("Parsing finished!");
+					this.isLoaded = true;
+				},
+				(error) =>
+					this.zone.run(() => {
+						this.parseError = error;
+					})
+			)
+			.catch((error) => console.error(`Error during parsing of config: ${error}`));
+	}
 
+	public setPostProcessingScript(config: CoSimulationConfig, path: string) {
+		config.postProcessingScript = config.getProjectRelativePath(path);
+	}
 
+	onNavigate(): boolean {
+		if (!this.editing) return true;
 
-        this.editing = false;
-    }
+		if (this.form.valid) {
+			if (confirm("Save your work before leaving?")) this.onSubmit();
 
-    getOutputs(scalarVariables: Array<ScalarVariable>) {
-        return scalarVariables.filter(variable => (variable.causality === CausalityType.Output || variable.causality === CausalityType.Local));
-    }
+			return true;
+		} else {
+			return confirm("The changes to the configuration are invalid and can not be saved. Continue anyway?");
+		}
+	}
 
-    getFilterTypes(scalarVariables: Array<InstanceScalarPair>, types:ScalarVariableType[]){
-      
-        return scalarVariables.filter(v => types.indexOf(v.scalarVariable.type) > -1);
-    }
+	onAlgorithmChange(algorithm: ICoSimAlgorithm) {
+		this.zone.run(() => {
+			this.config.algorithm = algorithm;
 
+			this.form.removeControl("algorithm");
+			this.form.addControl("algorithm", this.algorithmFormGroups.get(algorithm));
+		});
+	}
 
+	onSubmit() {
+		if (!this.editing) return;
 
-    restrictToCheckedLogVariables(instance: Instance, scalarVariables: Array<ScalarVariable>) {
-        return scalarVariables.filter(variable => this.isLogVariableChecked(instance, variable));
-    }
+		this.warnings = this.config.validate();
 
-    addConstraint() {
-        if (!this.newConstraint) return;
+		let override = false;
 
-        let algorithm = <VariableStepAlgorithm>this.config.algorithm;
-        let formArray = <FormArray>this.form.get('algorithm').get('constraints');
-        let constraint = new this.newConstraint();
-        algorithm.constraints.push(constraint);
-        formArray.push(constraint.toFormGroup());
-    }
+		if (this.warnings.length > 0) {
+			let res = dialog.showMessageBoxSync({ title: "The multi-model for this configuration has changed!", message: "Do you want to override it?", buttons: ["No", "Yes"] });
+			if (res == 1) {
+				override = true;
+				this.warnings = [];
+			}
+		}
 
-    removeConstraint(constraint: VariableStepConstraint) {
-        let algorithm = <VariableStepAlgorithm>this.config.algorithm;
-        let formArray = <FormArray>this.form.get('algorithm').get('constraints');
-        let index = algorithm.constraints.indexOf(constraint);
+		if (override) {
+			this.config
+				.saveOverride()
+				.then(() => this.change.emit(this.path))
+				.catch((error) => console.error("error when overriding save: " + error));
+		} else {
+			this.config
+				.save()
+				.then(() => this.change.emit(this.path))
+				.catch((error) => console.error("error when saving: " + error));
+		}
 
-        algorithm.constraints.splice(index, 1);
-        formArray.removeAt(index);
-    }
+		this.editing = false;
+	}
 
+	getOutputs(scalarVariables: Array<ScalarVariable>) {
+		return scalarVariables.filter((variable) => variable.causality === CausalityType.Output || variable.causality === CausalityType.Local);
+	}
 
-    addLiveGraph() {
-        let g = new LiveGraph();
-        this.config.liveGraphs.push(g);
-        let formArray = <FormArray>this.form.get('liveGraphs');
-        formArray.push(g.toFormGroup());
-    }
+	getFilterTypes(scalarVariables: Array<InstanceScalarPair>, types: ScalarVariableType[]) {
+		return scalarVariables.filter((v) => types.indexOf(v.scalarVariable.type) > -1);
+	}
 
-    removeGraph(graph: LiveGraph)
-    {
-        let formArray = <FormArray>this.form.get('liveGraphs');
-        let index = this.config.liveGraphs.indexOf(graph);
-        this.config.liveGraphs.splice(index, 1);
-        formArray.removeAt(index);
-    }
+	restrictToCheckedLogVariables(instance: Instance, scalarVariables: Array<ScalarVariable>) {
+		return scalarVariables.filter((variable) => this.isLogVariableChecked(instance, variable));
+	}
 
-    getConstraintName(constraint: any) {
-        if (constraint === ZeroCrossingConstraint || constraint instanceof ZeroCrossingConstraint)
-            return "Zero Crossing";
-        if (constraint === FmuMaxStepSizeConstraint || constraint instanceof FmuMaxStepSizeConstraint)
-            return "FMU Max Step Size";
+	addConstraint() {
+		if (!this.newConstraint) return;
 
-        if (constraint === BoundedDifferenceConstraint || constraint instanceof BoundedDifferenceConstraint)
-            return "Bounded Difference";
+		let algorithm = <VariableStepAlgorithm>this.config.algorithm;
+		let formArray = <FormArray>this.form.get("algorithm").get("constraints");
+		let constraint = new this.newConstraint();
+		algorithm.constraints.push(constraint);
+		formArray.push(constraint.toFormGroup());
+	}
 
-        if (constraint === SamplingRateConstraint || constraint instanceof SamplingRateConstraint)
-            return "Sampling Rate";
-    }
+	removeConstraint(constraint: VariableStepConstraint) {
+		let algorithm = <VariableStepAlgorithm>this.config.algorithm;
+		let formArray = <FormArray>this.form.get("algorithm").get("constraints");
+		let index = algorithm.constraints.indexOf(constraint);
 
+		algorithm.constraints.splice(index, 1);
+		formArray.removeAt(index);
+	}
 
+	addLiveGraph() {
+		let g = new LiveGraph();
+		this.config.liveGraphs.push(g);
+		let formArray = <FormArray>this.form.get("liveGraphs");
+		formArray.push(g.toFormGroup());
+	}
 
-    isLogVariableChecked(instance: Instance, output: ScalarVariable) {
-        let variables = this.config.logVariables.get(instance);
+	removeGraph(graph: LiveGraph) {
+		let formArray = <FormArray>this.form.get("liveGraphs");
+		let index = this.config.liveGraphs.indexOf(graph);
+		this.config.liveGraphs.splice(index, 1);
+		formArray.removeAt(index);
+	}
 
-        if (!variables) return false;
+	getConstraintName(constraint: any) {
+		if (constraint === ZeroCrossingConstraint || constraint instanceof ZeroCrossingConstraint) return "Zero Crossing";
+		if (constraint === FmuMaxStepSizeConstraint || constraint instanceof FmuMaxStepSizeConstraint) return "FMU Max Step Size";
 
-        return variables.indexOf(output) !== -1;
-    }
+		if (constraint === BoundedDifferenceConstraint || constraint instanceof BoundedDifferenceConstraint) return "Bounded Difference";
 
-    isLocal(variable: ScalarVariable): boolean {
-        return variable.causality === CausalityType.Local
-    }
+		if (constraint === SamplingRateConstraint || constraint instanceof SamplingRateConstraint) return "Sampling Rate";
+	}
 
-    getScalarVariableTypeName(type: ScalarVariableType) {
-        return ScalarVariableType[type];
-    }
+	isLogVariableChecked(instance: Instance, output: ScalarVariable) {
+		let variables = this.config.logVariables.get(instance);
 
+		if (!variables) return false;
 
-    onLogVariableChange(enabled: boolean, instance: Instance, output: ScalarVariable) {
-        let variables = this.config.logVariables.get(instance);
+		return variables.indexOf(output) !== -1;
+	}
 
-        if (!variables) {
-            variables = [];
-            this.config.logVariables.set(instance, variables);
-        }
+	isLocal(variable: ScalarVariable): boolean {
+		return variable.causality === CausalityType.Local;
+	}
 
-        if (enabled)
-            variables.push(output);
-        else {
-            variables.splice(variables.indexOf(output), 1);
+	getScalarVariableTypeName(type: ScalarVariableType) {
+		return ScalarVariableType[type];
+	}
 
-            if (variables.length == 0)
-                this.config.logVariables.delete(instance);
-        }
-    }
+	onLogVariableChange(enabled: boolean, instance: Instance, output: ScalarVariable) {
+		let variables = this.config.logVariables.get(instance);
 
-    onLogVariablesKey(event: any) {
-        this.logVariablesSearchName = event.target.value;
-    }
+		if (!variables) {
+			variables = [];
+			this.config.logVariables.set(instance, variables);
+		}
+
+		if (enabled) variables.push(output);
+		else {
+			variables.splice(variables.indexOf(output), 1);
+
+			if (variables.length == 0) this.config.logVariables.delete(instance);
+		}
+	}
+
+	onLogVariablesKey(event: any) {
+		this.logVariablesSearchName = event.target.value;
+	}
 }
