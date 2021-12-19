@@ -10,10 +10,10 @@
  * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
  * THIS INTO-CPS ASSOCIATION PUBLIC LICENSE VERSION 1.0.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL 
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL
  * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The INTO-CPS toolchain  and the INTO-CPS Association Public License 
+ * The INTO-CPS toolchain  and the INTO-CPS Association Public License
  * are obtained from the INTO-CPS Association, either from the above address,
  * from the URLs: http://www.into-cps.org, and in the INTO-CPS toolchain distribution.
  * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
@@ -26,28 +26,20 @@
  *
  * See the full INTO-CPS Association Public License conditions for more details.
  *
- * See the CONTRIBUTORS file for author and contributor information. 
+ * See the CONTRIBUTORS file for author and contributor information.
  */
 
-import {Injectable} from "@angular/core";
+import { Injectable } from "@angular/core";
 
 @Injectable()
 export class NavigationService {
-    openComponent:any;
+	openComponent: any;
 
-    registerComponent(component: any) {
-        this.openComponent = component;
-    }
+	registerComponent(component: any) {
+		this.openComponent = component;
+	}
 
-    canNavigate() {
-        if (!this.openComponent)
-            return true;
-
-        if (this.openComponent.onNavigate()) {
-            this.openComponent = null;
-            return true;
-        } else {
-            return false;
-        }
-    }
+	canNavigate() {
+		return !this.openComponent ? true : this.openComponent.onNavigate();
+	}
 }
