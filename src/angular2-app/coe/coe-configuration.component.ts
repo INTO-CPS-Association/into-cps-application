@@ -38,10 +38,9 @@ import {
     VariableStepConstraint, FmuMaxStepSizeConstraint, LiveGraph
 } from "../../intocps-configurations/CoSimulationConfig";
 import { ScalarVariable, CausalityType, Instance, InstanceScalarPair, ScalarVariableType } from "./models/Fmu";
-import { lessThanValidator2, numberValidator, lessThanValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
+import { lessThanValidator2, numberValidator ,uniqueGroupPropertyValidator} from "../shared/validators";
 import { NavigationService } from "../shared/navigation.service";
 import { WarningMessage } from "../../intocps-configurations/Messages";
-import { bind } from "bluebird";
 
 const dialog = require("electron").remote.dialog;
 
@@ -158,17 +157,17 @@ export class CoeConfigurationComponent {
     }
 
     onNavigate(): boolean {
-        if (!this.editing)
-            return true;
+        if (!this.editing) return true;
 
-        if (this.form.valid) {
-            if (confirm("Save your work before leaving?"))
-                this.onSubmit();
+		let navigate = true;
+		if (this.form.valid) {
+			if (dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "Save your work before leaving??" }) == 0) this.onSubmit();
+		} else {
+			navigate = dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "The changes to the configuration are invalid and can not be saved. Continue anyway?" }) == 0;
+		}
 
-            return true;
-        } else {
-            return confirm("The changes to the configuration are invalid and can not be saved. Continue anyway?");
-        }
+		this.editing = false;
+		return navigate;
     }
 
     onAlgorithmChange(algorithm: ICoSimAlgorithm) {

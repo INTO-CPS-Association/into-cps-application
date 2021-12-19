@@ -33,14 +33,11 @@
 import { Component, Input, NgZone, Output, EventEmitter, OnDestroy } from "@angular/core";
 import {Serializer} from "../../intocps-configurations/Parser";
 import {
-    Instance, ScalarVariable, CausalityType, InstanceScalarPair, isCausalityCompatible, isTypeCompatiple,
-    Fmu, ScalarValuePair, ScalarVariableType
+    Instance, ScalarVariable, CausalityType, isCausalityCompatible, ScalarValuePair, ScalarVariableType
 } from "../coe/models/Fmu";
-import {CoeSimulationService} from "../coe/coe-simulation.service";
 import IntoCpsApp from "../../IntoCpsApp";
 /* import {Http} from "@angular/http"; */
-import { HttpClient } from '@angular/common/http';
-import {SettingsService, SettingKeys} from "../shared/settings.service";
+import {SettingKeys} from "../shared/settings.service";
 import {ParetoDimension, InternalFunction, DseConfiguration, ParetoRanking, ExternalScript, DseParameter, DseScenario, DseParameterConstraint, DseObjectiveConstraint,IDseAlgorithm, GeneticSearch, ExhaustiveSearch} from "../../intocps-configurations/dse-configuration";
 import { WarningMessage } from "../../intocps-configurations/Messages";
 import { NavigationService } from "../shared/navigation.service";
@@ -51,6 +48,7 @@ import * as fs from 'fs';
 import { MaestroApiService } from "../shared/maestro-api.service";
 import { Subscription } from "rxjs";
 
+const dialog = require("electron").remote.dialog;
 
 
 @Component({
@@ -171,17 +169,17 @@ export class DseConfigurationComponent implements OnDestroy {
     }
 
     onNavigate(): boolean {
-        if (!this.editing)
-            return true;
+        if (!this.editing) return true;
 
-        if (this.form.valid) {
-            if (confirm("Save your work before leaving?"))
-                this.onSubmit();
+		let navigate = true;
+		if (this.form.valid) {
+			if (dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "Save your work before leaving??" }) == 0) this.onSubmit();
+		} else {
+			navigate = dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "The changes to the configuration are invalid and can not be saved. Continue anyway?" }) == 0;
+		}
 
-            return true;
-        } else {
-            return confirm("The changes to the configuration are invalid and can not be saved. Continue anyway?");
-        }
+		this.editing = false;
+		return navigate;
     }
 
     onSubmit() {
