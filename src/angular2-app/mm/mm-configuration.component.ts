@@ -29,7 +29,7 @@
  * See the CONTRIBUTORS file for author and contributor information.
  */
 
-import { Component, Input, NgZone, Output, EventEmitter, DoCheck } from "@angular/core";
+import { Component, Input, NgZone, Output, EventEmitter } from "@angular/core";
 import { MultiModelConfig } from "../../intocps-configurations/MultiModelConfig";
 import IntoCpsApp from "../../IntoCpsApp";
 import { Instance, ScalarVariable, CausalityType, InstanceScalarPair, isCausalityCompatible, isTypeCompatiple, Fmu, ScalarValuePair, ScalarVariableType } from "../coe/models/Fmu";
@@ -47,7 +47,7 @@ const dialog = require("electron").remote.dialog;
 	selector: "mm-configuration",
 	templateUrl: "./angular2-app/mm/mm-configuration.component.html",
 })
-export class MmConfigurationComponent implements DoCheck {
+export class MmConfigurationComponent{
 	private _path: string;
 
 	@Input()
@@ -81,8 +81,6 @@ export class MmConfigurationComponent implements DoCheck {
 	constructor(private zone: NgZone, private navigationService: NavigationService) {
 		this.navigationService.registerComponent(this);
 	}
-
-	ngDoCheck(): void {}
 
 	parseConfig() {
 		let project: IProject = IntoCpsApp.getInstance().getActiveProject();
@@ -120,6 +118,7 @@ export class MmConfigurationComponent implements DoCheck {
 	}
 
 	onNavigate(): boolean {
+		this.resetSelectedInstances();
 		if (!this.editing) return true;
 
 		let navigate = true;
@@ -352,5 +351,13 @@ export class MmConfigurationComponent implements DoCheck {
 
 	getErrors() {
 		return this.warnings.filter((w) => w instanceof ErrorMessage);
+	}
+
+	private resetSelectedInstances() {
+		this.selectedParameterInstance = undefined;
+		this.selectedOutputInstance = undefined;
+		this.selectedOutput = undefined;
+		this.selectedInputInstance = undefined;
+		this.selectedInstanceFmu = undefined;
 	}
 }
