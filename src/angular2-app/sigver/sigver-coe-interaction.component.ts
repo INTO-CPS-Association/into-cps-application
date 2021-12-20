@@ -33,8 +33,8 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     isGeneratingMasterModel: boolean = false;
     isVerifying: boolean = false;
 
-    constructor(private coeApiService: MaestroApiService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
-        this._coeIsOnlineSub = coeApiService.coeIsOnlineObservable.subscribe(isOnline => this.isCoeOnline = isOnline && coeApiService.getMaestroVersion() == maestroVersions.maestroV2);
+    constructor(private maestroApiService: MaestroApiService, private sanitizer: DomSanitizer, private sigverConfigurationService: SigverConfigurationService) {
+        this._coeIsOnlineSub = this.maestroApiService.startMonitoringOnlineStatus(isOnline => this.isCoeOnline = isOnline && maestroApiService.getMaestroVersion() == maestroVersions.maestroV2);
 
         this._configurationChangedSub = this.sigverConfigurationService.configurationChangedObservable.subscribe(() => {
             this.handleConfigurationChanges();
@@ -42,13 +42,13 @@ export class SigverCoeInteractionComponent implements OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this._coeIsOnlineSub.unsubscribe();
+        this.maestroApiService.stopMonitoringOnlineStatus(this._coeIsOnlineSub);
         this._configurationChangedSub.unsubscribe();
     }
 
     onGenerateMasterModelClick() {
         this.isGeneratingMasterModel = true;
-        this.coeApiService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(masterModelFile => {
+        this.maestroApiService.generateScenario(this.sigverConfigurationService.configurationToExtendedMultiModelDTO()).then(masterModelFile => {
             masterModelFile.text().then(masterModel => {
                 this.sigverConfigurationService.configuration.masterModel = masterModel;
                 this.sigverConfigurationService.configurationChanged();
@@ -65,7 +65,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     onVerifyClick() {
         this.isVerifying = true;
-        this.coeApiService.verifyAlgorithm(this.sigverConfigurationService.configuration.masterModel).then(res => {
+        this.maestroApiService.verifyAlgorithm(this.sigverConfigurationService.configuration.masterModel).then(res => {
             this.isVerified = true;
             this.isVerificationFailed = !res.verifiedSuccessfully;
             if (this.isVerificationFailed) {
@@ -83,7 +83,7 @@ export class SigverCoeInteractionComponent implements OnDestroy {
 
     onVisualizeTracesClick() {
         this.isGeneratingTraces = true;
-        this.coeApiService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
+        this.maestroApiService.visualizeTrace(this.sigverConfigurationService.configuration.masterModel).then(videoFile => {
             this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(window.URL.createObjectURL(videoFile));
             this.writeFileToDir(videoFile, this.verificationresultspath);
         }, errMsg => {

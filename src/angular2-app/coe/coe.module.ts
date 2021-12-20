@@ -32,7 +32,6 @@ import { NgModule } from "@angular/core";
 import { BrowserModule } from '@angular/platform-browser'
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { CoePageComponent } from "./coe-page.component";
-import { CoeSimulationService } from "./coe-simulation.service";
 import { SharedModule } from "../shared/shared.module";
 import { CoeConfigurationComponent } from "./coe-configuration.component";
 import { ZeroCrossingComponent } from "./inputs/zero-crossing.component";
@@ -56,8 +55,7 @@ import { LineChartComponent } from "../shared/line-chart.component";
         LiveGraphComponent,
         CoeSimulationComponent,
         LineChartComponent],
-    exports: [CoePageComponent, CoeSimulationComponent],
-    providers: [CoeSimulationService]
+    exports: [CoePageComponent, CoeSimulationComponent]
 })
 export class COEModule {
 

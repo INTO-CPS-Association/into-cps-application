@@ -11,7 +11,7 @@
 <div *ngIf="online" class="alert alert-success">
   {{coeVersions[coeSimulation.getMaestroVersion()]}}, version {{ coeSimulation.getCoeVersion() }}, online at {{ coeSimulation.coeUrl }}.
 </div>
-<h5 *ngIf="!correctCoeVersion || !online" class="text-warning">Simulation requires that {{coeVersions[required_coe_version]}} is running</h5>
+<h5 *ngIf="required_coe_version && (!correctCoeVersion || !online)" class="text-warning">Simulation requires that {{coeVersions[required_coe_version]}} is running</h5>
 
 <div *ngIf="mmWarnings.length > 0">
   <strong>The multi model configuration is not valid.</strong>

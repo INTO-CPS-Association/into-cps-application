@@ -66,7 +66,7 @@ describe('In Tutorial 9', function () {
         .then(async n => {
           return waitFor(await n.getText())
               .to
-              .match(/Co-Simulation Engine, .+, online at .+\./);
+              .match(/maestro.+, online at .+\./);
         });
   });
 

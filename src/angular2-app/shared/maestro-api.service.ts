@@ -3,10 +3,11 @@ import { Injectable, OnDestroy } from "@angular/core";
 import { CoeProcess } from "../../coe-server-status/CoeProcess";
 import { IntoCpsApp } from "../../IntoCpsApp";
 import { map, timeout } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import * as http from "http"
 import { SettingsService, SettingKeys } from "./settings.service";
 import * as fs from 'fs'
+import { timer } from 'rxjs';
 const JSZip = require("jszip");
 
 // Verificaiton DTO utilised by Maestro
@@ -37,23 +38,46 @@ export enum maestroVersions {
 })
 export class MaestroApiService implements OnDestroy {
     private _coe: CoeProcess;
-    private _onlineInterval: number;
     private _coeIsOnline = new Subject<boolean>();
+    private _timerSubscription: Subscription;
 
     coeVersionNumber: string = "";
     coeUrl: string = "";
-    coeIsOnlineObservable = this._coeIsOnline.asObservable();
 
     constructor(private httpClient: HttpClient, private settings: SettingsService) {
         this.coeUrl = this.settings.get(SettingKeys.COE_URL);
         this._coe = IntoCpsApp.getInstance().getCoeProcess();
-        this.isCoeOnline();
-        this._onlineInterval = window.setInterval(() => this.isCoeOnline(), 2000);
+    }
+    
+    ngOnDestroy() {
+        this._timerSubscription.unsubscribe();
+    }
+
+    startMonitoringOnlineStatus(callback: (n: boolean) => void): Subscription {
+        if(!this._timerSubscription || this._timerSubscription.closed){
+            this._timerSubscription = timer(0, 2000).subscribe(() => this.isCoeOnline());
+        }
+        return this._coeIsOnline.asObservable().subscribe(callback);
+    }
+
+    stopMonitoringOnlineStatus(subscription: Subscription) {
+        subscription.unsubscribe();
+        if(this._coeIsOnline.observers.length < 1){
+            this._timerSubscription.unsubscribe();
+        }
     }
 
     /* 
         Simulation API entry points methods
     */
+
+    getCoeVersionNumber(): Promise<string> {
+        return this.httpClient.get(`http://${this.coeUrl}/version`).pipe(timeout(2000), map((response: any) => {
+            //This regex match expects the coe version number to have the format x.x.x
+            this.coeVersionNumber = response.version.match('[\\d\\.]+')[0];
+            return this.coeVersionNumber;
+        })).toPromise();
+    }
 
     stopSimulation(simulationSessionId: string): Promise<Response> {
         return new Promise<Response>((resolve, reject) => { 
@@ -209,20 +233,8 @@ export class MaestroApiService implements OnDestroy {
         return this._coe;
     }
 
-    ngOnDestroy() {
-        clearInterval(this._onlineInterval);
-    }
-
-    isCoeOnline() {
-        this.httpClient.get(`http://${this.coeUrl}/version`).pipe(timeout(2000), map(response => response))
-            .subscribe(
-                (data: any) => {
-                    //This regex match expects the coe version number to have the format x.x.x
-                    this.coeVersionNumber = data.version.match('[\\d\\.]+')[0];
-                    this._coeIsOnline.next(true);
-                },
-                () => (this._coeIsOnline.next(false))
-            );
+    private isCoeOnline() {
+        this.getCoeVersionNumber().then(() => this._coeIsOnline.next(true)).catch(() => this._coeIsOnline.next(false));
     }
 
     inferMaestroVersionFromJarContent(): Promise<maestroVersions> {
