@@ -47,7 +47,7 @@ const dialog = require("electron").remote.dialog;
 	selector: "mm-configuration",
 	templateUrl: "./angular2-app/mm/mm-configuration.component.html",
 })
-export class MmConfigurationComponent{
+export class MmConfigurationComponent {
 	private _path: string;
 
 	@Input()
@@ -88,7 +88,6 @@ export class MmConfigurationComponent{
 		MultiModelConfig.parse(this.path, project.getFmusPath())
 			.then(
 				(config) => {
-					/* this.zone.run(() => { */
 					this.parseError = null;
 
 					this.config = config;
@@ -110,25 +109,24 @@ export class MmConfigurationComponent{
 						),
 					});
 					this.warnings = this.config.validate();
-					/*  }); */
 				},
 				(error) => (this.parseError = error)
 			)
-			.catch((err) => console.log(err)); /*  this.zone.run(() => */
+			.catch((err) => console.log(err));
 	}
 
 	onNavigate(): boolean {
-		this.resetSelectedInstances();
-		if (!this.editing) return true;
-
 		let navigate = true;
-		if (this.form.valid) {
-			if (dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "Save your work before leaving??" }) == 0) this.onSubmit();
-		} else {
-			navigate = dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "The changes to the configuration are invalid and can not be saved. Continue anyway?" }) == 0;
+		if (this.editing) {
+			if (this.form.valid) {
+				if (dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "Save your work before leaving??" }) == 0) this.onSubmit();
+			} else {
+				navigate = dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "The changes to the configuration are invalid and can not be saved. Continue anyway?" }) == 0;
+			}
 		}
-
-		this.editing = false;
+		if (navigate) {
+			this.resetComponentState();
+		}
 		return navigate;
 	}
 
@@ -353,11 +351,12 @@ export class MmConfigurationComponent{
 		return this.warnings.filter((w) => w instanceof ErrorMessage);
 	}
 
-	private resetSelectedInstances() {
+	private resetComponentState() {
 		this.selectedParameterInstance = undefined;
 		this.selectedOutputInstance = undefined;
 		this.selectedOutput = undefined;
 		this.selectedInputInstance = undefined;
 		this.selectedInstanceFmu = undefined;
+		this.editing = false;
 	}
 }

@@ -78,7 +78,7 @@ export class CoeConfigurationComponent {
     logVariablesSearchName: string = '';
     parseError: string = null;
     warnings: WarningMessage[] = [];
-    loglevels: string[] = ["Not set", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
+    readonly loglevels: string[] = ["Not set", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
 
     // liveGraphs: LiveGraph[];
     //The variable zeroCrossings is necessary to give different names to the radiobutton groups in the different zeroCrossing constraints.
@@ -157,18 +157,19 @@ export class CoeConfigurationComponent {
     }
 
     onNavigate(): boolean {
-        if (!this.editing) return true;
-
 		let navigate = true;
-		if (this.form.valid) {
-			if (dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "Save your work before leaving??" }) == 0) this.onSubmit();
-		} else {
-			navigate = dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "The changes to the configuration are invalid and can not be saved. Continue anyway?" }) == 0;
+		if (this.editing) {
+			if (this.form.valid) {
+				if (dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "Save your work before leaving??" }) == 0) this.onSubmit();
+			} else {
+				navigate = dialog.showMessageBoxSync({ buttons: ["Yes", "No"], message: "The changes to the configuration are invalid and can not be saved. Continue anyway?" }) == 0;
+			}
 		}
-
-		this.editing = false;
+		if (navigate) {
+			this.resetComponentState();
+		}
 		return navigate;
-    }
+	}
 
     onAlgorithmChange(algorithm: ICoSimAlgorithm) {
         this.zone.run(() => {
@@ -311,5 +312,13 @@ export class CoeConfigurationComponent {
 
     onLogVariablesKey(event: any) {
         this.logVariablesSearchName = event.target.value;
+    }
+
+    private resetComponentState() {
+        this.editing = false;
+        this.isLoaded  = false;
+        this.logVariablesSearchName = '';
+        this.parseError = null;
+        this.warnings = [];
     }
 }
