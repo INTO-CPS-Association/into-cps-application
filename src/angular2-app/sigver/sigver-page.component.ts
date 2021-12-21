@@ -76,7 +76,6 @@ export class SigverPageComponent implements OnDestroy {
         this._configurationChangedSub.unsubscribe();
     }
 
-
     ensureResultPaths(rootResultsPath: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.verificationResultsPath = Path.join(rootResultsPath, "verification");

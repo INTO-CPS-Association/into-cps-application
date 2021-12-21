@@ -70,13 +70,13 @@ export class MmConfigurationComponent {
 
 	private config: MultiModelConfig;
 
-	private selectedParameterInstance: Instance;
-	private selectedOutputInstance: Instance;
-	private selectedOutput: ScalarVariable;
-	private selectedInputInstance: Instance;
-	private selectedInstanceFmu: Fmu;
+	private selectedParameterInstance: Instance = undefined;
+	private selectedOutputInstance: Instance = undefined;
+	private selectedOutput: ScalarVariable = undefined;
+	private selectedInputInstance: Instance = undefined;
+	private selectedInstanceFmu: Fmu = undefined; 
 
-	private newParameter: ScalarVariable;
+	private newParameter: ScalarVariable = undefined;
 
 	constructor(private zone: NgZone, private navigationService: NavigationService) {
 		this.navigationService.registerComponent(this);
@@ -358,5 +358,6 @@ export class MmConfigurationComponent {
 		this.selectedInputInstance = undefined;
 		this.selectedInstanceFmu = undefined;
 		this.editing = false;
+		this.newParameter = undefined;
 	}
 }
