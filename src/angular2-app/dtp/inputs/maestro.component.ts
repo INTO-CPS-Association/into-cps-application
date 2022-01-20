@@ -93,8 +93,7 @@ export class DtpMaestroComponent implements AfterContentInit{
         }
 
         if(!this.maestro.isCreatedOnServer){
-            const availableTools = this.getSimulationTools();
-            this.maestro.tool = availableTools.length > 0 ? availableTools[0].id : "";
+            this.maestro.tool = this.getSimulationTools().length > 0 ? this.getSimulationTools()[0].id : "";
         }
         this.showInitialSetupBtns = true;
     }

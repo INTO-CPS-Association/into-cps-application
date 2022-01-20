@@ -19,7 +19,7 @@ export class DtpDtToolingService implements OnDestroy {
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.isServerOnline(), 2000);
-        this.url = "http://127.0.0.1:5000"; // "http://localhost";
+        this.url = "http://127.0.0.1:5000";//"http://localhost";
     }
 
     ngOnDestroy() {
@@ -33,15 +33,15 @@ export class DtpDtToolingService implements OnDestroy {
             return;
         }
 
-        // this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${baseDir}`]);
-        // console.log("DT tooling webserver PID: " + this.serverProcess.pid);
+        this.serverProcess = spawn('python', ['-m', 'digital_twin_tooling', 'webapi', '-base', `${baseDir}`]);
+        console.log("DT tooling webserver PID: " + this.serverProcess.pid);
 
-        // window.addEventListener('beforeunload', this.stopServer); //TODO: Doesn't terminate the webserver on app close
+        window.addEventListener('beforeunload', this.stopServer); //TODO: Doesn't terminate the webserver on app close
     }
 
     private stopServer() {
-        // if(process.platform == "win32") exec(`taskkill /PID ${this.serverProcess.pid} /T /F`); else process.kill(-this.serverProcess.pid); 
-        // console.log("Stopping DT tooling webserver with PID: " + this.serverProcess.pid);
+        if(process.platform == "win32") exec(`taskkill /PID ${this.serverProcess.pid} /T /F`); else process.kill(-this.serverProcess.pid); 
+        console.log("Stopping DT tooling webserver with PID: " + this.serverProcess.pid);
     }
 
     isServerOnline() {

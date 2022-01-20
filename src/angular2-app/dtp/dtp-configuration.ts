@@ -172,8 +172,8 @@ export class ToolDtpItem extends dtpItem {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
             path: new FormControl(this.path, Validators.required),
-            url: new FormControl(this.path),
-            type: new FormControl(this.type)
+            url: new FormControl(this.url),
+            type: new FormControl(this.type, Validators.required)
         })
     }
 
@@ -194,9 +194,9 @@ export class ServerDtpItem extends dtpItem {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
             type: new FormControl(this.type),
-            username: new FormControl(this.username),
-            password: new FormControl(this.password),
-            host: new FormControl(this.host),
+            username: new FormControl(this.username, Validators.required),
+            password: new FormControl(this.password, Validators.required),
+            host: new FormControl(this.host, Validators.required),
             port: new FormControl(this.port, [Validators.required, integerValidator]),
             embedded: new FormControl(this.embedded)
         });
@@ -317,14 +317,14 @@ export class SignalDtpType extends dtpItem {
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
-            source_exchange: new FormControl(this.source.exchange),
-            source_datatype: new FormControl(this.source.datatype),
-            source_routing_key: new FormControl(this.source.routing_key),
-            target_exchange: new FormControl(this.target.exchange),
-            target_datatype: new FormControl(this.target.datatype),
-            target_routing_key: new FormControl(this.target.routing_key),
-            target_pack: new FormControl(this.target.pack),
-            target_path: new FormControl(this.target.path)
+            source_exchange: new FormControl(this.source.exchange, Validators.required),
+            source_datatype: new FormControl(this.source.datatype, Validators.required),
+            source_routing_key: new FormControl(this.source.routing_key, Validators.required),
+            target_exchange: new FormControl(this.target.exchange, Validators.required),
+            target_datatype: new FormControl(this.target.datatype, Validators.required),
+            target_routing_key: new FormControl(this.target.routing_key, Validators.required),
+            target_pack: new FormControl(this.target.pack, Validators.required),
+            target_path: new FormControl(this.target.path, Validators.required)
         });
     }
 
@@ -338,7 +338,7 @@ export class SignalDtpType extends dtpItem {
 export class DataRepeaterDtpItem extends dtpItem {
     public static readonly objectIdentifier: string = "amqp-repeater";
     public static readonly datarepeaterMappingsIndex = "dataRepeaterFmuMappings";
-    constructor(name: string = "", id: string = "", public toolId: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<dtpItem> = [], public fmu_path: string = "", public isCreatedOnServer: boolean = false) { 
+    constructor(name: string = "", id: string = "", public tool: string = "", public server_source: string = "", public server_target: string = "", public signals: Array<dtpItem> = [], public fmu_path: string = "", public isCreatedOnServer: boolean = false) { 
         super(isCreatedOnServer, id, name);
     }
 
@@ -366,8 +366,8 @@ export class DataRepeaterDtpItem extends dtpItem {
     toFormGroup() {
         return new FormGroup({
             name: new FormControl(this.name, Validators.required),
-            server_source: new FormControl(this.server_source),
-            server_target: new FormControl(this.server_target),
+            server_source: new FormControl(this.server_source, Validators.required),
+            server_target: new FormControl(this.server_target, Validators.required),
             signals: new FormArray(this.signals.map(signal => signal.toFormGroup())),
             fmu_path: new FormControl(this.fmu_path)
         });
@@ -380,7 +380,7 @@ export class DataRepeaterDtpItem extends dtpItem {
             signalsObj[dtpSignal.id] = dtpSignal.toYamlObject();
         });
         const dataRepeaterObject: any = {};
-        dataRepeaterObject[DataRepeaterDtpItem.objectIdentifier] = { name: this.name, prepare: { tool: this.toolId }, servers: { source: this.server_source, target: this.server_target }, signals: signalsObj };
+        dataRepeaterObject[DataRepeaterDtpItem.objectIdentifier] = { name: this.name, prepare: { tool: this.tool }, servers: { source: this.server_source, target: this.server_target }, signals: signalsObj };
         dataRepeaterObject.id = this.id;
         return dataRepeaterObject;
     }

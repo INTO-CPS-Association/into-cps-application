@@ -15,7 +15,7 @@
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{tool.name}}</p>
             <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control">
-            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+            <p *ngIf="formGroup.hasError('required', 'name')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
 
@@ -24,7 +24,7 @@
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{tool.path}}</p>
             <file-browser *ngIf="editing" [basePath]="tool.path" [path]="tool.path" (pathChange)="setPath($event)"></file-browser>
-            <div *ngIf="formGroup.hasError('required', 'path')" class="alert alert-danger">This field is required.</div>
+            <p *ngIf="formGroup.hasError('required', 'path')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
     
@@ -32,7 +32,7 @@
         <label class="col-sm-3 control-label">URL</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{tool.url}}</p>
-            <input *ngIf="editing" (change)="onChangeUrl($event.target.value)" class="form-control">
+            <input *ngIf="editing" (change)="onChangeUrl($event.target.value)" formControlName="url" class="form-control">
         </div>
     </div>
 
@@ -40,9 +40,10 @@
         <label class="col-sm-3 control-label">Type</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{tool.type}}</p>
-            <select *ngIf="editing" [(ngModel)]="tool.type" [ngModelOptions]="{standalone: true}" class="form-control">
+            <select *ngIf="editing" (change)="onChangeTool($event.target.value)" formControlName="type" class="form-control">
                 <option *ngFor="let key of keys" [value]="key">{{toolTypes[key]}}</option>
             </select>
+            <p *ngIf="formGroup.hasError('required', 'type')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
 </div>

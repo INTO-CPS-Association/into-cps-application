@@ -43,10 +43,9 @@ import { DtpTaskConfigurationComponent } from "./inputs/taskConfiguration.compon
 import { MmModule } from "../mm/mm.module";
 import { DtpExecuteComponent } from "./dtp-execute.component";
 import { COEModule } from "../coe/coe.module";
-import { DisableReactiveControlDirective } from "../shared/disable-reactive-control-directive";
 @NgModule({
     imports: [ FormsModule, ReactiveFormsModule, SharedModule, CommonModule , MmModule, COEModule], // module dependencies
-    declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent, DtpServerComponent, DtpSignalComponent, DtpDataRepeaterComponent, DtpToolComponent, DtpTaskConfigurationComponent, DtpExecuteComponent, DisableReactiveControlDirective], // components and directives
+    declarations: [ DtpPageComponent, DtpConfigurationComponent, DtpMaestroComponent, DtpServerComponent, DtpSignalComponent, DtpDataRepeaterComponent, DtpToolComponent, DtpTaskConfigurationComponent, DtpExecuteComponent], // components and directives
     exports: [DtpPageComponent]
   })
   export class DtpModule {

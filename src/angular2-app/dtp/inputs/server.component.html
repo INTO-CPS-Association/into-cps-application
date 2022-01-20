@@ -55,14 +55,14 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Embedded</label>
         <div class="col-sm-9">
-            <input [disablecontrol]="!editing" (change)="onChangeEmbedded($event.target.checked)" formControlName="embedded" type="checkbox">
+            <input [attr.disabled]="!editing ? true : null" (change)="onChangeEmbedded($event.target.checked)" formControlName="embedded" type="checkbox">
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Type</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" [(ngModel)]="server.type" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
+            <select *ngIf="editing" (change)="onChangeType($event.target.checked)" formControlName="type" class="form-control col-sm-9">
                 <option *ngFor="let serverType of servertypes" >{{serverType}}</option>
             </select>
             <p *ngIf="!editing" class="form-control-static">{{server.type}}</p>

@@ -11,7 +11,7 @@
     <div class="form-group">
         <label class="col-sm-3 control-label">Capture output</label>
         <div class="col-sm-9">
-            <input [disablecontrol]="!editing" (change)="onChangeCaptureOutput($event.target.checked)" formControlName="capture_output" type="checkbox">
+            <input [attr.disabled]="!editing ? true : null" (change)="onChangeCaptureOutput($event.target.checked)" formControlName="capture_output" type="checkbox"> 
         </div>
     </div>
 

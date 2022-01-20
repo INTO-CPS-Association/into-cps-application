@@ -18,27 +18,29 @@
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{datarepeater.name}}</p>
             <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control">
-            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+            <p *ngIf="formGroup.hasError('required', 'name')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Source</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" (change)="onChangeServerSource($event.target.value)" formControlName="server_source" class="form-control col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="datarepeater.server_source.id" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
                 <option *ngFor="let server of config.servers" [ngValue]="server.id">{{server.name}}</option>
             </select>
             <p *ngIf="!editing" class="form-control-static">{{serverIdToName(datarepeater.server_source)}}</p>
+            <p *ngIf="formGroup.hasError('required', 'server_source')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
 
     <div class="form-group">
         <label class="col-sm-3 control-label">Server Target</label>
         <div class="col-sm-9">
-            <select *ngIf="editing" (change)="onChangeServerTarget($event.target.value)" formControlName="server_target" class="form-control col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="datarepeater.server_target.id" [ngModelOptions]="{standalone: true}" class="form-control col-sm-9">
                 <option *ngFor="let server of config.servers" [ngValue]="server.id">{{server.name}}</option>
             </select>
             <p *ngIf="!editing" class="form-control-static">{{serverIdToName(datarepeater.server_target)}}</p>
+            <p *ngIf="formGroup.hasError('required', 'server_target')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
 
@@ -49,6 +51,7 @@
                 <option *ngFor="let rabbitMqTool of getRabbitMqTools(config.tools)" [ngValue]="rabbitMqTool.id">{{rabbitMqTool.name}}</option>
             </select>
             <p *ngIf="!editing" class="form-control-static">{{toolIdToName(datarepeater.tool)}}</p>
+            <p *ngIf="formGroup.hasError('required', 'tool')" class="text-warning"> * This field is required.</p>
         </div>
     </div>
 

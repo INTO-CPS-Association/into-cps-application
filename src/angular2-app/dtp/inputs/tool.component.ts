@@ -78,6 +78,10 @@ export class DtpToolComponent implements AfterContentInit{
         this.tool.url = url;
     }
 
+    onChangeTool(toolType: ToolType) {
+        this.tool.type = this.toolTypes[toolType];
+    }
+    
     onSaveTool() {
         this.dtpToolingService.updateTool(this.tool.id, this.tool.toYamlObject(), this.config.projectName).then(() => {
             this.editing = false;

@@ -64,6 +64,9 @@ export class DtpServerComponent implements AfterContentInit {
 
     ngAfterContentInit(): void {
         this.editing = !this.server.isCreatedOnServer;
+        if(this.editing){
+            this.server.type = this.config.serverTypes[0] ?? "";
+        }
     }
 
     onChangeName(name: string) {
@@ -88,6 +91,10 @@ export class DtpServerComponent implements AfterContentInit {
 
     onChangeEmbedded(embedded: boolean) {
         this.server.embedded = embedded;
+    }
+
+    onChangeType(type: string) {
+        this.server.type = type;
     }
 
     onSaveServer() {       

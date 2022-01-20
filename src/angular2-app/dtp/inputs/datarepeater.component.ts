@@ -83,7 +83,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     ngAfterContentInit(): void {
         if(!this.datarepeater.isCreatedOnServer){
             const availableTools = this.getRabbitMqTools();
-            this.datarepeater.toolId = availableTools.length > 0 ? availableTools[0].id : "";
+            this.datarepeater.tool = availableTools.length > 0 ? availableTools[0].id : "";
         }
     }
 
@@ -121,7 +121,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     }
 
     onChangeTool(id: string) {
-        this.datarepeater.toolId = id;
+        this.datarepeater.tool = id;
     }
 
     generateFMU() {

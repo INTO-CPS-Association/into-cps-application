@@ -33,7 +33,6 @@ import { Component, Input } from "@angular/core";
 import { FormArray, FormGroup } from "@angular/forms";
 import { MaestroDtpItem, DTPConfig, ServerDtpItem, SignalDtpType, DataRepeaterDtpItem, dtpItem, ToolDtpItem, TaskConfigurationDtpItem, ToolType } from "./dtp-configuration";
 import { NavigationService } from "../shared/navigation.service";
-import { uniqueGroupPropertyValidator } from "../../angular2-app/shared/validators";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 
 const Yaml = require('js-yaml');
@@ -44,7 +43,6 @@ const Ajv = require("ajv")
     templateUrl: "./angular2-app/dtp/dtp-configuration.component.html"
 })
 export class DtpConfigurationComponent {
-    private _path: string;
     private readonly formkey_servers = "servers";
     private readonly formkey_configurations = "configurations";
     private readonly formkey_tools = "tools";
@@ -67,16 +65,6 @@ export class DtpConfigurationComponent {
 
     constructor(private navigationService: NavigationService, private dtpToolingService: DtpDtToolingService) {
         this.navigationService.registerComponent(this);
-    }
-
-    private handleConfigurationUpdated(){
-        const groupObj: any = {};
-        groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()));
-        groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()));
-        groupObj[this.formkey_configurations] = new FormArray(this.config.configurations.map(c => c.toFormGroup()));
-
-        this.form = new FormGroup(groupObj);
-        this.isLoaded = true;
     }
 
     onNavigate(): boolean {
@@ -158,16 +146,13 @@ export class DtpConfigurationComponent {
         }
     }
 
-    validateConfig() {
-        // this.config.toYaml().then(yamlObj => {
-        //     const schemaPath = Path.join(Path.dirname(this._path), "..", "schema.yml");
-        //     const schemaObj = Yaml.load(fs.readFileSync(schemaPath, 'utf8'), { json: true });
-    
-        //     const validate = new Ajv().compile(schemaObj)
-        //     this.isConfigValid = validate(yamlObj);
-        //     if (!this.isConfigValid) {
-        //         console.warn("YAML config has errors: " + validate.errors);
-        //     }
-        // });
+    private handleConfigurationUpdated(){
+        const groupObj: any = {};
+        groupObj[this.formkey_servers] = new FormArray(this.config.servers.map(c => c.toFormGroup()));
+        groupObj[this.formkey_tools] = new FormArray(this.config.tools.map(c => c.toFormGroup()));
+        groupObj[this.formkey_configurations] = new FormArray(this.config.configurations.map(c => c.toFormGroup()));
+
+        this.form = new FormGroup(groupObj);
+        this.isLoaded = true;
     }
 }
