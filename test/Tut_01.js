@@ -95,7 +95,7 @@ describe('In Tutorial 1', function () {
     it('Co-Simulation Engine offline', function () {
         return app.client.$("#Simulation")
             .then(n => n.click())
-            .then(() => app.client.$("coe-simulation"))
+            .then(() => app.client.$("coe-launch > div.alert"))
             .then(n => n.getText())
             .should
             .eventually
@@ -127,7 +127,7 @@ describe('In Tutorial 1', function () {
             .then(() => app.client.$(".btn.btn-sm.btn-default"))
             .then(n => n.click())
             .then(() => sleep(300))
-            .then(() => app.client.$("coe-simulation"))
+            .then(() => app.client.$("coe-launch"))
             .then(n => n.$(".alert.alert-success"))
             // .then(async () => {
             //     return await waitFor(() => app.client.$("div.alert.alert-success").getText())
