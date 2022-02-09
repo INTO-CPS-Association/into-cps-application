@@ -218,12 +218,33 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     /*
-        RUNNING CONFIGURATIONS 
+        CONFIGURATION EXECUTION
     */
-    public runConfiguration(configurationId: string, projectName: string): Promise<any> {
+    public executeConfiguration(configurationId: string, projectName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.httpClient.post(`${this.url}/projects/${projectName}/execution/configurations/${configurationId}/run`, "").subscribe(res => {
                 resolve(res);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    public stopExecution(configurationId: string, projectName: string): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.httpClient.post(`${this.url}/projects/${projectName}/execution/configurations/${configurationId}/stop`, "").subscribe(res => {
+                resolve(res);
+            }, (err: HttpErrorResponse) => {
+                reject(err.error);
+            });
+        });
+    }
+
+    public getExecutionStatus(configurationId: string, projectName: string): Promise<componentStatus[]> {
+        return new Promise<componentStatus[]>((resolve, reject) => {
+            this.httpClient.get(`${this.url}/projects/${projectName}/execution/configurations/${configurationId}/status`).subscribe(res => {
+                const status: componentStatus[] = Object.entries(res).map(entry => ({componentId: entry[0], status: entry[1]}) as componentStatus)
+                resolve(status);
             }, (err: HttpErrorResponse) => {
                 reject(err.error);
             });
@@ -262,3 +283,8 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 }
+
+export type componentStatus = {
+    componentId: string;
+    status: string;
+ }

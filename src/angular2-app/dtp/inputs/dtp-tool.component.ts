@@ -10,10 +10,10 @@
  * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
  * THIS INTO-CPS ASSOCIATION PUBLIC LICENSE VERSION 1.0.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL 
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL
  * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The INTO-CPS toolchain  and the INTO-CPS Association Public License 
+ * The INTO-CPS toolchain  and the INTO-CPS Association Public License
  * are obtained from the INTO-CPS Association, either from the above address,
  * from the URLs: http://www.into-cps.org, and in the INTO-CPS toolchain distribution.
  * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
@@ -26,7 +26,7 @@
  *
  * See the full INTO-CPS Association Public License conditions for more details.
  *
- * See the CONTRIBUTORS file for author and contributor information. 
+ * See the CONTRIBUTORS file for author and contributor information.
  */
 
 import { Component, Input, AfterContentInit } from "@angular/core";
@@ -35,27 +35,26 @@ import { DTPConfig, ToolDtpItem, ToolType } from "../dtp-configuration";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 
 @Component({
-    selector: 'tool',
-    templateUrl: "./angular2-app/dtp/inputs/tool.component.html"
+    selector: "dtp-tool",
+    templateUrl: "./angular2-app/dtp/inputs/dtp-tool.component.html",
 })
-export class DtpToolComponent implements AfterContentInit{
+export class DtpToolComponent implements AfterContentInit {
     @Input()
-    tool: ToolDtpItem
+    tool: ToolDtpItem;
 
     @Input()
-    formGroup:FormGroup;
+    formGroup: FormGroup;
 
     @Input()
     config: DTPConfig;
-    
+
     editing: boolean = true;
 
-    toolTypes = ToolType
+    toolTypes = ToolType;
 
     keys: string[];
 
     constructor(private dtpToolingService: DtpDtToolingService) {
-        console.log("Tool component constructor");
         this.keys = Object.keys(this.toolTypes);
     }
 
@@ -65,8 +64,8 @@ export class DtpToolComponent implements AfterContentInit{
 
     setPath(path: string) {
         this.tool.path = path;
-        this.formGroup.patchValue({path: path});
-        let formControl = <FormControl> this.formGroup.get('path');
+        this.formGroup.patchValue({ path: path });
+        let formControl = <FormControl>this.formGroup.get("path");
         formControl.updateValueAndValidity();
     }
 
@@ -81,11 +80,11 @@ export class DtpToolComponent implements AfterContentInit{
     onChangeTool(toolType: ToolType) {
         this.tool.type = this.toolTypes[toolType];
     }
-    
+
     onSaveTool() {
         this.dtpToolingService.updateTool(this.tool.id, this.tool.toYamlObject(), this.config.projectName).then(() => {
             this.editing = false;
             this.tool.isCreatedOnServer = true;
-        })
+        });
     }
 }

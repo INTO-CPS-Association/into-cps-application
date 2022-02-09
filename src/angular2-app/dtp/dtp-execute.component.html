@@ -7,18 +7,75 @@
         height: fit-content;
         margin-top: 10px;
     }
+
+    @keyframes spin {
+        from {
+            transform: scale(1) rotate(0deg);
+        }
+        to {
+            transform: scale(1.1) rotate(360deg);
+        }
+    }
 </style>
+
 <div class="dtp-bounding-box">
-    <div class="input-group" *ngIf="!isRunning">
+    <div class="input-group" style="margin-bottom: 15px">
         <select [(ngModel)]="selectedConfiguration" [ngModelOptions]="{ standalone: true }" class="form-control">
-            <option *ngFor="let conf of config.configurations" [ngValue]="conf">{{conf.name}}</option>
+            <option *ngFor="let conf of getSelectableConfigurations()" [ngValue]="conf">{{ conf.name }}</option>
         </select>
         <span class="input-group-btn">
-            <button type="button" (click)="execute()" class="btn btn-default" [disabled]="isRunning">
+            <button
+                type="button"
+                (click)="startExecution(selectedConfiguration)"
+                class="btn btn-success"
+                [disabled]="!canRunConfiguration"
+                title="Start execution"
+            >
                 <span class="glyphicon glyphicon-play-circle"></span>
                 Run
             </button>
         </span>
     </div>
-    <p *ngIf="isRunning">Running...</p>
+
+    <div class="form-horizontal">
+        <div class="constraint-container">
+            <div
+                class="panel panel-default constraint-panel"
+                *ngFor="let executingConfiguration of executingConfigurationToStatus | keyvalue"
+            >
+                <div class="panel-heading btn-panel-heading">
+                    <button class="btn btn-danger pull-right" title="Stop execution" (click)="stopExecution(executingConfiguration.key)">
+                        <span class="glyphicon glyphicon-remove-circle"></span>
+                    </button>
+                    <h4 class="panel-title pull-left" style="padding-top: 7.5px; padding-left: 7.5px">
+                        {{ executingConfiguration.key.name }}
+                    </h4>
+                </div>
+
+                <div class="panel-body" style="padding: 5px">
+                    <form>
+                        <div class="form-group">
+                            <label class="col-sm-3 col-form-label">Configuration status: </label>
+                            <div class="col-sm-9">
+                                <p *ngIf="executingConfiguration.value.length == 0" class="form-control-static">Starting execution</p>
+                                <p *ngIf="executingConfiguration.value.length > 1" class="form-control-static">Executing</p>
+                                <span style="margin-left: 10px !important" class="glyphicon glyphicon-refresh spinning"></span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div *ngFor="let status of executingConfiguration.value">
+                            <div class="form-group">
+                                <label class="col-sm-3 col-form-label">{{ status.componentId }}:</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">{{ status.status }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

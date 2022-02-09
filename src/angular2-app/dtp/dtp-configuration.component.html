@@ -1,88 +1,96 @@
 <form *ngIf="isLoaded" [formGroup]="form">
-	<div class="form-horizontal">
-		<panel id="tools" [title]="'Tools'" [open]="false">
-			<div class="form-group">
-				<div class="col-sm-7 col-md-8">
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button type="button" (click)="addDtpItem('tool')" class="btn btn-default">
-								New tool 
-								<span class="glyphicon glyphicon-plus"></span>
-							</button>
-						</span>
-					</div>
-				</div>
-			</div>
+    <div class="form-horizontal">
+        <panel id="tools" [title]="'Tools'" [open]="false">
+            <div class="form-group">
+                <div class="col-sm-7 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-btn">
+                            <button type="button" (click)="addDtpItem('tool')" class="btn btn-default">
+                                New tool
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let tool of config.tools; let i = index">
-					<div class="panel-heading btn-panel-heading">
-						<button class="btn btn-default pull-right" title="Remove tool" (click)="removeDtpItem(tool)">
-							<span class="glyphicon glyphicon-remove"></span>
-						</button>
-					</div>
-					<div class="panel-body">
-						<tool [tool]="tool" [config] = "config" [formGroup]="form.get('tools').at(i)"></tool>		
-					</div>
-				</div>
-			</div>
-		</panel>
+            <div class="constraint-container">
+                <div class="panel panel-default constraint-panel" *ngFor="let tool of config.tools; let i = index">
+                    <div class="panel-heading btn-panel-heading">
+                        <button class="btn btn-default pull-right" title="Remove tool" (click)="removeDtpItem(tool)">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                    </div>
+                    <div class="panel-body">
+                        <dtp-tool [tool]="tool" [config]="config" [formGroup]="form.get('tools').at(i)"></dtp-tool>
+                    </div>
+                </div>
+            </div>
+        </panel>
 
-		<panel id="servers" [title]="'Servers'" [open]="false">
-			<div class="form-group">
-				<div class="col-sm-7 col-md-8">
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button type="button" (click)="addDtpItem('server')" class="btn btn-default">
-								New server 
-								<span class="glyphicon glyphicon-plus"></span>
-							</button>
-						</span>
-					</div>
-				</div>
-			</div>
+        <panel id="servers" [title]="'Servers'" [open]="false">
+            <div class="form-group">
+                <div class="col-sm-7 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-btn">
+                            <button type="button" (click)="addDtpItem('server')" class="btn btn-default">
+                                New server
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let server of config.servers; let i = index">
-					<div class="panel-heading btn-panel-heading">
-						<button class="btn btn-default pull-right" title="Remove server" (click)="removeDtpItem(server)">
-							<span class="glyphicon glyphicon-remove"></span>
-						</button>
-					</div>
-					<div class="panel-body">
-						<server [server]="server" [config] = "config" [formGroup]="form.get('servers').at(i)" [servertypes] = "config.serverTypes"></server>			
-					</div>
-				</div>
-			</div>
-		</panel>
+            <div class="constraint-container">
+                <div class="panel panel-default constraint-panel" *ngFor="let server of config.servers; let i = index">
+                    <div class="panel-heading btn-panel-heading">
+                        <button class="btn btn-default pull-right" title="Remove server" (click)="removeDtpItem(server)">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                    </div>
+                    <div class="panel-body">
+                        <dtp-server
+                            [server]="server"
+                            [config]="config"
+                            [formGroup]="form.get('servers').at(i)"
+                            [servertypes]="config.serverTypes"
+                        ></dtp-server>
+                    </div>
+                </div>
+            </div>
+        </panel>
 
-		<panel id="configurations" [title]="'Configurations'" [open]="false">
+        <panel id="configurations" [title]="'Configurations'" [open]="false">
+            <div class="form-group">
+                <div class="col-sm-7 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-btn">
+                            <button type="button" (click)="addDtpItem('configuration')" class="btn btn-default">
+                                New configuration
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-			<div class="form-group">
-				<div class="col-sm-7 col-md-8">
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button type="button" (click)="addDtpItem('configuration')" class="btn btn-default">
-								New configuration 
-								<span class="glyphicon glyphicon-plus"></span>
-							</button>
-						</span>
-					</div>
-				</div>
-			</div>
-
-			<div class="constraint-container">
-				<div class="panel panel-default constraint-panel" *ngFor="let configuration of config.configurations; let i = index">
-					<div class="panel-heading btn-panel-heading">
-						<button class="btn btn-default pull-right" title="Remove configuration" (click)="removeDtpItem(configuration)">
-							<span class="glyphicon glyphicon-remove"></span>
-						</button>
-					</div>
-					<div class="panel-body">
-						<task-configuration [configuration]="configuration" [formGroup]="form.get('configurations').at(i)" [config]="config"></task-configuration>		
-					</div>
-				</div>
-			</div>
-		</panel>
-	</div>
+            <div class="constraint-container">
+                <div class="panel panel-default constraint-panel" *ngFor="let configuration of config.configurations; let i = index">
+                    <div class="panel-heading btn-panel-heading">
+                        <button class="btn btn-default pull-right" title="Remove configuration" (click)="removeDtpItem(configuration)">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                    </div>
+                    <div class="panel-body">
+                        <dtp-taskconfiguration
+                            [configuration]="configuration"
+                            [formGroup]="form.get('configurations').at(i)"
+                            [config]="config"
+                        ></dtp-taskconfiguration>
+                    </div>
+                </div>
+            </div>
+        </panel>
+    </div>
 </form>

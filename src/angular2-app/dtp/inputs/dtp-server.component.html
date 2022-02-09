@@ -1,0 +1,91 @@
+<div class="form-horizontal" [formGroup]="formGroup">
+    <button class="btn btn-default" title="Edit server" (click)="editing = true" *ngIf="!editing">
+        <span class="glyphicon glyphicon-edit"></span>
+        Edit
+    </button>
+    <button class="btn btn-default" title="Save server" (click)="onSaveServer()" *ngIf="editing" [disabled]="!formGroup.valid">
+        <span class="glyphicon glyphicon-floppy-saved"></span>
+        Save
+    </button>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Name</label>
+        </div>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ server.name }}</p>
+            <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control" />
+            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Username</label>
+        </div>
+
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ server.username }}</p>
+            <input *ngIf="editing" (change)="onChangeUsername($event.target.value)" formControlName="username" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Password</label>
+        </div>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ server.password }}</p>
+            <input *ngIf="editing" (change)="onChangePassword($event.target.value)" formControlName="password" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Host</label>
+        </div>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ server.host }}</p>
+            <input *ngIf="editing" (change)="onChangeHost($event.target.value)" formControlName="host" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Port</label>
+        </div>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ server.port }}</p>
+            <input *ngIf="editing" (change)="onChangePort($event.target.value)" formControlName="port" class="form-control" />
+            <div *ngIf="formGroup.hasError('invalidInteger', 'port')" class="alert alert-danger">Only integers are allowed.</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Embedded</label>
+        </div>
+        <div class="col-sm-9">
+            <input
+                [attr.disabled]="!editing ? true : null"
+                (change)="onChangeEmbedded($event.target.checked)"
+                formControlName="embedded"
+                type="checkbox"
+            />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Type</label>
+        </div>
+        <div class="col-sm-9">
+            <select *ngIf="editing" (change)="onChangeType($event.target.checked)" formControlName="type" class="form-control col-sm-9">
+                <option *ngFor="let serverType of servertypes">{{ serverType }}</option>
+            </select>
+            <p *ngIf="!editing" class="form-control-static">{{ server.type }}</p>
+        </div>
+    </div>
+</div>

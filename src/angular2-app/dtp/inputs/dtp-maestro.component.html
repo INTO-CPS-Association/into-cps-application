@@ -1,0 +1,87 @@
+<div class="form-horizontal" [formGroup]="formGroup">
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ maestro.name }}</p>
+            <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control" />
+            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3control-label">Capture Output</label>
+        <div class="col-sm-9">
+            <input
+                [attr.disabled]="!editing ? true : null"
+                (change)="onChangeCaptureOutput($event.target.checked)"
+                formControlName="capture_output"
+                type="checkbox"
+            />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Simulation Tool</label>
+        <div class="col-sm-9">
+            <select *ngIf="editing" [(ngModel)]="maestro.tool" [ngModelOptions]="{ standalone: true }" class="form-control col-sm-9">
+                <option *ngFor="let simulationTool of getSimulationTools()" [ngValue]="simulationTool.id">{{ simulationTool.name }}</option>
+            </select>
+            <p *ngIf="!editing" class="form-control-static">{{ toolIdToName(maestro.tool) }}</p>
+        </div>
+    </div>
+
+    <!-- CO-SIMULATION EXPERIMENT -->
+    <div class="form-group">
+        <div *ngIf="showInitialSetupBtns && editing" class="btn-group col-sm-9">
+            <button
+                type="button"
+                (click)="doInitialSetup(false)"
+                class="btn btn-default"
+                [disabled]="
+                    !this.maestro ||
+                    (this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name)
+                "
+            >
+                New setup
+                <span class="glyphicon glyphicon-edit"></span>
+            </button>
+            <button
+                type="button"
+                (click)="doInitialSetup(true)"
+                class="btn btn-default"
+                [disabled]="
+                    !this.maestro ||
+                    (this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name)
+                "
+            >
+                Setup from experiment
+                <span class="glyphicon glyphicon-edit"></span>
+            </button>
+        </div>
+        <div *ngIf="showExperimentSelect && editing">
+            <label class="col-sm-3 control-label">Choose experiment: </label>
+            <select
+                [(ngModel)]="baseExperimentPath"
+                [ngModelOptions]="{ standalone: true }"
+                class="form-control col-sm-9"
+                (change)="onBaseExperimentSet()"
+            >
+                <option *ngFor="let path of experimentsPaths" [ngValue]="path">{{ getExperimentNameFromPath(path, "2") }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div *ngIf="!showInitialSetupBtns && !showExperimentSelect">
+        <panel *ngIf="!editing" [title]="'Configuration overview'" [open]="false">
+            <mm-overview *ngIf="!editing" #overview [(path)]="maestro.multiModelPath"></mm-overview>
+        </panel>
+
+        <panel *ngIf="editing" id="MultiModelConfiguration" [title]="'Multi-Model Configuration'" [open]="false">
+            <mm-configuration [(path)]="maestro.multiModelPath" (change)="overview.parseConfig()"></mm-configuration>
+        </panel>
+
+        <panel *ngIf="editing" id="SimulationConfiguration" [title]="'Simulation Configuration'" [open]="false">
+            <coe-configuration [path]="maestro.coePath"></coe-configuration>
+        </panel>
+    </div>
+</div>

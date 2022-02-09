@@ -1,0 +1,82 @@
+<div class="form-horizontal" [formGroup]="formGroup">
+    <button class="btn btn-default" title="Edit configuration" (click)="editing = true" *ngIf="!editing">
+        <span class="glyphicon glyphicon-edit"></span>
+        Edit
+    </button>
+    <button
+        class="btn btn-default"
+        title="Save configuration"
+        (click)="onSaveConfiguration()"
+        *ngIf="editing"
+        [disabled]="!formGroup.valid"
+    >
+        <span class="glyphicon glyphicon-floppy-saved"></span>
+        Save
+    </button>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-3">
+            <label class="control-label">Name</label>
+        </div>
+        <div class="col-sm-9">
+            <p *ngIf="!editing" class="form-control-static">{{ configuration.name }}</p>
+            <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control" />
+            <p *ngIf="formGroup.hasError('required', 'name')" class="text-warning">* This field is required.</p>
+        </div>
+    </div>
+
+    <panel id="tasks" [title]="'Tasks'" [open]="false">
+        <div class="form-group" *ngIf="editing">
+            <div class="col-sm-7 col-md-8">
+                <div class="input-group">
+                    <select name="tasks" [(ngModel)]="selectedTask" [ngModelOptions]="{ standalone: true }" class="form-control">
+                        <option *ngFor="let taskToCon of taskNameToConstructor" [ngValue]="taskToCon.name">
+                            {{ taskToCon.name }}
+                        </option>
+                    </select>
+                    <span class="input-group-btn">
+                        <button
+                            type="button"
+                            (click)="addSelectedTask()"
+                            class="btn btn-default"
+                            [disabled]="selectedTask == 'Select task...'"
+                        >
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Add Task
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="constraint-container">
+            <div class="panel panel-default constraint-panel" *ngFor="let task of configuration.tasks; let i = index">
+                <div class="panel-heading btn-panel-heading">
+                    <button class="btn btn-default btn-sm pull-right" title="Remove task" (click)="removeTask(task)" *ngIf="editing">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+
+                    <h4 class="panel-title" style="text-align: left">{{ getTaskName(task) }}</h4>
+                </div>
+                <div class="panel-body">
+                    <dtp-maestro
+                        [maestro]="task"
+                        [editing]="editing"
+                        [config]="config"
+                        [formGroup]="formGroup.get('tasks').at(i)"
+                        *ngIf="isTaskMaestro(task)"
+                    ></dtp-maestro>
+                    <dtp-datarepeater
+                        [datarepeater]="task"
+                        [editing]="editing"
+                        [formGroup]="formGroup.get('tasks').at(i)"
+                        [config]="config"
+                        *ngIf="isTaskDatarepeater(task)"
+                    ></dtp-datarepeater>
+                </div>
+            </div>
+        </div>
+    </panel>
+</div>
