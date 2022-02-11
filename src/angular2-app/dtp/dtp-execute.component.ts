@@ -52,6 +52,11 @@ export class DtpExecuteComponent {
             this._statusTimerTimeout = setInterval(() => this.updateStatusForExecutingConfigs(), 2000);
         }
         this.canRunConfiguration = this.getSelectableConfigurations().length > 0;
+
+        // Update selection to the next available configuration
+        if (this.canRunConfiguration) {
+            this.selectedConfiguration = this.getSelectableConfigurations()[0];
+        }
     }
 
     private updateStatusForExecutingConfigs() {

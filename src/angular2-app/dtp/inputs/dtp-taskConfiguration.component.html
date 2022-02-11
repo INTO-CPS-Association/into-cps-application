@@ -17,9 +17,7 @@
     <hr />
 
     <div class="form-group">
-        <div class="col-sm-3">
-            <label class="control-label">Name</label>
-        </div>
+        <label class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{ configuration.name }}</p>
             <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control" />
@@ -29,25 +27,18 @@
 
     <panel id="tasks" [title]="'Tasks'" [open]="false">
         <div class="form-group" *ngIf="editing">
-            <div class="col-sm-7 col-md-8">
-                <div class="input-group">
-                    <select name="tasks" [(ngModel)]="selectedTask" [ngModelOptions]="{ standalone: true }" class="form-control">
-                        <option *ngFor="let taskToCon of taskNameToConstructor" [ngValue]="taskToCon.name">
-                            {{ taskToCon.name }}
-                        </option>
-                    </select>
-                    <span class="input-group-btn">
-                        <button
-                            type="button"
-                            (click)="addSelectedTask()"
-                            class="btn btn-default"
-                            [disabled]="selectedTask == 'Select task...'"
-                        >
-                            <span class="glyphicon glyphicon-plus"></span>
-                            Add Task
-                        </button>
-                    </span>
-                </div>
+            <div class="input-group" style="margin-left: 10px; margin-right: 10px">
+                <select name="tasks" [(ngModel)]="selectedTask" [ngModelOptions]="{ standalone: true }" class="form-control">
+                    <option *ngFor="let taskToCon of taskNameToConstructor" [ngValue]="taskToCon.name">
+                        {{ taskToCon.name }}
+                    </option>
+                </select>
+                <span class="input-group-btn">
+                    <button type="button" (click)="addSelectedTask()" class="btn btn-default" [disabled]="selectedTask == 'Select task...'">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Add Task
+                    </button>
+                </span>
             </div>
         </div>
 

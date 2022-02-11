@@ -25,12 +25,18 @@
         </select>
         <span class="input-group-btn">
             <button
+                *ngIf="canRunConfiguration"
                 type="button"
                 (click)="startExecution(selectedConfiguration)"
                 class="btn btn-success"
                 [disabled]="!canRunConfiguration"
                 title="Start execution"
             >
+                <span class="glyphicon glyphicon-play-circle"></span>
+                Run
+            </button>
+
+            <button *ngIf="!canRunConfiguration" type="button" class="btn btn-default" [disabled]="!canRunConfiguration" title="Disabled">
                 <span class="glyphicon glyphicon-play-circle"></span>
                 Run
             </button>
@@ -52,14 +58,18 @@
                     </h4>
                 </div>
 
-                <div class="panel-body" style="padding: 5px">
+                <div class="panel-body">
                     <form>
+                        <!-- <div class="form-row align-items-center">
+                            <div class="col-sm-auto">
+                                <span class="glyphicon glyphicon-refresh spinning"></span>
+                            </div>
+                        </div> -->
                         <div class="form-group">
-                            <label class="col-sm-3 col-form-label">Configuration status: </label>
-                            <div class="col-sm-9">
+                            <label class="col-sm-2 control-label">Configuration status: </label>
+                            <div class="col-sm-auto">
                                 <p *ngIf="executingConfiguration.value.length == 0" class="form-control-static">Starting execution</p>
-                                <p *ngIf="executingConfiguration.value.length > 1" class="form-control-static">Executing</p>
-                                <span style="margin-left: 10px !important" class="glyphicon glyphicon-refresh spinning"></span>
+                                <p *ngIf="executingConfiguration.value.length > 0" class="form-control-static">Executing</p>
                             </div>
                         </div>
 
@@ -67,8 +77,8 @@
 
                         <div *ngFor="let status of executingConfiguration.value">
                             <div class="form-group">
-                                <label class="col-sm-3 col-form-label">{{ status.componentId }}:</label>
-                                <div class="col-sm-9">
+                                <label class="col-sm-2 control-label">{{ status.componentId }}:</label>
+                                <div class="col-sm-auto">
                                     <p class="form-control-static">{{ status.status }}</p>
                                 </div>
                             </div>

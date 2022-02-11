@@ -4,13 +4,13 @@
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{ maestro.name }}</p>
             <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control" />
-            <div *ngIf="formGroup.hasError('required', 'name')" class="alert alert-danger">This field is required.</div>
+            <p *ngIf="formGroup.hasError('required', 'name')" class="text-warning">* This field is required.</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3control-label">Capture Output</label>
-        <div class="col-sm-9">
+        <label class="col-sm-2 control-label">Capture Output</label>
+        <div class="col-sm-auto">
             <input
                 [attr.disabled]="!editing ? true : null"
                 (change)="onChangeCaptureOutput($event.target.checked)"
@@ -21,8 +21,8 @@
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">Simulation Tool</label>
-        <div class="col-sm-9">
+        <label class="col-sm-2 control-label">Simulation Tool</label>
+        <div class="col-sm-auto">
             <select *ngIf="editing" [(ngModel)]="maestro.tool" [ngModelOptions]="{ standalone: true }" class="form-control col-sm-9">
                 <option *ngFor="let simulationTool of getSimulationTools()" [ngValue]="simulationTool.id">{{ simulationTool.name }}</option>
             </select>
@@ -30,9 +30,11 @@
         </div>
     </div>
 
+    <hr />
+
     <!-- CO-SIMULATION EXPERIMENT -->
     <div class="form-group">
-        <div *ngIf="showInitialSetupBtns && editing" class="btn-group col-sm-9">
+        <div *ngIf="showInitialSetupBtns && editing" class="btn-group col-sm-12">
             <button
                 type="button"
                 (click)="doInitialSetup(false)"
@@ -42,7 +44,7 @@
                     (this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name)
                 "
             >
-                New setup
+                New configuration
                 <span class="glyphicon glyphicon-edit"></span>
             </button>
             <button
@@ -54,7 +56,7 @@
                     (this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name)
                 "
             >
-                Setup from experiment
+                Configuration from experiment
                 <span class="glyphicon glyphicon-edit"></span>
             </button>
         </div>

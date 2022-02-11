@@ -11,8 +11,8 @@
 
 <div class="form-horizontal" [formGroup]="formGroup">
     <div class="form-group">
-        <label class="col-sm-3 control-label">Name</label>
-        <div class="col-sm-9">
+        <label class="col-sm-2 control-label">Name</label>
+        <div class="col-sm-10">
             <p *ngIf="!editing" class="form-control-static">{{ datarepeater.name }}</p>
             <input *ngIf="editing" (change)="onChangeName($event.target.value)" formControlName="name" class="form-control" />
             <p *ngIf="formGroup.hasError('required', 'name')" class="text-warning">* This field is required.</p>
@@ -20,8 +20,8 @@
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">Server Source</label>
-        <div class="col-sm-9">
+        <label class="col-sm-2 control-label">Server Source</label>
+        <div class="col-sm-10">
             <select
                 *ngIf="editing"
                 class="form-control"
@@ -36,8 +36,8 @@
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">Server Target</label>
-        <div class="col-sm-9">
+        <label class="col-sm-2 control-label">Server Target</label>
+        <div class="col-sm-10">
             <select
                 *ngIf="editing"
                 class="form-control"
@@ -52,8 +52,8 @@
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">RabbitMQ Tool</label>
-        <div class="col-sm-9">
+        <label class="col-sm-2 control-label">RabbitMQ Tool</label>
+        <div class="col-sm-10">
             <select *ngIf="editing" class="form-control" (change)="onChangeTool($event.target.value)" formControlName="tool">
                 <option *ngFor="let rabbitMqTool of getRabbitMqTools(config.tools)" [ngValue]="rabbitMqTool.id">
                     {{ rabbitMqTool.name }}
@@ -65,34 +65,36 @@
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 control-label">FMU Path </label>
-        <span *ngIf="!datarepeater.fmu_path" class="col-sm-9 input-group-btn">
-            <button
-                type="button"
-                (click)="generateFMU()"
-                class="btn btn-default"
-                [disabled]="!isToolingServerOnline || isCreatingFMU || !formGroup.valid"
-            >
-                <span *ngIf="!isCreatingFMU"> Generate FMU </span>
-                <span *ngIf="isCreatingFMU"> Generating.. </span>
-                <span *ngIf="isCreatingFMU" class="glyphicon glyphicon-refresh spinning"> </span>
-            </button>
-        </span>
-        <div *ngIf="datarepeater.fmu_path" class="col-sm-9">
+        <label class="col-sm-2 control-label">FMU Path </label>
+        <div *ngIf="!datarepeater.fmu_path" class="col-sm-10">
+            <div class="input-group">
+                <button
+                    type="button"
+                    (click)="generateFMU()"
+                    class="btn btn-default"
+                    [disabled]="!isToolingServerOnline || isCreatingFMU || !formGroup.valid"
+                >
+                    <span *ngIf="!isCreatingFMU"> Generate FMU </span>
+                    <span *ngIf="isCreatingFMU"> Generating.. </span>
+                    <span *ngIf="isCreatingFMU" class="glyphicon glyphicon-refresh spinning"> </span>
+                </button>
+            </div>
+        </div>
+        <div *ngIf="datarepeater.fmu_path" class="col-sm-10">
             <p class="form-control-static">{{ datarepeater.fmu_path }}</p>
         </div>
     </div>
+
+    <hr />
 
     <panel id="signals" [title]="'Signals'" [open]="false">
         <div class="form-group" *ngIf="editing">
             <div class="col-sm-7 col-md-8">
                 <div class="input-group">
-                    <span class="input-group-btn">
-                        <button type="button" (click)="addNewSignal()" class="btn btn-default">
-                            New signal
-                            <span class="glyphicon glyphicon-plus"></span>
-                        </button>
-                    </span>
+                    <button (click)="addNewSignal()" class="btn btn-default">
+                        New signal
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
                 </div>
             </div>
         </div>
