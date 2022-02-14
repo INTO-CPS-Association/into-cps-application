@@ -10,10 +10,10 @@
  * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
  * THIS INTO-CPS ASSOCIATION PUBLIC LICENSE VERSION 1.0.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL 
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL
  * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The INTO-CPS toolchain  and the INTO-CPS Association Public License 
+ * The INTO-CPS toolchain  and the INTO-CPS Association Public License
  * are obtained from the INTO-CPS Association, either from the above address,
  * from the URLs: http://www.into-cps.org, and in the INTO-CPS toolchain distribution.
  * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
@@ -26,64 +26,97 @@
  *
  * See the full INTO-CPS Association Public License conditions for more details.
  *
- * See the CONTRIBUTORS file for author and contributor information. 
+ * See the CONTRIBUTORS file for author and contributor information.
  */
 
-import { Component, Input} from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { DTPConfig } from "./dtp-configuration";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
-import * as Path from 'path';
+import * as Path from "path";
 
 @Component({
     selector: "dtp-page",
     templateUrl: "./angular2-app/dtp/dtp-page.component.html",
-    providers: [DtpDtToolingService]
+    providers: [DtpDtToolingService],
 })
 export class DtpPageComponent {
-    private _path : string;
-    private config: DTPConfig = new DTPConfig();
-    private configIsLoaded: boolean = false;
+    private _path: string;
+    protected _config: DTPConfig = new DTPConfig();
+    protected configIsLoaded: boolean = false;
+    protected statusMsg: string = "Retrieving configuration from server...";
+    private readonly _noConnectionMsg: string = "Unable to connect to the DTP tooling server.";
 
     @Input()
-    set path(path: string){
+    set path(path: string) {
         this._path = path;
-        
+
         if (path) {
-            this.dtpToolingService.startServer(Path.join(Path.dirname(this._path), ".."));
-            const projectPath = Path.dirname(path);
-            this.parseConfig(Path.basename(projectPath), projectPath);
+            this.dtpToolingService
+                .startServer(Path.join(Path.dirname(this._path), ".."))
+                .then(() => {
+                    const projectPath = Path.dirname(path);
+                    this.parseConfig(Path.basename(projectPath), projectPath);
+                })
+                .catch((err) => console.warn(err));
         }
     }
 
-    get path(){
+    get path() {
         return this._path;
     }
-    
+
     constructor(private dtpToolingService: DtpDtToolingService) {}
 
     private ensureProjectExsists(projectName: string): Promise<void> {
-        return new Promise<void> ((resolve, reject) => {
-            this.dtpToolingService.getProjects().then((projectNames: string[]) => {
-                if(projectNames.findIndex(name => projectName == name) == -1){
-                    this.dtpToolingService.createProject(projectName).then(() => resolve()).catch(err => reject(err));
-                } else {
-                    resolve();
-                }
-            }).catch(err => reject(err));
+        return new Promise<void>((resolve, reject) => {
+            this.dtpToolingService
+                .getProjects()
+                .then((projectNames: string[]) => {
+                    if (projectNames.findIndex((name) => projectName == name) == -1) {
+                        this.dtpToolingService
+                            .createProject(projectName)
+                            .then(() => resolve())
+                            .catch((err) => reject(err));
+                    } else {
+                        resolve();
+                    }
+                })
+                .catch((err) => reject(err));
         });
     }
 
     private parseConfig(projectName: string, projectPath: string) {
-        this.ensureProjectExsists(projectName).then(() => {
-            this.dtpToolingService.getProject(projectName).then(yamlConf => {
-                this.dtpToolingService.getSchemaDefinition().then(schema => {
-                    this.config = DTPConfig.createFromYamlObj(yamlConf, projectName, projectPath);
-                    this.config.signalDataTypes = schema["$defs"]?.["signal_type"]?.["enum"] ?? [];
-                    this.config.serverTypes = schema["$defs"]?.["server_type"]?.["enum"] ?? [];
-                    this.configIsLoaded = true;
-                    console.log("Parsed DTP config from server");
+        this.ensureProjectExsists(projectName)
+            .then(() => {
+                this.dtpToolingService
+                    .getProject(projectName)
+                    .then((yamlConf) => {
+                        this.dtpToolingService.getSchemaDefinition().then((schema) => {
+                            this._config = DTPConfig.createFromYamlObj(yamlConf, projectName, projectPath);
+                            this._config.signalDataTypes = schema["$defs"]?.["signal_type"]?.["enum"] ?? [];
+                            this._config.serverTypes = schema["$defs"]?.["server_type"]?.["enum"] ?? [];
+                            this.configIsLoaded = true;
+                            console.log("Parsed DTP config from server");
+                        });
+                    })
+                    .catch((err) => {
+                        this.dtpToolingService.getIsServerOnline().then((isOnline) => {
+                            const msg: string = isOnline
+                                ? `Unable to fetch project from server: ${err}`
+                                : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`;
+                            this.statusMsg = msg;
+                            console.error(msg);
+                        });
+                    });
+            })
+            .catch((err) => {
+                this.dtpToolingService.getIsServerOnline().then((isOnline) => {
+                    const msg: string = isOnline
+                        ? `Unable to determine if project exists: ${err}`
+                        : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`;
+                    this.statusMsg = msg;
+                    console.error(msg);
                 });
-            }).catch(err => console.error("Unable to fetch project from server: " + err));
-        }).catch(err => console.warn("Unable to determine if project exists: " + err));
+            });
     }
 }

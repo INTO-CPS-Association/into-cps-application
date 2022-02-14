@@ -1,8 +1,8 @@
 <div *ngIf="configIsLoaded">
     <h3>Configure</h3>
-    <dtp-configuration [config] = "config"></dtp-configuration>
-    
+    <dtp-configuration [config]="_config"></dtp-configuration>
+
     <h3>Execute</h3>
-    <dtp-execute [config] = "config"></dtp-execute>
+    <dtp-execute [config]="_config"></dtp-execute>
 </div>
-<h3 *ngIf="!configIsLoaded">Retrieving configuration from server...</h3>
+<h3 *ngIf="!configIsLoaded">{{ statusMsg }}</h3>

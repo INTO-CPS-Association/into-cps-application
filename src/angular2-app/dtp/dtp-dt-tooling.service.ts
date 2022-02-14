@@ -1,7 +1,9 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Subject } from "rxjs";
-import { exec, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, exec, execSync, spawn } from "child_process";
+
+const TKill = require("tree-kill");
 
 export interface IDataRepeaterResponse {
     file: string;
@@ -12,50 +14,80 @@ export interface IDataRepeaterResponse {
 export class DtpDtToolingService implements OnDestroy {
     private _isOnline = new Subject<boolean>();
     private _onlineInterval: number;
+    private static _serverProc: ChildProcessWithoutNullStreams;
+    public readonly url: string = "";
     public isOnlineObservable = this._isOnline.asObservable();
-    public serverIsOnline: boolean = false;
-    private serverProcess: any;
-    private url: string = "";
+    private _isServerOnline: boolean = false;
 
     constructor(private httpClient: HttpClient) {
-        this._onlineInterval = window.setInterval(() => this.isServerOnline(), 2000);
+        this._onlineInterval = window.setInterval(() => this.getIsServerOnline(), 2000);
         this.url = "http://localhost"; //http://127.0.0.1:5000
     }
 
     ngOnDestroy() {
         clearInterval(this._onlineInterval);
-        window.removeEventListener("beforeunload", this.stopServer); //TODO: Doesn't terminate the webserver on app close
-        this.stopServer();
+        window.removeEventListener("beforeunload", this.stopServer);
+        //this.stopServer();
     }
 
-    public async startServer(baseDir: string) {
-        if (this.serverIsOnline) {
-            return;
-        }
+    public startServer(baseDir: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (DtpDtToolingService._serverProc) {
+                return resolve();
+            }
 
-        this.serverProcess = spawn("python", ["-m", "digital_twin_tooling", "webapi", "-base", `${baseDir}`]);
-        console.log("DT tooling webserver PID: " + this.serverProcess.pid);
+            DtpDtToolingService._serverProc = spawn("python", ["-m", "digital_twin_tooling", "webapi", "-base", `${baseDir}`]);
+            console.log("DT tooling webserver PID: " + DtpDtToolingService._serverProc.pid);
 
-        window.addEventListener("beforeunload", this.stopServer); //TODO: Doesn't terminate the webserver on app close
+            window.addEventListener("beforeunload", this.stopServer); //beforeunload
+            this.getIsServerOnline().finally(() => {
+                if (this._isServerOnline) return resolve();
+                return reject("Unable to start the server");
+            });
+        });
     }
 
     private stopServer() {
-        if (process.platform == "win32") exec(`taskkill /PID ${this.serverProcess.pid} /T /F`);
-        else process.kill(-this.serverProcess.pid);
-        console.log("Stopping DT tooling webserver with PID: " + this.serverProcess.pid);
+        const procId: number = DtpDtToolingService._serverProc.pid;
+        console.log("Stopping DT tooling server with PID: " + procId);
+        switch (process.platform) {
+            case "win32":
+                execSync(`taskkill /PID ${procId} /T /F`);
+                break;
+            case "darwin":
+                execSync(`taskkill /PID ${procId} /T /F`);
+                break;
+            case "linux":
+                execSync(`pkill -TERM -P ${procId}`);
+                break;
+            default:
+                console.log(`Unable to stop DT tooling server process for platform: ${process.platform}`);
+        }
+        DtpDtToolingService._serverProc = null;
+        // if (process.platform == "win32") execSync(`taskkill /PID ${procId} /T /F`);
+        // else process.kill(-procId);
+        // process.kill(-procId);
     }
 
-    isServerOnline() {
-        this.httpClient.get(`${this.url}/`, { responseType: "text" }).subscribe(
-            () => {
-                this._isOnline.next(true);
-                this.serverIsOnline = true;
-            },
-            () => {
-                this._isOnline.next(false);
-                this.serverIsOnline = false;
-            }
-        );
+    public getIsServerOnline(): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            this.httpClient
+                .get(`${this.url}/`, { responseType: "text" })
+                .toPromise()
+                .then(() => {
+                    if (!this._isServerOnline) {
+                        this._isOnline.next(true);
+                        this._isServerOnline = true;
+                    }
+                })
+                .catch(() => {
+                    if (this._isServerOnline) {
+                        this._isOnline.next(false);
+                        this._isServerOnline = false;
+                    }
+                })
+                .finally(() => resolve(this._isServerOnline));
+        });
     }
 
     /*
