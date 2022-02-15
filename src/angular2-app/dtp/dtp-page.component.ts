@@ -57,7 +57,7 @@ export class DtpPageComponent {
                     const projectPath = Path.dirname(path);
                     this.parseConfig(Path.basename(projectPath), projectPath);
                 })
-                .catch((err) => console.warn(err));
+                .catch((err) => this.displayErrorMsg(`${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`, err));
         }
     }
 
@@ -81,7 +81,7 @@ export class DtpPageComponent {
                         resolve();
                     }
                 })
-                .catch((err) => reject(err));
+                .catch((err) => resolve(err));
         });
     }
 
@@ -100,23 +100,32 @@ export class DtpPageComponent {
                         });
                     })
                     .catch((err) => {
-                        this.dtpToolingService.getIsServerOnline().then((isOnline) => {
-                            const msg: string = isOnline
-                                ? `Unable to fetch project from server: ${err}`
-                                : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`;
-                            this.statusMsg = msg;
-                            console.error(msg);
-                        });
+                        this.dtpToolingService
+                            .getIsServerOnline()
+                            .then((isOnline) =>
+                                this.displayErrorMsg(
+                                    isOnline
+                                        ? `Unable to fetch project from server: ${err}`
+                                        : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`
+                                )
+                            );
                     });
             })
             .catch((err) => {
-                this.dtpToolingService.getIsServerOnline().then((isOnline) => {
-                    const msg: string = isOnline
-                        ? `Unable to determine if project exists: ${err}`
-                        : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`;
-                    this.statusMsg = msg;
-                    console.error(msg);
-                });
+                this.dtpToolingService
+                    .getIsServerOnline()
+                    .then((isOnline) =>
+                        this.displayErrorMsg(
+                            isOnline
+                                ? `Unable to determine if project exists: ${err}`
+                                : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`
+                        )
+                    );
             });
+    }
+
+    private displayErrorMsg(msg: string, logErr?: string) {
+        this.statusMsg = msg;
+        console.warn(logErr ? logErr : msg);
     }
 }

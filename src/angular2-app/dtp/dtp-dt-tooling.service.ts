@@ -1,9 +1,7 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Subject } from "rxjs";
-import { ChildProcessWithoutNullStreams, exec, execSync, spawn } from "child_process";
-
-const TKill = require("tree-kill");
+import { ChildProcessWithoutNullStreams, execSync, spawn } from "child_process";
 
 export interface IDataRepeaterResponse {
     file: string;
@@ -21,13 +19,13 @@ export class DtpDtToolingService implements OnDestroy {
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.getIsServerOnline(), 2000);
-        this.url = "http://localhost"; //http://127.0.0.1:5000
+        this.url = "http://127.0.0.1:5000"; //http://localhost
     }
 
     ngOnDestroy() {
         clearInterval(this._onlineInterval);
         window.removeEventListener("beforeunload", this.stopServer);
-        //this.stopServer();
+        this.stopServer();
     }
 
     public startServer(baseDir: string): Promise<void> {
@@ -48,25 +46,29 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     private stopServer() {
-        const procId: number = DtpDtToolingService._serverProc.pid;
-        console.log("Stopping DT tooling server with PID: " + procId);
-        switch (process.platform) {
-            case "win32":
-                execSync(`taskkill /PID ${procId} /T /F`);
-                break;
-            case "darwin":
-                execSync(`taskkill /PID ${procId} /T /F`);
-                break;
-            case "linux":
-                execSync(`pkill -TERM -P ${procId}`);
-                break;
-            default:
-                console.log(`Unable to stop DT tooling server process for platform: ${process.platform}`);
-        }
+        this.getStopServer()
+            .then((sutdownMsg) =>
+                console.log(
+                    `Stopping DT tooling server with PID: ${
+                        DtpDtToolingService._serverProc?.pid ?? "??"
+                    }. Server shutdown msg: ${sutdownMsg}`
+                )
+            )
+            .catch((err) => console.warn(err));
         DtpDtToolingService._serverProc = null;
-        // if (process.platform == "win32") execSync(`taskkill /PID ${procId} /T /F`);
-        // else process.kill(-procId);
-        // process.kill(-procId);
+    }
+
+    public getStopServer(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            this.httpClient.get(`${this.url}/server/shutdown`).subscribe(
+                (shutdownMsg: string) => {
+                    resolve(shutdownMsg);
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
+        });
     }
 
     public getIsServerOnline(): Promise<boolean> {
@@ -95,49 +97,40 @@ export class DtpDtToolingService implements OnDestroy {
     */
     public getProject(projectName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.httpClient
-                .get(`${this.url}/projects/${projectName}`)
-                .toPromise()
-                .then(
-                    (res) => {
-                        resolve(res);
-                    },
-                    (err: HttpErrorResponse) => {
-                        reject(err.error);
-                    }
-                );
+            this.httpClient.get(`${this.url}/projects/${projectName}`).subscribe(
+                (res) => {
+                    resolve(res);
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
         });
     }
 
     public createProject(projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient
-                .post(`${this.url}/projects/${projectName}`, "")
-                .toPromise()
-                .then(
-                    () => {
-                        resolve();
-                    },
-                    (err: HttpErrorResponse) => {
-                        reject(err.error);
-                    }
-                );
+            this.httpClient.post(`${this.url}/projects/${projectName}`, "").subscribe(
+                () => {
+                    resolve();
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
         });
     }
 
     public deleteProject(projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.httpClient
-                .delete(`${this.url}/projects/${projectName}`)
-                .toPromise()
-                .then(
-                    () => {
-                        resolve();
-                    },
-                    (err: HttpErrorResponse) => {
-                        reject(err.error);
-                    }
-                );
+            this.httpClient.delete(`${this.url}/projects/${projectName}`).subscribe(
+                () => {
+                    resolve();
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
         });
     }
 
@@ -387,17 +380,14 @@ export class DtpDtToolingService implements OnDestroy {
 
     public getProjects(): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
-            this.httpClient
-                .get(`${this.url}/projects`)
-                .toPromise()
-                .then(
-                    (res) => {
-                        resolve(res as string[]);
-                    },
-                    (err: HttpErrorResponse) => {
-                        reject(err.error);
-                    }
-                );
+            this.httpClient.get(`${this.url}/projects`).subscribe(
+                (res) => {
+                    resolve(res as string[]);
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
         });
     }
 }
