@@ -33,6 +33,7 @@ import { Component, Input } from "@angular/core";
 import { DTPConfig } from "./dtp-configuration";
 import { DtpDtToolingService } from "./dtp-dt-tooling.service";
 import * as Path from "path";
+import { Subscription } from "rxjs";
 
 @Component({
     selector: "dtp-page",
@@ -41,6 +42,7 @@ import * as Path from "path";
 })
 export class DtpPageComponent {
     private _path: string;
+    private isToolingServerOnlineSub: Subscription;
     protected _config: DTPConfig = new DTPConfig();
     protected configIsLoaded: boolean = false;
     protected statusMsg: string = "Retrieving configuration from server...";
@@ -51,13 +53,19 @@ export class DtpPageComponent {
         this._path = path;
 
         if (path) {
-            this.dtpToolingService
-                .startServer(Path.join(Path.dirname(this._path), ".."))
-                .then(() => {
-                    const projectPath = Path.dirname(path);
-                    this.parseConfig(Path.basename(projectPath), projectPath);
-                })
-                .catch((err) => this.displayErrorMsg(`${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`, err));
+            this.dtpToolingService.startServer(Path.join(Path.dirname(this._path), ".."));
+            if (!this.isToolingServerOnlineSub) {
+                this.isToolingServerOnlineSub = this.dtpToolingService.isOnlineObservable.subscribe((isOnline) => {
+                    if (isOnline) {
+                        this.isToolingServerOnlineSub.unsubscribe();
+                        this.isToolingServerOnlineSub = null;
+                        const projectPath: string = Path.dirname(this._path);
+                        this.parseConfig(Path.basename(projectPath), projectPath);
+                    } else {
+                        this.displayErrorMsg(`${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`);
+                    }
+                });
+            }
         }
     }
 

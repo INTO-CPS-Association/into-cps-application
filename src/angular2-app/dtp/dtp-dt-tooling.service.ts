@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from "@angular/core";
-import { HttpClient, HttpErrorResponse, HttpResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Subject } from "rxjs";
-import { ChildProcessWithoutNullStreams, execSync, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 export interface IDataRepeaterResponse {
     file: string;
@@ -19,7 +19,8 @@ export class DtpDtToolingService implements OnDestroy {
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.getIsServerOnline(), 2000);
-        this.url = "http://localhost"; // http://127.0.0.1:5000
+        this.url = "http://localhost/"; // http://127.0.0.1:5000
+        window.addEventListener("beforeunload", this.stopServer); //beforeunload
     }
 
     ngOnDestroy() {
@@ -28,32 +29,27 @@ export class DtpDtToolingService implements OnDestroy {
         this.stopServer();
     }
 
-    public startServer(baseDir: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (DtpDtToolingService._serverProc) {
-                return resolve();
-            }
+    public startServer(baseDir: string) {
+        if (DtpDtToolingService._serverProc) {
+            return;
+        }
 
-            DtpDtToolingService._serverProc = spawn("python", ["-m", "digital_twin_tooling", "webapi", "-base", `${baseDir}`]);
-            console.log("DT tooling webserver PID: " + DtpDtToolingService._serverProc.pid);
-
-            window.addEventListener("beforeunload", this.stopServer); //beforeunload
-            this.getIsServerOnline().finally(() => {
-                if (this._isServerOnline) return resolve();
-                return reject("Unable to start the server");
-            });
-        });
+        DtpDtToolingService._serverProc = spawn("sudo", ["python3", "-m", "digital_twin_tooling", "webapi", "-base", `${baseDir}`]);
+        console.log("DT tooling webserver PID: " + DtpDtToolingService._serverProc.pid);
     }
 
     private stopServer() {
+        if (!DtpDtToolingService._serverProc) {
+            return;
+        }
         const pid: string = DtpDtToolingService._serverProc ? DtpDtToolingService._serverProc.pid.toString() : "??";
-        this.getStopServer()
+        this.getShutdownServer()
             .then((sutdownMsg) => console.log(`Stopping DT tooling server with PID: ${pid}. Server shutdown msg: ${sutdownMsg}`))
             .catch((err) => console.warn(err));
         DtpDtToolingService._serverProc = null;
     }
 
-    public getStopServer(): Promise<string> {
+    public getShutdownServer(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.httpClient.get(`${this.url}/server/shutdown`, { responseType: "text" }).subscribe(
                 (res) => {
