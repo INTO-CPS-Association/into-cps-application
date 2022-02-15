@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from "@angular/core";
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpResponse } from "@angular/common/http";
 import { Subject } from "rxjs";
 import { ChildProcessWithoutNullStreams, execSync, spawn } from "child_process";
 
@@ -19,7 +19,7 @@ export class DtpDtToolingService implements OnDestroy {
 
     constructor(private httpClient: HttpClient) {
         this._onlineInterval = window.setInterval(() => this.getIsServerOnline(), 2000);
-        this.url = "http://127.0.0.1:5000"; //http://localhost
+        this.url = "http://localhost"; // http://127.0.0.1:5000
     }
 
     ngOnDestroy() {
@@ -46,26 +46,21 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     private stopServer() {
+        const pid: string = DtpDtToolingService._serverProc ? DtpDtToolingService._serverProc.pid.toString() : "??";
         this.getStopServer()
-            .then((sutdownMsg) =>
-                console.log(
-                    `Stopping DT tooling server with PID: ${
-                        DtpDtToolingService._serverProc?.pid ?? "??"
-                    }. Server shutdown msg: ${sutdownMsg}`
-                )
-            )
+            .then((sutdownMsg) => console.log(`Stopping DT tooling server with PID: ${pid}. Server shutdown msg: ${sutdownMsg}`))
             .catch((err) => console.warn(err));
         DtpDtToolingService._serverProc = null;
     }
 
     public getStopServer(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            this.httpClient.get(`${this.url}/server/shutdown`).subscribe(
-                (shutdownMsg: string) => {
-                    resolve(shutdownMsg);
+            this.httpClient.get(`${this.url}/server/shutdown`, { responseType: "text" }).subscribe(
+                (res) => {
+                    resolve(res as string);
                 },
                 (err: HttpErrorResponse) => {
-                    reject(err.error);
+                    reject(err);
                 }
             );
         });
