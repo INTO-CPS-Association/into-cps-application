@@ -1,7 +1,8 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { remote } from "electron";
 
 export interface IDataRepeaterResponse {
     file: string;
@@ -10,45 +11,95 @@ export interface IDataRepeaterResponse {
 
 @Injectable()
 export class DtpDtToolingService implements OnDestroy {
-    private _isOnline = new Subject<boolean>();
+    private _isOnlineSubject = new Subject<boolean>();
     private _onlineInterval: number;
     private static _serverProc: ChildProcessWithoutNullStreams;
-    public readonly url: string = "";
-    public isOnlineObservable = this._isOnline.asObservable();
-    private _isServerOnline: boolean = false;
+    public readonly url: string = "http://localhost/"; //http://127.0.0.1:5000/
+    public readonly isOnlineObservable: Observable<boolean> = this._isOnlineSubject.asObservable();
+    public latestServerOnlineStatus: boolean = false;
 
-    constructor(private httpClient: HttpClient) {
-        this._onlineInterval = window.setInterval(() => this.getIsServerOnline(), 2000);
-        this.url = "http://localhost/"; // http://127.0.0.1:5000
-        window.addEventListener("beforeunload", this.stopServer); //beforeunload
-    }
+    constructor(private httpClient: HttpClient) {}
 
     ngOnDestroy() {
         clearInterval(this._onlineInterval);
-        window.removeEventListener("beforeunload", this.stopServer);
-        this.stopServer();
     }
 
-    public startServer(baseDir: string) {
+    public spawnServer(baseDir: string): boolean {
         if (DtpDtToolingService._serverProc) {
-            return;
+            console.log(`DT tooling server is already running with PID: ${DtpDtToolingService._serverProc.pid}`);
+            return true;
         }
 
-        DtpDtToolingService._serverProc = spawn("sudo", ["python3", "-m", "digital_twin_tooling", "webapi", "-base", `${baseDir}`]);
-        console.log("DT tooling webserver PID: " + DtpDtToolingService._serverProc.pid);
+        this._onlineInterval = window.setInterval(() => this.updateServerOnlineStatus(), 2000);
+
+        DtpDtToolingService._serverProc = spawn(process.platform != "win32" ? "python3" : "python", [
+            "-m",
+            "digital_twin_tooling",
+            "webapi",
+            "-base",
+            `${baseDir}`,
+        ]);
+        if (!DtpDtToolingService._serverProc || !DtpDtToolingService._serverProc.pid) {
+            console.error("Unable to start DT tooling sever. Ensure that python is in path.");
+            return false;
+        }
+        console.log(`DT tooling webserver PID: ${DtpDtToolingService._serverProc.pid}`);
+
+        remote.getCurrentWindow().on("close", () => this.stopServer());
+
+        return true;
+    }
+
+    public getStopServer(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            this.httpClient.get(`${this.url}/server/shutdown`).subscribe(
+                (shutdownMsg: string) => {
+                    resolve(shutdownMsg);
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
+        });
     }
 
     private stopServer() {
         if (!DtpDtToolingService._serverProc) {
             return;
         }
-        const pid: string = DtpDtToolingService._serverProc ? DtpDtToolingService._serverProc.pid.toString() : "??";
-        this.getShutdownServer()
-            .then((sutdownMsg) => console.log(`Stopping DT tooling server with PID: ${pid}. Server shutdown msg: ${sutdownMsg}`))
+        const pid: string = DtpDtToolingService._serverProc?.pid.toString() ?? "??";
+
+        this.getStopServer()
+            .then((shutdownMsg) => console.log(`Stopping DT tooling server with PID: ${pid}. Server shutdown msg: ${shutdownMsg}`))
             .catch((err) => console.warn(err));
+
         DtpDtToolingService._serverProc = null;
     }
 
+    public updateServerOnlineStatus(): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            this.httpClient
+                .get(`${this.url}/`, { responseType: "text" })
+                .toPromise()
+                .then(() => {
+                    if (!this.latestServerOnlineStatus) {
+                        this._isOnlineSubject.next(true);
+                        this.latestServerOnlineStatus = true;
+                    }
+                })
+                .catch(() => {
+                    if (this.latestServerOnlineStatus) {
+                        this._isOnlineSubject.next(false);
+                        this.latestServerOnlineStatus = false;
+                    }
+                })
+                .finally(() => resolve(this.latestServerOnlineStatus));
+        });
+    }
+
+    /*
+        SERVER CONTROLS
+    */
     public getShutdownServer(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.httpClient.get(`${this.url}/server/shutdown`, { responseType: "text" }).subscribe(
@@ -62,30 +113,22 @@ export class DtpDtToolingService implements OnDestroy {
         });
     }
 
-    public getIsServerOnline(): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            this.httpClient
-                .get(`${this.url}/`, { responseType: "text" })
-                .toPromise()
-                .then(() => {
-                    if (!this._isServerOnline) {
-                        this._isOnline.next(true);
-                        this._isServerOnline = true;
-                    }
-                })
-                .catch(() => {
-                    if (this._isServerOnline) {
-                        this._isOnline.next(false);
-                        this._isServerOnline = false;
-                    }
-                })
-                .finally(() => resolve(this._isServerOnline));
-        });
-    }
-
     /*
         GET, CREATE, REMOVE PROJECT
     */
+    public getProjects(): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
+            this.httpClient.get(`${this.url}/projects`).subscribe(
+                (res) => {
+                    resolve(res as string[]);
+                },
+                (err: HttpErrorResponse) => {
+                    reject(err.error);
+                }
+            );
+        });
+    }
+
     public getProject(projectName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.httpClient.get(`${this.url}/projects/${projectName}`).subscribe(
@@ -126,7 +169,7 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     /*
-        ADDING NEW ITEMS 
+        ADDING NEW ITEMS
     */
     public addTool(toolYamlObj: any, projectName: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
@@ -181,7 +224,7 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     /*
-        UPDATING ITEMS 
+        UPDATING ITEMS
     */
     public updateConfiguration(id: string, configurationYamlObj: any, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -238,7 +281,7 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     /*
-        REMOVING ITEMS 
+        REMOVING ITEMS
     */
     public removeTool(id: string, projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -340,7 +383,7 @@ export class DtpDtToolingService implements OnDestroy {
     }
 
     /*
-        OTHER API CALLS
+        ADDITIONAL API CALLS
     */
     public getSchemaDefinition(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
@@ -366,19 +409,6 @@ export class DtpDtToolingService implements OnDestroy {
                         reject(err.error);
                     }
                 );
-        });
-    }
-
-    public getProjects(): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            this.httpClient.get(`${this.url}/projects`).subscribe(
-                (res) => {
-                    resolve(res as string[]);
-                },
-                (err: HttpErrorResponse) => {
-                    reject(err.error);
-                }
-            );
         });
     }
 }

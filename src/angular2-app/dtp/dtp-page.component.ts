@@ -42,29 +42,47 @@ import { Subscription } from "rxjs";
 })
 export class DtpPageComponent {
     private _path: string;
+    private _connectionAttempts: number = 0;
     private isToolingServerOnlineSub: Subscription;
     protected _config: DTPConfig = new DTPConfig();
     protected configIsLoaded: boolean = false;
-    protected statusMsg: string = "Retrieving configuration from server...";
-    private readonly _noConnectionMsg: string = "Unable to connect to the DTP tooling server.";
+    protected statusMsg: string = "Connecting to DTP tooling server...";
+    private readonly _noConnectionMsg: string = "Unable to connect to the DTP tooling server";
 
     @Input()
     set path(path: string) {
         this._path = path;
-
         if (path) {
-            this.dtpToolingService.startServer(Path.join(Path.dirname(this._path), ".."));
-            if (!this.isToolingServerOnlineSub) {
-                this.isToolingServerOnlineSub = this.dtpToolingService.isOnlineObservable.subscribe((isOnline) => {
-                    if (isOnline) {
-                        this.isToolingServerOnlineSub.unsubscribe();
-                        this.isToolingServerOnlineSub = null;
-                        const projectPath: string = Path.dirname(this._path);
-                        this.parseConfig(Path.basename(projectPath), projectPath);
-                    } else {
-                        this.displayErrorMsg(`${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`);
-                    }
-                });
+            if (!this.dtpToolingService.latestServerOnlineStatus) {
+                if (this.dtpToolingService.spawnServer(Path.join(Path.dirname(this._path), ".."))) {
+                    this.dtpToolingService.updateServerOnlineStatus().then((isOnline) => {
+                        if (isOnline) {
+                            const projectPath: string = Path.dirname(this._path);
+                            this.parseConfig(Path.basename(projectPath), projectPath);
+                        } else {
+                            if (!this.isToolingServerOnlineSub) {
+                                this.isToolingServerOnlineSub = this.dtpToolingService.isOnlineObservable.subscribe((isOnline) => {
+                                    this._connectionAttempts++;
+                                    if (isOnline) {
+                                        this.isToolingServerOnlineSub.unsubscribe();
+                                        this.isToolingServerOnlineSub = null;
+                                        const projectPath: string = Path.dirname(this._path);
+                                        this.parseConfig(Path.basename(projectPath), projectPath);
+                                    } else if ((this._connectionAttempts = 2)) {
+                                        this.displayErrorMsg(
+                                            `Unable to connect to the DTP tooling server on URL '${this.dtpToolingService.url}'`
+                                        );
+                                    }
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    this.displayErrorMsg(`Unable to start the server on URL '${this.dtpToolingService.url}'`);
+                }
+            } else {
+                const projectPath: string = Path.dirname(this._path);
+                this.parseConfig(Path.basename(projectPath), projectPath);
             }
         }
     }
@@ -74,6 +92,10 @@ export class DtpPageComponent {
     }
 
     constructor(private dtpToolingService: DtpDtToolingService) {}
+
+    ngOnDestroy() {
+        this.isToolingServerOnlineSub?.unsubscribe();
+    }
 
     private ensureProjectExsists(projectName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -109,24 +131,24 @@ export class DtpPageComponent {
                     })
                     .catch((err) => {
                         this.dtpToolingService
-                            .getIsServerOnline()
+                            .updateServerOnlineStatus()
                             .then((isOnline) =>
                                 this.displayErrorMsg(
                                     isOnline
                                         ? `Unable to fetch project from server: ${err}`
-                                        : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`
+                                        : `${this._noConnectionMsg}. Server URL:  ${this.dtpToolingService.url}`
                                 )
                             );
                     });
             })
             .catch((err) => {
                 this.dtpToolingService
-                    .getIsServerOnline()
+                    .updateServerOnlineStatus()
                     .then((isOnline) =>
                         this.displayErrorMsg(
                             isOnline
                                 ? `Unable to determine if project exists: ${err}`
-                                : `${this._noConnectionMsg} URL:  ${this.dtpToolingService.url}`
+                                : `${this._noConnectionMsg}. Server URL:  ${this.dtpToolingService.url}`
                         )
                     );
             });
