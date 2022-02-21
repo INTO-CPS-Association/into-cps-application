@@ -58,10 +58,10 @@ describe('In Tutorial 9', function () {
         .then(n => n.doubleClick())
         .then(() => app.client.$("#Simulation"))
         .then(n => n.click())
-        .then(() => app.client.$("coe-simulation .btn.btn-sm.btn-default"))
+        .then(() => app.client.$("coe-launch .btn.btn-sm.btn-default"))
         .then(n => n.click())
         .then(() => sleep(100))
-        .then(() => app.client.$("coe-simulation"))
+        .then(() => app.client.$("coe-launch"))
         .then(n => n.$(".alert.alert-success"))
         .then(async n => {
           return waitFor(await n.getText())
