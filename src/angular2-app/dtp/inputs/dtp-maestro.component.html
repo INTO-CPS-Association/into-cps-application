@@ -56,24 +56,24 @@
                     (this.formGroup.parent.hasError('notUnique') && this.formGroup.parent.errors.notUnique === this.maestro.name)
                 "
             >
-                Configuration from experiment
+                Existing Configuration
                 <span class="glyphicon glyphicon-edit"></span>
             </button>
         </div>
-        <div *ngIf="showExperimentSelect && editing">
-            <label class="col-sm-3 control-label">Choose experiment: </label>
+        <div *ngIf="showConfigurationSelect && editing">
+            <label class="col-sm-3 control-label">Choose configuration: </label>
             <select
-                [(ngModel)]="baseExperimentPath"
+                [(ngModel)]="configurationPath"
                 [ngModelOptions]="{ standalone: true }"
                 class="form-control col-sm-9"
-                (change)="onBaseExperimentSet()"
+                (change)="onConfigurationSet()"
             >
-                <option *ngFor="let path of experimentsPaths" [ngValue]="path">{{ getExperimentNameFromPath(path, "2") }}</option>
+                <option *ngFor="let path of configurationPaths" [ngValue]="path">{{ getConfigurationNameFromPath(path, "2") }}</option>
             </select>
         </div>
     </div>
 
-    <div *ngIf="!showInitialSetupBtns && !showExperimentSelect">
+    <div *ngIf="!showInitialSetupBtns && !showConfigurationSelect">
         <panel *ngIf="!editing" [title]="'Configuration overview'" [open]="false">
             <mm-overview *ngIf="!editing" #overview [(path)]="maestro.multiModelPath"></mm-overview>
         </panel>

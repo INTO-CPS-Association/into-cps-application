@@ -52,10 +52,10 @@ export class DtpToolComponent implements AfterContentInit {
 
     toolTypes = ToolType;
 
-    keys: string[];
+    toolTypeKeys: string[];
 
     constructor(private dtpToolingService: DtpDtToolingService) {
-        this.keys = Object.keys(this.toolTypes);
+        this.toolTypeKeys = Object.keys(this.toolTypes);
     }
 
     ngAfterContentInit(): void {

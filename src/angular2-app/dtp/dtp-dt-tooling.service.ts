@@ -14,11 +14,13 @@ export class DtpDtToolingService implements OnDestroy {
     private _isOnlineSubject = new Subject<boolean>();
     private _onlineInterval: number;
     private static _serverProc: ChildProcessWithoutNullStreams;
-    public readonly url: string = "http://localhost/"; //http://127.0.0.1:5000/
+    public readonly url: string = "http://localhost/"; // http://127.0.0.1:5000/
     public readonly isOnlineObservable: Observable<boolean> = this._isOnlineSubject.asObservable();
     public latestServerOnlineStatus: boolean = false;
 
-    constructor(private httpClient: HttpClient) {}
+    constructor(private httpClient: HttpClient) {
+        this._onlineInterval = window.setInterval(() => this.updateServerOnlineStatus(), 2000);
+    }
 
     ngOnDestroy() {
         clearInterval(this._onlineInterval);
@@ -29,8 +31,6 @@ export class DtpDtToolingService implements OnDestroy {
             console.log(`DT tooling server is already running with PID: ${DtpDtToolingService._serverProc.pid}`);
             return true;
         }
-
-        this._onlineInterval = window.setInterval(() => this.updateServerOnlineStatus(), 2000);
 
         DtpDtToolingService._serverProc = spawn(process.platform != "win32" ? "python3" : "python", [
             "-m",
@@ -50,26 +50,13 @@ export class DtpDtToolingService implements OnDestroy {
         return true;
     }
 
-    public getStopServer(): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            this.httpClient.get(`${this.url}/server/shutdown`).subscribe(
-                (shutdownMsg: string) => {
-                    resolve(shutdownMsg);
-                },
-                (err: HttpErrorResponse) => {
-                    reject(err.error);
-                }
-            );
-        });
-    }
-
     private stopServer() {
         if (!DtpDtToolingService._serverProc) {
             return;
         }
         const pid: string = DtpDtToolingService._serverProc?.pid.toString() ?? "??";
 
-        this.getStopServer()
+        this.getShutdownServer()
             .then((shutdownMsg) => console.log(`Stopping DT tooling server with PID: ${pid}. Server shutdown msg: ${shutdownMsg}`))
             .catch((err) => console.warn(err));
 
@@ -82,16 +69,12 @@ export class DtpDtToolingService implements OnDestroy {
                 .get(`${this.url}/`, { responseType: "text" })
                 .toPromise()
                 .then(() => {
-                    if (!this.latestServerOnlineStatus) {
-                        this._isOnlineSubject.next(true);
-                        this.latestServerOnlineStatus = true;
-                    }
+                    this._isOnlineSubject.next(true);
+                    this.latestServerOnlineStatus = true;
                 })
                 .catch(() => {
-                    if (this.latestServerOnlineStatus) {
-                        this._isOnlineSubject.next(false);
-                        this.latestServerOnlineStatus = false;
-                    }
+                    this._isOnlineSubject.next(false);
+                    this.latestServerOnlineStatus = false;
                 })
                 .finally(() => resolve(this.latestServerOnlineStatus));
         });
@@ -102,12 +85,12 @@ export class DtpDtToolingService implements OnDestroy {
     */
     public getShutdownServer(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            this.httpClient.get(`${this.url}/server/shutdown`, { responseType: "text" }).subscribe(
-                (res) => {
-                    resolve(res as string);
+            this.httpClient.get(`${this.url}/server/shutdown`).subscribe(
+                (shutdownMsg: string) => {
+                    resolve(shutdownMsg);
                 },
                 (err: HttpErrorResponse) => {
-                    reject(err);
+                    reject(err.error);
                 }
             );
         });

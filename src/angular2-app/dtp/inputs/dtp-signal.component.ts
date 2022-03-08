@@ -83,4 +83,8 @@ export class DtpSignalComponent {
     onChangeTargetPack(pack: string) {
         this.signal.target.pack = pack;
     }
+
+    onChangeTargetPath(path: string) {
+        this.signal.target.path = path;
+    }
 }

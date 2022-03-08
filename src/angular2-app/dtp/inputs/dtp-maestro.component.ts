@@ -35,16 +35,13 @@ import { DTPConfig, MaestroDtpItem, ToolDtpItem, ToolType } from "../dtp-configu
 import IntoCpsApp from "../../../IntoCpsApp";
 import * as Path from "path";
 import * as fs from "fs";
-import { Project } from "../../../proj/Project";
+import { checksum, Project } from "../../../proj/Project";
 
 @Component({
     selector: "dtp-maestro",
     templateUrl: "./angular2-app/dtp/inputs/dtp-maestro.component.html",
 })
 export class DtpMaestroComponent implements AfterContentInit {
-    private _maestroConfName: string;
-    private _coeConfName: string;
-
     @Input()
     maestro: MaestroDtpItem;
 
@@ -57,19 +54,15 @@ export class DtpMaestroComponent implements AfterContentInit {
     @Input()
     config: DTPConfig;
 
-    baseExperimentPath: string = "";
+    configurationPath: string = "";
 
-    baseOnExperiment: boolean = false;
-
-    experimentsPaths: string[] = this.getExperimentsPaths(
+    configurationPaths: string[] = this.getConfigurationPaths(
         Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), Project.PATH_MULTI_MODELS)
     );
 
     showInitialSetupBtns: boolean = false;
 
-    showExperimentSelect: boolean = false;
-
-    constructor() {}
+    showConfigurationSelect: boolean = false;
 
     getSimulationTools(): ToolDtpItem[] {
         return this.config.tools.reduce((maestroToolNames: ToolDtpItem[], tool: ToolDtpItem) => {
@@ -111,68 +104,75 @@ export class DtpMaestroComponent implements AfterContentInit {
         this.maestro.capture_output = captureOutput;
     }
 
-    async onBaseExperimentSet() {
-        if (!fs.existsSync(this.baseExperimentPath)) {
+    protected async onConfigurationSet() {
+        if (!fs.existsSync(this.configurationPath)) {
             return;
         }
-        this._maestroConfName = (this.maestro.name ? this.maestro.name + "_" : "") + this.maestro.id + "_multiModel.json";
-        this._coeConfName = (this.maestro.name ? this.maestro.name + "_" : "") + this.maestro.id + "_simConf.json";
-        const destinationPath = this.config.projectPath;
-        const mm_destinationName = Path.join(destinationPath, this._maestroConfName);
-        const coe_destinationName = Path.join(destinationPath, this._coeConfName);
-        const mm_sourcePath = Path.join(this.baseExperimentPath, "..");
-        const coe_sourcePath = this.baseExperimentPath;
+        const mm_destination: string = Path.join(this.config.projectPath, this.generateMultiModelName());
+        const coe_destination: string = Path.join(this.config.projectPath, this.generateCoeConfName());
+        const mm_source: string = Path.join(this.configurationPath, "..");
+        const coe_source: string = this.configurationPath;
 
         // Make a copy of the multi model and coe file so that changes can be reflected in these.
-        await fs.promises.readdir(mm_sourcePath).then(async (files) => {
-            const mm_name = files.find((fileName) => fileName.toLowerCase().endsWith("mm.json"));
+        await fs.promises.readdir(mm_source).then(async (files: string[]) => {
+            const mm_name = files.find((fileName: string) => fileName.toLowerCase().endsWith("mm.json"));
             if (mm_name) {
-                const mm_sourceName = Path.join(mm_sourcePath, mm_name);
+                const mm_sourceName: string = Path.join(mm_source, mm_name);
                 await fs.promises
-                    .copyFile(mm_sourceName, mm_destinationName)
-                    .then(() => (this.maestro.multiModelPath = mm_destinationName))
-                    .catch((err) => console.warn(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destinationName}: "${err}"`));
+                    .copyFile(mm_sourceName, mm_destination)
+                    .then(() => (this.maestro.multiModelPath = mm_destination))
+                    .catch((err) => console.warn(`Unable to copy multi model from: ${mm_sourceName} to ${mm_destination}: "${err}"`));
             } else {
-                console.warn(`Unable to locate multi model in: ${mm_sourcePath}.`);
+                console.warn(`Unable to locate multi model in: ${mm_source}.`);
             }
         });
-        await fs.promises.readdir(coe_sourcePath).then(async (files) => {
-            const coe_name = files.find((fileName) => fileName.toLowerCase().endsWith("coe.json"));
+        await fs.promises.readdir(coe_source).then(async (files: string[]) => {
+            const coe_name: string = files.find((fileName) => fileName.toLowerCase().endsWith("coe.json"));
             if (coe_name) {
-                const coe_sourceName = Path.join(coe_sourcePath, coe_name);
+                const coe_sourceName: string = Path.join(coe_source, coe_name);
                 await fs.promises
-                    .copyFile(coe_sourceName, coe_destinationName)
+                    .copyFile(coe_sourceName, coe_destination)
                     .then(() => {
-                        this.maestro.coePath = coe_destinationName;
+                        this.maestro.coePath = coe_destination;
                         // Change the relative mmPath to the copied mm file.
-                        const coeObj = JSON.parse(fs.readFileSync(coe_destinationName, { encoding: "utf8", flag: "r" }));
+                        const coeObj: any = JSON.parse(fs.readFileSync(coe_destination, { encoding: "utf8", flag: "r" }));
                         coeObj["multimodel_path"] = Path.relative(
                             IntoCpsApp.getInstance().getActiveProject().getRootFilePath(),
-                            mm_destinationName
+                            mm_destination
                         );
-                        fs.writeFileSync(coe_destinationName, JSON.stringify(coeObj));
+                        fs.writeFileSync(coe_destination, JSON.stringify(coeObj));
                     })
-                    .catch((err) => console.warn(`Unable to copy coe file from: ${coe_sourceName} to ${coe_destinationName}: "${err}"`));
+                    .catch((err) => console.warn(`Unable to copy coe file from: ${coe_sourceName} to ${coe_destination}: "${err}"`));
             } else {
-                console.warn(`Unable to locate coe file in: ${coe_sourcePath}.`);
+                console.warn(`Unable to locate coe file in: ${coe_source}.`);
             }
         });
         this.maestro.linkToCoeAndMMPath(this.config.fileLinksPath);
-        this.showExperimentSelect = false;
+        this.showConfigurationSelect = false;
     }
 
-    doInitialSetup(setupFromExperiment: boolean) {
+    protected doInitialSetup(setupFromConfig: boolean) {
         this.showInitialSetupBtns = false;
-        this.showExperimentSelect = setupFromExperiment;
-        if (!setupFromExperiment) {
-            this.maestro.multiModelPath = Path.join(Path.dirname(this.config.projectPath), this._maestroConfName);
-            this.maestro.coePath = Path.join(Path.dirname(this.config.projectPath), this._coeConfName);
+        this.showConfigurationSelect = setupFromConfig;
+        if (!setupFromConfig) {
+            this.maestro.multiModelPath = Path.join(this.config.projectPath, this.generateMultiModelName());
             fs.writeFileSync(this.maestro.multiModelPath, "{}", "utf-8");
-            fs.writeFileSync(this.maestro.coePath, "{}", "utf-8");
+
+            this.maestro.coePath = Path.join(this.config.projectPath, this.generateCoeConfName());
+
+            let data = '{"algorithm":{"type":"fixed-step","size":0.1},"endTime":10,"startTime":0}';
+            const json = JSON.parse(data + "");
+            json["multimodel_crc"] = checksum(fs.readFileSync(this.maestro.multiModelPath).toString(), "md5", "hex");
+
+            data = JSON.stringify(json);
+
+            fs.writeFileSync(this.maestro.coePath, data, "utf-8");
+
+            this.maestro.linkToCoeAndMMPath(this.config.fileLinksPath);
         }
     }
 
-    getExperimentNameFromPath(path: string, depth: number): string {
+    protected getConfigurationNameFromPath(path: string, depth: number): string {
         let elems = path.split(Path.sep);
         if (elems.length <= 1) {
             return path;
@@ -184,19 +184,27 @@ export class DtpMaestroComponent implements AfterContentInit {
         return pathToReturn;
     }
 
-    getExperimentsPaths(path: string): string[] {
-        let experimentPaths: string[] = [];
+    private getConfigurationPaths(path: string): string[] {
+        let configurationPaths: string[] = [];
         let files = fs.readdirSync(path);
         if (files.findIndex((f) => f.endsWith("coe.json")) != -1) {
-            experimentPaths.push(path);
+            configurationPaths.push(path);
         } else {
             for (let i in files) {
                 let fileName = Path.join(path, files[i]);
                 if (fs.statSync(fileName).isDirectory()) {
-                    experimentPaths = experimentPaths.concat(this.getExperimentsPaths(fileName));
+                    configurationPaths = configurationPaths.concat(this.getConfigurationPaths(fileName));
                 }
             }
         }
-        return experimentPaths;
+        return configurationPaths;
+    }
+
+    private generateCoeConfName(): string {
+        return (this.maestro.name ? this.maestro.name + "_" : "") + this.maestro.id + "_simConf.json";
+    }
+
+    private generateMultiModelName(): string {
+        return (this.maestro.name ? this.maestro.name + "_" : "") + this.maestro.id + "_multiModel.json";
     }
 }

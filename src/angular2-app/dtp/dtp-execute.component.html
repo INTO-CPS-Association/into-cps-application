@@ -8,6 +8,10 @@
         margin-top: 10px;
     }
 
+    .glyphicon.spinning {
+        animation: spin 2s infinite linear;
+    }
+
     @keyframes spin {
         from {
             transform: scale(1) rotate(0deg);
@@ -25,18 +29,23 @@
         </select>
         <span class="input-group-btn">
             <button
-                *ngIf="canRunConfiguration"
+                *ngIf="canRunConfiguration()"
                 type="button"
                 (click)="startExecution(selectedConfiguration)"
                 class="btn btn-success"
-                [disabled]="!canRunConfiguration"
                 title="Start execution"
             >
                 <span class="glyphicon glyphicon-play-circle"></span>
                 Run
             </button>
 
-            <button *ngIf="!canRunConfiguration" type="button" class="btn btn-default" [disabled]="!canRunConfiguration" title="Disabled">
+            <button
+                *ngIf="!canRunConfiguration()"
+                type="button"
+                class="btn btn-default"
+                [disabled]="!canRunConfiguration()"
+                title="Disabled"
+            >
                 <span class="glyphicon glyphicon-play-circle"></span>
                 Run
             </button>

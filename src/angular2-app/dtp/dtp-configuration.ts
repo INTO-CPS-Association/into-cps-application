@@ -125,7 +125,7 @@ export class TaskConfigurationDtpItem extends dtpItem {
     public removeTasksFileLinks(mappingsFilePath: string, removeLinkedFile: boolean) {
         this.tasks.forEach((task) => {
             if (task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem) {
-                task.removeFileLinks(mappingsFilePath, removeLinkedFile);
+                task.removeFileLink(mappingsFilePath, removeLinkedFile);
             }
         });
     }
@@ -145,9 +145,9 @@ export class TaskConfigurationDtpItem extends dtpItem {
                               const id = taskYamlObj["id"];
                               let fmuPath: string = mappings[DataRepeaterDtpItem.datarepeaterMappingsIndex]?.[id] ?? "";
                               if (fmuPath) {
-                                  // If path is not absolute then try relative to project.
+                                  // If path is not absolute then try relative.
                                   if (!Path.isAbsolute(fmuPath)) {
-                                      fmuPath = Path.join(projectPath, fmuPath);
+                                      fmuPath = Path.resolve(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), fmuPath);
                                   }
                                   if (!fs.existsSync(fmuPath)) {
                                       console.warn(`Could not find linked data-repeater fmu in path: ${fmuPath}`);
@@ -161,12 +161,12 @@ export class TaskConfigurationDtpItem extends dtpItem {
                               let mmPath: string = mappings[MaestroDtpItem.mmMappingsIndex]?.[id] ?? "";
                               // If the coe path exists so should the mm path.
                               if (coePath) {
-                                  // If paths are not absolute then try relative to project.
+                                  // If paths are not absolute then try relative.
                                   if (!Path.isAbsolute(coePath)) {
-                                      coePath = Path.join(projectPath, coePath);
+                                      coePath = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), coePath);
                                   }
                                   if (!Path.isAbsolute(mmPath)) {
-                                      mmPath = Path.join(projectPath, mmPath);
+                                      mmPath = Path.join(IntoCpsApp.getInstance().getActiveProject().getRootFilePath(), mmPath);
                                   }
                                   if (!fs.existsSync(coePath)) {
                                       console.warn(`Could not load data from linked coe path: ${coePath}`);
@@ -267,7 +267,7 @@ export class ServerDtpItem extends dtpItem {
     }
 }
 
-export class MaestroDtpItem extends dtpItem {
+export class MaestroDtpItem extends dtpItem implements linkedFile {
     public static readonly objectIdentifier: string = "simulation";
     public static readonly mmMappingsIndex = "multiModelPathMappings";
     public static readonly coeMappingsIndex = "coePathMappings";
@@ -284,24 +284,31 @@ export class MaestroDtpItem extends dtpItem {
     }
 
     public linkToCoeAndMMPath(mappingsFilePath: string) {
-        const obj = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: "utf8", flag: "r" }));
+        const obj: any = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: "utf8", flag: "r" }));
         if (!obj[MaestroDtpItem.mmMappingsIndex]) {
             obj[MaestroDtpItem.mmMappingsIndex] = {};
         }
         if (!obj[MaestroDtpItem.coeMappingsIndex]) {
             obj[MaestroDtpItem.coeMappingsIndex] = {};
         }
-        obj[MaestroDtpItem.mmMappingsIndex][this.id] = Path.basename(this.multiModelPath);
-        obj[MaestroDtpItem.coeMappingsIndex][this.id] = Path.basename(this.coePath);
+        obj[MaestroDtpItem.mmMappingsIndex][this.id] = Path.relative(
+            IntoCpsApp.getInstance().getActiveProject().getRootFilePath(),
+            this.multiModelPath
+        );
+        obj[MaestroDtpItem.coeMappingsIndex][this.id] = Path.relative(
+            IntoCpsApp.getInstance().getActiveProject().getRootFilePath(),
+            this.coePath
+        );
         fs.writeFile(mappingsFilePath, JSON.stringify(obj), (err) => {
             if (err) console.warn(err);
         });
     }
 
-    public removeFileLinks(mappingsFilePath: string, removeLinkedFile: boolean) {
-        const obj = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: "utf8", flag: "r" }));
+    public removeFileLink(mappingsFilePath: string, removeLinkedFile: boolean) {
+        const obj: any = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: "utf8", flag: "r" }));
         // If one of the mappings are not present the other is also missing..
         if (!obj[MaestroDtpItem.mmMappingsIndex]?.[this.id]) {
+            console.warn("Unable to remove coe/mm link from mappings file as there is no link..");
             return;
         }
         delete obj[MaestroDtpItem.coeMappingsIndex][this.id];
@@ -314,9 +321,7 @@ export class MaestroDtpItem extends dtpItem {
                 if (err) console.warn(`Unable to delete coe file linked with maestro: ${err}`);
             });
         }
-        fs.writeFile(mappingsFilePath, JSON.stringify(obj), (err) => {
-            if (err) console.warn("Unable to remove coe/mm link from mappings file: " + err);
-        });
+        fs.writeFileSync(mappingsFilePath, JSON.stringify(obj));
     }
 
     async toYamlObject() {
@@ -452,7 +457,7 @@ export class SignalDtpType extends dtpItem {
     }
 }
 
-export class DataRepeaterDtpItem extends dtpItem {
+export class DataRepeaterDtpItem extends dtpItem implements linkedFile {
     public static readonly objectIdentifier: string = "amqp-repeater";
     public static readonly datarepeaterMappingsIndex = "dataRepeaterFmuMappings";
     constructor(
@@ -473,26 +478,28 @@ export class DataRepeaterDtpItem extends dtpItem {
         if (!obj[DataRepeaterDtpItem.datarepeaterMappingsIndex]) {
             obj[DataRepeaterDtpItem.datarepeaterMappingsIndex] = {};
         }
-        obj[DataRepeaterDtpItem.datarepeaterMappingsIndex][this.id] = Path.basename(this.fmu_path);
+
+        obj[DataRepeaterDtpItem.datarepeaterMappingsIndex][this.id] = Path.relative(
+            IntoCpsApp.getInstance().getActiveProject().getRootFilePath(),
+            this.fmu_path
+        );
         fs.writeFile(mappingsFilePath, JSON.stringify(obj), (err) => {
             if (err) console.warn(err);
         });
     }
 
-    public removeFileLinks(mappingsFilePath: string, removeLinkedFile: boolean) {
+    public removeFileLink(mappingsFilePath: string, removeLinkedFile: boolean) {
         const obj = JSON.parse(fs.readFileSync(mappingsFilePath, { encoding: "utf8", flag: "r" }));
         if (!obj[DataRepeaterDtpItem.datarepeaterMappingsIndex]?.[this.id]) {
             return;
         }
         delete obj[DataRepeaterDtpItem.datarepeaterMappingsIndex][this.id];
         if (removeLinkedFile) {
-            fs.unlink(this.fmu_path, (err) => {
+            fs.unlink(Path.resolve(this.fmu_path), (err) => {
                 if (err) console.warn(`Unable to delete fmu linked with datarepeater: ${err}`);
             });
         }
-        fs.writeFile(mappingsFilePath, JSON.stringify(obj), (err) => {
-            if (err) console.warn(err);
-        });
+        fs.writeFileSync(mappingsFilePath, JSON.stringify(obj));
     }
 
     toFormGroup() {
@@ -538,4 +545,8 @@ export class DataRepeaterDtpItem extends dtpItem {
             true
         );
     }
+}
+
+export interface linkedFile {
+    removeFileLink(mappingsFilePath: string, removeLinkedFile: boolean): void;
 }

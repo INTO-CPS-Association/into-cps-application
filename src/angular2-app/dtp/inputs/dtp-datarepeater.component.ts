@@ -35,7 +35,6 @@ import {
     DataRepeaterDtpItem,
     DTPConfig,
     dtpItem,
-    ServerDtpItem,
     SignalDtpType,
     TaskConfigurationDtpItem,
     ToolDtpItem,
@@ -44,7 +43,7 @@ import {
 import { Subscription } from "rxjs";
 import { DtpDtToolingService } from "../dtp-dt-tooling.service";
 import * as Path from "path";
-import { DtpServerComponent } from "./dtp-server.component";
+import IntoCpsApp from "../../../IntoCpsApp";
 
 @Component({
     selector: "dtp-datarepeater",
@@ -55,7 +54,7 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     private isToolingServerOnlineSub: Subscription;
     private isToolingServerOnline: boolean = false;
     private _editing: boolean = true;
-    private isCreatingFMU: boolean = false;
+    protected isCreatingFMU: boolean = false;
 
     @Input()
     datarepeater: DataRepeaterDtpItem;
@@ -122,15 +121,15 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
     }
 
     onChangeServerSource(id: string) {
-        this.datarepeater.server_source = id;
+        this.datarepeater.server_source = id.split(" ")[1];
     }
 
     onChangeServerTarget(id: string) {
-        this.datarepeater.server_target = id;
+        this.datarepeater.server_target = id.split(" ")[1];
     }
 
     onChangeTool(id: string) {
-        this.datarepeater.tool = id;
+        this.datarepeater.tool = id.split(" ")[1];
     }
 
     generateFMU() {
@@ -142,16 +141,22 @@ export class DtpDataRepeaterComponent implements OnDestroy, AfterContentInit {
 
         parentConfiguration.toYamlObject().then(async (yamlObj) => {
             // Create or update the configuration in the server
-            parentConfiguration.isCreatedOnServer
-                ? await this.dtpToolingService.updateConfiguration(parentConfiguration.id, yamlObj, this.config.projectName)
-                : await this.dtpToolingService
+            await (parentConfiguration.isCreatedOnServer
+                ? this.dtpToolingService.updateConfiguration(parentConfiguration.id, yamlObj, this.config.projectName)
+                : this.dtpToolingService
                       .addConfiguration(yamlObj, this.config.projectName)
-                      .then(() => (parentConfiguration.isCreatedOnServer = true));
+                      .then(() => (parentConfiguration.isCreatedOnServer = true))
+            ).finally(() => (this.datarepeater.isCreatedOnServer = true));
+
             // When the configuraiton is up-to-date in the server, create the datareapter FMU
             this.dtpToolingService
                 .createFmuFromDataRepeater(parentConfiguration.id, this.datarepeater.id, this.config.projectName)
                 .then((relativeFmuPath) => {
-                    this.datarepeater.fmu_path = Path.join(this.config.projectPath, relativeFmuPath);
+                    this.datarepeater.fmu_path = Path.resolve(
+                        IntoCpsApp.getInstance().activeProject.getRootFilePath(),
+                        "DTP",
+                        relativeFmuPath
+                    );
                     this.datarepeater.addLinkToFMU(this.config.fileLinksPath);
                 })
                 .catch((err) => console.log(err))

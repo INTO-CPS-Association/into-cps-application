@@ -100,7 +100,7 @@ export class DtpTaskConfigurationComponent implements AfterContentInit {
                 });
         }
         if (task instanceof MaestroDtpItem || task instanceof DataRepeaterDtpItem) {
-            task.removeFileLinks(this.config.fileLinksPath, true);
+            task.removeFileLink(this.config.fileLinksPath, true);
         }
         const index = this.configuration.tasks.indexOf(task);
         this.configuration.tasks.splice(index, 1);

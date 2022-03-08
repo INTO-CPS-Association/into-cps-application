@@ -41,7 +41,7 @@
         <div class="col-sm-9">
             <p *ngIf="!editing" class="form-control-static">{{ tool.type }}</p>
             <select *ngIf="editing" (change)="onChangeTool($event.target.value)" formControlName="type" class="form-control">
-                <option *ngFor="let key of keys" [value]="key">{{ toolTypes[key] }}</option>
+                <option *ngFor="let key of toolTypeKeys" [value]="key">{{ toolTypes[key] }}</option>
             </select>
             <p *ngIf="formGroup.hasError('required', 'type')" class="text-warning">* This field is required.</p>
         </div>
