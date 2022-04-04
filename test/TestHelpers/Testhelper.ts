@@ -10,14 +10,14 @@ import * as Crypto from "crypto";
 
 // Which COE to test on? coe|maestro2 Default: coe
 // https://github.com/INTO-CPS-Association/INTO-CPS-Association.github.io/blob/master/download/1.0.9.json
-const TestEngine = "coe";
+
 
 export class TestHelper {
     public electronApp : ElectronApplication;
     public window : Page;
     private coeDownloaded : boolean = false;
     private testDataPath : string;
-
+    private TestEngine : string = "coe";
 
     /*
     *   Start function to use the testing framework Playwright
@@ -108,7 +108,7 @@ export class TestHelper {
 
         // Define engine
         let engineDownloadIndex : any;
-        if(TestEngine === "maestro2"){
+        if(this.TestEngine === "maestro2"){
             engineDownloadIndex = downloadList.tools.maestro2;
         } else {
             engineDownloadIndex = downloadList.tools.coe;
