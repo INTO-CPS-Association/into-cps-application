@@ -5,7 +5,6 @@ const helper = new TestHelper();
 
 test.describe("Tutorial 1", async () => {
   test.beforeAll(async () => {
-    //await helper.launch();
     await helper.launch("test1_data.zip");
   });
   
@@ -13,15 +12,41 @@ test.describe("Tutorial 1", async () => {
     await helper.shutdown();
   });
 
-  test('Is Packaged', async () => {
-    const isPackaged = await helper.electronApp.evaluate( async (e) => {
-      return e.app.isPackaged;
-    });
-    expect(isPackaged).toBe(false);
+  test('Should have name Three Tank', async () => {
+      const project = await helper.electronApp.evaluate( async (e : any) => {
+        return await e.app.getIProject();
+      });
+      expect(project.name).toBe("Three Tank");
   });
-  test('Check version', async () => {
-      const text = await helper.window.innerText('#appVersion');
-      expect(text).toBe('4.0.7-dev');
+
+  test('Open Multi-Model from sidebar', async () => {
+    //Find multimodel with text and go to the parent that got the on click event
+    await helper.window.locator('text=Non-3D >> xpath=../../../../..')
+      .dblclick();
+    expect(await helper.window.innerText('#activeTabTitle'))
+      .toBe("Non-3D");
+  });
+
+  test('Click on the +', async () => {
+    expect(await helper.window.locator('text=Experiment1 >> xpath=../../../../../..')
+    .getAttribute('style')
+    .then( n => n.includes('display: none;'))
+    ).toBe(true); //pr default the element is hidden
+
+    //Find multimodel -> go to parent -> find element with class and click
+    await helper.window.locator('text=Non-3D >> xpath=../.. >> td.w2ui-node-dots')
+      .click();
+    expect(await helper.window.locator('text=Experiment1 >> xpath=../../../../../..')
+      .getAttribute('style')
+      .then( n => n.includes('display: none;'))
+      ).toBe(false);
+  });
+
+  test('Go to Non-3D > Experiment1 from sidebar', async () => {
+    await helper.window.locator('text=Experiment1 >> xpath=../../../../..')
+      .dblclick();
+    expect(await helper.window.innerText('#activeTabTitle'))
+      .toBe('Non-3D > Experiment1');
   });
 
 });
