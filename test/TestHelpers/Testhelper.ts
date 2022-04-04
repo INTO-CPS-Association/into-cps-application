@@ -48,7 +48,7 @@ export class TestHelper {
             zip.extractAllTo(this.testDataPath,true);
             await this.electronApp.evaluate( async ( eApp : any, path : string) => {
                 eApp.app.loadProject(path + "/project/.project.json"); // See main for function
-            }, this.testDataPath).then( () => console.log("Loaded electron app, with testdata from: " + zipPath));
+            }, this.testDataPath); //.then( () => console.log("Loaded electron app, with testdata from: " + zipPath));
         }
 
         await this.downloadCOE();
@@ -118,7 +118,8 @@ export class TestHelper {
         const coeDir : string = await this.electronApp.evaluate( async (eApp : any ) => {
             return eApp.app.getCOEDownloadPath(); //From main.js
         });
-        if(!fs.existsSync( coeDir + "/")) fs.mkdirSync( coeDir + "/");
+        console.log(coeDir)
+        if(!fs.existsSync( coeDir + "/")) fs.mkdirSync( coeDir + "/", { recursive: true });
 
         // Check if already downloaded, else do it..
         let coePath = coeDir + "/coe_" + engineDownloadIndex.version + ".jar";
