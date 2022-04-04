@@ -2,6 +2,6 @@ import { PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
   // Limit the number of workers on CI, use default locally
-  workers: 2,
+  workers: 4,
 };
 export default config;
