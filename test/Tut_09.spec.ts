@@ -25,7 +25,7 @@ test.describe("Tutorial 9", async () => {
     await helper.window.locator('#node_ProjectBrowserItem_12').dblclick();
     await helper.window.locator('#Simulation div:has-text("Simulation") >> nth=1').click();
     await helper.window.locator('#Simulation >> text=Launch').click();
-    await helper.window.waitForTimeout(3000);
+    await helper.window.locator('#Simulation >> xpath=div/div/coe-launch >> .alert.alert-success').waitFor();
     expect(await helper.window.locator('#Simulation >> xpath=div/div/coe-launch/div')
     .innerText()
     ).toMatch(/maestroV.+, online at .+\./);

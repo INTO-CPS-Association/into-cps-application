@@ -89,10 +89,10 @@ test.describe("Tutorial 1", async () => {
   // Step 8
   test('Co-Simulation Engine Online', async () => {
 
-    await helper.window.locator('#Simulation >> xpath=div/div/coe-launch/div/button')
+    await helper.window.locator('#Simulation >> xpath=div/div/coe-launch >> .alert.alert-danger >> button')
       .click();
 
-    await helper.window.waitForTimeout(3000);
+    await helper.window.locator('#Simulation >> xpath=div/div/coe-launch >> .alert.alert-success').waitFor();
 
     expect(await helper.window.locator('#Simulation >> xpath=div/div/coe-launch/div')
     .innerText()
