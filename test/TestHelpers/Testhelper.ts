@@ -1,6 +1,6 @@
 import { _electron as electron, ElectronApplication, Page } from "playwright";
 import axios from "axios";
-import { IDownloadFile, IGithubApiDir }  from "./ApiModels"
+import { IDownloadFile, IGithubApiDir } from "./ApiModels"
 import { downloadFile } from "./IO";
 import * as fs from "fs";
 const AdmZip = require("adm-zip");
@@ -13,11 +13,11 @@ import * as Crypto from "crypto";
 
 
 export class TestHelper {
-    public electronApp : ElectronApplication;
-    public window : Page;
-    private coeDownloaded : boolean = false;
-    private testDataPath : string;
-    private TestEngine : string = "coe";
+    public electronApp: ElectronApplication;
+    public window: Page;
+    public testDataPath: string;
+    private TestEngine: string = "coe";
+    private coeDownloaded: boolean = false;
 
     /*
     *   Start function to use the testing framework Playwright
@@ -31,46 +31,44 @@ export class TestHelper {
             {
                 args: ['.']
             }
-        ).then( (eA) => {
+        ).then((eA) => {
             this.electronApp = eA;
         });
         this.window = await this.electronApp.firstWindow();
 
 
-        // Unzip and load project
-        // TODO: Unzip
-
-        if(testDataZipFile){
-
+        // Unzip and load project if file provided
+        if (testDataZipFile) {
+        
             const zipPath = __dirname + "/../TestData/" + testDataZipFile;
             var zip = new AdmZip(zipPath);
             this.testDataPath = __dirname + "/../TestData/" + testDataZipFile.split('.')[0]
-            zip.extractAllTo(this.testDataPath,true);
-            await this.electronApp.evaluate( async ( eApp : any, path : string) => {
+            //console.log(this.testDataPath)
+            zip.extractAllTo(this.testDataPath, true);
+            await this.electronApp.evaluate(async (eApp: any, path: string) => {
                 eApp.app.loadProject(path + "/project/.project.json"); // See main for function
             }, this.testDataPath); //.then( () => console.log("Loaded electron app, with testdata from: " + zipPath));
         }
 
         await this.downloadCOE();
-
-        return;
-    }
-
-    private randomString(size : number): string {
-        return Crypto.randomBytes(size).toString('base64').slice(0,size);
     }
 
     public async shutdown(): Promise<void> {
-        if(this.electronApp) {
+        if (this.electronApp) {
+            // Shutdown COE
+            await this.electronApp.evaluate( (eApp: any) => {
+                eApp.app.stopCoe();
+            });
+
             // // Remove COE
             // await this.electronApp.evaluate( (eApp : any) => {
             //     return eApp.app.getCOEDownloadPath();
             // }).then( (p) => fs.unlinkSync( p + "/coe.jar") );
 
             // Remove test data
-            await this.electronApp.close().then( () => {
-                if(this.testDataPath){
-                    fs.rmdirSync(this.testDataPath, {recursive: true });
+            await this.electronApp.close().then(() => {
+                if (this.testDataPath) {
+                    fs.rmdirSync(this.testDataPath, { recursive: true });
                 }
             });
         }
@@ -81,56 +79,59 @@ export class TestHelper {
 
         // Get git directory for newest software
         let downloadListUrl = "https://api.github.com/repos/INTO-CPS-Association/INTO-CPS-Association.github.io/contents/download";
-
-        const response : any = await axios.get(downloadListUrl, { headers: { 'Accept': 'application/vnd.github.v3.raw' }})
-            .catch( (err) => {
+        let engineDownloadIndex: any;
+        const response: any = await axios.get(downloadListUrl, { headers: { 'Accept': 'application/vnd.github.v3.raw' } })
+            .catch((err) => {
                 console.error("Error while getting software versions list " + err);
             });
-        const versionsList : Array<IGithubApiDir> = response.data;
+        const versionsList: Array<IGithubApiDir> = response.data;
         var filteredList = new Array<IGithubApiDir>();
         //Filter for correct naming
-        versionsList.forEach( ( item : IGithubApiDir ) => {
-            let nameSplitted : string[] = item.name.split('.');
-            if( nameSplitted.length === 4 && nameSplitted.lastIndexOf('json') != -1 && Number.isInteger( parseInt(nameSplitted[0]) )){
+        versionsList.forEach((item: IGithubApiDir) => {
+            let nameSplitted: string[] = item.name.split('.');
+            if (nameSplitted.length === 4 && nameSplitted.lastIndexOf('json') != -1 && Number.isInteger(parseInt(nameSplitted[0]))) {
                 filteredList.push(item);
             }
         });
         // Get newest version of coes..
         let newestDownloadVersion = filteredList.sort().reverse()[0];
-        
-        const versionResponse : any = await axios.get(newestDownloadVersion.download_url)
-            .catch( (err) => {
+
+        const versionResponse: any = await axios.get(newestDownloadVersion.download_url)
+            .catch((err) => {
                 console.log("Got an error while trying to download version file: " + newestDownloadVersion.name);
                 console.error(err);
             });
-        const downloadList : IDownloadFile = versionResponse.data;
-        
+        const downloadList: IDownloadFile = versionResponse.data;
 
         // Define engine
-        let engineDownloadIndex : any;
-        if(this.TestEngine === "maestro2"){
+
+        if (this.TestEngine === "maestro2") {
             engineDownloadIndex = downloadList.tools.maestro2;
         } else {
             engineDownloadIndex = downloadList.tools.coe;
         }
 
+
         // Install directory
-        const coeDir : string = await this.electronApp.evaluate( async (eApp : any ) => {
+        const coeDir: string = await this.electronApp.evaluate( (eApp: any) => {
             return eApp.app.getCOEDownloadPath(); //From main.js
         });
-        console.log(coeDir)
-        if(!fs.existsSync( coeDir + "/")) fs.mkdirSync( coeDir + "/", { recursive: true });
+        if (!fs.existsSync(coeDir + "/")) fs.mkdirSync(coeDir + "/", { recursive: true });
+
 
         // Check if already downloaded, else do it..
-        let coePath = coeDir + "/coe_" + engineDownloadIndex.version + ".jar";
-        if(fs.existsSync(coePath)) {
+        let coePath = coeDir + "/coe.jar";
+        if (fs.existsSync(coePath)) {
             this.coeDownloaded = true;
             return;
         }
-        
-        await downloadFile(engineDownloadIndex.platforms.any.url,coePath).then( () => {
+        await downloadFile(engineDownloadIndex.platforms.any.url, coePath).then(() => {
             console.log("Downloaded " + engineDownloadIndex.name + " version " + engineDownloadIndex.version);
         })
-        return;
+    }
+
+    public ReadJsonFile( file : string) : string
+    {
+        return JSON.parse(fs.readFileSync(file,"utf-8"));
     }
 }
