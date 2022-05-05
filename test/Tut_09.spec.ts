@@ -48,29 +48,37 @@ test.describe("Tutorial 9", async () => {
   test('Should set ambient light for sensor 1', async () => {
     await helper.window.locator('#initialvalsensor1').click();
     await helper.window.locator('#ambient_light').fill('25');
-    await helper.window.waitForTimeout(100);
-    expect(await helper.window.locator('#ambient_light').inputValue()).toBe('25');
+    await helper.window.locator('text=Save >> nth=1').click();
+    await helper.window.locator('#initialvalsensor1').click();
+    
+    expect(await helper.window.locator('text=25').innerText()).toBe('25');
   });
 
   test('Should set ambient light for sensor 2', async () => {
+    await helper.window.locator('text=Edit >> nth=1').click();
     await helper.window.locator('#initialvalsensor2').click();
     await helper.window.locator('#ambient_light').fill('25');
-    await helper.window.waitForTimeout(100);
-    expect(await helper.window.locator('#ambient_light').inputValue()).toBe('25');
+    await helper.window.locator('text=Save >> nth=1').click();
+    await helper.window.locator('#initialvalsensor2').click();
+    expect(await helper.window.locator('text=25').innerText()).toBe('25');
   });
 
   test('Should set noise for sensor 1', async () => {
+    await helper.window.locator('text=Edit >> nth=1').click();
     await helper.window.locator('#initialvalsensor1').click();
     await helper.window.locator('#noise_level').fill('4');
-    await helper.window.waitForTimeout(100);
-    expect(await helper.window.locator('#noise_level').inputValue()).toBe('4');
+    await helper.window.locator('text=Save >> nth=1').click();
+    await helper.window.locator('#initialvalsensor1').click();
+    expect(await helper.window.locator('text=4').innerText()).toBe('4');
   });
 
   test('Should set noise for sensor 2', async () => {
+    await helper.window.locator('text=Edit >> nth=1').click();
     await helper.window.locator('#initialvalsensor2').click();
     await helper.window.locator('#noise_level').fill('4');
-    await helper.window.waitForTimeout(100);
-    expect(await helper.window.locator('#noise_level').inputValue()).toBe('4');
+    await helper.window.locator('text=Save >> nth=1').click();
+    await helper.window.locator('#initialvalsensor1').click();
+    expect(await helper.window.locator('text=4').innerText()).toBe('4');
   });
 
 });
