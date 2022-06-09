@@ -20,7 +20,7 @@ jobs:
         node-version: '14.x'
 
     - name: Install Java
-      run: /usr/bin/sudo apt-get install openjdk-8-jre-headless
+      run: /usr/bin/sudo apt-get install openjdk-11-jdk
 
     - name: Install Node Dependencies
       run: npm install  
