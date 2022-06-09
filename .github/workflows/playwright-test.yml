@@ -1,9 +1,9 @@
-name: PlayWright Test
+name: Run All Tests
 
 on: 
   push:
     branches: 
-      - 181-playwright
+      - test
 
 jobs:
   run-tests:
