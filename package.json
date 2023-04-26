@@ -14,7 +14,7 @@
     "email": "null@void.org",
     "url": "http://into-cps.au.dk/"
   },
-  "electronVersion": "10.1.3",
+  "electronVersion": "13.6.9",
   "scripts": {
     "start": "electron dist/main.js",
     "test": "npx playwright test",
@@ -24,7 +24,7 @@
     "appId": "org.into-cps-association.into-cps-app",
     "copyright": "Copyright © 2021 INTO-CPS Association",
     "productName": "INTO-CPS-Application",
-    "electronVersion": "10.1.2",
+    "electronVersion": "13.6.9",
     "files": [
       "**/*",
       "dist/**/*"
@@ -102,12 +102,12 @@
     "zone.js": "^0.8.29"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.901.0",
+    "@angular-devkit/build-angular": "^0.901.15",
     "@playwright/test": "^1.19.2",
     "@types/adm-zip": "^0.4.34",
     "@types/bluebird": "~3.0.37",
     "@types/bunyan": "0.0.35",
-    "@types/node": "^12.12.29",
+    "@types/node": "^13.13.52",
     "@types/request": "^2.48.8",
     "@types/xml2js": "0.0.32",
     "adm-zip": "^0.5.4",
@@ -116,7 +116,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-wait-for": "^1.0.4",
     "del": "~2.2.0",
-    "electron": "^10.2.0",
+    "electron": "^13.6.9",
     "electron-builder": "^22.9.1",
     "electron-packager": "^14.2.1",
     "fs": "0.0.1-security",
