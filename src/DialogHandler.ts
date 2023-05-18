@@ -78,13 +78,15 @@ export default class DialogHandler {
     public openWindow(data:string = '', showWindow:boolean = true) : Electron.BrowserWindow {
         let self = this;
        this.win = (BrowserWindow 
-        ? new BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true} }) 
-        : new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true} }));
+        ? new BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true, contextIsolation: false }}) 
+        : new remote.BrowserWindow({ width: this.windowWidth, height: this.windowHeight, show: showWindow, webPreferences: {nodeIntegration: true, enableRemoteModule : true, contextIsolation: false }}));
         if(!IntoCpsApp.getInstance().getSettings().getSetting(SettingKeys.DEVELOPMENT_MODE) && this.win.setMenu)
             this.win.setMenu(null);
 
         // Open the DevTools.
-        //this.win.webContents.openDevTools();
+        if (IntoCpsApp.getInstance().getSettings().getValue(SettingKeys.DEVELOPMENT_MODE)){
+            this.win.webContents.openDevTools();
+        }
        /*  window.onbeforeunload = (ev: BeforeUnloadEvent) => {if(this.win) this.win.removeAllListeners();} */
 
         this.win.on('closed', function () {
