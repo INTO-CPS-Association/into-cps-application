@@ -3,7 +3,8 @@ name: Build Snapshot
 on: 
    push:
      branches: 
-       - development
+       - "development"
+       - "snapshot/**"
 
 jobs:
   package:
