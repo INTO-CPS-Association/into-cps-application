@@ -51,31 +51,31 @@ jobs:
             name: INTO-CPS-Application-${{ steps.version.outputs.result }}-linux_x64.AppImage
           if: startsWith(matrix.os, 'ubuntu')
 
-        - name: Upload Windows Version
-          uses: actions/upload-artifact@v2
-          with:
-            path: ./release/INTO-CPS-Application Setup ${{ steps.version.outputs.result }}.exe
-            name: INTO-CPS-Application-${{ steps.version.outputs.result }}-win_x86-Setup.exe
-          if: startsWith(matrix.os, 'windows')
+      - name: Upload Windows Version
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application Setup ${{ steps.version.outputs.result }}.exe
+          name: INTO-CPS-Application-${{ steps.version.outputs.result }}-win_x86-Setup.exe
+        if: startsWith(matrix.os, 'windows')
 
-        - name: Upload Portable Windows Version
-          uses: actions/upload-artifact@v2
-          with:
-            path: ./release/INTO-CPS-Application ${{ steps.version.outputs.result }}.exe
-            name: INTO-CPS-Application-${{ steps.version.outputs.result }}-win_x86-Portable.exe
-          if: startsWith(matrix.os, 'windows')
+      - name: Upload Portable Windows Version
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application ${{ steps.version.outputs.result }}.exe
+          name: INTO-CPS-Application-${{ steps.version.outputs.result }}-win_x86-Portable.exe
+        if: startsWith(matrix.os, 'windows')
 
-        - name: Upload Dmg
-          uses: actions/upload-artifact@v2
-          with:
-            path: ./release/INTO-CPS-Application-${{ steps.version.outputs.result }}.dmg
-            name: INTO-CPS-Application-${{ steps.version.outputs.result }}-darwin_x64.dmg
-          if: startsWith(matrix.os, 'mac')
+      - name: Upload Dmg
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.version.outputs.result }}.dmg
+          name: INTO-CPS-Application-${{ steps.version.outputs.result }}-darwin_x64.dmg
+        if: startsWith(matrix.os, 'mac')
 
-        - name: Upload Darwin Zip
-          uses: actions/upload-artifact@v2
-          with:
-            path: ./release/INTO-CPS-Application-${{ steps.version.outputs.result }}-mac.zip
-            name: INTO-CPS-Application-${{ steps.version.outputs.result }}-darwin_x64.zip
-          if: startsWith(matrix.os, 'mac')
+      - name: Upload Darwin Zip
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.version.outputs.result }}-mac.zip
+          name: INTO-CPS-Application-${{ steps.version.outputs.result }}-darwin_x64.zip
+        if: startsWith(matrix.os, 'mac')
 
