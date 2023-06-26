@@ -50,11 +50,11 @@ jobs:
         if: startsWith(matrix.os, 'mac')
 
       - name: Upload Linux Version
-          uses: actions/upload-artifact@v2
-          with:
-            path: ./release/INTO-CPS-Application-${{ steps.version.outputs.result }}.AppImage
-            name: INTO-CPS-Application-SNAPSHOT-v${{ steps.version.outputs.result }}.${{ github.run_number }}-linux_x64.AppImage
-          if: startsWith(matrix.os, 'ubuntu')
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./release/INTO-CPS-Application-${{ steps.version.outputs.result }}.AppImage
+          name: INTO-CPS-Application-SNAPSHOT-v${{ steps.version.outputs.result }}.${{ github.run_number }}-linux_x64.AppImage
+        if: startsWith(matrix.os, 'ubuntu')
 
       - name: Upload Windows Version
         uses: actions/upload-artifact@v2
