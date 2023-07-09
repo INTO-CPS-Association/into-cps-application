@@ -203,7 +203,12 @@ export class Fmu {
                         tNode = document.evaluate('String', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
                         if (tNode != null) {
                             type = ScalarVariableType.String;
-                    }
+                        } else {
+                            tNode = document.evaluate('Enumeration', thisNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
+                            if(tNode != null) {
+                                type = ScalarVariableType.Enumeration;
+                            }
+                        }
                     }
                 }
             }
@@ -326,7 +331,7 @@ export class ScalarVariable {
     }
 }
 
-export enum ScalarVariableType { Real, Bool, Int, String, Unknown }
+export enum ScalarVariableType { Real, Bool, Int, String, Enumeration, Unknown }
 export function typeToString(type: ScalarVariableType) {
     switch (type) {
         case ScalarVariableType.Real:
@@ -337,6 +342,8 @@ export function typeToString(type: ScalarVariableType) {
             return "Integer";
         case ScalarVariableType.String:
             return "String";
+        case ScalarVariableType.Enumeration:
+            return "Enumeration";
         case ScalarVariableType.Unknown:
             return "unknown";
     }

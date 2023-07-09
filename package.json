@@ -1,7 +1,7 @@
 {
   "name": "into-cps-app",
   "productName": "INTO-CPS APP",
-  "version": "4.0.6",
+  "version": "4.0.7",
   "description": "User interface for the INTO-CPS Toolchain",
   "license": "MIT",
   "repository": {
@@ -17,7 +17,7 @@
   "electronVersion": "10.1.3",
   "scripts": {
     "start": "electron dist/main.js",
-    "test": "mocha",
+    "test": "npx playwright test",
     "dist": "electron-builder --x64 -p never"
   },
   "build": {
@@ -103,11 +103,15 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.901.0",
+    "@playwright/test": "^1.19.2",
+    "@types/adm-zip": "^0.4.34",
     "@types/bluebird": "~3.0.37",
     "@types/bunyan": "0.0.35",
     "@types/node": "^12.12.29",
+    "@types/request": "^2.48.8",
     "@types/xml2js": "0.0.32",
     "adm-zip": "^0.5.4",
+    "axios": "^0.26.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-wait-for": "^1.0.4",
@@ -115,6 +119,7 @@
     "electron": "^10.2.0",
     "electron-builder": "^22.9.1",
     "electron-packager": "^14.2.1",
+    "fs": "0.0.1-security",
     "gulp": "~4.0.2",
     "gulp-bower": "0.0.15",
     "gulp-bump": "~2.4.0",
@@ -134,6 +139,7 @@
     "merge-stream": "~1.0.0",
     "minimist": "^1.2.5",
     "mocha": "^7.1.0",
+    "playwright": "^1.19.2",
     "readable-stream": "^3.6.0",
     "run-sequence": "~1.2.2",
     "semver": "~5.3.0",

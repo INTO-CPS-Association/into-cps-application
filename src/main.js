@@ -66,7 +66,7 @@ function createWindow() {
   mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   // Open the DevTools.
-  if (devMode) {
+  if (devMode && process.env.RUNNING_TEST !== "true") {
     mainWindow.webContents.openDevTools();
   }
 
@@ -144,7 +144,7 @@ app.on('activate', function () {
   }
 });
 
-if(process.env.RUNNING_IN_SPECTRON) {
+if(process.env.RUNNING_TEST) {
   app.getActiveProject = () => { 
     return intoCpsApp.getSettings().getValue(SettingKeys.SettingKeys.ACTIVE_PROJECT)
   };
