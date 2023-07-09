@@ -20,7 +20,7 @@ test.describe("Default Test", async () => {
   });
   test('Check version', async () => {
       const text = await helper.window.innerText('#appVersion');
-      expect(text).toBe('4.0.7-dev');
+      expect(text).toBe('4.0.8-dev');
   });
 
 });
