@@ -66,7 +66,7 @@ function createWindow() {
   mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   // Open the DevTools.
-  if (devMode) {
+  if (devMode && process.env.RUNNING_TEST !== "true") {
     mainWindow.webContents.openDevTools();
   }
 

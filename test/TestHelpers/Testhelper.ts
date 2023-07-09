@@ -26,7 +26,7 @@ export class TestHelper {
     */
     public async launch(testDataZipFile?: string): Promise<void> {
         // Start
-        process.env.RUNNING_TEST = 'whatever, we only evaluate on the key..';
+        process.env.RUNNING_TEST = 'true';
         await electron.launch(
             {
                 args: ['.']
