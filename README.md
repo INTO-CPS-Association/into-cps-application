@@ -15,7 +15,7 @@ For additional details besides this document, see the [wiki](https://github.com/
 How to build
 ---
 The app is built with [Electron](http://electron.atom.io/) and
-[Node.js](https://nodejs.org/) (v6 recommended). You need npm (comes with Node.js). Npm 3 or higher is required. Npm
+[Node.js](https://nodejs.org/) (v14 recommended). You need npm (comes with Node.js). Npm 6 or higher is required. Npm
 can be upgraded with `npm install npm@latest -g`. We use Gulp to manage tasks. It's easiest to have it installed globally (`npm install -g gulp`). 
 
 After checking out the repo:
