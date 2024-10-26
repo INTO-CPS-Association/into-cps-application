@@ -51,9 +51,8 @@ var outputPath = "dist/",
       "src/resources/bootstrap/css/bootstrap.css",
       resourcesFolder + "/w2ui-2.0/w2ui-2.0.css"
     ],
-    customResources = [resourcesFolder + "/**/*", "!" + resourcesFolder + "/appicon/**/*.{png,ico}"];
+    customResources = [resourcesFolder + "/**/*", "!" + resourcesFolder + "/**/*.{png,ico,jpg,jpeg,gif}" ];
     
-
 // Gulp plugins
 const tsProject = ts.createProject("tsconfig.json");
 
@@ -69,24 +68,37 @@ gulp.task("copy-custom", function () {
     .pipe(gulp.dest(outputPath + "resources"));
 });
 
+// Copy immages to resources folder
+gulp.task("copy-images", function (done) {
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico'];
+  const sourceDir = resourcesFolder;
+  const destDir = path.join(outputPath, 'resources/');
 
-gulp.task("copy-icons", function (done) {
-  const sourceDir = path.join(resourcesFolder, 'into-cps/appicon');
-  const destDir = path.join(outputPath, 'resources/into-cps/appicon');
-
-  // Verifica che la cartella di destinazione esista o creala
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir, { recursive: true });
   }
 
-  // Copia ogni file dalla cartella di origine a quella di destinazione
-  fs.readdirSync(sourceDir).forEach(file => {
-    const sourceFile = path.join(sourceDir, file);
-    const destFile = path.join(destDir, file);
+  const copyImagesRecursively = (srcDir, destDir) => {
+    const files = fs.readdirSync(srcDir);
 
-    fs.copyFileSync(sourceFile, destFile);
-  });
+    files.forEach(file => {
+      const sourceFile = path.join(srcDir, file);
+      const destFile = path.join(destDir, file);
+      const stats = fs.statSync(sourceFile);
 
+      if (stats.isDirectory()) {
+        if (!fs.existsSync(destFile)) {
+          fs.mkdirSync(destFile);
+        }
+        copyImagesRecursively(sourceFile, destFile);
+      } else if (imageExtensions.includes(path.extname(file).toLowerCase())) {
+        fs.copyFileSync(sourceFile, destFile);
+      }
+    });
+  };
+
+  copyImagesRecursively(sourceDir, destDir);
+  
   done();
 });
 
@@ -158,8 +170,7 @@ gulp.task(
     "copy-html",
     "copy-css",
     "copy-custom",
-    "copy-icons"
-  )
+    "copy-images")
 );
 // Watch for changes and rebuild
 gulp.task("watch", function () {

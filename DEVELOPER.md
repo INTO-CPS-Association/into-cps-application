@@ -1,6 +1,6 @@
 # Development environment documentation
 
-## Required technologies and toolsù
+## Required technologies and tools
 
 - [Node Package Manager (NPM)](https://www.npmjs.com/package/npm): a package management system used to maintain packages used by the application. NPM 3 or higher is required.
 - [Node.js](https://nodejs.org/) (v14.x is required).

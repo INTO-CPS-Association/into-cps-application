@@ -19,7 +19,7 @@
         "test": "gulp && npx playwright test",
         "dist": "electron-builder --x64 -p never",
         "dist:win": "electron-builder --win --x64 -p never",
-        "clean": "rimraf dist monocart-report node_modules release pkg test-results && npm prune"
+        "clean": "rimraf dist monocart-report node_modules release pkg test-results test/coverage-reports"
     },
     "build": {
         "appId": "org.into-cps-association.into-cps-app",
@@ -56,7 +56,6 @@
             "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
         }
     },
-
     "dependencies": {
         "@playwright/test": "^1.47.2",
         "@popperjs/core": "^2.11.8",

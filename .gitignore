@@ -50,9 +50,10 @@ downloader-test/*.zip
 **/test-project/downloads
 
 #Test results
+monocart-report/
+test/coverage-reports/
 coverage/
 test-results/
-.nyc_output/
 
 MakeFile
 
