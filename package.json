@@ -14,6 +14,49 @@
         "email": "null@void.org",
         "url": "http://into-cps.au.dk/"
     },
+    "scripts": {
+        "start": "electron dist/main.js",
+        "test": "gulp && npx playwright test",
+        "dist": "electron-builder --x64 -p never",
+        "dist:win": "electron-builder --win --x64 -p never",
+        "clean": "rimraf dist monocart-report node_modules release pkg test-results && npm prune"
+    },
+    "build": {
+        "appId": "org.into-cps-association.into-cps-app",
+        "copyright": "Copyright © 2021 INTO-CPS Association",
+        "productName": "INTO-CPS-Application",
+        "electronVersion": "32.1.2",
+        "files": [
+            "**/*",
+            "dist/**/*"
+        ],
+        "directories": {
+            "output": "release",
+            "buildResources": "dist"
+        },
+        "mac": {
+            "category": "public.app-category.developer-tools",
+            "icon": "dist/resources/into-cps/appicon/into-cps-logo.ico"
+        },
+        "win": {
+            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
+            "target": [
+                "nsis",
+                "portable"
+            ]
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true
+        },
+        "linux": {
+            "target": [
+                "AppImage"
+            ],
+            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
+        }
+    },
+
     "dependencies": {
         "@playwright/test": "^1.47.2",
         "@popperjs/core": "^2.11.8",
@@ -34,51 +77,11 @@
         "gulp-clean-css": "^4.3.0",
         "gulp-htmlhint": "^4.0.2",
         "monocart-coverage-reports": "^2.11.1",
+        "monocart-reporter": "^2.9.6",
         "nyc": "^17.1.0",
         "playwright": "^1.47.2",
+        "source-map-support": "^0.5.21",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.2"
-    },
-    "scripts": {
-        "start": "electron dist/main.js",
-        "test": "gulp && nyc --reporter=html --reporter=text --reporter=lcov npx playwright test",
-        "dist": "electron-builder --x64 -p never",
-        "dist:win": "electron-builder --win --x64 -p never",
-        "clean": "npm prune"
-    },
-    "build": {
-        "appId": "org.into-cps-association.into-cps-app",
-        "copyright": "Copyright © 2021 INTO-CPS Association",
-        "productName": "INTO-CPS-Application",
-        "electronVersion": "32.1.2",
-        "files": [
-            "**/*",
-            "dist/**/*"
-        ],
-        "directories": {
-            "output": "release",
-            "buildResources": "dist"
-        },
-        "mac": {
-            "category": "public.app-category.developer-tools",
-            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
-        },
-        "win": {
-            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
-            "target": [
-                "nsis",
-                "portable"
-            ]
-        },
-        "nsis": {
-            "oneClick": false,
-            "allowToChangeInstallationDirectory": true
-        },
-        "linux": {
-            "target": [
-                "AppImage"
-            ],
-            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
-        }
     }
 }

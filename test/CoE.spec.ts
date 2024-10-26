@@ -1,14 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test,expect } from "@playwright/test";
 import { TestHelper } from "./TestHelpers/TestHelper";
-
 const helper = new TestHelper();
 
 test.describe("COE Button Tests", async () => {
     test.beforeAll(async () => {
         await helper.launch();
+        await helper.startCoverage();
     });
 
     test.afterAll(async () => {
+        const coverageList = await helper.stopCoverage();
+        await helper.addCoverageToReport(coverageList);
         await helper.shutdown();
     });
 
@@ -49,11 +51,12 @@ test.describe("COE Button Tests", async () => {
             throw new Error("Window is not initialized");
         }
 
-        await helper.window.locator('#coe-btn-launch-bottom').click(); 
         let buttonText = await helper.window.locator('#coe-btn-launch-bottom').innerText();
         let iconColor = await helper.window.locator('#coeIconColor').evaluate((icon) => icon.style.color);
+        expect(buttonText).toContain('Start COE');
+        expect(iconColor).toBe('red');
 
-        await helper.window.locator('#coe-btn-launch-bottom').click();
+        await helper.window.locator('#coe-btn-launch-bottom').click(); 
         buttonText = await helper.window.locator('#coe-btn-launch-bottom').innerText();
         iconColor = await helper.window.locator('#coeIconColor').evaluate((icon) => icon.style.color);
         expect(buttonText).toContain('Stop COE');

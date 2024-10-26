@@ -45,7 +45,7 @@ const createTopMenu = () => {
   ];
 
   const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu); // Set the custom menu
+  Menu.setApplicationMenu(menu);
 };
 
 app.on('ready', function () {

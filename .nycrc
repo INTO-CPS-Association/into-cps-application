@@ -1,8 +1,0 @@
-{
-  "reporter": ["html", "text", "lcov"],
-  "all": true,
-  "include": ["src/**/*.js", "src/**/*.ts"],
-  "exclude": ["src/resources/**", "test/**", "node_modules/**"],
-  "extension": [".js", ".ts"],
-  "require": ["ts-node/register"]
-}

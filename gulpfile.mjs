@@ -32,6 +32,8 @@
 "use strict";
 
 import gulp from "gulp";
+import fs from 'fs';
+import path from 'path';
 import ts from "gulp-typescript";
 import sourcemap from "gulp-sourcemaps";
 import htmlhint from "gulp-htmlhint";
@@ -49,7 +51,8 @@ var outputPath = "dist/",
       "src/resources/bootstrap/css/bootstrap.css",
       resourcesFolder + "/w2ui-2.0/w2ui-2.0.css"
     ],
-    customResources = [resourcesFolder + "/into-cps/**/*"]
+    customResources = [resourcesFolder + "/**/*", "!" + resourcesFolder + "/appicon/**/*.{png,ico}"];
+    
 
 // Gulp plugins
 const tsProject = ts.createProject("tsconfig.json");
@@ -58,6 +61,35 @@ const tsProject = ts.createProject("tsconfig.json");
 gulp.task("clean", async function () {
   return await deleteAsync([outputPath]);
 });
+
+// Copy custom resources
+gulp.task("copy-custom", function () {
+  return gulp
+    .src(customResources)
+    .pipe(gulp.dest(outputPath + "resources"));
+});
+
+
+gulp.task("copy-icons", function (done) {
+  const sourceDir = path.join(resourcesFolder, 'into-cps/appicon');
+  const destDir = path.join(outputPath, 'resources/into-cps/appicon');
+
+  // Verifica che la cartella di destinazione esista o creala
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  // Copia ogni file dalla cartella di origine a quella di destinazione
+  fs.readdirSync(sourceDir).forEach(file => {
+    const sourceFile = path.join(sourceDir, file);
+    const destFile = path.join(destDir, file);
+
+    fs.copyFileSync(sourceFile, destFile);
+  });
+
+  done();
+});
+
 
 // Copy css to app folder
 gulp.task("copy-css", function () {
@@ -125,6 +157,8 @@ gulp.task(
     "copy-js",
     "copy-html",
     "copy-css",
+    "copy-custom",
+    "copy-icons"
   )
 );
 // Watch for changes and rebuild

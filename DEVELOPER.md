@@ -18,10 +18,12 @@ The following are the commands to run the application. After checking out the re
 3. To build the UI:  `gulp` or `gulp build`
 4. To run it:  `npm start`
 5. To run tests: `npm test`
+6. To build the application for the release: `npm run dist` or `npm run dist:win` for Windows only. Please note that it's required to run the `gulp` command first.
 
 ## Useful commands and properties
 
 - `gulp watch`: it will automatically detect when you save a file and run the corresponding build task so you only have to refresh the app when developing.
+- `npm run clean`: cleans the working envorinment from different folders, making it ready to be deployed.
 
 ## Latest builds
 

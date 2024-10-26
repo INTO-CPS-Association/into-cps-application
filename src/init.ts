@@ -31,7 +31,6 @@
 'use strict'
 
 class InitializationController {
-    // constants
     mainViewId: string = "mainView";
     layout!: W2UI.W2Layout;
     title!: HTMLTitleElement;
@@ -44,6 +43,7 @@ class InitializationController {
         this.setTitle();
         this.configureLayout();
         this.loadViews();
+        console.log("InitializationController initialized");
     }
     
     private configureLayout() {
@@ -61,20 +61,15 @@ class InitializationController {
         });
     }
     private setTitle() {
-        this.title = <HTMLTitleElement>document.querySelector("Project Name Placeholder");
+        this.title = <HTMLTitleElement>document.querySelector("INTO-CPS Application");
     }
 
     private loadViews() {
         this.layout.load("main", "main.html", "", () => {
             this.mainView = (<HTMLDivElement>document.getElementById(this.mainViewId));
             var appVer = (<HTMLSpanElement>document.getElementById('appVersion'));
-            appVer.innerText = "Version placeholder";
-
-            let divReadme = (<HTMLDivElement>document.getElementById("mainReadmeView"));
-
-            let devMode = "development_mode";
-            }
-        );
+            appVer.innerText = "5.0.0";
+        });
         this.layout.load("bottom", "bottom.html", "", () => {});
         this.layout.hide("preview");
     }
