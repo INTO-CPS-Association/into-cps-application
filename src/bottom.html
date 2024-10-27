@@ -1,17 +1,34 @@
-<div class="preview-wrapper" style="overflow-y: hidden;top: 0px;">
-    <nav class="navbar navbar-default navbar-fixed-bottom intonav">
-        <ul id="navigation" class="nav nav-pills justify-content-end">
-                <li>
-                        <button type="button" id="coe-btn-launch-bottom" class="btn link-button" onclick="coeViewController.launchCoe()" title="Shows the output of the COE process. Provides options to Launch and Stop the COE.">
-                            Start COE
-                            <span id="coeIconColor" style="color:red" class="glyphicon glyphicon-one-fine-dot"></span>
-                        </button>
-                        </li>
-                        <li>
-                        <a id="coe-log-btn-status" class="nav-link" href="#" title="Tails the COE log file (coe.log) if it is located in into-cps-projects\install_downloads\coe-working-dir">COE Log</a>
-                        </li> 
-                        
+<script>
+    let coeRunning = false;
+    function launchServerCoeMock() {
+        const button = document.getElementById("coe-btn-launch-bottom");
+        const icon = document.getElementById("coeIconColor");
+        if (!coeRunning) {
+            button.childNodes[0].textContent = 'Stop COE';
+            button.appendChild(icon);
+            document.getElementById("coeIconColor").style.color = 'green';
+        } else {
+            button.childNodes[0].textContent = 'Start COE';
+            button.appendChild(icon);
+            document.getElementById("coeIconColor").style.color = 'red';
+        }
+        coeRunning = !coeRunning;
+    }
+</script>
 
+
+<div class="preview-wrapper" style="overflow-y: hidden; top: 0px;">
+    <nav class="navbar navbar-default navbar-fixed-bottom intonav" style="display: flex; align-items: center; height: 50px;">
+        <ul id="navigation" class="nav nav-pills" style="width: 100%; display: flex; align-items: center; height: 100%;">
+            <li>
+                <button type="button" id="coe-btn-launch-bottom" class="btn link-button" 
+                    onclick="launchServerCoeMock()" 
+                    title="Shows the output of the COE process. Provides options to Launch and Stop the COE.">
+                    Start COE
+                    <span id="coeIconColor" style="color:red" class="glyphicon glyphicon-one-fine-dot"></span>
+                </button>
+            </li>
         </ul>
     </nav>
 </div>
+

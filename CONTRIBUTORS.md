@@ -1,3 +1,5 @@
+# Contributors
+
 The authors and contributors of the INTO-CPS Application are, in no particular
 order:
 
@@ -17,3 +19,4 @@ Etienne Brosse
 Martin Mansfield
 Anders Terkelsen
 Kristoffer Stampe Villadsen
+Simone Micalizzi

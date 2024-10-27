@@ -1,154 +1,86 @@
 {
-  "name": "into-cps-app",
-  "productName": "INTO-CPS APP",
-  "version": "4.0.8-dev",
-  "description": "User interface for the INTO-CPS Toolchain",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/INTO-CPS-Association/into-cps-application.git"
-  },
-  "main": "dist/main.js",
-  "author": {
-    "name": "INTO-CPS Project",
-    "email": "null@void.org",
-    "url": "http://into-cps.au.dk/"
-  },
-  "electronVersion": "10.1.3",
-  "scripts": {
-    "start": "electron --no-sandbox dist/main.js",
-    "test": "npx playwright test",
-    "dist": "electron-builder --x64 -p never"
-  },
-  "build": {
-    "appId": "org.into-cps-association.into-cps-app",
-    "copyright": "Copyright © 2021 INTO-CPS Association",
-    "productName": "INTO-CPS-Application",
-    "electronVersion": "10.1.2",
-    "files": [
-      "**/*",
-      "dist/**/*"
-    ],
-    "directories": {
-      "output": "release",
-      "buildResources": "dist"
+    "name": "into-cps-app",
+    "productName": "INTO-CPS APP",
+    "version": "5.0.0",
+    "description": "User interface for the INTO-CPS Toolchain",
+    "license": "SEE LICENSE IN <LICENSE.md>",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/INTO-CPS-Association/into-cps-application.git"
     },
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
+    "main": "dist/main.js",
+    "author": {
+        "name": "INTO-CPS Project",
+        "email": "null@void.org",
+        "url": "http://into-cps.au.dk/"
     },
-    "win": {
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
-      "target": [
-        "nsis",
-        "portable"
-      ]
+    "scripts": {
+        "start": "electron dist/main.js",
+        "test": "gulp && npx playwright test",
+        "dist": "electron-builder --x64 -p never",
+        "dist:win": "electron-builder --win --x64 -p never",
+        "clean": "rimraf dist monocart-report node_modules release pkg test-results test/coverage-reports"
     },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+    "build": {
+        "appId": "org.into-cps-association.into-cps-app",
+        "copyright": "Copyright © 2021 INTO-CPS Association",
+        "productName": "INTO-CPS-Application",
+        "electronVersion": "32.1.2",
+        "files": [
+            "**/*",
+            "dist/**/*"
+        ],
+        "directories": {
+            "output": "release",
+            "buildResources": "dist"
+        },
+        "mac": {
+            "category": "public.app-category.developer-tools",
+            "icon": "dist/resources/into-cps/appicon/into-cps-logo.ico"
+        },
+        "win": {
+            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
+            "target": [
+                "nsis",
+                "portable"
+            ]
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true
+        },
+        "linux": {
+            "target": [
+                "AppImage"
+            ],
+            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
+        }
     },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
+    "dependencies": {
+        "@playwright/test": "^1.47.2",
+        "@popperjs/core": "^2.11.8",
+        "@types/w2ui": "^1.4.37",
+        "bootstrap": "^5.3.3",
+        "del": "^7.1.0",
+        "gulp": "^5.0.0",
+        "gulp-sourcemaps": "^3.0.0",
+        "gulp-typescript": "^6.0.0-alpha.1",
+        "jquery": "^3.7.1",
+        "mocha": "^10.7.3"
+    },
+    "devDependencies": {
+        "@types/node": "^22.7.5",
+        "electron": "^32.1.2",
+        "electron-builder": "^25.1.7",
+        "electron-playwright-helpers": "^1.7.1",
+        "gulp-clean-css": "^4.3.0",
+        "gulp-htmlhint": "^4.0.2",
+        "monocart-coverage-reports": "^2.11.1",
+        "monocart-reporter": "^2.9.6",
+        "nyc": "^17.1.0",
+        "playwright": "^1.47.2",
+        "source-map-support": "^0.5.21",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.6.2"
     }
-  },
-  "dependencies": {
-    "@angular/animations": "^7.2.16",
-    "@angular/cli": "^7.3.9",
-    "@angular/common": "^7.2.16",
-    "@angular/compiler": "^7.2.16",
-    "@angular/compiler-cli": "^7.2.16",
-    "@angular/core": "^7.2.16",
-    "@angular/forms": "^7.2.16",
-    "@angular/http": "^7.2.16",
-    "@angular/platform-browser": "^7.2.16",
-    "@angular/platform-browser-dynamic": "^7.2.16",
-    "@angular/platform-server": "^7.2.16",
-    "@angular/router": "^7.2.16",
-    "@types/ace": "0.0.42",
-    "@types/fs-extra": "9.0.7",
-    "@types/jquery": "^2.0.54",
-    "@types/sql.js": "~0.0.28",
-    "@types/w2ui": "~1.4.30",
-    "ace-builds": "^1.4.12",
-    "bluebird": "~3.4.7",
-    "bootstrap": "^3.3.6",
-    "electron-default-menu": "^1.0.1",
-    "es6-shim": "^0.35.5",
-    "fs-extra": "~0.30.0",
-    "is-running": "~2.1.0",
-    "jquery": "^3.4.1",
-    "jsonschema": "~1.1.1",
-    "jszip": "^3.2.2",
-    "md5-promised": "~1.0.1",
-    "mkdirp": "^1.0.3",
-    "node-sha1": "^1.0.1",
-    "plotly.js-dist": "^1.58.4",
-    "progress-stream": "~2.0.0",
-    "reflect-metadata": "^0.1.13",
-    "request": "^2.88.2",
-    "request-progress": "~2.0.1",
-    "rimraf": "~2.5.4",
-    "rxjs": "^6.5.4",
-    "showdown": "^1.9.1",
-    "sql.js": "~0.3.2",
-    "tree-kill": "^1.2.2",
-    "tslib": "^1.9.0",
-    "xml2js": "^0.4.23",
-    "yauzl": "~2.6.0",
-    "zone.js": "^0.8.29"
-  },
-  "devDependencies": {
-    "@angular-devkit/build-angular": "^0.901.0",
-    "@playwright/test": "^1.19.2",
-    "@types/adm-zip": "^0.4.34",
-    "@types/bluebird": "~3.0.37",
-    "@types/bunyan": "0.0.35",
-    "@types/node": "^12.12.29",
-    "@types/request": "^2.48.8",
-    "@types/xml2js": "0.0.32",
-    "adm-zip": "^0.5.4",
-    "axios": "^0.26.1",
-    "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "chai-wait-for": "^1.0.4",
-    "del": "~2.2.0",
-    "electron": "^10.2.0",
-    "electron-builder": "^22.9.1",
-    "electron-packager": "^14.2.1",
-    "fs": "0.0.1-security",
-    "gulp": "~4.0.2",
-    "gulp-bower": "0.0.15",
-    "gulp-bump": "~2.4.0",
-    "gulp-clean-css": "~2.3.2",
-    "gulp-concat": "~2.6.0",
-    "gulp-debug": "~2.1.2",
-    "gulp-filter": "~4.0.0",
-    "gulp-git": "^2.8.1",
-    "gulp-htmlhint": "^3.0.0",
-    "gulp-inject": "~4.1.0",
-    "gulp-sourcemaps": "^2.6.5",
-    "gulp-typescript": "^4.0.0",
-    "gulp-uglify": "^3.0.2",
-    "gulp-util": "~3.0.7",
-    "gulp-zip": "^5.0.1",
-    "main-bower-files": "^2.13.3",
-    "merge-stream": "~1.0.0",
-    "minimist": "^1.2.5",
-    "mocha": "^7.1.0",
-    "playwright": "^1.19.2",
-    "readable-stream": "^3.6.0",
-    "run-sequence": "~1.2.2",
-    "semver": "~5.3.0",
-    "spectron": "^12.0.0",
-    "terser-webpack-plugin": "^2.3.5",
-    "ts-loader": "^8.0.2",
-    "typescript": "^3.9.7",
-    "uglify-save-license": "^0.4.1",
-    "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11"
-  }
 }
