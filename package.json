@@ -15,11 +15,13 @@
         "url": "http://into-cps.au.dk/"
     },
     "scripts": {
-        "start": "electron dist/main.js",
-        "test": "gulp && npx playwright test",
-        "dist": "electron-builder --x64 -p never",
-        "dist:win": "electron-builder --win --x64 -p never",
-        "clean": "rimraf dist monocart-report node_modules release pkg test-results test/coverage-reports"
+        "build": "webpack --config webpack.config.js && tsc && electron-builder",
+        "dist": "npm run build && electron-builder",
+        "start": "NODE_ENV=development concurrently \"npm:react-start\" \"npm:tsc-watch\" \"npm:electron-start\"",
+        "electron-start": "wait-on http://localhost:8080 && electron dist/main.js",
+        "react-start": "webpack serve --config webpack.config.js",
+        "syntax": "npx eslint . --fix",
+        "tsc-watch": "tsc --watch"
     },
     "build": {
         "appId": "org.into-cps-association.into-cps-app",
@@ -57,30 +59,43 @@
         }
     },
     "dependencies": {
-        "@playwright/test": "^1.47.2",
-        "@popperjs/core": "^2.11.8",
-        "@types/w2ui": "^1.4.37",
-        "bootstrap": "^5.3.3",
+        "@babel/core": "^7.26.0",
+        "@emotion/react": "^11.13.3",
+        "@emotion/styled": "^11.13.0",
+        "@mui/icons-material": "^6.1.6",
+        "@mui/material": "^6.1.6",
+        "babel-loader": "^9.2.1",
         "del": "^7.1.0",
-        "gulp": "^5.0.0",
-        "gulp-sourcemaps": "^3.0.0",
-        "gulp-typescript": "^6.0.0-alpha.1",
-        "jquery": "^3.7.1",
-        "mocha": "^10.7.3"
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "webpack": "^5.95.0",
+        "webpack-cli": "^5.1.4",
+        "webpack-dev-server": "^5.1.0"
     },
     "devDependencies": {
+        "@babel/preset-env": "^7.26.0",
+        "@babel/preset-react": "^7.25.9",
+        "@babel/preset-typescript": "^7.26.0",
+        "@eslint/js": "^9.14.0",
         "@types/node": "^22.7.5",
+        "@types/react-dom": "^18.3.1",
+        "babel-jest": "^29.7.0",
+        "concurrently": "^9.0.1",
         "electron": "^32.1.2",
         "electron-builder": "^25.1.7",
         "electron-playwright-helpers": "^1.7.1",
-        "gulp-clean-css": "^4.3.0",
-        "gulp-htmlhint": "^4.0.2",
-        "monocart-coverage-reports": "^2.11.1",
-        "monocart-reporter": "^2.9.6",
-        "nyc": "^17.1.0",
-        "playwright": "^1.47.2",
+        "eslint": "^8.57.1",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-config-react-app": "^7.0.1",
+        "eslint-plugin-react": "^7.37.2",
+        "globals": "^15.11.0",
+        "jest": "^29.7.0",
+        "prettier": "3.3.3",
+        "react-test-renderer": "^18.3.1",
         "source-map-support": "^0.5.21",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
+        "typescript": "^5.6.2",
+        "typescript-eslint": "^8.12.2",
+        "wait-on": "^8.0.1"
     }
 }
