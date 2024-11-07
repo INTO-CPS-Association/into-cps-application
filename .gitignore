@@ -61,3 +61,6 @@ pkg/
 
 # WebStorm project files
 .idea/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -53,7 +53,7 @@ function createTopMenu() {
     }
   ];
 
-  const menu = Menu.buildFromTemplate(template as any);
+  const menu = Menu.buildFromTemplate(template as never);
   Menu.setApplicationMenu(menu);
 }
 

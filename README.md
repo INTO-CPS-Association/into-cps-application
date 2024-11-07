@@ -12,16 +12,17 @@ For additional details besides this document, see the [wiki](https://github.com/
 
 ## How to build
 
-The app is built with [Electron](http://electron.atom.io/) and
-[Node.js](https://nodejs.org/) (v14.x is required). You need npm (comes with Node.js). Npm 3 or higher is required. Npm
-can be upgraded with `npm install npm@latest -g`. We use Gulp to manage tasks. It's easiest to have it installed globally (`npm install -g gulp`).
+The app is built with [Electron](http://electron.atom.io/), [React](https://react.dev) and
+[Node.js](https://nodejs.org/) (v23.x is required). You need npm (comes with Node.js). Npm 10 or higher is required. Npm
+can be upgraded with `npm install npm@latest -g`.
 
 After checking out the repo:
 
 1. To install node dependencies: `npm install`
-2. To build the UI: `gulp`
-3. To run it: `npm start`
-4. To run the tests: `npm test`
+2. To run it: `npm run start`
+3. To run the tests: `npm test`
+4. To run a syntax check: `npm run syntax`
+5. To build the app for release: `npm run dist`
 
 ## Development
 

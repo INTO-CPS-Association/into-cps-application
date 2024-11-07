@@ -33,5 +33,11 @@ export default [
     react: {
         version: "detect",
     },
-  }}
+  }},
+  {
+    files: ["preload.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ];

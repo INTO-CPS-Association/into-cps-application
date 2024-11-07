@@ -1,7 +1,7 @@
 import { _electron as electron, ElectronApplication, Page } from "playwright";
 import * as path from "path";
 import MCR from "monocart-coverage-reports";
-import coverageOptions from "../../mcr.config";
+import coverageOptions from "../e2e/setup/mcr.config";
 
 export class TestHelper {
     public electronApp: ElectronApplication | null = null;
@@ -16,7 +16,6 @@ export class TestHelper {
         });
 
         this.window = await this.electronApp.firstWindow();
-        const title = await this.window.title();
     }
 
     public async startCoverage(): Promise<void> {
@@ -28,11 +27,11 @@ export class TestHelper {
         }
     }
 
-    public async stopCoverage(): Promise<any[]> {
+    public async stopCoverage(): Promise<unknown[]> {
         if (this.window) {
             const jsCoverage = await this.window.coverage.stopJSCoverage();
             const cssCoverage = await this.window.coverage.stopCSSCoverage();
-            return [...jsCoverage];
+            return [...jsCoverage, ...cssCoverage];
         }
         return [];
     }
@@ -43,7 +42,7 @@ export class TestHelper {
         }
     }
 
-    public async getMenuItems(): Promise<any> {
+    public async getMenuItems(): Promise<unknown> {
         if (this.electronApp) {
             return await this.electronApp.evaluate(async ({ Menu }) => {
                 const menu = Menu.getApplicationMenu();
@@ -59,7 +58,7 @@ export class TestHelper {
         return [];
     }
 
-    public async addCoverageToReport(coverageList: any[]): Promise<void> {
+    public async addCoverageToReport(coverageList: unknown[]): Promise<void> {
         if (coverageList.length === 0) {
             console.log("No coverage data collected");
         } else {

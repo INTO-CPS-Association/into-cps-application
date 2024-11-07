@@ -21,8 +21,9 @@ const Bottom: React.FC = () => {
     >      
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>
         <BottomNavigationAction
+          id="coe-btn-launch-bottom"
           label={<Typography>{coeRunning ? 'Stop COE' : 'Start COE'}</Typography>}
-          icon={coeRunning ? <StopCircleIcon color="error" /> : <PlayCircleOutlineIcon color="primary" />}
+          icon={coeRunning ? <StopCircleIcon id="coeIconColor" color="error" /> : <PlayCircleOutlineIcon id="coeIconColor" color="primary" />}
           onClick={toggleCoeState}
         />
       </BottomNavigation>

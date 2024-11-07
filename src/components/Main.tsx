@@ -7,7 +7,7 @@ const Main: React.FC = () => (
       INTO-CPS &gt; Welcome
     </Typography>
     <Typography variant="body1">
-      Welcome to the INTO-CPS Application version 5.0.0
+      Welcome to the INTO-CPS Application<Typography variant="body1" id="appVersion"> 5.0.0</Typography>
     </Typography>
   </Box>
 );
