@@ -21,7 +21,8 @@
     "electron-start": "wait-on http://localhost:8080 && electron dist/main.js",
     "react-start": "webpack serve --config webpack.config.js",
     "syntax": "npx eslint . --fix",
-    "tsc-watch": "tsc --watch"
+    "tsc-watch": "tsc --watch",
+    "clean": "rimraf dist monocart-report node_modules release pkg test-results test/coverage-reports"
   },
   "build": {
     "appId": "org.into-cps-association.into-cps-app",
