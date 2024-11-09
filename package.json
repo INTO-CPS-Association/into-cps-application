@@ -15,8 +15,9 @@
     "url": "http://into-cps.au.dk/"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js && tsc && electron-builder",
+    "build": "rimraf release/ && webpack --config webpack.config.js && tsc && electron-builder",
     "dist": "npm run build && electron-builder",
+    "dist:win": "rimraf release/ && electron-builder --win --x64 -p never && .\\convert-to-msix.bat",
     "start": "NODE_ENV=development concurrently \"npm:react-start\" \"npm:tsc-watch\" \"npm:electron-start\"",
     "electron-start": "wait-on http://localhost:8080 && electron dist/main.js",
     "react-start": "webpack serve --config webpack.config.js",
@@ -44,13 +45,19 @@
     "win": {
       "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
       "target": [
-        "nsis",
-        "portable"
-      ]
+          "nsis",
+          "msi",
+          "portable"
+      ],
+      "signAndEditExecutable": false,
+      "forceCodeSigning": false
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true
+    },
+    "msi": {
+        "oneClick": false
     },
     "linux": {
       "target": [
