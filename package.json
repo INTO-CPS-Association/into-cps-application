@@ -15,15 +15,13 @@
     "url": "http://into-cps.au.dk/"
   },
   "scripts": {
-    "build": "rimraf release/ && webpack --config webpack.config.js && tsc && electron-builder",
-    "dist": "npm run build && electron-builder",
-    "dist:win": "rimraf release/ && electron-builder --win --x64 -p never && .\\convert-to-msix.bat",
-    "start": "NODE_ENV=development concurrently \"npm:react-start\" \"npm:tsc-watch\" \"npm:electron-start\"",
-    "electron-start": "wait-on http://localhost:8080 && electron dist/main.js",
-    "react-start": "webpack serve --config webpack.config.js",
+    "build": "rimraf release/ && node esbuild.config.mjs && electron-builder --x64",
+    "build:win": "npm run build && .\\convert-to-msix.bat",
+    "start": "node esbuild.config.mjs --dev && concurrently \"npm run serve\" \"npm run electron-start\"",
+    "serve": "serve dist -l 8080 --cors",
+    "electron-start": "wait-on http://localhost:8080 && npx electron dist/main.js",
     "syntax": "npx eslint . --fix",
-    "tsc-watch": "tsc --watch",
-    "clean": "rimraf dist monocart-report node_modules release pkg test-results test/coverage-reports"
+    "clean": "npx rimraf dist monocart-report release pkg test-results test/coverage-reports && npm ci"
   },
   "build": {
     "appId": "org.into-cps-association.into-cps-app",
@@ -36,56 +34,44 @@
     ],
     "directories": {
       "output": "release",
-      "buildResources": "dist"
+      "buildResources": "buildResources"
     },
     "mac": {
       "category": "public.app-category.developer-tools",
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.ico"
+      "icon": "src/resources/into-cps/appicon/into-cps-logo.png.ico"
     },
     "win": {
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
-      "target": [
-          "nsis",
-          "msi",
-          "portable"
-      ],
+      "icon": "src/resources/into-cps/appicon/into-cps-logo.png.ico",
+      "target": ["nsis", "msi", "portable"],
       "signAndEditExecutable": false,
       "forceCodeSigning": false
     },
     "nsis": {
-        "oneClick": false,
-        "allowToChangeInstallationDirectory": true
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "msi": {
-        "oneClick": false
+      "oneClick": false
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
+      "icon": "src/resources/into-cps/appicon/into-cps-logo.png"
     }
   },
   "dependencies": {
-    "@babel/core": "^7.26.0",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
-    "babel-loader": "^9.2.1",
     "del": "^7.1.0",
     "monocart-coverage-reports": "^2.11.1",
     "playwright": "^1.48.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "webpack": "^5.95.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.26.0",
-    "@babel/preset-react": "^7.25.9",
-    "@babel/preset-typescript": "^7.26.0",
     "@eslint/js": "^9.14.0",
     "@playwright/test": "^1.48.2",
     "@types/node": "^22.7.5",
@@ -95,6 +81,7 @@
     "electron": "^32.1.2",
     "electron-builder": "^25.1.7",
     "electron-playwright-helpers": "^1.7.1",
+    "esbuild": "0.24.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-react-app": "^7.0.1",
@@ -103,6 +90,7 @@
     "jest": "^29.7.0",
     "prettier": "3.3.3",
     "react-test-renderer": "^18.3.1",
+    "serve": "^14.2.4",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2",

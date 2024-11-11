@@ -1,24 +1,32 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import * as path from 'path';
-
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    icon: path.join(__dirname, 'resources/into-cps/appicon/', 'into-cps-logo.png.ico'),
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, '../preload.js'),
     },
-  });
+  });  
+  const isDev = process.argv.includes('--dev');
 
-  const startUrl = process.env.NODE_ENV === 'development'
+  const startUrl = isDev
     ? 'http://localhost:8080'
-    : `file://${path.join(__dirname, 'public/index.html')}`;
+    : `file://${path.join(__dirname, 'index.html')}`;
 
-  mainWindow.loadURL(startUrl);
+    console.log(
+      `Starting Electron in ${isDev ? 'development' : 'production'} mode`,
+    );
+    console.log(`Loading URL: ${startUrl}`);
 
+  
+  mainWindow.loadURL(startUrl).catch((error) => {
+    console.error('Failed to load URL:', error);
+  });
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -46,11 +54,12 @@ function createTopMenu() {
         {
           label: 'Toggle Developer Tools',
           accelerator: 'CmdOrCtrl+Shift+I',
-          click: () => {mainWindow?.webContents.toggleDevTools();
+          click: () => {
+            mainWindow?.webContents.toggleDevTools();
           },
         },
       ],
-    }
+    },
   ];
 
   const menu = Menu.buildFromTemplate(template as never);
