@@ -1,86 +1,100 @@
 {
-    "name": "into-cps-app",
-    "productName": "INTO-CPS APP",
-    "version": "5.0.0",
-    "description": "User interface for the INTO-CPS Toolchain",
-    "license": "SEE LICENSE IN <LICENSE.md>",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/INTO-CPS-Association/into-cps-application.git"
+  "name": "into-cps-app",
+  "productName": "INTO-CPS APP",
+  "version": "5.0.0",
+  "description": "User interface for the INTO-CPS Toolchain",
+  "license": "SEE LICENSE IN <LICENSE.md>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/INTO-CPS-Association/into-cps-application.git"
+  },
+  "main": "dist/main.js",
+  "author": {
+    "name": "INTO-CPS Project",
+    "email": "null@void.org",
+    "url": "http://into-cps.au.dk/"
+  },
+  "scripts": {
+    "build": "rimraf release/ && node esbuild.config.mjs && electron-builder --x64",
+    "build:win": "npm run build && .\\convert-to-msix.bat",
+    "start": "node esbuild.config.mjs --dev && concurrently \"npm run serve\" \"npm run electron-start\"",
+    "serve": "serve dist -l 8080 --cors",
+    "electron-start": "wait-on http://localhost:8080 && npx electron dist/main.js",
+    "syntax": "npx eslint . --fix",
+    "clean": "npx rimraf dist monocart-report release pkg test-results test/coverage-reports && npm ci"
+  },
+  "build": {
+    "appId": "org.into-cps-association.into-cps-app",
+    "copyright": "Copyright © 2021 INTO-CPS Association",
+    "productName": "INTO-CPS-Application",
+    "electronVersion": "32.1.2",
+    "files": [
+      "**/*",
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "buildResources"
     },
-    "main": "dist/main.js",
-    "author": {
-        "name": "INTO-CPS Project",
-        "email": "null@void.org",
-        "url": "http://into-cps.au.dk/"
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "src/resources/into-cps/appicon/into-cps-logo.png.ico"
     },
-    "scripts": {
-        "start": "electron dist/main.js",
-        "test": "gulp && npx playwright test",
-        "dist": "electron-builder --x64 -p never",
-        "dist:win": "electron-builder --win --x64 -p never",
-        "clean": "rimraf dist monocart-report node_modules release pkg test-results test/coverage-reports"
+    "win": {
+      "icon": "src/resources/into-cps/appicon/into-cps-logo.png.ico",
+      "target": ["nsis", "msi", "portable"],
+      "signAndEditExecutable": false,
+      "forceCodeSigning": false
     },
-    "build": {
-        "appId": "org.into-cps-association.into-cps-app",
-        "copyright": "Copyright © 2021 INTO-CPS Association",
-        "productName": "INTO-CPS-Application",
-        "electronVersion": "32.1.2",
-        "files": [
-            "**/*",
-            "dist/**/*"
-        ],
-        "directories": {
-            "output": "release",
-            "buildResources": "dist"
-        },
-        "mac": {
-            "category": "public.app-category.developer-tools",
-            "icon": "dist/resources/into-cps/appicon/into-cps-logo.ico"
-        },
-        "win": {
-            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png.ico",
-            "target": [
-                "nsis",
-                "portable"
-            ]
-        },
-        "nsis": {
-            "oneClick": false,
-            "allowToChangeInstallationDirectory": true
-        },
-        "linux": {
-            "target": [
-                "AppImage"
-            ],
-            "icon": "dist/resources/into-cps/appicon/into-cps-logo.png"
-        }
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
-    "dependencies": {
-        "@playwright/test": "^1.47.2",
-        "@popperjs/core": "^2.11.8",
-        "@types/w2ui": "^1.4.37",
-        "bootstrap": "^5.3.3",
-        "del": "^7.1.0",
-        "gulp": "^5.0.0",
-        "gulp-sourcemaps": "^3.0.0",
-        "gulp-typescript": "^6.0.0-alpha.1",
-        "jquery": "^3.7.1",
-        "mocha": "^10.7.3"
+    "msi": {
+      "oneClick": false
     },
-    "devDependencies": {
-        "@types/node": "^22.7.5",
-        "electron": "^32.1.2",
-        "electron-builder": "^25.1.7",
-        "electron-playwright-helpers": "^1.7.1",
-        "gulp-clean-css": "^4.3.0",
-        "gulp-htmlhint": "^4.0.2",
-        "monocart-coverage-reports": "^2.11.1",
-        "monocart-reporter": "^2.9.6",
-        "nyc": "^17.1.0",
-        "playwright": "^1.47.2",
-        "source-map-support": "^0.5.21",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "src/resources/into-cps/appicon/into-cps-logo.png"
     }
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.6",
+    "@mui/material": "^6.1.6",
+    "del": "^7.1.0",
+    "monocart-coverage-reports": "^2.11.1",
+    "playwright": "^1.48.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "@playwright/test": "^1.48.2",
+    "@types/node": "^22.7.5",
+    "@types/react-dom": "^18.3.1",
+    "babel-jest": "^29.7.0",
+    "concurrently": "^9.0.1",
+    "electron": "^32.1.2",
+    "electron-builder": "^25.1.7",
+    "electron-playwright-helpers": "^1.7.1",
+    "esbuild": "0.24.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-react": "^7.37.2",
+    "globals": "^15.11.0",
+    "jest": "^29.7.0",
+    "prettier": "3.3.3",
+    "react-test-renderer": "^18.3.1",
+    "serve": "^14.2.4",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.12.2",
+    "wait-on": "^8.0.1"
+  }
 }
