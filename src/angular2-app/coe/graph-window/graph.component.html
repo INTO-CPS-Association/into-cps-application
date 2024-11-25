@@ -1,8 +1,0 @@
-<div *ngIf="graph.getGraphs().length >0">
-    <div *ngFor="let g of graph.getGraphs(); let i=index; trackBy:customTrackBy">
-        <div style="page-break-inside:avoid !important;border-style: solid; margin: 2px; padding-left: 2px;border-width: 0.1em;">
-            <h5>Graph: {{g.title}}</h5>
-            <line-chart *ngIf="graph.getDataset(g).getValue().length > 0" [datasets]="graph.getDataset(g)"></line-chart>
-        </div>
-    </div>
-</div>

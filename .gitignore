@@ -49,6 +49,11 @@ downloader-test/*.zip
 **/R_*
 **/test-project/downloads
 
+#Test results
+monocart-report/
+test/coverage-reports/
+coverage/
+test-results/
 
 MakeFile
 
@@ -56,3 +61,6 @@ pkg/
 
 # WebStorm project files
 .idea/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
