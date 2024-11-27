@@ -6,5 +6,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   removeToggleDarkModeListener: () => {
     ipcRenderer.removeAllListeners('toggle-dark-mode');
-  }
+  },
+  readJsonFile: (relativePath) => {
+    return ipcRenderer.invoke('read-json-file', relativePath)
+  },
+  startCoe: () => ipcRenderer.invoke('start-coe'),
+  stopCoe: () => ipcRenderer.invoke('stop-coe'),
 });

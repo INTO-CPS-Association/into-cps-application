@@ -6,7 +6,18 @@ import StopCircleIcon from '@mui/icons-material/StopCircle';
 const Bottom: React.FC = () => {
   const [coeRunning, setCoeRunning] = useState(false);
 
-  const toggleCoeState = () => setCoeRunning((prev) => !prev);
+  const toggleCoeState = async () => {
+    try {
+      if (coeRunning) {
+        await window?.electronAPI?.stopCoe();
+      } else {
+        await window?.electronAPI?.startCoe();
+      }
+      setCoeRunning(!coeRunning);
+    } catch (error) {
+      console.error('Error toggling COE:', error);
+    }
+  };
 
   return (
     <Box
@@ -18,12 +29,18 @@ const Bottom: React.FC = () => {
         bgcolor: 'background.paper',
         boxShadow: 3,
       }}
-    >      
+    >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>
         <BottomNavigationAction
           id="coe-btn-launch-bottom"
           label={<Typography>{coeRunning ? 'Stop COE' : 'Start COE'}</Typography>}
-          icon={coeRunning ? <StopCircleIcon id="coeIconColor" color="error" /> : <PlayCircleOutlineIcon id="coeIconColor" color="primary" />}
+          icon={
+            coeRunning ? (
+              <StopCircleIcon id="coeIconColor" color="error" />
+            ) : (
+              <PlayCircleOutlineIcon id="coeIconColor" color="primary" />
+            )
+          }
           onClick={toggleCoeState}
         />
       </BottomNavigation>

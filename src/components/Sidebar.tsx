@@ -1,5 +1,6 @@
 import React from 'react';
-import { Drawer, List, Divider, Toolbar } from '@mui/material';
+import { Drawer, List, ListItem, ListItemText, ListItemButton, Toolbar } from '@mui/material';
+import { NavLink } from 'react-router-dom';
 
 const Sidebar: React.FC = () => (
   <Drawer
@@ -11,8 +12,17 @@ const Sidebar: React.FC = () => (
     }}
   >
     <Toolbar />
-    <Divider />
     <List>
+      <ListItem disablePadding>
+        <ListItemButton component={NavLink} to="/">
+          <ListItemText primary="Home" />
+        </ListItemButton>
+      </ListItem>
+      <ListItem disablePadding>
+        <ListItemButton component={NavLink} to="/cosimulation">
+          <ListItemText primary="Cosimulation" />
+        </ListItemButton>
+      </ListItem>
     </List>
   </Drawer>
 );

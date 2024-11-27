@@ -64,3 +64,4 @@ pkg/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/src/resources/coe
