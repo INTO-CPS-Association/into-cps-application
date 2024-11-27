@@ -14,8 +14,8 @@ const Cosimulation: React.FC = () => {
         console.log('readJsonFile exists:', typeof window?.electronAPI?.readJsonFile === 'function');
   
         console.log('Fetching JSON from:', filePath);
-        const data = await window?.electronAPI?.readJsonFile(filePath); // Dovrebbe ora ricevere i dati
-        console.log('Data fetched:', data); // Dovrebbe loggare il JSON correttamente
+        const data = await window?.electronAPI?.readJsonFile(filePath);
+        console.log('Data fetched:', data);
         setJsonData(data);
       } catch (err) {
         console.error('Error fetching JSON:', err);

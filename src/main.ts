@@ -109,7 +109,7 @@
       const jsonData = JSON.parse(rawData);
       console.log('Parsed JSON:', jsonData);
   
-      return jsonData; // IMPORTANTE: Assicurati che venga restituito jsonData
+      return jsonData;
     } catch (error) {
       console.error('Error reading JSON file:', error);
       throw error;
