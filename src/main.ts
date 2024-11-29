@@ -69,16 +69,25 @@
         label: 'Cosimulation',
         submenu: [
           {
-            label: 'Start',
+            label: 'Start Simulation',
             accelerator: process.platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
+            click: async () => {
+              console.log('Start Simulation menu clicked');
+              try {
+                await ipcMain.emit('start-simulation');
+              } catch (error) {
+                console.error('Error starting simulation:', error);
+              }
+            },
           },
         ],
       },
     ];
-
+  
     const menu = Menu.buildFromTemplate(template as never);
     Menu.setApplicationMenu(menu);
   }
+  
 
   app.on('ready', () => {
     createTopMenu();
@@ -175,5 +184,94 @@
   } catch (error) {
     console.error('Error stopping COE:', error);
     throw error;
+  }
+});
+
+ipcMain.on('start-simulation', async () => {
+  try {
+    const coePath = path.join(app.getAppPath(), 'resources', 'cosimulation', '2018may7', 'coe.json');
+    const mmPath = path.join(app.getAppPath(), 'resources', 'cosimulation', '2018may7', 'mm.json');
+
+    console.log('Loading COE configuration from:', coePath);
+    console.log('Loading Multi-model configuration from:', mmPath);
+
+    const coeConfig = JSON.parse(fs.readFileSync(coePath, 'utf8'));
+    const mmConfig = JSON.parse(fs.readFileSync(mmPath, 'utf8'));
+
+    // Resolve FMU paths relative to mm.json
+    const resolvedFmus = Object.fromEntries(
+      Object.entries(mmConfig.fmus).map(([key, relativePath]) => [
+        key,
+        path.resolve(path.dirname(mmPath), relativePath as string),
+      ])
+    );
+
+    coeConfig.connections = mmConfig.connections;
+    coeConfig.parameters = mmConfig.parameters;
+    coeConfig.fmus = resolvedFmus;
+
+    console.log('Updated COE configuration with resolved FMU paths:', coeConfig);
+
+    mainWindow?.webContents.send('simulation-status', 'Starting...');
+
+    console.log('Sending /createSession request to COE...');
+    const sessionResponse = await fetch('http://localhost:8082/createSession', {
+      method: 'POST',
+    });
+
+    if (!sessionResponse.ok) {
+      const errorText = await sessionResponse.text();
+      throw new Error(`Failed to create session: ${errorText}`);
+    }
+
+    const { sessionId } = await sessionResponse.json();
+    console.log('Session created successfully. Session ID:', sessionId);
+
+    console.log('Sending /initialize request to COE...');
+    const initializeResponse = await fetch(`http://localhost:8082/initialize/${sessionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(coeConfig),
+    });
+
+    if (!initializeResponse.ok) {
+      const errorText = await initializeResponse.text();
+      throw new Error(`Failed to initialize simulation: ${errorText}`);
+    }
+
+    console.log('Simulation initialized successfully.');
+
+    console.log('Sending /simulate request to COE...');
+    const simulateResponse = await fetch(`http://localhost:8082/simulate/${sessionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ startTime: coeConfig.startTime, endTime: coeConfig.endTime }),
+    });
+
+    if (!simulateResponse.ok) {
+      const errorText = await simulateResponse.text();
+      throw new Error(`Failed to start simulation: ${errorText}`);
+    }
+
+    console.log('Simulation started successfully.');
+
+    console.log('Fetching simulation results...');
+    const resultResponse = await fetch(`http://localhost:8082/result/${sessionId}`);
+
+    if (!resultResponse.ok) {
+      const errorText = await resultResponse.text();
+      throw new Error(`Failed to fetch results: ${errorText}`);
+    }
+
+    const resultData = await resultResponse.json();
+    const resultPath = path.join(app.getAppPath(), 'resources', 'cosimulation', 'results', 'result.json');
+
+    fs.writeFileSync(resultPath, JSON.stringify(resultData, null, 2));
+    console.log('Simulation results saved to:', resultPath);
+
+    mainWindow?.webContents.send('simulation-status', 'Simulation completed.');
+  } catch (error) {
+    console.error('Error during simulation:', error);
+    mainWindow?.webContents.send('simulation-status', 'Simulation failed.');
   }
 });
