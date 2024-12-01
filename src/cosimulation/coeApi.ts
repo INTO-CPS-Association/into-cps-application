@@ -1,10 +1,11 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import { configCoe } from '../utils/config';
+
+const { outputPath } = configCoe;
+
 const COE_API_BASE_URL = "http://localhost:8082";
 
-/**
- * Create a simulation on the COE.
- * @param simulationConfig - Configuration of the simulation.
- * @returns Simulation ID of the created simulation.
- */
 export const createSimulation = async (simulationConfig: object): Promise<string> => {
   const response = await fetch(`${COE_API_BASE_URL}/create`, {
     method: "POST",
@@ -23,10 +24,6 @@ export const createSimulation = async (simulationConfig: object): Promise<string
   return data.simulationId;
 };
 
-/**
- * Start a simulation on the COE.
- * @param simulationId - ID of the simulation to start.
- */
 export const startSimulation = async (simulationId: string): Promise<void> => {
   const response = await fetch(`${COE_API_BASE_URL}/start/${simulationId}`, {
     method: "POST",
@@ -39,11 +36,6 @@ export const startSimulation = async (simulationId: string): Promise<void> => {
   console.log("Simulation started successfully.");
 };
 
-/**
- * Retrieve the status of a simulation.
- * @param simulationId - ID of the simulation.
- * @returns The status of the simulation.
- */
 export const getSimulationStatus = async (simulationId: string): Promise<object> => {
   const response = await fetch(`${COE_API_BASE_URL}/status/${simulationId}`);
 
@@ -54,4 +46,14 @@ export const getSimulationStatus = async (simulationId: string): Promise<object>
   const status = await response.json();
   console.log("Simulation status:", status);
   return status;
+};
+
+export const saveSimulationResults = (data: object) => {
+  const resultPath = path.join(outputPath, 'simulation-results.json');
+  try {
+    fs.writeFileSync(resultPath, JSON.stringify(data, null, 2));
+    console.log('Results saved to:', resultPath);
+  } catch (error) {
+    console.error('Error saving results:', error);
+  }
 };

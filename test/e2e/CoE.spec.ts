@@ -44,8 +44,8 @@ test.describe("COE Button Tests", () => {
         if (!helper.window) throw new Error("Window is not initialized");
 
         const button = helper.window.locator("#coe-btn-launch-bottom");
-        await button.click(); // Switch to 'Stop COE'
-        await button.click(); // Switch back to 'Start COE'
+        await button.click();
+        await button.click();
 
         const buttonText = await helper.window?.locator('#coe-btn-launch-bottom p').innerText();
         expect(buttonText).toContain("Start COE");
