@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { BottomNavigation, BottomNavigationAction, Box, Typography } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Box, Typography, useTheme } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 
-const Bottom: React.FC = () => {
+const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth, sidebarOpen }) => {
   const [coeRunning, setCoeRunning] = useState(false);
+  const theme = useTheme();
 
   const toggleCoeState = async () => {
     try {
@@ -22,12 +23,13 @@ const Bottom: React.FC = () => {
   return (
     <Box
       sx={{
-        width: 'calc(100% - 240px)',
+        width: '100%',
         position: 'fixed',
         bottom: 0,
-        left: '240px',
+        left: `${sidebarWidth}px`,
         bgcolor: 'background.paper',
-        boxShadow: 3,
+        boxShadow: theme.shadows[3],
+        transition: 'left 0.3s ease, width 0.3s ease',
       }}
     >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>

@@ -9,10 +9,25 @@ import Cosimulation from './components/Cosimulation/Cosimulation';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const sidebarWidth = sidebarOpen ? 240 : 64;
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
-  };
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const handleToggleDarkMode = () => {
@@ -32,19 +47,28 @@ const App: React.FC = () => {
     };
   }, []);
 
+
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>
       <CssBaseline />
       <Router>
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-          <Sidebar />
-          <Box component="main" sx={{ flexGrow: 1, p: 3, position: 'relative' }}>
+          <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              p: 3,
+              transition: 'margin-left 0.3s ease',
+              marginLeft: `-10px`,
+            }}
+          >
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<Cosimulation />} />
             </Routes>
           </Box>
-          <Bottom />
+          <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} />
         </Box>
       </Router>
     </ThemeProvider>
