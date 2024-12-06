@@ -163,8 +163,8 @@ ipcMain.on('start-simulation', async () => {
   try {
     mainWindow?.webContents.send('simulation-status', 'Starting simulation...');
 
-    const coePath = path.join(simulationConfigPath, 'coe.json');
-    const mmPath = path.join(multiModels, 'mm.json');
+    const coePath = path.join(simulationConfigPath, 'experiment.json');
+    const mmPath = path.join(multiModels, 'multi-model.json');
 
     const coeConfig = JSON.parse(fs.readFileSync(coePath, 'utf8'));
     const mmConfig = JSON.parse(fs.readFileSync(mmPath, 'utf8'));
