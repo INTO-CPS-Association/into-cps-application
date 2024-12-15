@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
-import { ConfigCoe } from '../../types/global';
+import { ConfigMaestro } from '../../types/global';
 
 dotenv.config();
 
@@ -12,20 +12,20 @@ if (!configFilePath || !fs.existsSync(configFilePath)) {
   process.exit(1);
 }
 
-let configCoe:ConfigCoe;
+let configMaestro:ConfigMaestro;
 try {
   const configData = fs.readFileSync(configFilePath, 'utf-8');
-  configCoe = JSON.parse(configData);
-  console.log('Loaded Config:', configCoe);
+  configMaestro = JSON.parse(configData);
+  console.log('Loaded Config:', configMaestro);
 } catch (error) {
   console.error('Failed to load config file:', error);
   process.exit(1);
 }
 
-const outputPath = configCoe.outputPath;
+const outputPath = configMaestro.outputPath;
 
 if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-export { configCoe };
+export { configMaestro };

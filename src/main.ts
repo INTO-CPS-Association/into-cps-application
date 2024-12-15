@@ -2,7 +2,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { createTopMenu } from './main/menu';
 import { pathToFileURL } from 'url';
-import { configCoe } from './utils/config';
+import { configMaestro } from './utils/config';
 import { setSessionId, getSessionId } from './cosimulation/simulationContext';
 
 import * as path from 'path';
@@ -12,7 +12,7 @@ import kill from 'tree-kill';
 
 let mainWindow: BrowserWindow | null = null;
 let maestroProcess: ChildProcess | null = null;
-const { coeJarPath, simulationConfigPath, fmusPath, multiModels, outputPath } = configCoe;
+const { coeJarPath, simulationConfigPath, fmusPath, multiModels, outputPath } = configMaestro;
 
 if (!coeJarPath || !simulationConfigPath || !fmusPath || !multiModels || !outputPath) {
   console.error('Missing required paths in config.json');
@@ -142,8 +142,12 @@ ipcMain.handle('start-maestro', async () => {
     });
 
     maestroProcess.on('close', (code: number | null) => {
-      console.log(`Maestro process exited with code: ${code}`);
+      const message = `COE process exited with code ${code}`;
+      console.log(message);
       maestroProcess = null;
+      if (code !== 0) {
+        mainWindow?.webContents.send('show-error', message);
+      }
     });
 
     maestroProcess.unref();
@@ -156,23 +160,25 @@ ipcMain.handle('start-maestro', async () => {
 });
 
 ipcMain.handle('stop-maestro', async () => {
-  if (!maestroProcess) {
+  if (!maestroProcess || maestroProcess.pid === undefined) {
     console.log('Maestro is not running.');
     return;
   }
 
   try {
-    const pid = maestroProcess.pid;
-    if (pid) {
-      process.kill(pid, 'SIGTERM');
-      console.log('Maestro stopped successfully.');
+    kill(maestroProcess.pid, 'SIGTERM', (err) => {
+      if (err) {
+        console.error('Error stopping COE:', err);
+      } else {
+        console.log('COE stopped successfully.');
+        maestroProcess = null;
+      }
+    });
+  } catch (error) {
+    console.error('Error stopping COE:', error);
+    throw error;
     }
     maestroProcess = null;
-  } catch (error) {
-    console.error('Error stopping Maestro:', error);
-    mainWindow?.webContents.send('show-error', error);
-    throw error;
-  }
 });
 
 ipcMain.on('show-error', (_, error: Error) => {
@@ -183,8 +189,8 @@ ipcMain.on('show-error', (_, error: Error) => {
 });
 
 ipcMain.handle('get-config', () => {
-  console.log('Sending config to renderer:', configCoe);
-  return configCoe;
+  console.log('Sending config to renderer:', configMaestro);
+  return configMaestro;
 });
 
 ipcMain.handle('read-json-file', async (event, relativePath) => {
@@ -205,86 +211,17 @@ ipcMain.handle('read-json-file', async (event, relativePath) => {
   } catch (error) {
     console.error('Error reading JSON file:', error);
     throw error;
-  }
-});
+    }
+  });
 
-ipcMain.handle('start-coe', async (event) => {
-  event.sender.send('coe-reset');
-
-  if (coeProcess) {
-    console.log('COE is already running.');
-    return;
-  }
-
-  if (!fs.existsSync(coeJarPath)) {
-    const errorMessage = `COE JAR not found at: ${coeJarPath}`;
-    console.error(errorMessage);
-    event.sender.send('coe-error', errorMessage);
-    throw new Error(errorMessage);
-  }
-
-  try {
-    console.log('Starting COE with:', coeJarPath);
-    coeProcess = spawn('java', ['-jar', coeJarPath], {
-      detached: true,
-      stdio: ['ignore', 'inherit', 'inherit'],
-    });
-
-    coeProcess.on('error', (err) => {
-      const errorMessage = `Error spawning COE: ${err.message}`;
-      console.error(errorMessage);
-      event.sender.send('coe-error', errorMessage);
-    });
-
-    coeProcess.on('close', (code) => {
-      const message = `COE process exited with code ${code}`;
-      console.log(message);
-      coeProcess = null;
-      if (code !== 0) {
-        event.sender.send('coe-error', message);
-      }
-    });
-
-    coeProcess.unref();
-    console.log('COE started in a separate terminal.');
-  } catch (error) {
-    const errorMessage = `Error starting COE: ${error}`;
-    console.error(errorMessage);
-    event.sender.send('coe-error', errorMessage);
-    throw error;
-  }
-});
-
-ipcMain.handle('stop-coe', async () => {
-  if (!coeProcess || coeProcess.pid === undefined) {
-    console.log('COE is not running or PID is undefined');
-    return;
-  }
-
-  try {
-    console.log('Stopping COE with PID:', coeProcess.pid);
-    kill(coeProcess.pid, 'SIGTERM', (err) => {
-      if (err) {
-        console.error('Error stopping COE:', err);
-      } else {
-        console.log('COE stopped successfully.');
-        coeProcess = null;
-      }
-    });
-  } catch (error) {
-    console.error('Error stopping COE:', error);
-    throw error;
-  }
-});
-
-ipcMain.on('start-simulation', async () => {
+  ipcMain.on('start-simulation', async () => {
   try {
     mainWindow?.webContents.send('simulation-status', 'Starting simulation...');
 
-    const coePath = path.join(simulationConfigPath, 'experiment.json');
+    const maestroPath = path.join(simulationConfigPath, 'experiment.json');
     const mmPath = path.join(multiModels, 'multi-model.json');
 
-    const coeConfig = JSON.parse(fs.readFileSync(coePath, 'utf8'));
+    const maestroConfig = JSON.parse(fs.readFileSync(maestroPath, 'utf8'));
     const mmConfig = JSON.parse(fs.readFileSync(mmPath, 'utf8'));
 
     const resolvedFmus = Object.fromEntries(
@@ -296,15 +233,15 @@ ipcMain.on('start-simulation', async () => {
         ])
     );
 
-    coeConfig.connections = mmConfig.connections;
-    coeConfig.parameters = mmConfig.parameters;
-    coeConfig.fmus = resolvedFmus;
+    maestroConfig.connections = mmConfig.connections;
+    maestroConfig.parameters = mmConfig.parameters;
+    maestroConfig.fmus = resolvedFmus;
 
-    console.log('Updated COE configuration:', coeConfig);
+    console.log('Updated Maestro configuration:', maestroConfig);
 
     mainWindow?.webContents.send('simulation-status', 'Creating session...');
     const sessionResponse = await fetch('http://localhost:8082/createSession', {
-      method: 'POST',
+      method: 'GET',
     });
 
     if (!sessionResponse.ok) {
@@ -320,7 +257,7 @@ ipcMain.on('start-simulation', async () => {
     const initializeResponse = await fetch(`http://localhost:8082/initialize/${sessionId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(coeConfig),
+      body: JSON.stringify(maestroConfig),
     });
 
     if (!initializeResponse.ok) {
@@ -334,7 +271,7 @@ ipcMain.on('start-simulation', async () => {
     const simulateResponse = await fetch(`http://localhost:8082/simulate/${sessionId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ startTime: coeConfig.startTime, endTime: coeConfig.endTime }),
+      body: JSON.stringify({ startTime: maestroConfig.startTime, endTime: maestroConfig.endTime }),
     });
 
     if (!simulateResponse.ok) {
@@ -361,7 +298,7 @@ ipcMain.handle('get-session-id', () => {
 
 ipcMain.handle('get-simulation-result', async (event, sessionId: string) => {
   try {
-    const resultResponse = await fetch(`http://localhost:8082/result/${sessionId}/csv`);
+    const resultResponse = await fetch(`http://localhost:8082/result/${sessionId}/plain`);
     if (!resultResponse.ok) {
       throw new Error(`Error fetching CSV results: ${resultResponse.statusText}`);
     }

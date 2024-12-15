@@ -1,20 +1,20 @@
 export interface IElectronAPI {
   addToggleDarkModeListener: (listener: () => void) => void;
   removeToggleDarkModeListener: () => void;
-  readJsonFile: (filePath: string) => Promise<any>;
+  readJsonFile: (filePath: string) => Promise<unknown>;
+  startMaestro: () => Promise<void>;
+  stopMaestro: () => Promise<void>;
+  showError: (message) => void,
   startSimulation: () => void;
-  addCoeErrorListener: (callback: (event: any, error: string) => void) => void;
+  addCoeErrorListener: (callback: (event: unknown, error: string) => void) => void;
   removeCoeErrorListener: () => void;
-  onSimulationStatus: (callback: (event: any, status: string) => void) => void;
-  removeSimulationStatusListener: (callback: (event: any, status: string) => void) => void;
+  onSimulationStatus: (callback: (event: unknown, status: string) => void) => void;
+  removeSimulationStatusListener: (callback: (event: unknown, status: string) => void) => void;
   getConfig: () => { coeJarPath: string; simulationConfigPath: string };
   getSessionId: () => string | null;
   getSimulationResult: (sessionId: string) => Promise<string>;
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
-  startMaestro: () => Promise<void>;
-  stopMaestro: () => Promise<void>;
-  showError: (message) => void,
 }
 
 export interface ConfigMaestro {
