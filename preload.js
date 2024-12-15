@@ -6,5 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   removeToggleDarkModeListener: () => {
     ipcRenderer.removeAllListeners('toggle-dark-mode');
-  }
+  },
+  startMaestro: () => ipcRenderer.invoke('start-maestro'),
+  stopMaestro: () => ipcRenderer.invoke('stop-maestro'), 
 });

@@ -4,9 +4,20 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 
 const Bottom: React.FC = () => {
-  const [coeRunning, setCoeRunning] = useState(false);
+  const [maestroRunning, setMaestroRunning] = useState(false);
 
-  const toggleCoeState = () => setCoeRunning((prev) => !prev);
+  const toggleMaestroState = async () => {
+    try {
+      if (maestroRunning) {
+        await window?.electronAPI?.stopMaestro();
+      } else {
+        await window?.electronAPI?.startMaestro();
+      }
+      setMaestroRunning(!maestroRunning);
+    } catch (error) {
+      console.error('Error toggling Maestro:', error);
+    }
+  };
 
   return (
     <Box
@@ -18,13 +29,19 @@ const Bottom: React.FC = () => {
         bgcolor: 'background.paper',
         boxShadow: 3,
       }}
-    >      
+    >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>
         <BottomNavigationAction
-          id="coe-btn-launch-bottom"
-          label={<Typography>{coeRunning ? 'Stop COE' : 'Start COE'}</Typography>}
-          icon={coeRunning ? <StopCircleIcon id="coeIconColor" color="error" /> : <PlayCircleOutlineIcon id="coeIconColor" color="primary" />}
-          onClick={toggleCoeState}
+          id="maestro-btn-launch-bottom"
+          label={<Typography>{maestroRunning ? 'Stop Maestro' : 'Start Maestro'}</Typography>}
+          icon={
+            maestroRunning ? (
+              <StopCircleIcon id="maestroIconColor" color="error" />
+            ) : (
+              <PlayCircleOutlineIcon id="maestroIconColor" color="primary" />
+            )
+          }
+          onClick={toggleMaestroState}
         />
       </BottomNavigation>
     </Box>

@@ -15,9 +15,9 @@
     "url": "http://into-cps.au.dk/"
   },
   "scripts": {
-    "build": "rimraf release/ && node esbuild.config.mjs && electron-builder --x64",
+    "build": "NODE_ENV=production rimraf release/ && node esbuild.config.mjs && electron-builder --x64",
     "build:win": "npm run build && .\\convert-to-msix.bat",
-    "start": "node esbuild.config.mjs --dev && concurrently \"npm run serve\" \"npm run electron-start\"",
+    "start": "NODE_ENV=development node esbuild.config.mjs --dev && concurrently \"npm run serve\" \"npm run electron-start\"",
     "serve": "serve dist -l 3000 --cors",
     "electron-start": "wait-on http://localhost:3000 && npx electron dist/main.js",
     "syntax": "npx eslint . --fix",
@@ -29,8 +29,8 @@
     "productName": "INTO-CPS-Application",
     "electronVersion": "32.1.2",
     "files": [
-      "**/*",
-      "dist/**/*"
+      "dist/**/*",
+      "package.json"
     ],
     "directories": {
       "output": "release",
