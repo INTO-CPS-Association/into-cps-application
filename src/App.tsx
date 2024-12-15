@@ -4,6 +4,7 @@ import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
 import Main from './components/Main';
 import Bottom from './components/Bottom';
+import ErrorSnackbar from './components/ErrorSnackbar';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -43,6 +44,7 @@ const App: React.FC = () => {
         </Box>
         
         <Bottom />
+        <ErrorSnackbar />
       </Box>
     </ThemeProvider>
   );

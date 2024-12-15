@@ -3,6 +3,7 @@ export interface IElectronAPI {
   removeToggleDarkModeListener: () => void,
   startMaestro: () => Promise<void>;
   stopMaestro: () => Promise<void>;
+  showError: (message) => void,
   }
   
   declare global {

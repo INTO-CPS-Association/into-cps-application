@@ -33,7 +33,7 @@ const Bottom: React.FC = () => {
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>
         <BottomNavigationAction
           id="maestro-btn-launch-bottom"
-          label={<Typography>{maestroRunning ? 'Stop Maestro' : 'Start Maestro'}</Typography>}
+          label={<Typography>{maestroRunning ? 'Stop CoE' : 'Start CoE'}</Typography>}
           icon={
             maestroRunning ? (
               <StopCircleIcon id="maestroIconColor" color="error" />
