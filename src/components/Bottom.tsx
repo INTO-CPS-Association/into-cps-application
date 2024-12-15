@@ -4,19 +4,19 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 
 const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth, sidebarOpen }) => {
-  const [coeRunning, setCoeRunning] = useState(false);
+  const [maestroRunning, setMaestroRunning] = useState(false);
   const theme = useTheme();
 
-  const toggleCoeState = async () => {
+  const toggleMaestroState = async () => {
     try {
-      if (coeRunning) {
-        await window?.electronAPI?.stopCoe();
+      if (maestroRunning) {
+        await window?.electronAPI?.stopMaestro();
       } else {
-        await window?.electronAPI?.startCoe();
+        await window?.electronAPI?.startMaestro();
       }
-      setCoeRunning(!coeRunning);
+      setMaestroRunning(!maestroRunning);
     } catch (error) {
-      console.error('Error toggling COE:', error);
+      console.error('Error toggling Maestro:', error);
     }
   };
 
@@ -34,16 +34,16 @@ const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ side
     >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>
         <BottomNavigationAction
-          id="coe-btn-launch-bottom"
-          label={<Typography>{coeRunning ? 'Stop COE' : 'Start COE'}</Typography>}
+          id="maestro-btn-launch-bottom"
+          label={<Typography>{maestroRunning ? 'Stop CoE' : 'Start CoE'}</Typography>}
           icon={
-            coeRunning ? (
-              <StopCircleIcon id="coeIconColor" color="error" />
+            maestroRunning ? (
+              <StopCircleIcon id="maestroIconColor" color="error" />
             ) : (
-              <PlayCircleOutlineIcon id="coeIconColor" color="primary" />
+              <PlayCircleOutlineIcon id="maestroIconColor" color="primary" />
             )
           }
-          onClick={toggleCoeState}
+          onClick={toggleMaestroState}
         />
       </BottomNavigation>
     </Box>

@@ -4,8 +4,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addToggleDarkModeListener: (callback) => ipcRenderer.on('toggle-dark-mode', callback),
   removeToggleDarkModeListener: () => ipcRenderer.removeAllListeners('toggle-dark-mode'),
   readJsonFile: (relativePath) => ipcRenderer.invoke('read-json-file', relativePath),
-  startCoe: () => ipcRenderer.invoke('start-coe'),
-  stopCoe: () => ipcRenderer.invoke('stop-coe'),
+  startMaestro: () => ipcRenderer.invoke('start-maestro'),
+  stopMaestro: () => ipcRenderer.invoke('stop-maestro'), 
   addCoeErrorListener: (callback) => ipcRenderer.on('coe-error', (event, errorMessage) => callback(event, errorMessage)),
   removeCoeErrorListener: () => ipcRenderer.removeAllListeners('coe-error'),
   startSimulation: () => ipcRenderer.invoke('start-simulation'),
@@ -16,4 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSimulationResult: (sessionId) => ipcRenderer.invoke('get-simulation-result', sessionId),
   addCoeResetListener: (callback) => ipcRenderer.on('coe-reset', callback),
   removeCoeResetListener: () => ipcRenderer.removeAllListeners('coe-reset'),
+  showError: (callback) => {
+    ipcRenderer.on('show-error', (event, message) => callback(message));
+  },
 });

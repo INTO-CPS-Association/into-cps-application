@@ -2,8 +2,6 @@ export interface IElectronAPI {
   addToggleDarkModeListener: (listener: () => void) => void;
   removeToggleDarkModeListener: () => void;
   readJsonFile: (filePath: string) => Promise<any>;
-  stopCoe: () => void;
-  startCoe: () => void;
   startSimulation: () => void;
   addCoeErrorListener: (callback: (event: any, error: string) => void) => void;
   removeCoeErrorListener: () => void;
@@ -14,9 +12,12 @@ export interface IElectronAPI {
   getSimulationResult: (sessionId: string) => Promise<string>;
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
+  startMaestro: () => Promise<void>;
+  stopMaestro: () => Promise<void>;
+  showError: (message) => void,
 }
 
-export interface ConfigCoe {
+export interface ConfigMaestro {
   coeJarPath: string;
   simulationConfigPath: string;
   fmusPath: string;
@@ -27,6 +28,6 @@ export interface ConfigCoe {
 declare global {
   interface Window {
     electronAPI?: IElectronAPI;
-    ConfigCoe?: ConfigCoe;
+    ConfigMaestro?: ConfigMaestro;
   }
 }

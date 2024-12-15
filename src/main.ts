@@ -1,17 +1,17 @@
+import { spawn, ChildProcess } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { createTopMenu } from './main/menu';
 import { pathToFileURL } from 'url';
-import { spawn, ChildProcess } from 'child_process';
 import { configCoe } from './utils/config';
 import { setSessionId, getSessionId } from './cosimulation/simulationContext';
 
 import * as path from 'path';
 import * as fs from 'fs';
+import { exec } from 'node:child_process';
 import kill from 'tree-kill';
 
 let mainWindow: BrowserWindow | null = null;
-let coeProcess: ChildProcess | null = null;
-
+let maestroProcess: ChildProcess | null = null;
 const { coeJarPath, simulationConfigPath, fmusPath, multiModels, outputPath } = configCoe;
 
 if (!coeJarPath || !simulationConfigPath || !fmusPath || !multiModels || !outputPath) {
@@ -19,21 +19,69 @@ if (!coeJarPath || !simulationConfigPath || !fmusPath || !multiModels || !output
   process.exit(1);
 }
 
+const isDev = process.env.NODE_ENV === 'development';
+process.env.NODE_ENV =
+  process.env.NODE_ENV || (isDev ? 'development' : 'production');
+
+const preloadPath = isDev
+  ? path.resolve(__dirname, 'preload.js')
+  : path.resolve(app.getAppPath(), 'dist/preload.js');
+
+const startUrl = isDev
+  ? 'http://localhost:3000'
+  : `file://${path.resolve(app.getAppPath(), 'dist/index.html')}`;
+
+const iconPath = isDev
+  ? path.resolve(__dirname, 'resources/into-cps/appicon/into-cps-logo.png.ico')
+  : path.resolve(
+      app.getAppPath(),
+      'dist/resources/into-cps/appicon/into-cps-logo.png.ico',
+    );
+
+const maestroJarPath = isDev
+  ? path.resolve(__dirname, 'resources/maestro/maestro.jar')
+  : path.resolve(app.getAppPath(), 'dist/resources/maestro/maestro.jar');
+
+const tempMaestroJarPath = path.join(app.getPath('temp'), 'maestro.jar');
+
+function extractMaestroJar() {
+  if (!fs.existsSync(maestroJarPath)) {
+    console.error(`Maestro JAR not found at ${maestroJarPath}`);
+    throw new Error(`Maestro JAR not found at ${maestroJarPath}`);
+  } 
+
+  if(!fs.existsSync(tempMaestroJarPath)){
+    fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
+  } else {
+    console.log(`Maestro JAR already extracted to ${tempMaestroJarPath}`);
+  }
+}
+
+function checkJavaInstallation(): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    exec('java -version', (error, stdout, stderr) => {
+      if (error) {
+        console.error('Error executing java -version:', stderr);
+        reject(new Error('Java is not installed. Please install Java.'));
+      } else {
+        const javaVersionOutput = stdout + stderr;
+        console.log('Java version output:', javaVersionOutput);
+        resolve(true);
+      }
+    });
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    icon: path.join(__dirname, 'resources/into-cps/appicon/', 'into-cps-logo.png.ico'),
+    icon: iconPath,
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js'),
+      preload: preloadPath,
     },
   });
-
-  const isDev = process.argv.includes('--dev');
-  const startUrl = isDev
-    ? 'http://localhost:8080'
-    : `file://${path.join(__dirname, 'index.html')}`;
 
   console.log(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
   console.log(`Loading URL: ${startUrl}`);
@@ -41,6 +89,7 @@ function createWindow() {
   mainWindow.loadURL(startUrl).catch((error) => {
     console.error('Failed to load URL:', error);
   });
+
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -62,6 +111,75 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('toggle-dark-mode', () => {
   mainWindow?.webContents.send('toggle-dark-mode');
+});
+
+ipcMain.handle('start-maestro', async () => {
+  if (maestroProcess) {
+    console.log('Maestro is already running.');
+    return;
+  }
+
+  try {
+    extractMaestroJar();
+
+    await checkJavaInstallation();
+
+    if (!fs.existsSync(maestroJarPath)) {
+      throw new Error(`Maestro JAR not found at ${maestroJarPath}`);
+    }
+
+    maestroProcess = spawn('java', ['-jar', tempMaestroJarPath], {
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    maestroProcess.stdout?.on('data', (data) => {
+      console.log(`Maestro STDOUT: ${data.toString()}`);
+    });
+
+    maestroProcess.stderr?.on('data', (data) => {
+      console.error(`Maestro STDERR: ${data.toString()}`);
+    });
+
+    maestroProcess.on('close', (code: number | null) => {
+      console.log(`Maestro process exited with code: ${code}`);
+      maestroProcess = null;
+    });
+
+    maestroProcess.unref();
+    console.log('Maestro started successfully.');
+  } catch (error) {
+    console.error('Error starting Maestro:', error);
+    mainWindow?.webContents.send('show-error', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('stop-maestro', async () => {
+  if (!maestroProcess) {
+    console.log('Maestro is not running.');
+    return;
+  }
+
+  try {
+    const pid = maestroProcess.pid;
+    if (pid) {
+      process.kill(pid, 'SIGTERM');
+      console.log('Maestro stopped successfully.');
+    }
+    maestroProcess = null;
+  } catch (error) {
+    console.error('Error stopping Maestro:', error);
+    mainWindow?.webContents.send('show-error', error);
+    throw error;
+  }
+});
+
+ipcMain.on('show-error', (_, error: Error) => {
+  if (mainWindow) {
+    const errorMessage = error instanceof Error ? error.message : error;
+    mainWindow.webContents.send('show-error', errorMessage);
+  }
 });
 
 ipcMain.handle('get-config', () => {

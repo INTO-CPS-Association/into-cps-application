@@ -29,8 +29,8 @@
     "productName": "INTO-CPS-Application",
     "electronVersion": "32.1.2",
     "files": [
-      "**/*",
-      "dist/**/*"
+      "dist/**/*",
+      "package.json"
     ],
     "directories": {
       "output": "release",

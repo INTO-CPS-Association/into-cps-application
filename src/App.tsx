@@ -4,6 +4,7 @@ import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
 import Bottom from './components/Bottom';
+import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import Cosimulation from './components/Cosimulation/Cosimulation';
 
@@ -70,6 +71,7 @@ const App: React.FC = () => {
           </Box>
           <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} />
         </Box>
+        <ErrorSnackbar />
       </Router>
     </ThemeProvider>
   );
