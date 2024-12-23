@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { BottomNavigation, BottomNavigationAction, Box, Typography, useTheme } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
-
-const TRANSITION_DURATION = 0.3;
+import { styleConstants } from '../utils/constants';
 
 const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth, sidebarOpen }) => {
   const [maestroRunning, setMaestroRunning] = useState(false);
@@ -31,7 +30,7 @@ const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ side
         left: `${sidebarWidth}px`,
         bgcolor: 'background.paper',
         boxShadow: theme.shadows[3],
-        transition: `left ${TRANSITION_DURATION}s ease, width ${TRANSITION_DURATION}s ease`,
+        transition: `left ${styleConstants.TRANSITION_DURATION} ease, width ${styleConstants.TRANSITION_DURATION} ease`,
       }}
     >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>

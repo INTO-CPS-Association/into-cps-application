@@ -5,9 +5,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { NavLink } from 'react-router-dom';
-
-const DRAWER_WIDTH = 240;
-const COLLAPSED_WIDTH = 64;
+import { styleConstants } from "../utils/constants";
 
 const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open, toggleSidebar }) => {
   const [isResponsive, setIsResponsive] = useState(false);
@@ -15,7 +13,7 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < styleConstants.INNER_WIDTH_SIZE) {
         setIsResponsive(true);
         setManualOpen(false);
       } else {
@@ -43,12 +41,12 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
       variant="permanent"
       open={isOpen}
       sx={{
-        width: isOpen ? DRAWER_WIDTH : COLLAPSED_WIDTH,
+        width: isOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH,
         flexShrink: 0,
         [`& .MuiDrawer-paper`]: {
-          width: isOpen ? DRAWER_WIDTH : COLLAPSED_WIDTH,
+          width: isOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH,
           boxSizing: 'border-box',
-          transition: 'width 0.3s ease',
+          transition: `width ${styleConstants.TRANSITION_DURATION} ease`,
         },
       }}
     >
@@ -57,7 +55,7 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
           display: 'flex',
           justifyContent: isOpen ? 'flex-end' : 'center',
           alignItems: 'center',
-          height: '64px',
+          height: `${styleConstants.TOOLBAR_HEIGHT}px`,
         }}
       >
         <IconButton onClick={handleToggle}>
