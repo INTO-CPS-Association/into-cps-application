@@ -12,9 +12,9 @@ import kill from 'tree-kill';
 
 let mainWindow: BrowserWindow | null = null;
 let maestroProcess: ChildProcess | null = null;
-const { coeJarPath, simulationConfigPath, fmusPath, multiModels, outputPath } = configMaestro;
+const {simulationConfigPath, fmusPath, multiModels, outputPath } = configMaestro;
 
-if (!coeJarPath || !simulationConfigPath || !fmusPath || !multiModels || !outputPath) {
+if (!simulationConfigPath || !fmusPath || !multiModels || !outputPath) {
   console.error('Missing required paths in config.json');
   process.exit(1);
 }

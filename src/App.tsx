@@ -6,7 +6,10 @@ import Sidebar from './components/Sidebar';
 import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
-import Cosimulation from './components/Cosimulation/Cosimulation';
+import CoSimulation from './components/CoSimulation/CoSimulation';
+
+const INNER_WIDTH_SIZE = 768;
+const TRANSITION_DURATION = 0.3;
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -18,7 +21,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < INNER_WIDTH_SIZE) {
         setSidebarOpen(false);
       }
     };
@@ -60,13 +63,13 @@ const App: React.FC = () => {
             sx={{
               flexGrow: 1,
               p: 3,
-              transition: 'margin-left 0.3s ease',
+              transition: `margin-left ${TRANSITION_DURATION} ease`,
               marginLeft: `-10px`,
             }}
           >
             <Routes>
               <Route path="/" element={<Main />} />
-              <Route path="/cosimulation" element={<Cosimulation />} />
+              <Route path="/cosimulation" element={<CoSimulation />} />
             </Routes>
           </Box>
           <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} />

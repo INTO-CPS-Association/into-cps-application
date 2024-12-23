@@ -10,7 +10,7 @@ export interface IElectronAPI {
   removeCoeErrorListener: () => void;
   onSimulationStatus: (callback: (event: unknown, status: string) => void) => void;
   removeSimulationStatusListener: (callback: (event: unknown, status: string) => void) => void;
-  getConfig: () => { coeJarPath: string; simulationConfigPath: string };
+  getConfig: () => { maestroJarPath: string; simulationConfigPath: string };
   getSessionId: () => string | null;
   getSimulationResult: (sessionId: string) => Promise<string>;
   addCoeResetListener: (callback: () => void) => void;
@@ -18,7 +18,7 @@ export interface IElectronAPI {
 }
 
 export interface ConfigMaestro {
-  coeJarPath: string;
+  maestroJarPath: string;
   simulationConfigPath: string;
   fmusPath: string;
   multiModels: string;

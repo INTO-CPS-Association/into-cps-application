@@ -19,7 +19,8 @@
       "node",
     ],
     "strictNullChecks": true, //enable strict null checks
-    "resolveJsonModule": true //allow to import JSON files directly
+    "resolveJsonModule": true, //allow to import JSON files directly
+    "moduleResolution": "node",
     },
   "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts"],
 }

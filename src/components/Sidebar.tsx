@@ -6,8 +6,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { NavLink } from 'react-router-dom';
 
-const drawerWidth = 240;
-const collapsedWidth = 64;
+const DRAWER_WIDTH = 240;
+const COLLAPSED_WIDTH = 64;
 
 const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open, toggleSidebar }) => {
   const [isResponsive, setIsResponsive] = useState(false);
@@ -43,10 +43,10 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
       variant="permanent"
       open={isOpen}
       sx={{
-        width: isOpen ? drawerWidth : collapsedWidth,
+        width: isOpen ? DRAWER_WIDTH : COLLAPSED_WIDTH,
         flexShrink: 0,
         [`& .MuiDrawer-paper`]: {
-          width: isOpen ? drawerWidth : collapsedWidth,
+          width: isOpen ? DRAWER_WIDTH : COLLAPSED_WIDTH,
           boxSizing: 'border-box',
           transition: 'width 0.3s ease',
         },

@@ -5,7 +5,7 @@ import { ConfigMaestro } from '../../types/global';
 
 dotenv.config();
 
-const configFilePath = process.env.CONFIG_COE_PATH || path.resolve('./config.json');
+const configFilePath = process.env.CONFIG_MAESTRO_PATH || path.resolve('./config.json');
 
 if (!configFilePath || !fs.existsSync(configFilePath)) {
   console.error(`Config file not found at ${configFilePath}`);
