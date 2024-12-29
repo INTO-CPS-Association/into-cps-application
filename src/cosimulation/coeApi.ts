@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { configCoe } from '../utils/config';
+import { configMaestro } from '../utils/config';
 
-const { outputPath } = configCoe;
+const { outputPath } = configMaestro;
 
 const COE_API_BASE_URL = "http://localhost:8082";
 
@@ -33,7 +33,6 @@ export const startSimulation = async (simulationId: string): Promise<void> => {
     throw new Error(`Error starting simulation: ${response.statusText}`);
   }
 
-  console.log("Simulation started successfully.");
 };
 
 export const getSimulationStatus = async (simulationId: string): Promise<object> => {
@@ -44,7 +43,6 @@ export const getSimulationStatus = async (simulationId: string): Promise<object>
   }
 
   const status = await response.json();
-  console.log("Simulation status:", status);
   return status;
 };
 

@@ -35,14 +35,12 @@ export function createTopMenu(mainWindow: BrowserWindow | null): void {
           label: 'Start Simulation',
           accelerator: process.platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
           click: async () => {
-            console.log('Start Simulation menu clicked');
             ipcMain.emit('start-simulation');
           },
         },
       ],
     },
   ];
-
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }

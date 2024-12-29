@@ -1,27 +1,12 @@
-import { spawn, ChildProcess } from 'child_process';
+import * as path from 'path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { createTopMenu } from './main/menu';
-import { pathToFileURL } from 'url';
-import { configMaestro } from './utils/config';
-import { setSessionId, getSessionId } from './cosimulation/simulationContext';
-
-import * as path from 'path';
-import * as fs from 'fs';
-import { exec } from 'node:child_process';
-import kill from 'tree-kill';
+import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from './main/maestro/maestroManager';
 
 let mainWindow: BrowserWindow | null = null;
-let maestroProcess: ChildProcess | null = null;
-const {simulationConfigPath, fmusPath, multiModels, outputPath } = configMaestro;
-
-if (!simulationConfigPath || !fmusPath || !multiModels || !outputPath) {
-  console.error('Missing required paths in config.json');
-  process.exit(1);
-}
 
 const isDev = process.env.NODE_ENV === 'development';
-process.env.NODE_ENV =
-  process.env.NODE_ENV || (isDev ? 'development' : 'production');
+process.env.NODE_ENV = process.env.NODE_ENV || (isDev ? 'development' : 'production');
 
 const preloadPath = isDev
   ? path.resolve(__dirname, 'preload.js')
@@ -33,44 +18,7 @@ const startUrl = isDev
 
 const iconPath = isDev
   ? path.resolve(__dirname, 'resources/into-cps/appicon/into-cps-logo.png.ico')
-  : path.resolve(
-      app.getAppPath(),
-      'dist/resources/into-cps/appicon/into-cps-logo.png.ico',
-    );
-
-const maestroJarPath = isDev
-  ? path.resolve(__dirname, 'resources/maestro/maestro.jar')
-  : path.resolve(app.getAppPath(), 'dist/resources/maestro/maestro.jar');
-
-const tempMaestroJarPath = path.join(app.getPath('temp'), 'maestro.jar');
-
-function extractMaestroJar() {
-  if (!fs.existsSync(maestroJarPath)) {
-    console.error(`Maestro JAR not found at ${maestroJarPath}`);
-    throw new Error(`Maestro JAR not found at ${maestroJarPath}`);
-  } 
-
-  if(!fs.existsSync(tempMaestroJarPath)){
-    fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
-  } else {
-    console.log(`Maestro JAR already extracted to ${tempMaestroJarPath}`);
-  }
-}
-
-function checkJavaInstallation(): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    exec('java -version', (error, stdout, stderr) => {
-      if (error) {
-        console.error('Error executing java -version:', stderr);
-        reject(new Error('Java is not installed. Please install Java.'));
-      } else {
-        const javaVersionOutput = stdout + stderr;
-        console.log('Java version output:', javaVersionOutput);
-        resolve(true);
-      }
-    });
-  });
-}
+  : path.resolve(app.getAppPath(), 'dist/resources/into-cps/appicon/into-cps-logo.png.ico');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -89,7 +37,6 @@ function createWindow() {
   mainWindow.loadURL(startUrl).catch((error) => {
     console.error('Failed to load URL:', error);
   });
-
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -113,205 +60,15 @@ ipcMain.on('toggle-dark-mode', () => {
   mainWindow?.webContents.send('toggle-dark-mode');
 });
 
-ipcMain.handle('start-maestro', async () => {
-  if (maestroProcess) {
-    console.log('Maestro is already running.');
-    return;
-  }
-
-  try {
-    extractMaestroJar();
-
-    await checkJavaInstallation();
-
-    if (!fs.existsSync(maestroJarPath)) {
-      throw new Error(`Maestro JAR not found at ${maestroJarPath}`);
-    }
-
-    maestroProcess = spawn('java', ['-jar', tempMaestroJarPath], {
-      detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    maestroProcess.stdout?.on('data', (data) => {
-      console.log(`Maestro STDOUT: ${data.toString()}`);
-    });
-
-    maestroProcess.stderr?.on('data', (data) => {
-      console.error(`Maestro STDERR: ${data.toString()}`);
-    });
-
-    maestroProcess.on('close', (code: number | null) => {
-      const message = `COE process exited with code ${code}`;
-      console.log(message);
-      maestroProcess = null;
-      if (code !== 0) {
-        mainWindow?.webContents.send('show-error', message);
-      }
-    });
-
-    maestroProcess.unref();
-    console.log('Maestro started successfully.');
-  } catch (error) {
-    console.error('Error starting Maestro:', error);
-    mainWindow?.webContents.send('show-error', error);
-    throw error;
-  }
+ipcMain.handle('start-maestro', startMaestro);
+ipcMain.handle('stop-maestro', stopMaestro);
+ipcMain.on('simulation-status-update', (_, status: string) => {
+  mainWindow?.webContents.send('simulation-status', status);
 });
 
-ipcMain.handle('stop-maestro', async () => {
-  if (!maestroProcess || maestroProcess.pid === undefined) {
-    console.log('Maestro is not running.');
-    return;
-  }
-
-  try {
-    kill(maestroProcess.pid, 'SIGTERM', (err) => {
-      if (err) {
-        console.error('Error stopping COE:', err);
-      } else {
-        console.log('COE stopped successfully.');
-        maestroProcess = null;
-      }
-    });
-  } catch (error) {
-    console.error('Error stopping COE:', error);
-    throw error;
-    }
-    maestroProcess = null;
+ipcMain.on('start-simulation', async () => {
+  await startSimulation();
 });
-
-ipcMain.on('show-error', (_, error: Error) => {
-  if (mainWindow) {
-    const errorMessage = error instanceof Error ? error.message : error;
-    mainWindow.webContents.send('show-error', errorMessage);
-  }
-});
-
-ipcMain.handle('get-config', () => {
-  console.log('Sending config to renderer:', configMaestro);
-  return configMaestro;
-});
-
-ipcMain.handle('read-json-file', async (event, relativePath) => {
-  try {
-    const fullPath = path.isAbsolute(relativePath)
-      ? relativePath
-      : path.join(multiModels, relativePath);
-
-    console.log('Reading JSON file from:', fullPath);
-
-    const rawData = fs.readFileSync(fullPath, 'utf8');
-    console.log('Raw data:', rawData);
-
-    const jsonData = JSON.parse(rawData);
-    console.log('Parsed JSON:', jsonData);
-
-    return jsonData;
-  } catch (error) {
-    console.error('Error reading JSON file:', error);
-    throw error;
-    }
-  });
-
-  ipcMain.on('start-simulation', async () => {
-  try {
-    mainWindow?.webContents.send('simulation-status', 'Starting simulation...');
-
-    const maestroPath = path.join(simulationConfigPath, 'experiment.json');
-    const mmPath = path.join(multiModels, 'multi-model.json');
-
-    const maestroConfig = JSON.parse(fs.readFileSync(maestroPath, 'utf8'));
-    const mmConfig = JSON.parse(fs.readFileSync(mmPath, 'utf8'));
-
-    const resolvedFmus = Object.fromEntries(
-      Object.entries(mmConfig.fmus)
-        .filter(([_, relativePath]) => typeof relativePath === 'string' && relativePath.trim() !== '')
-        .map(([key, relativePath]) => [
-          key,
-          pathToFileURL(path.resolve(fmusPath, relativePath as string)).toString(),
-        ])
-    );
-
-    maestroConfig.connections = mmConfig.connections;
-    maestroConfig.parameters = mmConfig.parameters;
-    maestroConfig.fmus = resolvedFmus;
-
-    console.log('Updated Maestro configuration:', maestroConfig);
-
-    mainWindow?.webContents.send('simulation-status', 'Creating session...');
-    const sessionResponse = await fetch('http://localhost:8082/createSession', {
-      method: 'GET',
-    });
-
-    if (!sessionResponse.ok) {
-      const errorText = await sessionResponse.text();
-      throw new Error(`Failed to create session: ${errorText}`);
-    }
-
-    const { sessionId } = await sessionResponse.json();
-    setSessionId(sessionId);
-    console.log('Session created successfully. Session ID:', sessionId);
-
-    mainWindow?.webContents.send('simulation-status', 'Initializing simulation...');
-    const initializeResponse = await fetch(`http://localhost:8082/initialize/${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(maestroConfig),
-    });
-
-    if (!initializeResponse.ok) {
-      const errorText = await initializeResponse.text();
-      throw new Error(`Failed to initialize simulation: ${errorText}`);
-    }
-
-    console.log('Simulation initialized successfully.');
-
-    mainWindow?.webContents.send('simulation-status', 'Running simulation...');
-    const simulateResponse = await fetch(`http://localhost:8082/simulate/${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ startTime: maestroConfig.startTime, endTime: maestroConfig.endTime }),
-    });
-
-    if (!simulateResponse.ok) {
-      const errorText = await simulateResponse.text();
-      throw new Error(`Failed to start simulation: ${errorText}`);
-    }
-
-    console.log('Simulation started successfully.');
-
-    mainWindow?.webContents.send('simulation-status', 'Simulation completed.');
-  } catch (error) {
-    console.error('Error during simulation:', error);
-
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    mainWindow?.webContents.send('simulation-status', `Simulation failed: ${errorMessage}`);
-  }
-});
-
-ipcMain.handle('get-session-id', () => {
-  const sessionId = getSessionId();
-  console.log('Returning session ID:', sessionId);
-  return sessionId || null;
-});
-
-ipcMain.handle('get-simulation-result', async (event, sessionId: string) => {
-  try {
-    const resultResponse = await fetch(`http://localhost:8082/result/${sessionId}/plain`);
-    if (!resultResponse.ok) {
-      throw new Error(`Error fetching CSV results: ${resultResponse.statusText}`);
-    }
-
-    const csvData = await resultResponse.text();
-    const outputFile = path.join(outputPath, `simulation-${sessionId}.csv`);
-
-    fs.writeFileSync(outputFile, csvData);
-    console.log(`Simulation CSV results saved to: ${outputFile}`);
-
-    return outputFile;
-  } catch (error) {
-    console.error('Error fetching CSV results:', error);
-    throw error;
-  }
+ipcMain.handle('get-simulation-result', async (event: unknown, sessionId: string) => {
+  return await getSimulationResult(sessionId);
 });

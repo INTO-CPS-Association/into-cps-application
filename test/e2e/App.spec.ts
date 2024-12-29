@@ -26,7 +26,6 @@ test.describe("General App Tests", () => {
         await helper.window.waitForLoadState("domcontentloaded");
 
         const title = await helper.window.title();
-        console.log("Window title:", title);
         expect(title).toContain("INTO-CPS App");
     });
 

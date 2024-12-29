@@ -32,7 +32,6 @@ export const useCosimulation = () => {
     };
 
     const handleCoeReset = () => {
-      console.log('Resetting simulation states due to COE restart.');
       setSimulationStatus('Idle');
       setResultsPath(null);
       setError(null);
