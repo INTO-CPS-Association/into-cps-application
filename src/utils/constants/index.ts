@@ -1,2 +1,2 @@
-export * from './styleConstants';
-export * from './colorsConstants'
+export * from './style/styleConstants';
+export * from './style/colorsConstants';

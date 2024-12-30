@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
-import { useCosimulation } from './CoSimulation.ts';
+import { useCosimulation } from './useCosimulation';
 
 const CoSimulation: React.FC = () => {
   const { error, simulationStatus, resultsPath } = useCosimulation();

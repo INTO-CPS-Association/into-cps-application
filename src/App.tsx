@@ -6,7 +6,7 @@ import Sidebar from './components/Sidebar';
 import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
-import CoSimulation from './components/CoSimulation/CoSimulation';
+import CoSimulation from './components/Cosimulation/CoSimulation';
 import { styleConstants } from './utils/constants';
 
 const App: React.FC = () => {
@@ -49,6 +49,23 @@ const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleError = (errorMessage: string) => {
+      console.error('[App] Error received:', errorMessage);
+    };
+  
+    if (window.electronAPI) {
+      window.electronAPI.addErrorListener(handleError);
+    } else {
+      console.warn('[App] window.electronAPI not found!');
+    }
+  
+    return () => {
+      if (window.electronAPI) {
+        window.electronAPI.removeErrorListener();
+      }
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>

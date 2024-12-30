@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 
-const ErrorSnackbar = () => {
+const ErrorSnackbar: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [message, setMessage] = useState('');
+  const [severity, setSeverity] = useState<'info' | 'error' | 'warning' | 'success'>('error');
 
   useEffect(() => {
-    if (window.electronAPI) {
-      window.electronAPI.showError((message: string | Error) => {
-        const errorMessage = message instanceof Error ? message.message : message;
-        console.log('Received error message in React:', errorMessage);
-        setErrorMessage(errorMessage);
-        setOpen(true);
-      });
+    const handleError = (errorMessage: string) => {
+      setMessage(errorMessage);
+      setSeverity('error');
+      setOpen(true);
+    };
+
+    if (window?.electronAPI?.addErrorListener) {
+      window.electronAPI.addErrorListener(handleError);
     }
-  
-    return () => {};
+
+    return () => {
+      if (window?.electronAPI?.removeErrorListener) {
+        window.electronAPI.removeErrorListener();
+      }
+    };
   }, []);
 
   const handleClose = () => {
@@ -23,9 +29,14 @@ const ErrorSnackbar = () => {
   };
 
   return (
-    <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-      <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-        {errorMessage}
+    <Snackbar
+      open={open}
+      autoHideDuration={6000}
+      onClose={handleClose}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+        {message}
       </Alert>
     </Snackbar>
   );

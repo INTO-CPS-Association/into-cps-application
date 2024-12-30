@@ -11,9 +11,9 @@ const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ side
   const toggleMaestroState = async () => {
     try {
       if (maestroRunning) {
-        await window?.electronAPI?.stopMaestro();
+        await window?.cosimulationAPI?.stopMaestro();
       } else {
-        await window?.electronAPI?.startMaestro();
+        await window?.cosimulationAPI?.startMaestro();
       }
       setMaestroRunning(!maestroRunning);
     } catch (error) {

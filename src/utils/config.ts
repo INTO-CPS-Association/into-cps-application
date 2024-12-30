@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
-import { ConfigMaestro } from '../../types/global';
+import { ConfigMaestro } from '../types/global';
 
 dotenv.config();
 
@@ -12,11 +12,10 @@ if (!configFilePath || !fs.existsSync(configFilePath)) {
   process.exit(1);
 }
 
-let configMaestro:ConfigMaestro;
+let configMaestro: ConfigMaestro;
 try {
   const configData = fs.readFileSync(configFilePath, 'utf-8');
   configMaestro = JSON.parse(configData);
-  console.log('Loaded Config:', configMaestro);
 } catch (error) {
   console.error('Failed to load config file:', error);
   process.exit(1);
@@ -28,4 +27,7 @@ if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
 
-export { configMaestro };
+const maestroJarPath = path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar');
+const tempMaestroJarPath = path.join(process.env.TEMP || '/tmp', 'maestro-webapi-3.0.0-bundle.jar');
+
+export { configMaestro, maestroJarPath, tempMaestroJarPath };
