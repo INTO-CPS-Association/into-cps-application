@@ -68,6 +68,130 @@ Example of IPC usage for the renderer process:
 window?.cosimulationAPI?.startMaestro();
 ```
 
+### React App
+
+The core `App` component initializes the UI for the INTO-CPS Application, manages global states and handle the navigation.\
+The `Bottom.tsx` component allows users to start/stop the Maestro engine, required to run a CoSimulation, using `CoSimulationApi`. The `CoSimulation.tsx` component displays simulation status and results path using the useCosimulation hook, which makes use of `CoSimulationApi`.\
+Error handling is managed by `ErrorSnackbar.tsx`, which is being triggered and updated at each error captured, and displayed in a notification at the bottom of the screen.
+
+#### Class Diagram
+
+```mermaid
+classDiagram
+    %% App Component %%
+    class App {
+        - darkMode: boolean
+        - sidebarOpen: boolean
+        - sidebarWidth: number
+        + toggleDarkMode(): void
+        + toggleSidebar(): void
+        + handleResize(): void
+        + handleToggleDarkMode(): void
+        + handleError(errorMessage: string): void
+    }
+
+    %% Sidebar Component %%
+    class Sidebar {
+        - isResponsive: boolean
+        - manualOpen: boolean
+        + handleResize(): void
+        + handleToggle(): void
+    }
+
+    %% Bottom Component %%
+    class Bottom {
+        - maestroRunning: boolean
+        + toggleMaestroState(): Promise<void>
+    }
+
+    %% ErrorSnackbar Component %%
+    class ErrorSnackbar {
+        - open: boolean
+        - message: string
+        - severity: 'info' | 'error' | 'warning' | 'success'
+        + handleError(errorMessage: string): void
+        + handleClose(): void
+    }
+
+    %% CoSimulation Component %%
+    class CoSimulation {
+        + error: string | null
+        + simulationStatus: string
+        + resultsPath: string | null
+    }
+
+    %% useCosimulation Hook %%
+    class useCosimulation {
+        - error: string | null
+        - simulationStatus: string
+        - resultsPath: string | null
+        + handleStatusUpdate(event: unknown, status: string): Promise<void>
+        + handleCoeError(event: unknown, errorMessage: string): void
+        + handleCoeReset(): void
+    }
+
+    %% CosimulationAPI Interface %%
+    class CosimulationAPI {
+        + startMaestro(): Promise<void>
+        + stopMaestro(): Promise<void>
+        + startSimulation(): Promise<void>
+        + onSimulationStatus(callback): void
+        + removeSimulationStatusListener(callback): void
+        + addCoeErrorListener(callback): void
+        + removeCoeErrorListener(): void
+        + getSessionId(): Promise<string | null>
+        + getSimulationResult(sessionId: string): Promise<string>
+    }
+
+    %% Relationships %%
+    App --> Sidebar
+    App --> Bottom
+    App --> ErrorSnackbar
+    App --> CoSimulation
+    CoSimulation --> useCosimulation
+    Bottom --> CosimulationAPI
+    useCosimulation --> CosimulationAPI
+    ErrorSnackbar --> CosimulationAPI
+```
+
+#### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App
+    participant Sidebar
+    participant Bottom
+    participant CoSimulation
+    participant ErrorSnackbar
+    participant CosimulationAPI
+
+    %% 1. App Initialization %%
+    User->>App: Open Application
+    App->>Sidebar: mount()
+    App->>Bottom: mount()
+    App->>CoSimulation: mount()
+    App->>ErrorSnackbar: mount()
+
+    %% 2. Starting Maestro %%
+    User->>Bottom: Click "Start CoE" Button (toggleMaestroState)
+    Bottom->>CosimulationAPI: startMaestro()
+    CosimulationAPI-->>Bottom: Maestro Started
+    Bottom-->>CoSimulation: setSimulationStatus("Maestro Started")
+
+    %% 3. Running Simulation %%
+    User->>Sidebar: Click "CoSimulation" Navigation
+    Sidebar-->>CoSimulation: Render Component
+    User->>CoSimulation: Click "Run Simulation" Button
+    CoSimulation->>CosimulationAPI: startSimulation()
+    CosimulationAPI-->>CoSimulation: onSimulationStatus("Simulating...")
+    CosimulationAPI-->>CoSimulation: onSimulationStatus("Simulation Completed")
+
+    %% 4. Error Handling %%
+    CosimulationAPI-->>ErrorSnackbar: addErrorListener(errorMessage)
+    ErrorSnackbar-->>User: Display Error Notification (Snackbar)
+```
+
 ### Maestro Management Model
 
 The system is designed to manage the startup of Maestro server and the CoSimulation lifecycle through modular components:
