@@ -74,6 +74,10 @@ The core `App` component initializes the UI for the INTO-CPS Application, manage
 The `Bottom.tsx` component allows users to start/stop the Maestro engine, required to run a CoSimulation, using `CoSimulationApi`. The `CoSimulation.tsx` component displays simulation status and results path using the useCosimulation hook, which makes use of `CoSimulationApi`.\
 Error handling is managed by `ErrorSnackbar.tsx`, which is being triggered and updated at each error captured, and displayed in a notification at the bottom of the screen.
 
+#### Package Diagram
+
+![Package Diagram React App](react_app_package.png)
+
 #### Class Diagram
 
 ```mermaid
@@ -307,7 +311,7 @@ sequenceDiagram
 
 ```
 
-### Maestro Model and UI via IPC interaction
+### Maestro Model and React communication using IPC
 
 This squence diagram illustrates the interaction between the Maestro Model and the Electron IPC system for managing the CoSimulation process. The process involves starting the maestro server from the `Bottom` bar and running the CosSmulation from the application menu, result handling, and error management.
 
@@ -373,4 +377,52 @@ sequenceDiagram
     IPC->>Snackbar: show-error(errorMessage)
     Snackbar->>Snackbar: Display error in UI
 
+```
+
+### React -> IPC Communication
+
+The interaction between the React frontend and the Electron logic is being managed through IPC. \
+When a user interacts with the application, the React frontend calls methods exposed through `window.cosimulationAPI`. This API works as a secure bridge between the frontend and the Electron logic. \
+For instance, invoking `startMaestro()` from the frontend (`Bottom`) triggers `start-maestro`, an event handled by `ipcMain` in the main Electron process. The `startMaestro` function is then executed by the backend, initiating the Maestro process.
+The user interface receives real-time feedback thanks to the emitted statuses from the backend, like `simulation-status-update`, captured by the hook `useCosimulation`, which updates the UI.
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant Bottom as Bottom.tsx (React)
+    participant CosimAPI as window.cosimulationAPI (IPC Renderer)
+    participant IPCMain as ipcMain (Electron Main)
+    participant Maestro as MaestroManager (Backend Process)
+    participant ErrorHandler as ErrorHandler
+    participant Snackbar as ErrorSnackbar (React)
+
+    %% 1. User Starts Maestro %%
+    User->>Bottom: Click "Start CoE" Button
+    Bottom->>CosimAPI: startMaestro()
+    CosimAPI->>IPCMain: invoke('start-maestro')
+    IPCMain->>Maestro: startMaestro()
+    Maestro-->>IPCMain: emit('simulation-status-update', "Maestro Started")
+    IPCMain-->>CosimAPI: simulation-status-update("Maestro Started")
+    CosimAPI-->>Bottom: Update UI (Status: "Maestro Started")
+
+    %% 2. Running Simulation %%
+    User->>Bottom: Click "Start Simulation" Button
+    Bottom->>CosimAPI: startSimulation()
+    CosimAPI->>IPCMain: invoke('start-simulation')
+    IPCMain->>Maestro: startSimulation()
+    Maestro-->>IPCMain: emit('simulation-status-update', "Simulating...")
+    IPCMain-->>CosimAPI: simulation-status-update("Simulating...")
+    CosimAPI-->>Bottom: Update UI (Status: "Simulating...")
+
+    %% 3. Simulation Completed %%
+    Maestro-->>IPCMain: emit('simulation-status-update', "Simulation Completed")
+    IPCMain-->>CosimAPI: simulation-status-update("Simulation Completed")
+    CosimAPI-->>Bottom: Update UI (Status: "Simulation Completed")
+
+    %% 4. Error Handling %%
+    Maestro-->>ErrorHandler: handleError(error)
+    ErrorHandler->>IPCMain: emit('show-error', errorMessage)
+    IPCMain-->>CosimAPI: show-error(errorMessage)
+    CosimAPI-->>Snackbar: Display Error Snackbar
+    Snackbar-->>User: Show Error Notification
 ```
