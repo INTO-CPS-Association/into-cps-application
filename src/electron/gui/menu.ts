@@ -1,8 +1,8 @@
-import { Menu, BrowserWindow, app, ipcMain, MenuItemConstructorOptions } from 'electron';
+import { Menu, BrowserWindow, app, MenuItemConstructorOptions } from 'electron';
 
 let cosimulationEnabled = false;
 
-export function createTopMenu(mainWindow: BrowserWindow | null): void {
+export function createTopMenu(mainWindow: BrowserWindow): void {
   const template: MenuItemConstructorOptions[] = [
     {
       label: 'File',
@@ -19,13 +19,24 @@ export function createTopMenu(mainWindow: BrowserWindow | null): void {
       submenu: [
         {
           label: 'Toggle Dark Mode',
-          click: () => mainWindow?.webContents.send('toggle-dark-mode'),
+          click: () => {
+            if (mainWindow?.webContents) {
+              console.log('Sending toggle-dark-mode to renderer...');
+              mainWindow.webContents.send('toggle-dark-mode');
+            } else {
+              console.error('Main window or webContents is not available.');
+            }
+          },
         },
         {
           label: 'Toggle Developer Tools',
           accelerator: 'CmdOrCtrl+Shift+I',
           click: () => {
-            mainWindow?.webContents.toggleDevTools();
+            if (mainWindow) {
+              mainWindow.webContents.toggleDevTools();
+            } else {
+              console.error('Main window is not available.');
+            }
           },
         },
       ],
@@ -37,18 +48,24 @@ export function createTopMenu(mainWindow: BrowserWindow | null): void {
           label: 'Start Simulation',
           accelerator: process.platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
           enabled: cosimulationEnabled,
-          click: async () => {
-            ipcMain.emit('start-simulation');
+          click: () => {
+            if (mainWindow?.webContents) {
+              console.log('Invoking menu-start-simulation...');
+              mainWindow.webContents.send('menu-start-simulation');
+            } else {
+              console.error('Main window or webContents is not available.');
+            }
           },
         },
       ],
     },
   ];
+
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
 
-export function updateCosimulationMenu(enabled: boolean): void {
+export function updateCosimulationMenu(mainWindow: BrowserWindow, enabled: boolean): void {
   cosimulationEnabled = enabled;
-  createTopMenu(null);
+  createTopMenu(mainWindow);
 }

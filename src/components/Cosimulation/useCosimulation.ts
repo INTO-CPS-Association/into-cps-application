@@ -5,6 +5,21 @@ export const useCosimulation = () => {
   const [simulationStatus, setSimulationStatus] = useState<string>('Idle');
   const [resultsPath, setResultsPath] = useState<string | null>(null);
 
+  const startSimulation = async () => {
+    try {
+      const response = await window?.cosimulationAPI?.maestro('start-simulation');
+
+      if (response?.success) {
+        setSimulationStatus('Simulating...');
+      } else {
+        setError(response?.error || 'Failed to start simulation.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred while starting the simulation.');
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const handleStatusUpdate = async (event: unknown, status: string) => {
       setSimulationStatus(status);
@@ -16,8 +31,7 @@ export const useCosimulation = () => {
             throw new Error('Session ID is not available.');
           }
 
-          const resultPath =
-            await window?.cosimulationAPI?.getSimulationResult(sessionId);
+          const resultPath = await window?.cosimulationAPI?.getSimulationResult(sessionId);
           setResultsPath(resultPath || null);
         } catch (err) {
           console.error('Error fetching simulation results:', err);
@@ -48,5 +62,5 @@ export const useCosimulation = () => {
     };
   }, []);
 
-  return { error, simulationStatus, resultsPath };
+  return { error, simulationStatus, resultsPath, startSimulation };
 };

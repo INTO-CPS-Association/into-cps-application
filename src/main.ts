@@ -1,15 +1,25 @@
-import { app, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { createWindow, getMainWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
 import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from './cosimulation/maestro';
+import { MaestroResponse } from './types/global';
+
+export let mainWindow: BrowserWindow | null = null;
 
 app.on('ready', () => {
-  const mainWindow = createWindow();
-  createTopMenu(mainWindow);
+  mainWindow = createWindow();
+  mainWindow.once('ready-to-show', () => {
+    createTopMenu(mainWindow!);
+  });
 });
 
 app.on('activate', () => {
-  if (getMainWindow() === null) createWindow();
+  if (!mainWindow) {
+    mainWindow = createWindow();
+    mainWindow.once('ready-to-show', () => {
+      createTopMenu(mainWindow!);
+    });
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -18,19 +28,48 @@ app.on('window-all-closed', () => {
 
 
 ipcMain.on('toggle-dark-mode', () => {
-  getMainWindow()?.webContents.send('toggle-dark-mode');
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('toggle-dark-mode');
+  } else {
+    console.error('Main window or webContents is not available.');
+  }
 });
 
-ipcMain.handle('start-maestro', startMaestro);
-ipcMain.handle('stop-maestro', stopMaestro);
+ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
+  const { type, data } = args;
+  try {
+    switch (type) {
+      case 'start':
+        await startMaestro();
+        return { success: true, message: 'Maestro started' };
+
+      case 'stop':
+        await stopMaestro();
+        return { success: true, message: 'Maestro stopped' };
+
+      case 'start-simulation':
+        await startSimulation();
+        return { success: true, message: 'Simulation started' };
+
+      case 'get-result':
+        const resultPath = await getSimulationResult(data?.sessionId);
+        return { success: true, resultPath };
+
+      default:
+        throw new Error(`Unknown type: ${type}`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    console.error(`[Maestro Handler Error]: ${message}`);
+    return { success: false, error: message };
+  }
+});
+
 
 ipcMain.on('simulation-status-update', (_, status: string) => {
   getMainWindow()?.webContents.send('simulation-status', status);
 });
 
-ipcMain.on('start-simulation', async () => {
-  await startSimulation();
-});
 
 ipcMain.on('trigger-error', (_, message: string) => {
   console.error('[Main] Received Error:', message);

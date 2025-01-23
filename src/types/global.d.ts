@@ -4,22 +4,27 @@ export interface IElectronAPI {
   removeToggleDarkModeListener: () => void;
   addErrorListener: (callback?: (message: string) => void) => void;
   removeErrorListener: () => void;
+  on: (event: string, callback: (...args: any[]) => void) => void;
+  off: (event: string, callback: (...args: any[]) => void) => void;
 }
 
 export interface ICosimulationAPI {
-  startMaestro: () => Promise<void>;
-  stopMaestro: () => Promise<void>;
-  startSimulation: () => Promise<void>;
+  on: (event: string, callback: (...args: any[]) => void) => void;
+  off: (event: string, callback: (...args: any[]) => void) => void;
+  maestro: (type: string, data?: any) => Promise<{ success: boolean; message?: string; resultPath?: string; error?: string }>;
   onSimulationStatus: (callback: (event: unknown, status: string) => void) => void;
   removeSimulationStatusListener: (callback: (event: unknown, status: string) => void) => void;
   addCoeErrorListener: (callback: (event: unknown, errorMessage: string) => void) => void;
   removeCoeErrorListener: () => void;
+  addCoeResetListener: (callback: () => void) => void;
+  removeCoeResetListener: () => void;
   getConfig: () => Promise<{ maestroJarPath: string; simulationConfigPath: string }>;
   getSessionId: () => Promise<string | null>;
   getSimulationResult: (sessionId: string) => Promise<string>;
-  addCoeResetListener: (callback: () => void) => void;
-  removeCoeResetListener: () => void;
+  addListener: (event: string, callback: (...args: any[]) => void) => void;
+  removeListener: (event: string, callback: (...args: any[]) => void) => void;
 }
+
 
 export interface ConfigMaestro {
   maestroJarPath: string;
@@ -29,11 +34,18 @@ export interface ConfigMaestro {
   outputPath: string;
 }
 
+export interface MaestroResponse {
+  success: boolean;
+  message?: string;
+  resultPath?: string;
+  error?: string;
+}
+
 declare global {
   interface Window {
     electronAPI: IElectronAPI;
     cosimulationAPI: ICosimulationAPI;
     ConfigMaestro?: ConfigMaestro;
-    store: Store<RootState>;
+    MaestroResponse: MaestroResponse;
   }
 }

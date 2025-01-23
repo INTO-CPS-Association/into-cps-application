@@ -67,6 +67,25 @@ const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleMenuStartSimulation = async () => {
+      try {
+        const response = await window?.cosimulationAPI?.maestro('start-simulation');
+        if (!response?.success) {
+          console.error('Simulation failed to start:', response?.error || 'Unknown error');
+        }
+      } catch (err) {
+        console.error('Error in menu-start-simulation:', err);
+      }
+    };
+
+    window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
+
+    return () => {
+      window.electronAPI.off('menu-start-simulation', handleMenuStartSimulation);
+    };
+  }, []);
+  
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>
       <CssBaseline />

@@ -10,14 +10,17 @@ const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ side
   
   const toggleMaestroState = async () => {
     try {
-      if (maestroRunning) {
-        await window?.cosimulationAPI?.stopMaestro();
+      const type = maestroRunning ? 'stop' : 'start';
+      const response = await window?.cosimulationAPI?.maestro(type);
+
+      if (response?.success) {
+        setMaestroRunning(!maestroRunning);
       } else {
-        await window?.cosimulationAPI?.startMaestro();
+        console.error('Error toggling Maestro:', response?.error || 'Unknown error');
       }
-      setMaestroRunning(!maestroRunning);
     } catch (error) {
-      console.error('Error toggling Maestro:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Error toggling Maestro:', message);
     }
   };
 

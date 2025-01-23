@@ -10,6 +10,7 @@ import { SimulationStatus, MaestroStatus } from '../utils/constants/cosimulation
 import { configMaestro, maestroJarPath, tempMaestroJarPath } from '../utils/config';
 import { handleError } from '../utils/errorHandler';
 import { updateCosimulationMenu } from '../electron/gui/menu';
+import { mainWindow } from '../main'; 
 
 const { simulationConfigPath, fmusPath, multiModels, outputPath } = configMaestro;
 const MAESTRO_PORT = 8082;
@@ -44,8 +45,8 @@ async function startMaestro(): Promise<void> {
       await killProcessOnPort(MAESTRO_PORT);
     }
 
-    if (maestroProcess) {
-      updateCosimulationMenu(true);
+    if (maestroProcess && mainWindow) {
+      updateCosimulationMenu(mainWindow, true);
       return;
     }
 
@@ -69,7 +70,7 @@ async function startMaestro(): Promise<void> {
           console.log(MaestroStatus.MaestroServerReady);
           serverReady = true;
           sendSimulationStatus(MaestroStatus.MaestroStarted);
-          updateCosimulationMenu(true);
+          mainWindow && updateCosimulationMenu(mainWindow, true);
           resolve();
         }
       });
@@ -95,7 +96,7 @@ async function startMaestro(): Promise<void> {
       maestroProcess.on('close', (code) => {
         console.log(`[Maestro] Process exited with code: ${code}`);
         maestroProcess = null;
-        updateCosimulationMenu(false);
+        mainWindow && updateCosimulationMenu(mainWindow, false);
         if (!serverReady) {
           handleError(new Error(MaestroStatus.MaestroStoppedBeforeReady));
           reject(new Error(MaestroStatus.MaestroStoppedBeforeReady));
