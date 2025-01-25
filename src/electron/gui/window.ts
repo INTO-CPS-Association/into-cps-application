@@ -28,7 +28,6 @@ export function createWindow(): BrowserWindow {
   });
 
   console.log(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
-  console.log(`Loading URL: ${startUrl}`);
 
   mainWindow.loadURL(startUrl).catch((error) => {
     console.error('Failed to load URL:', error);

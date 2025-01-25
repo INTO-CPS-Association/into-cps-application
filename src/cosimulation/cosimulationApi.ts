@@ -1,20 +1,21 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 export interface CosimulationAPI {
-  maestro: (type: string, data?: any) => Promise<any>;
+  maestro: (args: { type: string; data?: unknown }) => Promise<unknown>;
   onSimulationStatus: (callback: (event: unknown, status: string) => void) => void;
   removeSimulationStatusListener: (callback: (event: unknown, status: string) => void) => void;
   addCoeErrorListener: (callback: (event: unknown, errorMessage: string) => void) => void;
   removeCoeErrorListener: () => void;
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
-  on: (event: string, callback: (...args: any[]) => void) => void;
-  off: (event: string, callback: (...args: any[]) => void) => void;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  off: (event: string, callback: (...args: unknown[]) => void) => void;
+  getSessionId: () => Promise<string | null>;
 }
 
 
 export const cosimulationAPI: CosimulationAPI = {
-  maestro: (type: string, data?: any) => ipcRenderer.invoke('maestro', { type, data }),
+  maestro: (args: { type: string; data?: unknown }) => ipcRenderer.invoke('maestro', args),
   onSimulationStatus: (callback) => ipcRenderer.on('simulation-status', callback),
   removeSimulationStatusListener: (callback) => ipcRenderer.off('simulation-status', callback),
   addCoeErrorListener: (callback) => ipcRenderer.on('coe-error', (event, errorMessage) => callback(event, errorMessage)),
@@ -23,6 +24,7 @@ export const cosimulationAPI: CosimulationAPI = {
   removeCoeResetListener: () => ipcRenderer.removeAllListeners('coe-reset'),
   on: (event, callback) => ipcRenderer.on(event, (_, ...args) => callback(...args)),
   off: (event, callback) => ipcRenderer.off(event, callback),
+  getSessionId: () => ipcRenderer.invoke('get-session-id'), 
 };
 
 contextBridge.exposeInMainWorld('cosimulationAPI', cosimulationAPI);

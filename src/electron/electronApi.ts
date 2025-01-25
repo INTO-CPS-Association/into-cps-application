@@ -15,10 +15,10 @@ export const electronAPI = {
   removeErrorListener: () => {
     ipcRenderer.removeAllListeners('show-error');
   },
-  on: (event: string, callback: (...args: any[]) => void) => {
+  on: (event: string, callback: (...args: unknown[]) => void) => {
     ipcRenderer.on(event, (_, ...args) => callback(...args));
   },
-  off: (event: string, callback: (...args: any[]) => void) => {
+  off: (event: string, callback: (...args: unknown[]) => void) => {
     ipcRenderer.off(event, callback);
   },
 };

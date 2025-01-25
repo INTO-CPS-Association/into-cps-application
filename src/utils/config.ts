@@ -1,33 +1,45 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as dotenv from 'dotenv';
 import { ConfigMaestro } from '../types/global';
 
-dotenv.config();
+let configMaestro: ConfigMaestro | null = null;
 
-const configFilePath = process.env.CONFIG_MAESTRO_PATH || path.resolve('./config.json');
+export function setProjectPath(projectPath: string): void {
+  const cosimulationPath = path.join(projectPath, 'cosimulation');
+  const defaultPath = path.join(cosimulationPath, 'default');
 
-if (!configFilePath || !fs.existsSync(configFilePath)) {
-  console.error(`Config file not found at ${configFilePath}`);
-  process.exit(1);
+  configMaestro = {
+    cosimulationPath,
+    defaultPath, 
+    simulationConfigPath: path.join(defaultPath, 'experiment.json'),
+    fmusPath: path.join(projectPath, 'FMUs'),
+    multiModels: path.join(defaultPath, 'multi-model.json'),
+    outputPath: path.join(projectPath, 'results', 'cosimulation', 'default'),
+    maestroJarPath: path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar'),
+    tempMaestroJarPath: path.join('/tmp', 'maestro-webapi-3.0.0-bundle.jar'),
+  };
+
+  const outputPath = configMaestro.outputPath;
+  if (!fs.existsSync(outputPath)) {
+    fs.mkdirSync(outputPath, { recursive: true });
+  }
+
+  try {
+    const { simulationConfigPath, multiModels } = configMaestro;
+
+    if (fs.existsSync(simulationConfigPath)) {
+      fs.copyFileSync(simulationConfigPath, path.join(outputPath, 'experiment.json'));
+    }
+
+    if (fs.existsSync(multiModels)) {
+      fs.copyFileSync(multiModels, path.join(outputPath, 'multi-model.json'));
+    }
+  } catch (error) {
+    console.error('[setProjectPath] Error copying configuration files to results folder:', error);
+  }
 }
 
-let configMaestro: ConfigMaestro;
-try {
-  const configData = fs.readFileSync(configFilePath, 'utf-8');
-  configMaestro = JSON.parse(configData);
-} catch (error) {
-  console.error('Failed to load config file:', error);
-  process.exit(1);
+
+export function getConfig(): ConfigMaestro | null {
+  return configMaestro;
 }
-
-const outputPath = configMaestro.outputPath;
-
-if (!fs.existsSync(outputPath)) {
-  fs.mkdirSync(outputPath, { recursive: true });
-}
-
-const maestroJarPath = path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar');
-const tempMaestroJarPath = path.join(process.env.TEMP || '/tmp', 'maestro-webapi-3.0.0-bundle.jar');
-
-export { configMaestro, maestroJarPath, tempMaestroJarPath };

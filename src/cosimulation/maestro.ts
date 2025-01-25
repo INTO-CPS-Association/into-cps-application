@@ -4,38 +4,51 @@ import kill from 'tree-kill';
 import { spawn, ChildProcess } from 'child_process';
 import { setSessionId } from './simulationContext';
 import { pathToFileURL } from 'url';
-import { ipcMain } from 'electron';
 import { isPortInUse, killProcessOnPort } from '../utils/processes/maestroUtils';
 import { SimulationStatus, MaestroStatus } from '../utils/constants/cosimulation/statuses';
-import { configMaestro, maestroJarPath, tempMaestroJarPath } from '../utils/config';
 import { handleError } from '../utils/errorHandler';
 import { updateCosimulationMenu } from '../electron/gui/menu';
-import { mainWindow } from '../main'; 
+import { mainWindow } from '../main';
+import { getConfig } from '../utils/config';
 
-const { simulationConfigPath, fmusPath, multiModels, outputPath } = configMaestro;
 const MAESTRO_PORT = 8082;
 const MAESTRO_BASE_URL = `http://localhost:${MAESTRO_PORT}`;
 
 let maestroProcess: ChildProcess | null = null;
+let isSimulationInProgress = false;
 
 function extractMaestroJar() {
+  const config = getConfig();
+  if (!config) {
+    throw new Error('Configuration not set. Please select a project.');
+  }
+
+  const { maestroJarPath, tempMaestroJarPath } = config;
+
   try {
     if (!fs.existsSync(maestroJarPath)) {
-      handleError(new Error(MaestroStatus.MaestroJarNotFound));
-      return;
+      throw new Error(
+        `Maestro JAR not found at ${maestroJarPath}. Ensure the file is in 'src/resources/maestro/'.`
+      );
     }
 
     if (!fs.existsSync(tempMaestroJarPath)) {
       fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
-    } else {
-      console.log(MaestroStatus.MaestroJarExtracted);
     }
   } catch (error) {
     handleError(error);
+    throw error;
   }
 }
 
 async function startMaestro(): Promise<void> {
+  const config = getConfig();
+  if (!config) {
+    throw new Error('Configuration not set. Please select a project.');
+  }
+
+  const { tempMaestroJarPath } = config;
+
   try {
     await stopMaestro();
 
@@ -67,10 +80,11 @@ async function startMaestro(): Promise<void> {
         console.log(`[Maestro STDOUT]: ${message}`);
 
         if (message.includes('Starting ProtocolHandler ["http-nio-8082"]')) {
-          console.log(MaestroStatus.MaestroServerReady);
           serverReady = true;
           sendSimulationStatus(MaestroStatus.MaestroStarted);
-          mainWindow && updateCosimulationMenu(mainWindow, true);
+          if (mainWindow) {
+            updateCosimulationMenu(mainWindow, true);
+          }
           resolve();
         }
       });
@@ -96,7 +110,9 @@ async function startMaestro(): Promise<void> {
       maestroProcess.on('close', (code) => {
         console.log(`[Maestro] Process exited with code: ${code}`);
         maestroProcess = null;
-        mainWindow && updateCosimulationMenu(mainWindow, false);
+        if (mainWindow) {
+          updateCosimulationMenu(mainWindow, false);
+        }
         if (!serverReady) {
           handleError(new Error(MaestroStatus.MaestroStoppedBeforeReady));
           reject(new Error(MaestroStatus.MaestroStoppedBeforeReady));
@@ -136,21 +152,44 @@ async function stopMaestro(): Promise<void> {
 }
 
 function sendSimulationStatus(status: string): void {
-  ipcMain.emit('simulation-status-update', null, status);
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('simulation-status', status);
+  } else {
+    console.error('[sendSimulationStatus] Main window not available.');
+  }
 }
 
 async function startSimulation(): Promise<void> {
   try {
+    const config = getConfig();
+    if (!config) {
+      throw new Error('Configuration not set. Please select a project.');
+    }
+
+    const { simulationConfigPath, multiModels, fmusPath } = config;
+
+    if (isSimulationInProgress) {
+      console.warn('[StartSimulation] Simulation already in progress.');
+      return;
+    }
+
+    isSimulationInProgress = true;
     sendSimulationStatus(SimulationStatus.StartingSimulation);
 
-    const maestroPath = path.join(simulationConfigPath, 'experiment.json');
-    const mmPath = path.join(multiModels, 'multi-model.json');
+    if (!fs.existsSync(simulationConfigPath)) {
+      console.error('[StartSimulation] Missing file:', simulationConfigPath);
+      throw new Error('experiment.json not found.');
+    }
+    if (!fs.existsSync(multiModels)) {
+      console.error('[StartSimulation] Missing file:', multiModels);
+      throw new Error('multi-model.json not found.');
+    }
 
-    const maestroConfig = JSON.parse(fs.readFileSync(maestroPath, 'utf8'));
-    const mmConfig = JSON.parse(fs.readFileSync(mmPath, 'utf8'));
+    const experimentConfig = JSON.parse(fs.readFileSync(simulationConfigPath, 'utf8'));
+    const multiModelConfig = JSON.parse(fs.readFileSync(multiModels, 'utf8'));
 
     const resolvedFmus = Object.fromEntries(
-      Object.entries(mmConfig.fmus)
+      Object.entries(multiModelConfig.fmus)
         .filter(([_, relativePath]) => typeof relativePath === 'string' && relativePath.trim() !== '')
         .map(([key, relativePath]) => [
           key,
@@ -158,9 +197,9 @@ async function startSimulation(): Promise<void> {
         ])
     );
 
-    maestroConfig.connections = mmConfig.connections;
-    maestroConfig.parameters = mmConfig.parameters;
-    maestroConfig.fmus = resolvedFmus;
+    experimentConfig.connections = multiModelConfig.connections;
+    experimentConfig.parameters = multiModelConfig.parameters;
+    experimentConfig.fmus = resolvedFmus;
 
     const sessionResponse = await fetch(`${MAESTRO_BASE_URL}/createSession`, { method: 'GET' });
 
@@ -177,7 +216,7 @@ async function startSimulation(): Promise<void> {
     const initializeResponse = await fetch(`${MAESTRO_BASE_URL}/initialize/${sessionId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(maestroConfig),
+      body: JSON.stringify(experimentConfig),
     });
 
     if (!initializeResponse.ok) {
@@ -192,7 +231,7 @@ async function startSimulation(): Promise<void> {
     const simulateResponse = await fetch(`${MAESTRO_BASE_URL}/simulate/${sessionId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ startTime: maestroConfig.startTime, endTime: maestroConfig.endTime }),
+      body: JSON.stringify({ startTime: experimentConfig.startTime, endTime: experimentConfig.endTime }),
     });
 
     if (!simulateResponse.ok) {
@@ -211,11 +250,22 @@ async function startSimulation(): Promise<void> {
 
     handleError(customMessage);
     sendSimulationStatus(SimulationStatus.SimulationFailed + customMessage);
+  } finally {
+    isSimulationInProgress = false;
   }
 }
 
+
 async function getSimulationResult(sessionId: string): Promise<string> {
+
   try {
+    const config = getConfig();
+    if (!config) {
+      throw new Error('Configuration not set. Please select a project.');
+    }
+
+    const { outputPath } = config;
+
     const resultResponse = await fetch(`${MAESTRO_BASE_URL}/result/${sessionId}/plain`);
     if (!resultResponse.ok) {
       handleError(new Error(`Error fetching CSV results: ${resultResponse.statusText}`));
@@ -226,14 +276,13 @@ async function getSimulationResult(sessionId: string): Promise<string> {
     const outputFile = path.join(outputPath, `simulation-${sessionId}.csv`);
 
     fs.writeFileSync(outputFile, csvData);
-    console.log(`Simulation CSV results saved to: ${outputFile}`);
-
     return outputFile;
   } catch (error) {
     handleError(error);
     return '';
   }
 }
+
 
 export {
   startMaestro,

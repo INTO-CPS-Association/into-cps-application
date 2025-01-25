@@ -4,14 +4,14 @@ export interface IElectronAPI {
   removeToggleDarkModeListener: () => void;
   addErrorListener: (callback?: (message: string) => void) => void;
   removeErrorListener: () => void;
-  on: (event: string, callback: (...args: any[]) => void) => void;
-  off: (event: string, callback: (...args: any[]) => void) => void;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  off: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
 export interface ICosimulationAPI {
-  on: (event: string, callback: (...args: any[]) => void) => void;
-  off: (event: string, callback: (...args: any[]) => void) => void;
-  maestro: (type: string, data?: any) => Promise<{ success: boolean; message?: string; resultPath?: string; error?: string }>;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  off: (event: string, callback: (...args: unknown[]) => void) => void;
+  maestro: (args: { type: string; data?: unknown }) => Promise<{ success: boolean; message?: string; resultPath?: string; error?: string }>;
   onSimulationStatus: (callback: (event: unknown, status: string) => void) => void;
   removeSimulationStatusListener: (callback: (event: unknown, status: string) => void) => void;
   addCoeErrorListener: (callback: (event: unknown, errorMessage: string) => void) => void;
@@ -21,13 +21,16 @@ export interface ICosimulationAPI {
   getConfig: () => Promise<{ maestroJarPath: string; simulationConfigPath: string }>;
   getSessionId: () => Promise<string | null>;
   getSimulationResult: (sessionId: string) => Promise<string>;
-  addListener: (event: string, callback: (...args: any[]) => void) => void;
-  removeListener: (event: string, callback: (...args: any[]) => void) => void;
+  addListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
 
 export interface ConfigMaestro {
+  cosimulationPath: string;
+  defaultPath: string;
   maestroJarPath: string;
+  tempMaestroJarPath: string;
   simulationConfigPath: string;
   fmusPath: string;
   multiModels: string;

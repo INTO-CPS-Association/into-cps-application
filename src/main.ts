@@ -1,8 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { createWindow, getMainWindow } from './electron/gui/window';
+import { createWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
 import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from './cosimulation/maestro';
 import { MaestroResponse } from './types/global';
+import { getSessionId } from './cosimulation/simulationContext';
 
 export let mainWindow: BrowserWindow | null = null;
 
@@ -36,6 +37,11 @@ ipcMain.on('toggle-dark-mode', () => {
 });
 
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
+  if (!args || typeof args.type !== 'string') {
+    console.error('[IPC Handler] Invalid or missing args:', args);
+    return { success: false, error: 'Invalid arguments provided to maestro handler' };
+  }
+
   const { type, data } = args;
   try {
     switch (type) {
@@ -51,9 +57,11 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
         await startSimulation();
         return { success: true, message: 'Simulation started' };
 
-      case 'get-result':
+      case 'get-result':{
+        console.log('[Maestro Handler] Fetching result for sessionId:', data?.sessionId);
         const resultPath = await getSimulationResult(data?.sessionId);
         return { success: true, resultPath };
+      }
 
       default:
         throw new Error(`Unknown type: ${type}`);
@@ -65,17 +73,16 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   }
 });
 
-
-ipcMain.on('simulation-status-update', (_, status: string) => {
-  getMainWindow()?.webContents.send('simulation-status', status);
-});
-
-
 ipcMain.on('trigger-error', (_, message: string) => {
-  console.error('[Main] Received Error:', message);
-  getMainWindow()?.webContents.send('show-error', message);
+  if (mainWindow?.webContents) {
+  mainWindow.webContents.send('show-error', message);
+  }else {
+    console.error('Main window or webContents is not available.');
+  }
 });
 
-ipcMain.handle('get-simulation-result', async (event: unknown, sessionId: string) => {
-  return await getSimulationResult(sessionId);
+ipcMain.handle('get-session-id', async () => {
+  const sessionId = getSessionId();
+  console.log('[IPC Main] getSessionId:', sessionId);
+  return sessionId;
 });

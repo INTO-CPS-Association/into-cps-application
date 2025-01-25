@@ -6,8 +6,9 @@ import Sidebar from './components/Sidebar';
 import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
-import CoSimulation from './components/Cosimulation/CoSimulation';
+import CoSimulation from './components/Cosimulation/Cosimulation';
 import { styleConstants } from './utils/constants';
+import { getSessionId } from './cosimulation/simulationContext';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -50,6 +51,19 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const handleProjectSelected = (...args: unknown[]) => {
+      const selectedPath = args[0] as string;
+    };
+  
+    window.electronAPI?.on('project-selected', handleProjectSelected);
+  
+    return () => {
+      window.electronAPI?.off('project-selected', handleProjectSelected);
+    };
+  }, []);
+
+  
+  useEffect(() => {
     const handleError = (errorMessage: string) => {
       console.error('[App] Error received:', errorMessage);
     };
@@ -68,23 +82,37 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let simulationInProgress = false;
+  
     const handleMenuStartSimulation = async () => {
+      if (simulationInProgress) {
+        console.warn('Simulation already in progress.');
+        return;
+      }
+  
+      simulationInProgress = true;
       try {
-        const response = await window?.cosimulationAPI?.maestro('start-simulation');
-        if (!response?.success) {
+        const response = await window?.cosimulationAPI?.maestro({
+          type: 'start-simulation',
+          data: { sessionId: getSessionId() },
+        });
+          if (!response?.success) {
           console.error('Simulation failed to start:', response?.error || 'Unknown error');
         }
       } catch (err) {
         console.error('Error in menu-start-simulation:', err);
+      } finally {
+        simulationInProgress = false;
       }
     };
-
+  
     window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
-
+  
     return () => {
       window.electronAPI.off('menu-start-simulation', handleMenuStartSimulation);
     };
   }, []);
+  
   
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>

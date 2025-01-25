@@ -1,4 +1,5 @@
-import { Menu, BrowserWindow, app, MenuItemConstructorOptions } from 'electron';
+import { Menu, BrowserWindow, MenuItemConstructorOptions, dialog } from 'electron';
+import { setProjectPath } from '../../utils/config';
 
 let cosimulationEnabled = false;
 
@@ -8,10 +9,22 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
       label: 'File',
       submenu: [
         {
-          label: 'Quit',
-          accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Alt+F4',
-          click: () => app.quit(),
+          label: 'Choose Project',
+          click: async () => {
+            const result = await dialog.showOpenDialog(mainWindow, {
+              properties: ['openDirectory'],
+              title: 'Select Project Folder',
+            });
+          
+            if (!result.canceled && result.filePaths.length > 0) {
+              const selectedPath = result.filePaths[0];          
+              setProjectPath(selectedPath);
+              mainWindow.webContents.send('project-selected', selectedPath);
+            }
+          },
         },
+        { type: 'separator' },
+        { role: 'quit' },
       ],
     },
     {
@@ -21,7 +34,6 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
           label: 'Toggle Dark Mode',
           click: () => {
             if (mainWindow?.webContents) {
-              console.log('Sending toggle-dark-mode to renderer...');
               mainWindow.webContents.send('toggle-dark-mode');
             } else {
               console.error('Main window or webContents is not available.');
@@ -50,7 +62,6 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
           enabled: cosimulationEnabled,
           click: () => {
             if (mainWindow?.webContents) {
-              console.log('Invoking menu-start-simulation...');
               mainWindow.webContents.send('menu-start-simulation');
             } else {
               console.error('Main window or webContents is not available.');

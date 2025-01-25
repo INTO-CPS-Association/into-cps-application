@@ -4,15 +4,17 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import { styleConstants } from '../utils/constants';
 
-const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth, sidebarOpen }) => {
+const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth }) => {
   const [maestroRunning, setMaestroRunning] = useState(false);
   const theme = useTheme();
   
   const toggleMaestroState = async () => {
     try {
       const type = maestroRunning ? 'stop' : 'start';
-      const response = await window?.cosimulationAPI?.maestro(type);
-
+      const response = await window?.cosimulationAPI?.maestro({
+        type: type,
+      });
+      
       if (response?.success) {
         setMaestroRunning(!maestroRunning);
       } else {

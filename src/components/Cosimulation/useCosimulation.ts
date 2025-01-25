@@ -5,36 +5,29 @@ export const useCosimulation = () => {
   const [simulationStatus, setSimulationStatus] = useState<string>('Idle');
   const [resultsPath, setResultsPath] = useState<string | null>(null);
 
-  const startSimulation = async () => {
-    try {
-      const response = await window?.cosimulationAPI?.maestro('start-simulation');
-
-      if (response?.success) {
-        setSimulationStatus('Simulating...');
-      } else {
-        setError(response?.error || 'Failed to start simulation.');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred while starting the simulation.');
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    const handleStatusUpdate = async (event: unknown, status: string) => {
+    const handleStatusUpdate = async (_: unknown, status: string) => {
       setSimulationStatus(status);
-
       if (status === 'Simulation completed.') {
         try {
           const sessionId = await window?.cosimulationAPI?.getSessionId();
+          console.log("sessionId", sessionId);
           if (!sessionId) {
             throw new Error('Session ID is not available.');
           }
 
-          const resultPath = await window?.cosimulationAPI?.getSimulationResult(sessionId);
-          setResultsPath(resultPath || null);
+          const resultPath = await window?.cosimulationAPI?.maestro({
+            type: 'get-result',
+            data: { sessionId },
+          });
+
+          if (resultPath?.success) {
+            setResultsPath(resultPath.resultPath || null);
+          } else {
+            throw new Error(resultPath?.error || 'Failed to fetch simulation results.');
+          }
         } catch (err) {
-          console.error('Error fetching simulation results:', err);
+          console.error('[useCosimulation] Error fetching simulation results:', err);
           setError('Failed to fetch simulation results.');
         }
       }
@@ -62,5 +55,5 @@ export const useCosimulation = () => {
     };
   }, []);
 
-  return { error, simulationStatus, resultsPath, startSimulation };
+  return { error, simulationStatus, resultsPath };
 };
