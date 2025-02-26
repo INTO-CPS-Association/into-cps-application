@@ -39,9 +39,7 @@ const App: React.FC = () => {
 
     if (window.electronAPI) {
       window.electronAPI.addToggleDarkModeListener(handleToggleDarkMode);
-    } else {
-      console.warn('window.electronAPI not found');
-    }
+    } 
 
     return () => {
       if (window.electronAPI) {
@@ -70,8 +68,6 @@ const App: React.FC = () => {
   
     if (window.electronAPI) {
       window.electronAPI.addErrorListener(handleError);
-    } else {
-      console.warn('[App] window.electronAPI not found!');
     }
   
     return () => {
@@ -100,7 +96,7 @@ const App: React.FC = () => {
           console.error('Simulation failed to start:', response?.error || 'Unknown error');
         }
       } catch (err) {
-        console.error('Error in menu-start-simulation:', err);
+        console.error('Error in starting the simulation:', err);
       } finally {
         simulationInProgress = false;
       }
@@ -112,7 +108,6 @@ const App: React.FC = () => {
       window.electronAPI.off('menu-start-simulation', handleMenuStartSimulation);
     };
   }, []);
-  
   
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>

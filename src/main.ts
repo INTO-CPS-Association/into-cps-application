@@ -4,6 +4,8 @@ import { createTopMenu } from './electron/gui/menu';
 import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from './cosimulation/maestro';
 import { MaestroResponse } from './types/global';
 import { getSessionId } from './cosimulation/simulationContext';
+import { getConfig } from './utils/config';
+import { MaestroNotifications, SimulationStatus } from './utils/constants/cosimulation/statuses';
 
 export let mainWindow: BrowserWindow | null = null;
 
@@ -31,34 +33,42 @@ app.on('window-all-closed', () => {
 ipcMain.on('toggle-dark-mode', () => {
   if (mainWindow?.webContents) {
     mainWindow.webContents.send('toggle-dark-mode');
-  } else {
-    console.error('Main window or webContents is not available.');
   }
 });
 
+let isStartSimulationRunning = false;
+
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   if (!args || typeof args.type !== 'string') {
-    console.error('[IPC Handler] Invalid or missing args:', args);
     return { success: false, error: 'Invalid arguments provided to maestro handler' };
   }
 
   const { type, data } = args;
   try {
     switch (type) {
-      case 'start':
-        await startMaestro();
-        return { success: true, message: 'Maestro started' };
+      case 'start':{
+        const result = await startMaestro();
+        return result;}
 
       case 'stop':
         await stopMaestro();
-        return { success: true, message: 'Maestro stopped' };
+        if (mainWindow?.webContents) {
+          mainWindow.webContents.send('reset-simulation-state');
+        }
+        return { success: true, message: MaestroNotifications.Status.MaestroStopped };
 
-      case 'start-simulation':
-        await startSimulation();
-        return { success: true, message: 'Simulation started' };
-
+        case 'start-simulation':{
+          if (isStartSimulationRunning) {
+            return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
+          }
+  
+          isStartSimulationRunning = true; // to avoid unwanted double calls  
+          await startSimulation();
+          
+          isStartSimulationRunning = false;
+          return { success: true, message: SimulationStatus.Started };}
+  
       case 'get-result':{
-        console.log('[Maestro Handler] Fetching result for sessionId:', data?.sessionId);
         const resultPath = await getSimulationResult(data?.sessionId);
         return { success: true, resultPath };
       }
@@ -67,8 +77,8 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
         throw new Error(`Unknown type: ${type}`);
     }
   } catch (error) {
+    isStartSimulationRunning = false;
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    console.error(`[Maestro Handler Error]: ${message}`);
     return { success: false, error: message };
   }
 });
@@ -76,13 +86,33 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
 ipcMain.on('trigger-error', (_, message: string) => {
   if (mainWindow?.webContents) {
   mainWindow.webContents.send('show-error', message);
-  }else {
-    console.error('Main window or webContents is not available.');
   }
 });
 
 ipcMain.handle('get-session-id', async () => {
   const sessionId = getSessionId();
-  console.log('[IPC Main] getSessionId:', sessionId);
   return sessionId;
 });
+
+ipcMain.handle('get-config', async () => {
+  const config = getConfig();
+  return config;
+});
+
+ipcMain.on('trigger-notification', (_, message: string, type) => {
+  if (mainWindow?.webContents) {
+  mainWindow.webContents.send('show-notification', message, type);
+  }
+});
+
+ipcMain.on('show-notification', (event, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  console.log(`[Main] Sending notification to renderer: ${message} (${type})`);
+
+  if (mainWindow?.webContents) {
+    console.log('[Main] Found mainWindow.webContents, sending event...');
+    mainWindow.webContents.send('show-notification', message, type);
+  } else {
+    console.warn('[Main] mainWindow.webContents is NULL, cannot send notification!');
+  }
+});
+

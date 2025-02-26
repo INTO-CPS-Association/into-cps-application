@@ -1,6 +1,7 @@
 import net from 'net';
 import { exec } from 'node:child_process';
 import kill from 'tree-kill';
+import { handleError, sendNotification } from '../errorHandler';
 
 /**
  * Checks if a given port is in use.
@@ -61,9 +62,9 @@ export async function killProcessOnPort(port: number): Promise<void> {
         console.log(`Killing process on port ${port} with PID: ${pid}`);
         kill(pid, 'SIGTERM', (err) => {
           if (err) {
-            console.error(`Failed to kill process with PID ${pid}:`, err);
+            handleError(`Failed to kill process with PID ${pid}:`);
           } else {
-            console.log(`Successfully killed process with PID ${pid}`);
+            sendNotification(`Successfully killed process with PID ${pid}`, 'success');
           }
           remaining -= 1;
           if (remaining === 0) {

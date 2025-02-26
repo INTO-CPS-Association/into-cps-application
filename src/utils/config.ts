@@ -35,7 +35,7 @@ export function setProjectPath(projectPath: string): void {
       fs.copyFileSync(multiModels, path.join(outputPath, 'multi-model.json'));
     }
   } catch (error) {
-    console.error('[setProjectPath] Error copying configuration files to results folder:', error);
+    console.error('[Project Configuration] Error copying configuration files to results folder:', error);
   }
 }
 

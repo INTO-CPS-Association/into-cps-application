@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SimulationStatus } from '../../utils/constants/cosimulation/statuses';
 
 export const useCosimulation = () => {
   const [error, setError] = useState<string | null>(null);
@@ -6,12 +7,21 @@ export const useCosimulation = () => {
   const [resultsPath, setResultsPath] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleStatusUpdate = async (_: unknown, status: string) => {
+    const handleStatusUpdate = async (_: unknown, status: string) => {      
       setSimulationStatus(status);
-      if (status === 'Simulation completed.') {
+
+      if (status === SimulationStatus.StartingSimulation) {
+        setResultsPath(null);
+        setError(null);
+      }
+
+      if (status === SimulationStatus.Started) {
+        setResultsPath(null);
+      }
+
+      if (status === SimulationStatus.SimulationCompleted) {
         try {
           const sessionId = await window?.cosimulationAPI?.getSessionId();
-          console.log("sessionId", sessionId);
           if (!sessionId) {
             throw new Error('Session ID is not available.');
           }
@@ -33,8 +43,7 @@ export const useCosimulation = () => {
       }
     };
 
-    const handleCoeError = (event: unknown, errorMessage: string) => {
-      console.error('COE Error:', errorMessage);
+    const handleCoeError = (_: unknown, errorMessage: string) => {
       setError(errorMessage);
     };
 
@@ -46,12 +55,12 @@ export const useCosimulation = () => {
 
     window.cosimulationAPI?.onSimulationStatus(handleStatusUpdate);
     window.cosimulationAPI?.addCoeErrorListener(handleCoeError);
-    window.cosimulationAPI?.addCoeResetListener(handleCoeReset);
+    window.electronAPI?.on('reset-simulation-state', handleCoeReset);
 
     return () => {
       window.cosimulationAPI?.removeSimulationStatusListener(handleStatusUpdate);
       window.cosimulationAPI?.removeCoeErrorListener();
-      window.cosimulationAPI?.removeCoeResetListener();
+      window.electronAPI?.off('reset-simulation-state', handleCoeReset);
     };
   }, []);
 

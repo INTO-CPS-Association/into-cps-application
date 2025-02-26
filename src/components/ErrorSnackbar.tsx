@@ -1,25 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 
+type SnackbarSeverity = 'info' | 'error' | 'warning' | 'success';
+
 const ErrorSnackbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [severity, setSeverity] = useState<'info' | 'error' | 'warning' | 'success'>('error');
+  const [severity, setSeverity] = useState<SnackbarSeverity>('info');
 
   useEffect(() => {
-    const handleError = (errorMessage: string) => {
-      setMessage(errorMessage);
+    const handleError = (msg: string) => {
+      setMessage(msg);
       setSeverity('error');
+      setOpen(true);
+    };
+
+    const handleNotification = (msg: string, type: SnackbarSeverity) => {
+      setMessage(msg);
+      setSeverity(type);
       setOpen(true);
     };
 
     if (window?.electronAPI?.addErrorListener) {
       window.electronAPI.addErrorListener(handleError);
     }
+    if (window?.electronAPI?.addNotificationListener) {
+      window.electronAPI.addNotificationListener(handleNotification);
+    } 
 
     return () => {
       if (window?.electronAPI?.removeErrorListener) {
         window.electronAPI.removeErrorListener();
+      }
+      if (window?.electronAPI?.removeNotificationListener) {
+        window.electronAPI.removeNotificationListener();
       }
     };
   }, []);

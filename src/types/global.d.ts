@@ -6,6 +6,9 @@ export interface IElectronAPI {
   removeErrorListener: () => void;
   on: (event: string, callback: (...args: unknown[]) => void) => void;
   off: (event: string, callback: (...args: unknown[]) => void) => void;
+  addNotificationListener: (callback?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void) => void;
+  removeNotificationListener: () => void;
+  sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
 export interface ICosimulationAPI {
@@ -18,7 +21,7 @@ export interface ICosimulationAPI {
   removeCoeErrorListener: () => void;
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
-  getConfig: () => Promise<{ maestroJarPath: string; simulationConfigPath: string }>;
+  getConfig: () => Promise<ConfigMaestro | null>;
   getSessionId: () => Promise<string | null>;
   getSimulationResult: (sessionId: string) => Promise<string>;
   addListener: (event: string, callback: (...args: unknown[]) => void) => void;

@@ -1,58 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from /* 'dotenv';
-// import path from 'path'; */
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
-const BASE_URI = process.env.REACT_APP_URL ?? 'http://localhost:4000/';
-
 export default defineConfig({
-  
-  testDir: './test/e2e',
-  /* Run tests in files in parallel */
+  testDir: './tests/e2e',
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
   workers: 1,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    [
-      'html',
-      {
-        outputFile: 'playwright-report/index.html',
-      },
-    ],
-    ['list'],
-    [
-      'junit',
-      {
-        outputFile: 'playwright-report/results.xml',
-      },
-    ],
-    [
-      'json',
-      {
-        outputFile: 'playwright-report/results.json',
-      },
-    ],
-  ],
-    /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
-    baseURL: BASE_URI,
+  reporter: [['html'], ['list'], ['json', { outputFile: 'playwright-report/results.json' }]],
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+  globalSetup: require.resolve('./tests/e2e/setup/global-setup'),
+  globalTeardown: require.resolve('./tests/e2e/setup/global-teardown'),
+
+  use: {
+    baseURL: process.env.REACT_APP_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',
   },
 
@@ -65,7 +25,11 @@ export default defineConfig({
 
   webServer: {
     command: 'npm run start',
-    port: 8080,
+    port: 3000,
     reuseExistingServer: true,
   },
 });
+
+export const testConfig = {
+  projectPath: "/home/simone/Scrivania/into-cps-forked_react/INTO-CPS Project",
+};

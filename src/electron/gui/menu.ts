@@ -10,6 +10,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
       submenu: [
         {
           label: 'Choose Project',
+          id: 'choose-project',
           click: async () => {
             const result = await dialog.showOpenDialog(mainWindow, {
               properties: ['openDirectory'],
@@ -23,8 +24,8 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
             }
           },
         },
-        { type: 'separator' },
-        { role: 'quit' },
+        { type: 'separator', id: 'file-separator' },
+        { role: 'quit', label: 'Quit', id: 'quit-app' }
       ],
     },
     {
@@ -32,6 +33,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
       submenu: [
         {
           label: 'Toggle Dark Mode',
+          id: 'toggle-dark-mode',
           click: () => {
             if (mainWindow?.webContents) {
               mainWindow.webContents.send('toggle-dark-mode');
@@ -42,12 +44,11 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
         },
         {
           label: 'Toggle Developer Tools',
+          id: 'toggle-dev-tools',
           accelerator: 'CmdOrCtrl+Shift+I',
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.toggleDevTools();
-            } else {
-              console.error('Main window is not available.');
             }
           },
         },
@@ -58,18 +59,17 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
       submenu: [
         {
           label: 'Start Simulation',
+          id: 'start-simulation',
           accelerator: process.platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
           enabled: cosimulationEnabled,
           click: () => {
             if (mainWindow?.webContents) {
               mainWindow.webContents.send('menu-start-simulation');
-            } else {
-              console.error('Main window or webContents is not available.');
             }
           },
         },
       ],
-    },
+    },    
   ];
 
   const menu = Menu.buildFromTemplate(template);

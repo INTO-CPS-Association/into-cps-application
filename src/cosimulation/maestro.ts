@@ -5,31 +5,32 @@ import { spawn, ChildProcess } from 'child_process';
 import { setSessionId } from './simulationContext';
 import { pathToFileURL } from 'url';
 import { isPortInUse, killProcessOnPort } from '../utils/processes/maestroUtils';
-import { SimulationStatus, MaestroStatus } from '../utils/constants/cosimulation/statuses';
-import { handleError } from '../utils/errorHandler';
+import { SimulationStatus, MaestroNotifications } from '../utils/constants/cosimulation/statuses';
+import { handleError, sendNotification } from '../utils/errorHandler';
 import { updateCosimulationMenu } from '../electron/gui/menu';
 import { mainWindow } from '../main';
 import { getConfig } from '../utils/config';
+import { MaestroResponse } from '../types/global';
 
 const MAESTRO_PORT = 8082;
 const MAESTRO_BASE_URL = `http://localhost:${MAESTRO_PORT}`;
 
 let maestroProcess: ChildProcess | null = null;
-let isSimulationInProgress = false;
+let isSimulationInProgress: boolean = false;
 
 function extractMaestroJar() {
   const config = getConfig();
   if (!config) {
-    throw new Error('Configuration not set. Please select a project.');
+    sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
+    return { success: false, error: MaestroNotifications.Error.ConfigurationNotSet };
   }
 
   const { maestroJarPath, tempMaestroJarPath } = config;
 
   try {
     if (!fs.existsSync(maestroJarPath)) {
-      throw new Error(
-        `Maestro JAR not found at ${maestroJarPath}. Ensure the file is in 'src/resources/maestro/'.`
-      );
+      sendNotification(`Maestro JAR not found at ${maestroJarPath}.`, 'error');
+      return;
     }
 
     if (!fs.existsSync(tempMaestroJarPath)) {
@@ -37,14 +38,15 @@ function extractMaestroJar() {
     }
   } catch (error) {
     handleError(error);
-    throw error;
+    return;
   }
 }
 
-async function startMaestro(): Promise<void> {
+async function startMaestro(): Promise<MaestroResponse> {
   const config = getConfig();
   if (!config) {
-    throw new Error('Configuration not set. Please select a project.');
+    sendNotification('Configuration not set. Please select a project.', 'error');
+    return { success: false, error: MaestroNotifications.Error.ConfigurationNotSet };
   }
 
   const { tempMaestroJarPath } = config;
@@ -54,18 +56,13 @@ async function startMaestro(): Promise<void> {
 
     const portInUse = await isPortInUse(MAESTRO_PORT);
     if (portInUse) {
-      console.warn(MaestroStatus.PortInUse(MAESTRO_PORT));
+      sendNotification(MaestroNotifications.Error.PortInUse(MAESTRO_PORT), 'error');
       await killProcessOnPort(MAESTRO_PORT);
-    }
-
-    if (maestroProcess && mainWindow) {
-      updateCosimulationMenu(mainWindow, true);
-      return;
     }
 
     extractMaestroJar();
 
-    sendSimulationStatus(MaestroStatus.StartingMaestro);
+    sendSimulationStatus(MaestroNotifications.Status.StartingMaestro);
 
     return new Promise((resolve, reject) => {
       maestroProcess = spawn('java', ['-jar', tempMaestroJarPath], {
@@ -81,30 +78,35 @@ async function startMaestro(): Promise<void> {
 
         if (message.includes('Starting ProtocolHandler ["http-nio-8082"]')) {
           serverReady = true;
-          sendSimulationStatus(MaestroStatus.MaestroStarted);
+          sendSimulationStatus(MaestroNotifications.Status.MaestroStarted);
           if (mainWindow) {
             updateCosimulationMenu(mainWindow, true);
           }
-          resolve();
+
+          if (maestroProcess && mainWindow) {
+            updateCosimulationMenu(mainWindow, true);
+          }
+          resolve({ success: true, message: MaestroNotifications.Status.MaestroStarted });
         }
       });
 
       maestroProcess.stderr?.on('data', (data) => {
         const errorOutput = data.toString();
+        sendNotification(`[Maestro]: ${errorOutput}`, 'error')
         console.error(`[Maestro STDERR]: ${errorOutput}`);
 
         if (!serverReady) {
           const errorMessage = errorOutput.includes('java')
-            ? MaestroStatus.JavaNotConfigured
-            : MaestroStatus.GenericStartupError;
-          handleError(new Error(errorMessage));
-          reject(new Error(errorMessage));
+            ? MaestroNotifications.Error.JavaNotConfigured
+            : MaestroNotifications.Error.GenericStartupError;
+            sendNotification(errorMessage, 'error');
+          reject({ success: false, error: errorMessage });
         }
       });
 
       maestroProcess.on('error', (error) => {
         handleError(error);
-        if (!serverReady) reject(error);
+        if (!serverReady) reject({ success: false, error: error.message });
       });
 
       maestroProcess.on('close', (code) => {
@@ -114,8 +116,8 @@ async function startMaestro(): Promise<void> {
           updateCosimulationMenu(mainWindow, false);
         }
         if (!serverReady) {
-          handleError(new Error(MaestroStatus.MaestroStoppedBeforeReady));
-          reject(new Error(MaestroStatus.MaestroStoppedBeforeReady));
+          sendNotification(MaestroNotifications.Status.MaestroStoppedBeforeReady, 'error');
+          reject({ success: false, error:MaestroNotifications.Status.MaestroStoppedBeforeReady});
         }
       });
 
@@ -123,6 +125,7 @@ async function startMaestro(): Promise<void> {
     });
   } catch (error) {
     handleError(error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
@@ -154,35 +157,39 @@ async function stopMaestro(): Promise<void> {
 function sendSimulationStatus(status: string): void {
   if (mainWindow?.webContents) {
     mainWindow.webContents.send('simulation-status', status);
-  } else {
-    console.error('[sendSimulationStatus] Main window not available.');
   }
 }
 
 async function startSimulation(): Promise<void> {
   try {
-    const config = getConfig();
-    if (!config) {
-      throw new Error('Configuration not set. Please select a project.');
-    }
-
-    const { simulationConfigPath, multiModels, fmusPath } = config;
-
     if (isSimulationInProgress) {
-      console.warn('[StartSimulation] Simulation already in progress.');
+      sendNotification('[Simulation] Simulation already in progress.', 'error');
       return;
     }
 
     isSimulationInProgress = true;
+    const config = getConfig();
+    
+    if (!config) {
+      sendNotification('Configuration not set. Please select a project.', 'error');
+      isSimulationInProgress = false;
+      return;
+    }
+
+    const { simulationConfigPath, multiModels, fmusPath } = config;
+
+
     sendSimulationStatus(SimulationStatus.StartingSimulation);
 
     if (!fs.existsSync(simulationConfigPath)) {
-      console.error('[StartSimulation] Missing file:', simulationConfigPath);
-      throw new Error('experiment.json not found.');
+      sendNotification(`[Simulation] Missing file: ${simulationConfigPath}`, 'error');
+      isSimulationInProgress = false;
+      return;
     }
     if (!fs.existsSync(multiModels)) {
-      console.error('[StartSimulation] Missing file:', multiModels);
-      throw new Error('multi-model.json not found.');
+      sendNotification(`[Simulation] Missing file: ${multiModels}`, 'error');
+      isSimulationInProgress = false;
+      return;
     }
 
     const experimentConfig = JSON.parse(fs.readFileSync(simulationConfigPath, 'utf8'));
@@ -205,13 +212,13 @@ async function startSimulation(): Promise<void> {
 
     if (!sessionResponse.ok) {
       const errorText = await sessionResponse.text();
-      handleError(new Error(`Failed to create session: ${errorText}`));
+      sendNotification(`Failed to create session: ${errorText}`, 'error');
+      isSimulationInProgress = false;
       return;
     }
 
     const { sessionId } = await sessionResponse.json();
     setSessionId(sessionId);
-    console.log('Session created successfully. Session ID:', sessionId);
 
     const initializeResponse = await fetch(`${MAESTRO_BASE_URL}/initialize/${sessionId}`, {
       method: 'POST',
@@ -221,11 +228,11 @@ async function startSimulation(): Promise<void> {
 
     if (!initializeResponse.ok) {
       const errorText = await initializeResponse.text();
-      handleError(new Error(`Failed to initialize simulation: ${errorText}`));
+      sendNotification(`Failed to initialize simulation: ${errorText}`, 'error');
+      isSimulationInProgress = false;
       return;
     }
 
-    console.log('Simulation initialized successfully.');
     sendSimulationStatus(SimulationStatus.Simulating);
 
     const simulateResponse = await fetch(`${MAESTRO_BASE_URL}/simulate/${sessionId}`, {
@@ -236,11 +243,11 @@ async function startSimulation(): Promise<void> {
 
     if (!simulateResponse.ok) {
       const errorText = await simulateResponse.text();
-      handleError(new Error(`Failed to start simulation: ${errorText}`));
+      sendNotification(`Failed to start simulation: ${errorText}`, 'error');
+      isSimulationInProgress = false;
       return;
     }
 
-    console.log('Simulation started successfully.');
     sendSimulationStatus(SimulationStatus.SimulationCompleted);
   } catch (error) {
     const customMessage =
@@ -261,14 +268,15 @@ async function getSimulationResult(sessionId: string): Promise<string> {
   try {
     const config = getConfig();
     if (!config) {
-      throw new Error('Configuration not set. Please select a project.');
+      sendNotification('Configuration not set. Please select a project.', 'error');
+      return '';
     }
 
     const { outputPath } = config;
 
     const resultResponse = await fetch(`${MAESTRO_BASE_URL}/result/${sessionId}/plain`);
     if (!resultResponse.ok) {
-      handleError(new Error(`Error fetching CSV results: ${resultResponse.statusText}`));
+      sendNotification(`Error fetching CSV results: ${resultResponse.statusText}`, 'error');
       return '';
     }
 

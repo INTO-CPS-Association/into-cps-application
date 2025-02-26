@@ -32,6 +32,8 @@ function buildRenderer() {
         outfile: 'dist/bundle.js',
         platform: 'browser',
         loader: { '.js': 'jsx', '.jsx': 'jsx', '.ts': 'tsx', '.tsx': 'tsx' },
+        jsx: "automatic",
+        jsxImportSource: "react", 
     });
 }
 

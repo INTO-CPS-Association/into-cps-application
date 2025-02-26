@@ -10,19 +10,37 @@
 
 export function handleError(error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error('[handleError Triggered]:', message);
+    console.error('[Error]:', message);
   
     if (process?.type === 'renderer') {
       if (window?.electronAPI?.dispatchActionToMain) {
         window.electronAPI.dispatchActionToMain({ type: 'error', payload: { message } });
       } else {
-        console.warn('[handleError] electronAPI not found in renderer!');
+        console.warn('[Error] electronAPI not found in renderer!');
       }
     } else if (process?.type === 'browser') {
       const { ipcMain } = require('electron');
       ipcMain.emit('trigger-error', null, message);
     } else {
-      console.warn('[handleError] Unknown process type!');
+      console.warn('[Error] Unknown process type!');
     }
   }
-  
+
+/**
+ * Sends a notification from Electron's main process to the renderer.
+ *
+ * @param message - The message to display in the notification.
+ * @param type - The type of notification ('success', 'error', 'warning', 'info').
+ */
+export function sendNotification(message: string, type: 'success' | 'error' | 'warning' | 'info') {
+  if (process?.type === 'renderer') {
+    if (window?.electronAPI?.dispatchActionToMain) {
+      window.electronAPI.dispatchActionToMain({ type: 'notification', payload: { message, type } });
+    }
+  } else if (process?.type === 'browser') {
+    const { ipcMain } = require('electron');
+    ipcMain.emit('trigger-notification', null, message, type);
+  } else {
+    console.warn('[Notification] Unknown process type!');
+  }
+}

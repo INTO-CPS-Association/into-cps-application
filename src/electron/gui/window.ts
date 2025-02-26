@@ -16,16 +16,19 @@ const iconPath = isDev
 
 let mainWindow: BrowserWindow | null = null;
 
+const isTesting = process.env.CI === 'e2e' || process.env.PLAYWRIGHT_TEST === 'true';
+
 export function createWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     icon: iconPath,
     webPreferences: {
+      nodeIntegration: false,
       contextIsolation: true,
       preload: preloadPath,
     },
-  });
+  }); 
 
   console.log(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
 
