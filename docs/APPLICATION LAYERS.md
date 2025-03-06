@@ -45,9 +45,11 @@ The preload script bridges the main process and the renderer process in a secure
 Example of `preload.js`:
 
 ```typescript
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
+
 contextBridge.exposeInMainWorld('electronAPI', {
-  startMaestro: () => ipcRenderer.invoke('start-maestro')
+  sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => ipcRenderer.send('show-notification', message, type),
+  onSimulationStatus: (callback) => ipcRenderer.on('simulation-status', callback),
 });
 ```
 
@@ -59,13 +61,17 @@ Processes communicate by passing messages through `ipcMain` and `ipcRenderer` mo
 Example of IPC usage for the main process:
 
 ```typescript
-ipcMain.handle('start-maestro', startMaestro);
+ipcMain.on('show-notification', (event, message: string, type) => {
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('show-notification', message, type);
+  }
+});
 ```
 
 Example of IPC usage for the renderer process:
 
 ```typescript
-window?.cosimulationAPI?.startMaestro();
+window.electronAPI.sendNotification('Simulation started', 'success');
 ```
 
 ### React App
@@ -76,13 +82,12 @@ Error handling is managed by `ErrorSnackbar.tsx`, which is being triggered and u
 
 #### Package Diagram
 
-![Package Diagram React App](react_app_package.png)
+![Package Diagram React App](./media/react_app_package.png)
 
 #### Class Diagram
 
 ```mermaid
 classDiagram
-    %% App Component %%
     class App {
         - darkMode: boolean
         - sidebarOpen: boolean
@@ -94,7 +99,6 @@ classDiagram
         + handleError(errorMessage: string): void
     }
 
-    %% Sidebar Component %%
     class Sidebar {
         - isResponsive: boolean
         - manualOpen: boolean
@@ -102,13 +106,11 @@ classDiagram
         + handleToggle(): void
     }
 
-    %% Bottom Component %%
     class Bottom {
         - maestroRunning: boolean
         + toggleMaestroState(): Promise<void>
     }
 
-    %% ErrorSnackbar Component %%
     class ErrorSnackbar {
         - open: boolean
         - message: string
@@ -117,14 +119,12 @@ classDiagram
         + handleClose(): void
     }
 
-    %% CoSimulation Component %%
     class CoSimulation {
         + error: string | null
         + simulationStatus: string
         + resultsPath: string | null
     }
 
-    %% useCosimulation Hook %%
     class useCosimulation {
         - error: string | null
         - simulationStatus: string
@@ -134,11 +134,8 @@ classDiagram
         + handleCoeReset(): void
     }
 
-    %% CosimulationAPI Interface %%
     class CosimulationAPI {
-        + startMaestro(): Promise<void>
-        + stopMaestro(): Promise<void>
-        + startSimulation(): Promise<void>
+        + maestro(args): Promise<void>
         + onSimulationStatus(callback): void
         + removeSimulationStatusListener(callback): void
         + addCoeErrorListener(callback): void
@@ -147,7 +144,6 @@ classDiagram
         + getSimulationResult(sessionId: string): Promise<string>
     }
 
-    %% Relationships %%
     App --> Sidebar
     App --> Bottom
     App --> ErrorSnackbar
@@ -169,6 +165,9 @@ sequenceDiagram
     participant CoSimulation
     participant ErrorSnackbar
     participant CosimulationAPI
+    participant ElectronAPI
+    participant MaestroManager
+    participant SimulationContext
 
     %% 1. App Initialization %%
     User->>App: Open Application
@@ -179,33 +178,60 @@ sequenceDiagram
 
     %% 2. Starting Maestro %%
     User->>Bottom: Click "Start CoE" Button (toggleMaestroState)
-    Bottom->>CosimulationAPI: startMaestro()
-    CosimulationAPI-->>Bottom: Maestro Started
-    Bottom-->>CoSimulation: setSimulationStatus("Maestro Started")
+    Bottom->>CosimulationAPI: maestro({ type: 'start' })
+    CosimulationAPI->>ElectronAPI: invoke('maestro', { type: 'start' })
+    ElectronAPI->>MaestroManager: startMaestro()
+    MaestroManager->>MaestroManager: Check if port is in use
+    MaestroManager->>MaestroManager: Extract and launch Maestro
+    MaestroManager->>ElectronAPI: emit('simulation-status', "Maestro Started")
+    ElectronAPI->>CosimulationAPI: emit('simulation-status', "Maestro Started")
+    CosimulationAPI->>Bottom: Update UI (Status: "Maestro Started")
 
     %% 3. Running Simulation %%
     User->>Sidebar: Click "CoSimulation" Navigation
     Sidebar-->>CoSimulation: Render Component
-    User->>CoSimulation: Click "Run Simulation" Button
-    CoSimulation->>CosimulationAPI: startSimulation()
-    CosimulationAPI-->>CoSimulation: onSimulationStatus("Simulating...")
-    CosimulationAPI-->>CoSimulation: onSimulationStatus("Simulation Completed")
+    User->>CoSimulation: Click "Start Simulation" Button
+    CoSimulation->>CosimulationAPI: maestro({ type: 'start-simulation' })
+    CosimulationAPI->>ElectronAPI: invoke('maestro', { type: 'start-simulation' })
+    ElectronAPI->>MaestroManager: startSimulation()
+    MaestroManager->>SimulationContext: getSessionId()
+    MaestroManager->>ElectronAPI: emit('simulation-status', "Simulating...")
+    ElectronAPI->>CosimulationAPI: emit('simulation-status', "Simulating...")
+    CosimulationAPI->>CoSimulation: Update UI (Status: "Simulating...")
 
-    %% 4. Error Handling %%
-    CosimulationAPI-->>ErrorSnackbar: addErrorListener(errorMessage)
-    ErrorSnackbar-->>User: Display Error Notification (Snackbar)
+    %% 4. Simulation Completion %%
+    MaestroManager->>ElectronAPI: emit('simulation-status', "Simulation Completed")
+    ElectronAPI->>CosimulationAPI: emit('simulation-status', "Simulation Completed")
+    CosimulationAPI->>CoSimulation: Update UI (Status: "Simulation Completed")
+
+    %% 5. Fetching Results %%
+    CoSimulation->>CosimulationAPI: maestro({ type: 'get-result' })
+    CosimulationAPI->>ElectronAPI: invoke('maestro', { type: 'get-result' })
+    ElectronAPI->>MaestroManager: getSimulationResult()
+    MaestroManager->>SimulationContext: getSessionId()
+    MaestroManager->>MaestroManager: Fetch simulation results
+    MaestroManager-->>ElectronAPI: return resultPath
+    ElectronAPI-->>CosimulationAPI: return resultPath
+    CosimulationAPI-->>CoSimulation: Display results path
+
+    %% 6. Error Handling and Snackbar Display %%
+    MaestroManager->>ElectronAPI: emit('show-error', errorMessage)
+    ElectronAPI->>CosimulationAPI: emit('show-error', errorMessage)
+    CosimulationAPI->>ErrorSnackbar: Display error notification
+    ErrorSnackbar-->>User: Show Error in UI
+
 ```
 
 ### Maestro Management Model
 
 The system is designed to manage the startup of Maestro server and the CoSimulation lifecycle through modular components:
 
-- `MaestroManager`: Controls the CoSimulation lifecycle, allowing to start/stop Maestro, initialize, run and fetch the simulation results.
-- `SimulationContext`: Stores and allow to retrieve the current simulation session ID.
-- `CosimulationAPI`: Interfaces with MaestroManager to trigger simulation actions (currently focused on backend flow).
-- `MaestroUtils`: Provides utilities for managing ports and external processes.
+- `MaestroManager`: Manages the CoSimulation lifecycle, allowing for starting/stopping Maestro, initializing, running, and retrieving simulation results.
+- `SimulationContext`: Stores and retrieves the current simulation session ID.
+- `CosimulationAPI`: Interfaces with `MaestroManager` to trigger simulation actions, serving as the bridge between the frontend and backend.
+- `MaestroUtils`: Provides utility functions for managing ports and external processes.
 - `ErrorHandler`: Centralized error handling throughout the simulation process.
-- `MenuManager`: Manages simulation-related UI state.
+- `MenuManager`: Manages UI state related to simulation controls.
 
 ```mermaid
 classDiagram
@@ -218,33 +244,42 @@ classDiagram
 
     %% Maestro Manager %%
     class MaestroManager {
-        + startMaestro(): Promise<void>
+        + startMaestro(): Promise<MaestroResponse>
         + stopMaestro(): Promise<void>
         + startSimulation(): Promise<void>
         + getSimulationResult(sessionId: string): Promise<string>
         - extractMaestroJar(): void
         - sendSimulationStatus(status: string): void
+        - isSimulationInProgress: boolean
+        - maestroProcess: ChildProcess | null
     }
 
     %% Cosimulation API %%
     class CosimulationAPI {
-        + startMaestro(): Promise<void>
-        + stopMaestro(): Promise<void>
-        + startSimulation(): Promise<void>
+        + maestro(type: string, data: unknown): Promise<MaestroResponse>
         + onSimulationStatus(callback): void
         + removeSimulationStatusListener(callback): void
         + addCoeErrorListener(callback): void
         + removeCoeErrorListener(): void
-        + getConfig(): Promise<Object>
-        + getSessionId(): Promise<string | null>
-        + getSimulationResult(sessionId: string): Promise<string>
         + addCoeResetListener(callback): void
         + removeCoeResetListener(): void
+        + getSessionId(): Promise<string | null>
+        + getConfig(): Promise<ConfigMaestro | null>
+        + getSimulationResult(sessionId: string): Promise<string>
+    }
+
+    %% Electron API %%
+    class ElectronAPI {
+        + on(event: string, callback): void
+        + off(event: string, callback): void
+        + invoke(channel: string, args?): Promise<unknown>
+        + send(channel: string, args...): void
     }
 
     %% Error Handler %%
     class ErrorHandler {
-        + handleError(error: unknown): void
+        + handleError(error): void
+        + sendNotification(message, type): void
     }
 
     %% Maestro Process Utilities %%
@@ -258,13 +293,22 @@ classDiagram
         + updateCosimulationMenu(enabled: boolean): void
     }
 
+    %% Config Manager %%
+    class ConfigManager {
+        + setProjectPath(path: string): void
+        + getConfig(): ConfigMaestro | null
+    }
 
-    %% Relazioni %%
     SimulationContext <|-- MaestroManager
     CosimulationAPI --> MaestroManager
     MaestroManager --> MaestroUtils
     MaestroManager --> ErrorHandler
     MaestroManager --> MenuManager
+    MaestroManager --> SimulationContext
+    CosimulationAPI --> ElectronAPI
+    ElectronAPI --> ErrorHandler
+    ElectronAPI --> ConfigManager
+    ElectronAPI --> MenuManager
 ```
 
 The following sequence diagram shows the internal workflow of the MaestroManager during the cosimulation process, covering the startup of the Maestro server, the CoSimulation execution, result handling, and error management
@@ -277,43 +321,49 @@ sequenceDiagram
     participant MC as SimulationContext
     participant Menu as MenuManager
 
-    %% Avvio di Maestro %%
+    %% Starting Maestro %%
     MM->>MU: isPortInUse(MAESTRO_PORT)
     MU-->>MM: Port status
     MM->>MU: killProcessOnPort(MAESTRO_PORT) (if needed)
     MM->>MM: extractMaestroJar()
     MM->>MM: spawn Maestro JAR
-    MM->>Menu: updateCosimulationMenu(true)
+    MM->>Menu: updateCosimulationMenu(mainWindow, true)
 
-    %% Maestro avviato correttamente %%
+    %% Maestro successfully started %%
     MM->>MM: sendSimulationStatus("Maestro Started")
 
-    %% Avvio della Simulazione %%
+    %% Simulation Initialization %%
     MM->>MM: load experiment.json, multi-model.json
     MM->>MU: resolve FMUs paths
     MM->>MM: fetch(`${MAESTRO_BASE_URL}/createSession`)
     MM->>MC: setSessionId(sessionId)
     MM->>MM: sendSimulationStatus("Simulation Initialized")
 
-    %% Esecuzione della Simulazione %%
-    MM->>MM: fetch(`${MAESTRO_BASE_URL}/simulate`)
+    %% Running Simulation %%
+    MM->>MM: fetch(`${MAESTRO_BASE_URL}/initialize/${sessionId}`)
+    MM->>MM: fetch(`${MAESTRO_BASE_URL}/simulate/${sessionId}`)
     MM->>MM: sendSimulationStatus("Simulating...")
 
-    %% Completamento della Simulazione %%
+    %% Simulation Completion %%
     MM->>MM: sendSimulationStatus("Simulation Completed")
 
-    %% Recupero dei Risultati %%
-    MM->>MM: fetch(`${MAESTRO_BASE_URL}/result/${sessionId}`)
+    %% Retrieving Results %%
+    MM->>MM: fetch(`${MAESTRO_BASE_URL}/result/${sessionId}/plain`)
     MM->>MM: save CSV to outputPath
 
-    %% Gestione degli Errori %%
+    %% Handling Errors %%
     MM->>EH: handleError(error)
 
 ```
 
 ### Maestro Model and React communication using IPC
 
-This squence diagram illustrates the interaction between the Maestro Model and the Electron IPC system for managing the CoSimulation process. The process involves starting the maestro server from the `Bottom` bar and running the CosSmulation from the application menu, result handling, and error management.
+This squence diagram illustrates the interaction between the Maestro Model and the Electron IPC system for managing the CoSimulation process. The process involves:
+
+- Starting the maestro server from the `Bottom.tsx` bar
+- Running the CosSmulation from the application menu
+- Handling result retrieval
+- Error management through `ErrorSnackbar.tsx`.
 
 ```mermaid
 sequenceDiagram
@@ -329,44 +379,45 @@ sequenceDiagram
     participant Snackbar as ErrorSnackbar (UI Error Display)
 
     %% 1. Starting Maestro from Bottom.tsx %%
-    Bottom->>IPC: invoke('start-maestro')
+    Bottom->>IPC: invoke('maestro', { type: 'start' })
     IPC->>MM: startMaestro()
     MM->>MU: isPortInUse(MAESTRO_PORT)
     MU-->>MM: Port status
     MM->>MU: killProcessOnPort(MAESTRO_PORT) (if needed)
     MM->>MM: extractMaestroJar()
     MM->>MM: spawn Maestro JAR
-    MM->>MenuManager: updateCosimulationMenu(true)
-    MM->>IPC: emit('simulation-status-update', "Maestro Started")
+    MM->>MenuManager: updateCosimulationMenu(mainWindow, true)
+    MM->>IPC: emit('simulation-status', "Maestro Started")
 
     %% 2. Bottom.tsx Receives Status Update %%
     IPC->>Bottom: simulation-status("Maestro Started")
 
     %% 3. Starting Simulation from Electron Menu %%
-    Menu->>IPC: emit('start-simulation')
+    Menu->>IPC: emit('menu-start-simulation')
     IPC->>MM: startSimulation()
     MM->>MM: load experiment.json, multi-model.json
     MM->>MU: resolve FMUs paths
-    MM->>MM: fetch('/createSession')
+    MM->>MM: fetch('${MAESTRO_BASE_URL}/createSession')
     MM->>MC: setSessionId(sessionId)
-    MM->>IPC: emit('simulation-status-update', "Simulation Initialized")
+    MM->>IPC: emit('simulation-status', "Simulation Initialized")
 
     %% 4. Bottom.tsx Receives Simulation Status %%
     IPC->>Bottom: simulation-status("Simulation Initialized")
 
     %% 5. Running Simulation %%
-    MM->>MM: fetch('/simulate')
-    MM->>IPC: emit('simulation-status-update', "Simulating...")
+    MM->>MM: fetch('${MAESTRO_BASE_URL}/initialize/${sessionId}')
+    MM->>MM: fetch('${MAESTRO_BASE_URL}/simulate/${sessionId}')
+    MM->>IPC: emit('simulation-status', "Simulating...")
     IPC->>Bottom: simulation-status("Simulating...")
 
     %% 6. Simulation Completion %%
-    MM->>IPC: emit('simulation-status-update', "Simulation Completed")
+    MM->>IPC: emit('simulation-status', "Simulation Completed")
     IPC->>Bottom: simulation-status("Simulation Completed")
 
     %% 7. Fetching Results %%
-    Bottom->>IPC: invoke('get-simulation-result', sessionId)
+    Bottom->>IPC: invoke('maestro', { type: 'get-result', data: { sessionId } })
     IPC->>MM: getSimulationResult(sessionId)
-    MM->>MM: fetch('/result/{sessionId}')
+    MM->>MM: fetch('${MAESTRO_BASE_URL}/result/${sessionId}/plain')
     MM->>MM: save CSV to outputPath
     MM-->>IPC: return results path
     IPC-->>Bottom: results path
@@ -376,50 +427,63 @@ sequenceDiagram
     EH->>IPC: emit('show-error', errorMessage)
     IPC->>Snackbar: show-error(errorMessage)
     Snackbar->>Snackbar: Display error in UI
-
 ```
 
 ### React -> IPC Communication
 
-The interaction between the React frontend and the Electron logic is being managed through IPC. \
-When a user interacts with the application, the React frontend calls methods exposed through `window.cosimulationAPI`. This API works as a secure bridge between the frontend and the Electron logic. \
-For instance, invoking `startMaestro()` from the frontend (`Bottom`) triggers `start-maestro`, an event handled by `ipcMain` in the main Electron process. The `startMaestro` function is then executed by the backend, initiating the Maestro process.
-The user interface receives real-time feedback thanks to the emitted statuses from the backend, like `simulation-status-update`, captured by the hook `useCosimulation`, which updates the UI.
+The interaction between the React frontend and the Electron logic is being managed through IPC.
+
+- When a user interacts with the application, the React frontend calls methods exposed through `window.cosimulationAPI`. This API works as a secure bridge between the frontend and the Electron logic.
+- For instance, invoking `startMaestro()` from the frontend (`Bottom`) triggers `start-maestro`, an event handled by `ipcMain` in the main Electron process.
+- The `startMaestro` function is then executed by the backend, initiating the Maestro process.
+- The user interface receives real-time feedback thanks to the emitted statuses from the backend, like `simulation-status-update`, captured by the hook `useCosimulation`, which updates the UI.
 
 ```mermaid
 sequenceDiagram
+    %% Participants %%
     participant User as User
     participant Bottom as Bottom.tsx (React)
     participant CosimAPI as window.cosimulationAPI (IPC Renderer)
     participant IPCMain as ipcMain (Electron Main)
     participant Maestro as MaestroManager (Backend Process)
     participant ErrorHandler as ErrorHandler
-    participant Snackbar as ErrorSnackbar (React)
+    participant Snackbar as ErrorSnackbar (React UI)
 
     %% 1. User Starts Maestro %%
     User->>Bottom: Click "Start CoE" Button
-    Bottom->>CosimAPI: startMaestro()
-    CosimAPI->>IPCMain: invoke('start-maestro')
+    Bottom->>CosimAPI: maestro({ type: 'start' })
+    CosimAPI->>IPCMain: invoke('maestro', { type: 'start' })
     IPCMain->>Maestro: startMaestro()
-    Maestro-->>IPCMain: emit('simulation-status-update', "Maestro Started")
-    IPCMain-->>CosimAPI: simulation-status-update("Maestro Started")
+    Maestro-->>IPCMain: emit('simulation-status', "Maestro Started")
+    IPCMain-->>CosimAPI: simulation-status("Maestro Started")
     CosimAPI-->>Bottom: Update UI (Status: "Maestro Started")
 
     %% 2. Running Simulation %%
     User->>Bottom: Click "Start Simulation" Button
-    Bottom->>CosimAPI: startSimulation()
-    CosimAPI->>IPCMain: invoke('start-simulation')
+    Bottom->>CosimAPI: maestro({ type: 'start-simulation' })
+    CosimAPI->>IPCMain: invoke('maestro', { type: 'start-simulation' })
     IPCMain->>Maestro: startSimulation()
-    Maestro-->>IPCMain: emit('simulation-status-update', "Simulating...")
-    IPCMain-->>CosimAPI: simulation-status-update("Simulating...")
+    Maestro-->>IPCMain: emit('simulation-status', "Simulating...")
+    IPCMain-->>CosimAPI: simulation-status("Simulating...")
     CosimAPI-->>Bottom: Update UI (Status: "Simulating...")
 
     %% 3. Simulation Completed %%
-    Maestro-->>IPCMain: emit('simulation-status-update', "Simulation Completed")
-    IPCMain-->>CosimAPI: simulation-status-update("Simulation Completed")
+    Maestro-->>IPCMain: emit('simulation-status', "Simulation Completed")
+    IPCMain-->>CosimAPI: simulation-status("Simulation Completed")
     CosimAPI-->>Bottom: Update UI (Status: "Simulation Completed")
 
-    %% 4. Error Handling %%
+    %% 4. Fetching Results %%
+    User->>Bottom: Click "Get Results"
+    Bottom->>CosimAPI: maestro({ type: 'get-result', data: { sessionId } })
+    CosimAPI->>IPCMain: invoke('maestro', { type: 'get-result', data: { sessionId } })
+    IPCMain->>Maestro: getSimulationResult(sessionId)
+    Maestro->>Maestro: fetch(`${MAESTRO_BASE_URL}/result/${sessionId}/plain`)
+    Maestro->>Maestro: save CSV to outputPath
+    Maestro-->>IPCMain: return results path
+    IPCMain-->>CosimAPI: results path
+    CosimAPI-->>Bottom: Update UI with results path
+
+    %% 5. Error Handling %%
     Maestro-->>ErrorHandler: handleError(error)
     ErrorHandler->>IPCMain: emit('show-error', errorMessage)
     IPCMain-->>CosimAPI: show-error(errorMessage)
