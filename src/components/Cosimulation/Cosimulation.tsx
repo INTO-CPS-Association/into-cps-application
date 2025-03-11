@@ -1,6 +1,7 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 import { useCosimulation } from './useCosimulation';
+import SimulationGuide from '../SimulationGuide'; 
 
 const CoSimulation: React.FC = () => {
   const { error, simulationStatus, resultsPath } = useCosimulation();
@@ -23,6 +24,7 @@ const CoSimulation: React.FC = () => {
           {error}
         </Typography>
       )}
+      <SimulationGuide />
     </Box>
   );
 };
