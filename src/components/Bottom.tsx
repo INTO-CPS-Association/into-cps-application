@@ -1,30 +1,55 @@
 import React, { useState } from 'react';
-import { BottomNavigation, BottomNavigationAction, Box, Typography } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Box, Typography, useTheme } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
+import { styleConstants } from '../utils/constants';
 
-const Bottom: React.FC = () => {
-  const [coeRunning, setCoeRunning] = useState(false);
-
-  const toggleCoeState = () => setCoeRunning((prev) => !prev);
+const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth }) => {
+  const [maestroRunning, setMaestroRunning] = useState(false);
+  const theme = useTheme();
+  
+  const toggleMaestroState = async () => {
+    try {
+      const type = maestroRunning ? 'stop' : 'start';
+      const response = await window?.cosimulationAPI?.maestro({
+        type: type,
+      });
+      
+      if (response?.success) {
+        setMaestroRunning(!maestroRunning);
+      } else {
+        console.error('Error toggling Maestro:', response?.error || 'Unknown error');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Error toggling Maestro:', message);
+    }
+  };
 
   return (
     <Box
       sx={{
-        width: 'calc(100% - 240px)',
+        width: '100%',
         position: 'fixed',
         bottom: 0,
-        left: '240px',
+        left: `${sidebarWidth}px`,
         bgcolor: 'background.paper',
-        boxShadow: 3,
+        boxShadow: theme.shadows[3],
+        transition: `left ${styleConstants.TRANSITION_DURATION} ease, width ${styleConstants.TRANSITION_DURATION} ease`,
       }}
-    >      
+    >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>
         <BottomNavigationAction
-          id="coe-btn-launch-bottom"
-          label={<Typography>{coeRunning ? 'Stop COE' : 'Start COE'}</Typography>}
-          icon={coeRunning ? <StopCircleIcon id="coeIconColor" color="error" /> : <PlayCircleOutlineIcon id="coeIconColor" color="primary" />}
-          onClick={toggleCoeState}
+          id="maestro-btn-launch-bottom"
+          label={<Typography>{maestroRunning ? 'Stop CoE' : 'Start CoE'}</Typography>}
+          icon={
+            maestroRunning ? (
+              <StopCircleIcon id="maestroIconColor" color="error" />
+            ) : (
+              <PlayCircleOutlineIcon id="maestroIconColor" color="primary" />
+            )
+          }
+          onClick={toggleMaestroState}
         />
       </BottomNavigation>
     </Box>

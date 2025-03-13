@@ -32,8 +32,21 @@ function buildRenderer() {
         outfile: 'dist/bundle.js',
         platform: 'browser',
         loader: { '.js': 'jsx', '.jsx': 'jsx', '.ts': 'tsx', '.tsx': 'tsx' },
+        jsx: "automatic",
+        jsxImportSource: "react", 
     });
 }
+
+function buildPreload() {
+    return esbuild.build({
+        ...sharedConfig,
+        entryPoints: ['./preload.js'],
+        outfile: 'dist/preload.js',
+        platform: 'node',
+        external: ['electron'],
+    });
+}
+
 
 // Recursive function to copy files and directories
 function copyRecursiveSync(src, dest) {
@@ -54,32 +67,24 @@ function copyRecursiveSync(src, dest) {
 }
 
 function copyStaticFiles() {
-    const publicPath = path.resolve('public');
-    const distPath = path.resolve('dist');
-    const resourcesPath = path.resolve('src/resources');
+  const publicPath = path.resolve('public');
+  const distPath = path.resolve('dist');
+  const resourcesPath = path.resolve('src/resources');
 
-    // Copy index.html
-    const sourceHtmlPath = path.join(publicPath, 'index.html');
-    const destHtmlPath = path.join(distPath, 'index.html');
-    if (fs.existsSync(sourceHtmlPath)) {
-        fs.copyFileSync(sourceHtmlPath, destHtmlPath);
-        console.log('index.html copied to dist folder');
-    } else {
-        console.error(`Source index.html not found at ${sourceHtmlPath}`);
-        process.exit(1);
-    }
+  if (!fs.existsSync(distPath)) fs.mkdirSync(distPath, { recursive: true });
 
-    // Copy the resources folder
-    const destResourcesPath = path.join(distPath, 'resources');
-    if (fs.existsSync(resourcesPath)) {
-        copyRecursiveSync(resourcesPath, destResourcesPath);
-        console.log('Resources folder copied to dist folder');
-    } else {
-        console.error(`Resources folder not found at ${resourcesPath}`);
-    }
+  // Copy index.html
+  const sourceHtmlPath = path.join(publicPath, 'index.html');
+  const destHtmlPath = path.join(distPath, 'index.html');
+  fs.copyFileSync(sourceHtmlPath, destHtmlPath);
+
+  // Copy resources folder
+  const destResourcesPath = path.join(distPath, 'resources');
+  copyRecursiveSync(resourcesPath, destResourcesPath);
 }
 
-Promise.all([buildMain(), buildRenderer()])
+
+Promise.all([buildMain(), buildRenderer(), buildPreload()])
     .then(() => {
         copyStaticFiles();
         console.log('Build completed.');

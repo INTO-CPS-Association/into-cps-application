@@ -18,10 +18,12 @@
     "build": "rimraf release/ && node esbuild.config.mjs && electron-builder --x64",
     "build:win": "npm run build && .\\convert-to-msix.bat",
     "start": "node esbuild.config.mjs --dev && concurrently \"npm run serve\" \"npm run electron-start\"",
-    "serve": "serve dist -l 8080 --cors",
-    "electron-start": "wait-on http://localhost:8080 && npx electron dist/main.js",
+    "serve": "serve dist -l 3000 --cors",
+    "electron-start": "wait-on http://localhost:3000 && npx electron dist/main.js",
     "syntax": "npx eslint . --fix",
-    "clean": "npx rimraf dist monocart-report release pkg test-results test/coverage-reports && npm ci"
+    "clean": "npx rimraf dist monocart-report release pkg test-results tkacest/coverage-reports && npm ci",
+    "postinstall": "node ./scripts/installMaestro.js",
+    "test-e2e": "PLAYWRIGHT_TEST=true npm run build && PLAYWRIGHT_TEST=true playwright test"
   },
   "build": {
     "appId": "org.into-cps-association.into-cps-app",
@@ -29,8 +31,8 @@
     "productName": "INTO-CPS-Application",
     "electronVersion": "32.1.2",
     "files": [
-      "**/*",
-      "dist/**/*"
+      "dist/**/*",
+      "package.json"
     ],
     "directories": {
       "output": "release",
@@ -42,7 +44,11 @@
     },
     "win": {
       "icon": "src/resources/into-cps/appicon/into-cps-logo.png.ico",
-      "target": ["nsis", "msi", "portable"],
+      "target": [
+        "nsis",
+        "msi",
+        "portable"
+      ],
       "signAndEditExecutable": false,
       "forceCodeSigning": false
     },
@@ -65,35 +71,56 @@
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
+    "@reduxjs/toolkit": "^2.5.0",
+    "@types/node-fetch": "^2.6.12",
     "del": "^7.1.0",
+    "dotenv": "^16.4.5",
+    "install": "^0.13.0",
     "monocart-coverage-reports": "^2.11.1",
+    "net": "^1.0.2",
+    "node-fetch": "^3.3.2",
+    "npm": "^11.0.0",
     "playwright": "^1.48.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.0.1",
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@playwright/test": "^1.48.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.7.5",
+    "@types/react": "^19.0.8",
     "@types/react-dom": "^18.3.1",
+    "@types/react-redux": "^7.1.34",
     "babel-jest": "^29.7.0",
     "concurrently": "^9.0.1",
     "electron": "^32.1.2",
     "electron-builder": "^25.1.7",
+    "electron-devtools-installer": "^4.0.0",
     "electron-playwright-helpers": "^1.7.1",
-    "esbuild": "0.24.0",
+    "esbuild": "^0.24.0",
+    "esbuild-jest": "^0.5.0",
+    "esbuild-plugin-alias": "^0.2.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.37.2",
     "globals": "^15.11.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "prettier": "3.3.3",
     "react-test-renderer": "^18.3.1",
     "serve": "^14.2.4",
     "source-map-support": "^0.5.21",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.2",
+    "typescript": "^5.7.3",
     "typescript-eslint": "^8.12.2",
     "wait-on": "^8.0.1"
   }

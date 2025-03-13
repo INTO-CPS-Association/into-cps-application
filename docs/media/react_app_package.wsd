@@ -1,0 +1,148 @@
+@startuml react_app_package
+'Set the background to transparent
+skinparam backgroundColor transparent
+skinparam packageBackgroundColor transparent
+skinparam rectangleBackgroundColor transparent
+skinparam classBackgroundColor transparent
+skinparam componentBackgroundColor transparent
+skinparam noteBackgroundColor transparent
+skinparam objectBackgroundColor transparent
+
+'Set the border, arrow and text colors to white
+skinparam packageBorderColor white
+skinparam rectangleBorderColor white
+skinparam classBorderColor white
+skinparam componentBorderColor white
+skinparam noteBorderColor white
+skinparam objectBorderColor white
+skinparam ArrowColor white
+skinparam DefaultTextAlignment center
+skinparam NoteFontColor white
+
+'Font colors to white
+skinparam ClassFontColor white
+skinparam PackageFontColor white
+skinparam DefaultFontColor white
+
+!define RECTANGLE class
+
+package "INTO-CPS React App" {
+    
+    'Package Components
+    package "Components" {
+        class App {
+            - darkMode: boolean
+            - sidebarOpen: boolean
+            - sidebarWidth: number
+            + toggleDarkMode(): void
+            + toggleSidebar(): void
+            + handleResize(): void
+            + handleToggleDarkMode(): void
+            + handleError(errorMessage: string): void
+        }
+
+        class Sidebar {
+            - isResponsive: boolean
+            - manualOpen: boolean
+            + handleResize(): void
+            + handleToggle(): void
+        }
+
+        class Bottom {
+            - maestroRunning: boolean
+            + toggleMaestroState(): Promise<void>
+        }
+
+        class CoSimulation {
+            + error: string | null
+            + simulationStatus: string
+            + resultsPath: string | null
+        }
+
+        class ErrorSnackbar {
+            - open: boolean
+            - message: string
+            - severity: 'info' | 'error' | 'warning' | 'success'
+            + handleError(errorMessage: string): void
+            + handleClose(): void
+        }
+    }
+
+    'Package Hooks
+    package "Hooks" {
+        class useCosimulation {
+            - error: string | null
+            - simulationStatus: string
+            - resultsPath: string | null
+            + handleStatusUpdate(event: unknown, status: string): Promise<void>
+            + handleCoeError(event: unknown, errorMessage: string): void
+            + handleCoeReset(): void
+        }
+
+        class useMaestro {
+            + startMaestro(): Promise<void>
+            + stopMaestro(): Promise<void>
+            + getSessionId(): Promise<string | null>
+        }
+    }
+
+    'Package APIs
+    package "APIs" {
+        class CosimulationAPI {
+            + maestro(args: { type: string, data?: unknown }): Promise<MaestroResponse>
+            + onSimulationStatus(callback): void
+            + removeSimulationStatusListener(callback): void
+            + addCoeErrorListener(callback): void
+            + removeCoeErrorListener(): void
+            + addCoeResetListener(callback): void
+            + removeCoeResetListener(): void
+            + getSessionId(): Promise<string | null>
+            + getConfig(): Promise<ConfigMaestro | null>
+            + getSimulationResult(sessionId: string): Promise<string>
+        }
+    }
+
+    'Package Utilities
+    package "Utilities" {
+        class MaestroUtils {
+            + isPortInUse(port: number): Promise<boolean>
+            + killProcessOnPort(port: number): Promise<void>
+        }
+
+        class ErrorHandler {
+            + handleError(error: unknown): void
+            + sendNotification(message: string, type: 'success' | 'error' | 'warning' | 'info'): void
+        }
+
+        class SimulationContext {
+            - sessionId: string | null
+            + getSessionId(): string | null
+            + setSessionId(id: string): void
+        }
+
+        class MenuManager {
+            + updateCosimulationMenu(enabled: boolean): void
+        }
+    }
+
+    'Relationships (using UML notation)
+    App --> Sidebar : uses
+    App --> Bottom : uses
+    App --> CoSimulation : uses
+    App --> ErrorSnackbar : uses
+
+    CoSimulation --> useCosimulation : «use»
+    useCosimulation ..> CosimulationAPI : «listen»
+    useMaestro ..> CosimulationAPI : «invoke»
+
+    Bottom ..> CosimulationAPI : «invoke»
+    Bottom ..> useMaestro : «use»
+
+    ErrorSnackbar ..> CosimulationAPI : «error handler»
+
+    CosimulationAPI --> MaestroUtils : «uses»
+    CosimulationAPI --> SimulationContext : «session management»
+    CosimulationAPI --> MenuManager : «UI update»
+    CosimulationAPI --> ErrorHandler : «error management»
+
+@enduml

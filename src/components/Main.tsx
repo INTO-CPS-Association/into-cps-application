@@ -1,5 +1,6 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
+import SimulationGuide from './SimulationGuide';
 
 const Main: React.FC = () => (
   <Box>
@@ -13,6 +14,7 @@ const Main: React.FC = () => (
         5.0.0
       </Typography>
     </Typography>
+    <SimulationGuide />
   </Box>
 );
 

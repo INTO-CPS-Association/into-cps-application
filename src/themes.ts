@@ -1,33 +1,36 @@
 import { createTheme, Theme } from '@mui/material/styles';
+import { lightColors, darkColors } from './utils/constants';
 
 export const lightTheme: Theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#3f51b5',
+      main: lightColors.primary,
     },
     secondary: {
-      main: '#f50057',
+      main: lightColors.secondary,
     },
     background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+      default: lightColors.background.default,
+      paper: lightColors.background.paper,
     },
   },
+  cssVariables: { cssVarPrefix: '' },
 });
 
 export const darkTheme: Theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#90caf9',
+      main: darkColors.primary,
     },
     secondary: {
-      main: '#f48fb1',
+      main: darkColors.secondary,
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: darkColors.background.default,
+      paper: darkColors.background.paper,
     },
   },
+  cssVariables: { cssVarPrefix: '' },
 });

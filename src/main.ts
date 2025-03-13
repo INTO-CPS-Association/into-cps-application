@@ -1,84 +1,118 @@
-import { app, BrowserWindow, Menu, ipcMain } from 'electron';
-import * as path from 'path';
-let mainWindow: BrowserWindow | null = null;
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { createWindow } from './electron/gui/window';
+import { createTopMenu } from './electron/gui/menu';
+import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from './cosimulation/maestro';
+import { MaestroResponse } from './types/global';
+import { getSessionId } from './cosimulation/simulationContext';
+import { getConfig } from './utils/config';
+import { MaestroNotifications, SimulationStatus } from './utils/constants/cosimulation/statuses';
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    icon: path.join(__dirname, 'resources/into-cps/appicon/', 'into-cps-logo.png.ico'),
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js'),
-    },
-  });  
-  const isDev = process.argv.includes('--dev');
-
-  const startUrl = isDev
-    ? 'http://localhost:8080'
-    : `file://${path.join(__dirname, 'index.html')}`;
-
-    console.log(
-      `Starting Electron in ${isDev ? 'development' : 'production'} mode`,
-    );
-    console.log(`Loading URL: ${startUrl}`);
-
-  
-  mainWindow.loadURL(startUrl).catch((error) => {
-    console.error('Failed to load URL:', error);
-  });
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-}
-
-function createTopMenu() {
-  const template = [
-    {
-      label: 'File',
-      submenu: [
-        {
-          label: 'Quit',
-          accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Alt+F4',
-          click: () => app.quit(),
-        },
-      ],
-    },
-    {
-      label: 'View',
-      submenu: [
-        {
-          label: 'Toggle Dark Mode',
-          click: () => mainWindow?.webContents.send('toggle-dark-mode'),
-        },
-        {
-          label: 'Toggle Developer Tools',
-          accelerator: 'CmdOrCtrl+Shift+I',
-          click: () => {
-            mainWindow?.webContents.toggleDevTools();
-          },
-        },
-      ],
-    },
-  ];
-
-  const menu = Menu.buildFromTemplate(template as never);
-  Menu.setApplicationMenu(menu);
-}
+export let mainWindow: BrowserWindow | null = null;
 
 app.on('ready', () => {
-  createTopMenu();
-  createWindow();
+  mainWindow = createWindow();
+  mainWindow.once('ready-to-show', () => {
+    createTopMenu(mainWindow!);
+  });
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (!mainWindow) {
+    mainWindow = createWindow();
+    mainWindow.once('ready-to-show', () => {
+      createTopMenu(mainWindow!);
+    });
+  }
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+
 ipcMain.on('toggle-dark-mode', () => {
-  mainWindow?.webContents.send('toggle-dark-mode');
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('toggle-dark-mode');
+  }
 });
+
+let isStartSimulationRunning = false;
+
+ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
+  if (!args || typeof args.type !== 'string') {
+    return { success: false, error: 'Invalid arguments provided to maestro handler' };
+  }
+
+  const { type, data } = args;
+  try {
+    switch (type) {
+      case 'start':{
+        const result = await startMaestro();
+        return result;}
+
+      case 'stop':
+        await stopMaestro();
+        if (mainWindow?.webContents) {
+          mainWindow.webContents.send('reset-simulation-state');
+        }
+        return { success: true, message: MaestroNotifications.Status.MaestroStopped };
+
+        case 'start-simulation':{
+          if (isStartSimulationRunning) {
+            return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
+          }
+  
+          isStartSimulationRunning = true; // to avoid unwanted double calls  
+          await startSimulation();
+          
+          isStartSimulationRunning = false;
+          return { success: true, message: SimulationStatus.Started };}
+  
+      case 'get-result':{
+        const resultPath = await getSimulationResult(data?.sessionId);
+        return { success: true, resultPath };
+      }
+
+      default:
+        throw new Error(`Unknown type: ${type}`);
+    }
+  } catch (error) {
+    isStartSimulationRunning = false;
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    return { success: false, error: message };
+  }
+});
+
+ipcMain.on('trigger-error', (_, message: string) => {
+  if (mainWindow?.webContents) {
+  mainWindow.webContents.send('show-error', message);
+  }
+});
+
+ipcMain.handle('get-session-id', async () => {
+  const sessionId = getSessionId();
+  return sessionId;
+});
+
+ipcMain.handle('get-config', async () => {
+  const config = getConfig();
+  return config;
+});
+
+ipcMain.on('trigger-notification', (_, message: string, type) => {
+  if (mainWindow?.webContents) {
+  mainWindow.webContents.send('show-notification', message, type);
+  }
+});
+
+ipcMain.on('show-notification', (event, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  console.log(`[Main] Sending notification to renderer: ${message} (${type})`);
+
+  if (mainWindow?.webContents) {
+    console.log('[Main] Found mainWindow.webContents, sending event...');
+    mainWindow.webContents.send('show-notification', message, type);
+  } else {
+    console.warn('[Main] mainWindow.webContents is NULL, cannot send notification!');
+  }
+});
+
