@@ -9,19 +9,20 @@ let configMaestro: ConfigMaestro | null = null;
 export function setProjectPath(projectPath: string): void {
   const cosimulationPath = path.join(projectPath, 'cosimulation');
   const defaultPath = path.join(cosimulationPath, 'default');
-
+  const outputPath= path.join(projectPath, 'results', 'cosimulation', 'default');
+  
   configMaestro = {
     cosimulationPath,
     defaultPath, 
     simulationConfigPath: path.join(defaultPath, 'experiment.json'),
     fmusPath: path.join(projectPath, 'FMUs'),
     multiModels: path.join(defaultPath, 'multi-model.json'),
-    outputPath: path.join(projectPath, 'results', 'cosimulation', 'default'),
+    outputPath: outputPath,
+    logDirectory: path.join(outputPath, 'logs'),
     maestroJarPath: path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar'),
     tempMaestroJarPath: path.join(os.tmpdir(), 'maestro-webapi-3.0.0-bundle.jar'),
   };
 
-  const outputPath = configMaestro.outputPath;
   if (!fs.existsSync(outputPath)) {
     fs.mkdirSync(outputPath, { recursive: true });
   }

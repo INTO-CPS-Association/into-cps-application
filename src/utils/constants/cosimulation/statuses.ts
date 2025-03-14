@@ -8,7 +8,7 @@ export const SimulationStatus = {
     Simulating: 'Simulating...',
     SimulationCompleted: 'Simulation completed.',
     SimulationFailed: 'Simulation failed: ',
-    FetchFailedSimulationError: 'Typer Error: Fetch Failed.',
+    FetchFailedSimulationError: 'Type Error: Fetch Failed.',
     SimulationAlreadyInProgress: 'Simulation request already in progress',
 } as const;
 
