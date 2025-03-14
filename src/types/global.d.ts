@@ -1,0 +1,57 @@
+export interface IElectronAPI {
+  dispatchActionToMain: (action: unknown) => void;
+  addToggleDarkModeListener: (callback: () => void) => void;
+  removeToggleDarkModeListener: () => void;
+  addErrorListener: (callback?: (message: string) => void) => void;
+  removeErrorListener: () => void;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  off: (event: string, callback: (...args: unknown[]) => void) => void;
+  addNotificationListener: (callback?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void) => void;
+  removeNotificationListener: () => void;
+  sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+}
+
+export interface ICosimulationAPI {
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  off: (event: string, callback: (...args: unknown[]) => void) => void;
+  maestro: (args: { type: string; data?: unknown }) => Promise<{ success: boolean; message?: string; resultPath?: string; error?: string }>;
+  onSimulationStatus: (callback: (event: unknown, status: string) => void) => void;
+  removeSimulationStatusListener: (callback: (event: unknown, status: string) => void) => void;
+  addCoeErrorListener: (callback: (event: unknown, errorMessage: string) => void) => void;
+  removeCoeErrorListener: () => void;
+  addCoeResetListener: (callback: () => void) => void;
+  removeCoeResetListener: () => void;
+  getConfig: () => Promise<ConfigMaestro | null>;
+  getSessionId: () => Promise<string | null>;
+  getSimulationResult: (sessionId: string) => Promise<string>;
+  addListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+}
+
+
+export interface ConfigMaestro {
+  cosimulationPath: string;
+  defaultPath: string;
+  maestroJarPath: string;
+  tempMaestroJarPath: string;
+  simulationConfigPath: string;
+  fmusPath: string;
+  multiModels: string;
+  outputPath: string;
+}
+
+export interface MaestroResponse {
+  success: boolean;
+  message?: string;
+  resultPath?: string;
+  error?: string;
+}
+
+declare global {
+  interface Window {
+    electronAPI: IElectronAPI;
+    cosimulationAPI: ICosimulationAPI;
+    ConfigMaestro?: ConfigMaestro;
+    MaestroResponse: MaestroResponse;
+  }
+}

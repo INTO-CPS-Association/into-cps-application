@@ -1,33 +1,41 @@
 import React, { useState } from 'react';
-import { BottomNavigation, BottomNavigationAction, Box, Typography } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Box, Typography, useTheme } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
+import { styleConstants } from '../utils/constants';
 
-const Bottom: React.FC = () => {
+const Bottom: React.FC<{ sidebarWidth: number; sidebarOpen: boolean }> = ({ sidebarWidth }) => {
   const [maestroRunning, setMaestroRunning] = useState(false);
-
+  const theme = useTheme();
+  
   const toggleMaestroState = async () => {
     try {
-      if (maestroRunning) {
-        await window?.electronAPI?.stopMaestro();
+      const type = maestroRunning ? 'stop' : 'start';
+      const response = await window?.cosimulationAPI?.maestro({
+        type: type,
+      });
+      
+      if (response?.success) {
+        setMaestroRunning(!maestroRunning);
       } else {
-        await window?.electronAPI?.startMaestro();
+        console.error('Error toggling Maestro:', response?.error || 'Unknown error');
       }
-      setMaestroRunning(!maestroRunning);
     } catch (error) {
-      console.error('Error toggling Maestro:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Error toggling Maestro:', message);
     }
   };
 
   return (
     <Box
       sx={{
-        width: 'calc(100% - 240px)',
+        width: '100%',
         position: 'fixed',
         bottom: 0,
-        left: '240px',
+        left: `${sidebarWidth}px`,
         bgcolor: 'background.paper',
-        boxShadow: 3,
+        boxShadow: theme.shadows[3],
+        transition: `left ${styleConstants.TRANSITION_DURATION} ease, width ${styleConstants.TRANSITION_DURATION} ease`,
       }}
     >
       <BottomNavigation showLabels sx={{ justifyContent: 'flex-start' }}>

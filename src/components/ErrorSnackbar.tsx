@@ -1,21 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 
-const ErrorSnackbar = () => {
+type SnackbarSeverity = 'info' | 'error' | 'warning' | 'success';
+
+const ErrorSnackbar: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [message, setMessage] = useState('');
+  const [severity, setSeverity] = useState<SnackbarSeverity>('info');
 
   useEffect(() => {
-    if (window.electronAPI) {
-      window.electronAPI.showError((message: string | Error) => {
-        const errorMessage = message instanceof Error ? message.message : message;
-        console.log('Received error message in React:', errorMessage);
-        setErrorMessage(errorMessage);
-        setOpen(true);
-      });
+    const handleError = (msg: string) => {
+      setMessage(msg);
+      setSeverity('error');
+      setOpen(true);
+    };
+
+    const handleNotification = (msg: string, type: SnackbarSeverity) => {
+      setMessage(msg);
+      setSeverity(type);
+      setOpen(true);
+    };
+
+    if (window?.electronAPI?.addErrorListener) {
+      window.electronAPI.addErrorListener(handleError);
     }
-  
-    return () => {};
+    if (window?.electronAPI?.addNotificationListener) {
+      window.electronAPI.addNotificationListener(handleNotification);
+    } 
+
+    return () => {
+      if (window?.electronAPI?.removeErrorListener) {
+        window.electronAPI.removeErrorListener();
+      }
+      if (window?.electronAPI?.removeNotificationListener) {
+        window.electronAPI.removeNotificationListener();
+      }
+    };
   }, []);
 
   const handleClose = () => {
@@ -23,9 +43,14 @@ const ErrorSnackbar = () => {
   };
 
   return (
-    <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-      <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-        {errorMessage}
+    <Snackbar
+      open={open}
+      autoHideDuration={6000}
+      onClose={handleClose}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+        {message}
       </Alert>
     </Snackbar>
   );

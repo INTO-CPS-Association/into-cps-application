@@ -13,13 +13,17 @@
     "noImplicitAny": true, //raise error on any type
     "allowSyntheticDefaultImports": true, //allow default imports from modules with no default export
     "sourceMap": true, //generate .map files
-    "jsx": "react", //use react   
+    "jsx": "react",
+    "allowJs": true,
     "types": [
       "react",
       "node",
+      "jest",
+      "@testing-library/jest-dom"
     ],
     "strictNullChecks": true, //enable strict null checks
-    "resolveJsonModule": true //allow to import JSON files directly
+    "resolveJsonModule": true, //allow to import JSON files directly
+    "moduleResolution": "node",
     },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts", "jest.config.ts"],
 }
