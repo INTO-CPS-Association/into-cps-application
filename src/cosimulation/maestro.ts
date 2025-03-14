@@ -4,8 +4,14 @@ import kill from 'tree-kill';
 import { spawn, ChildProcess } from 'child_process';
 import { setSessionId } from './simulationContext';
 import { pathToFileURL } from 'url';
-import { isPortInUse, killProcessOnPort } from '../utils/processes/maestroUtils';
-import { SimulationStatus, MaestroNotifications } from '../utils/constants/cosimulation/statuses';
+import {
+  isPortInUse,
+  killProcessOnPort,
+} from '../utils/processes/maestroUtils';
+import {
+  SimulationStatus,
+  MaestroNotifications,
+} from '../utils/constants/cosimulation/statuses';
 import { handleError, sendNotification } from '../utils/errorHandler';
 import { updateCosimulationMenu } from '../electron/gui/menu';
 import { mainWindow } from '../main';
@@ -18,11 +24,37 @@ const MAESTRO_BASE_URL = `http://localhost:${MAESTRO_PORT}`;
 let maestroProcess: ChildProcess | null = null;
 let isSimulationInProgress: boolean = false;
 
+function initializeLoggingFile() {
+  const config = getConfig();
+
+  if (!config?.logDirectory) {
+    sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
+    return null
+  }
+  try {
+    const logDirectory = config.logDirectory;
+    const maestroLogFile = path.join(logDirectory, 'Maestro.log');
+
+    if (!fs.existsSync(logDirectory)) {
+      fs.mkdirSync(logDirectory, { recursive: true });
+    }
+
+    fs.writeFileSync(maestroLogFile, '', { flag: 'w' });
+    return maestroLogFile;
+  } catch (error) {
+    handleError(error);
+    return null;
+  }
+}
+
 function extractMaestroJar() {
   const config = getConfig();
   if (!config) {
     sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
-    return { success: false, error: MaestroNotifications.Error.ConfigurationNotSet };
+    return {
+      success: false,
+      error: MaestroNotifications.Error.ConfigurationNotSet,
+    };
   }
 
   const { maestroJarPath, tempMaestroJarPath } = config;
@@ -30,12 +62,16 @@ function extractMaestroJar() {
   try {
     if (!fs.existsSync(maestroJarPath)) {
       sendNotification(`Maestro JAR not found at ${maestroJarPath}.`, 'error');
-      return;
+      return {
+        success: false,
+        error: `Maestro JAR not found at ${maestroJarPath}.`,
+      };
     }
 
     if (!fs.existsSync(tempMaestroJarPath)) {
       fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
     }
+    return; 
   } catch (error) {
     handleError(error);
     return;
@@ -45,28 +81,41 @@ function extractMaestroJar() {
 async function startMaestro(): Promise<MaestroResponse> {
   const config = getConfig();
   if (!config) {
-    sendNotification('Configuration not set. Please select a project.', 'error');
-    return { success: false, error: MaestroNotifications.Error.ConfigurationNotSet };
+    sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
+    return {
+      success: false,
+      error: MaestroNotifications.Error.ConfigurationNotSet,
+    };
   }
 
   const { tempMaestroJarPath } = config;
 
   try {
     await stopMaestro();
+    const maestroLogFile = initializeLoggingFile();
+    if (!maestroLogFile) {
+      return {
+        success: false,
+        error: 'Failed to initialize log file',
+      };
+    }
+    const logStream = fs.createWriteStream(maestroLogFile, { flags: 'a' });
 
     const portInUse = await isPortInUse(MAESTRO_PORT);
     if (portInUse) {
-      sendNotification(MaestroNotifications.Error.PortInUse(MAESTRO_PORT), 'error');
+      sendNotification(
+        MaestroNotifications.Error.PortInUse(MAESTRO_PORT),
+        'error',
+      );
       await killProcessOnPort(MAESTRO_PORT);
     }
 
     extractMaestroJar();
-
     sendSimulationStatus(MaestroNotifications.Status.StartingMaestro);
 
     return new Promise((resolve, reject) => {
       maestroProcess = spawn('java', ['-jar', tempMaestroJarPath], {
-        detached: true,
+        detached: false,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
 
@@ -75,6 +124,7 @@ async function startMaestro(): Promise<MaestroResponse> {
       maestroProcess.stdout?.on('data', (data) => {
         const message = data.toString();
         console.log(`[Maestro STDOUT]: ${message}`);
+        logStream.write(`[STDOUT]: ${message}\n`);
 
         if (message.includes('Starting ProtocolHandler ["http-nio-8082"]')) {
           serverReady = true;
@@ -86,38 +136,51 @@ async function startMaestro(): Promise<MaestroResponse> {
           if (maestroProcess && mainWindow) {
             updateCosimulationMenu(mainWindow, true);
           }
-          resolve({ success: true, message: MaestroNotifications.Status.MaestroStarted });
+          resolve({
+            success: true,
+            message: MaestroNotifications.Status.MaestroStarted,
+          });
         }
       });
 
       maestroProcess.stderr?.on('data', (data) => {
         const errorOutput = data.toString();
-        sendNotification(`[Maestro]: ${errorOutput}`, 'error')
+        sendNotification(`[Maestro]: ${errorOutput}`, 'error');
         console.error(`[Maestro STDERR]: ${errorOutput}`);
 
         if (!serverReady) {
           const errorMessage = errorOutput.includes('java')
             ? MaestroNotifications.Error.JavaNotConfigured
             : MaestroNotifications.Error.GenericStartupError;
-            sendNotification(errorMessage, 'error');
+          sendNotification(errorMessage, 'error');
           reject({ success: false, error: errorMessage });
         }
       });
 
       maestroProcess.on('error', (error) => {
         handleError(error);
+        logStream.write(`[ERROR]: ${error.message}\n`);
         if (!serverReady) reject({ success: false, error: error.message });
       });
 
       maestroProcess.on('close', (code) => {
         console.log(`[Maestro] Process exited with code: ${code}`);
+        logStream.write(`[EXIT]: Process exited with code ${code}\n`);
+        logStream.end();
+
         maestroProcess = null;
         if (mainWindow) {
           updateCosimulationMenu(mainWindow, false);
         }
         if (!serverReady) {
-          sendNotification(MaestroNotifications.Status.MaestroStoppedBeforeReady, 'error');
-          reject({ success: false, error:MaestroNotifications.Status.MaestroStoppedBeforeReady});
+          sendNotification(
+            MaestroNotifications.Status.MaestroStoppedBeforeReady,
+            'error',
+          );
+          reject({
+            success: false,
+            error: MaestroNotifications.Status.MaestroStoppedBeforeReady,
+          });
         }
       });
 
@@ -125,7 +188,10 @@ async function startMaestro(): Promise<MaestroResponse> {
     });
   } catch (error) {
     handleError(error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
@@ -169,20 +235,25 @@ async function startSimulation(): Promise<void> {
 
     isSimulationInProgress = true;
     const config = getConfig();
-    
+
     if (!config) {
-      sendNotification('Configuration not set. Please select a project.', 'error');
+      sendNotification(
+        'Configuration not set. Please select a project.',
+        'error',
+      );
       isSimulationInProgress = false;
       return;
     }
 
     const { simulationConfigPath, multiModels, fmusPath } = config;
 
-
     sendSimulationStatus(SimulationStatus.StartingSimulation);
 
     if (!fs.existsSync(simulationConfigPath)) {
-      sendNotification(`[Simulation] Missing file: ${simulationConfigPath}`, 'error');
+      sendNotification(
+        `[Simulation] Missing file: ${simulationConfigPath}`,
+        'error',
+      );
       isSimulationInProgress = false;
       return;
     }
@@ -192,23 +263,32 @@ async function startSimulation(): Promise<void> {
       return;
     }
 
-    const experimentConfig = JSON.parse(fs.readFileSync(simulationConfigPath, 'utf8'));
+    const experimentConfig = JSON.parse(
+      fs.readFileSync(simulationConfigPath, 'utf8'),
+    );
     const multiModelConfig = JSON.parse(fs.readFileSync(multiModels, 'utf8'));
 
     const resolvedFmus = Object.fromEntries(
       Object.entries(multiModelConfig.fmus)
-        .filter(([_, relativePath]) => typeof relativePath === 'string' && relativePath.trim() !== '')
+        .filter(
+          ([_, relativePath]) =>
+            typeof relativePath === 'string' && relativePath.trim() !== '',
+        )
         .map(([key, relativePath]) => [
           key,
-          pathToFileURL(path.resolve(fmusPath, relativePath as string)).toString(),
-        ])
+          pathToFileURL(
+            path.resolve(fmusPath, relativePath as string),
+          ).toString(),
+        ]),
     );
 
     experimentConfig.connections = multiModelConfig.connections;
     experimentConfig.parameters = multiModelConfig.parameters;
     experimentConfig.fmus = resolvedFmus;
 
-    const sessionResponse = await fetch(`${MAESTRO_BASE_URL}/createSession`, { method: 'GET' });
+    const sessionResponse = await fetch(`${MAESTRO_BASE_URL}/createSession`, {
+      method: 'GET',
+    });
 
     if (!sessionResponse.ok) {
       const errorText = await sessionResponse.text();
@@ -220,26 +300,38 @@ async function startSimulation(): Promise<void> {
     const { sessionId } = await sessionResponse.json();
     setSessionId(sessionId);
 
-    const initializeResponse = await fetch(`${MAESTRO_BASE_URL}/initialize/${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(experimentConfig),
-    });
+    const initializeResponse = await fetch(
+      `${MAESTRO_BASE_URL}/initialize/${sessionId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(experimentConfig),
+      },
+    );
 
     if (!initializeResponse.ok) {
       const errorText = await initializeResponse.text();
-      sendNotification(`Failed to initialize simulation: ${errorText}`, 'error');
+      sendNotification(
+        `Failed to initialize simulation: ${errorText}`,
+        'error',
+      );
       isSimulationInProgress = false;
       return;
     }
 
     sendSimulationStatus(SimulationStatus.Simulating);
 
-    const simulateResponse = await fetch(`${MAESTRO_BASE_URL}/simulate/${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ startTime: experimentConfig.startTime, endTime: experimentConfig.endTime }),
-    });
+    const simulateResponse = await fetch(
+      `${MAESTRO_BASE_URL}/simulate/${sessionId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startTime: experimentConfig.startTime,
+          endTime: experimentConfig.endTime,
+        }),
+      },
+    );
 
     if (!simulateResponse.ok) {
       const errorText = await simulateResponse.text();
@@ -262,21 +354,27 @@ async function startSimulation(): Promise<void> {
   }
 }
 
-
 async function getSimulationResult(sessionId: string): Promise<string> {
-
   try {
     const config = getConfig();
     if (!config) {
-      sendNotification('Configuration not set. Please select a project.', 'error');
+      sendNotification(
+        'Configuration not set. Please select a project.',
+        'error',
+      );
       return '';
     }
 
     const { outputPath } = config;
 
-    const resultResponse = await fetch(`${MAESTRO_BASE_URL}/result/${sessionId}/plain`);
+    const resultResponse = await fetch(
+      `${MAESTRO_BASE_URL}/result/${sessionId}/plain`,
+    );
     if (!resultResponse.ok) {
-      sendNotification(`Error fetching CSV results: ${resultResponse.statusText}`, 'error');
+      sendNotification(
+        `Error fetching CSV results: ${resultResponse.statusText}`,
+        'error',
+      );
       return '';
     }
 
@@ -291,10 +389,4 @@ async function getSimulationResult(sessionId: string): Promise<string> {
   }
 }
 
-
-export {
-  startMaestro,
-  stopMaestro,
-  startSimulation,
-  getSimulationResult,
-};
+export { startMaestro, stopMaestro, startSimulation, getSimulationResult };

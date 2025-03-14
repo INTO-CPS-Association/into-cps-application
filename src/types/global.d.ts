@@ -37,6 +37,7 @@ export interface ConfigMaestro {
   simulationConfigPath: string;
   fmusPath: string;
   multiModels: string;
+  logDirectory: string;
   outputPath: string;
 }
 
