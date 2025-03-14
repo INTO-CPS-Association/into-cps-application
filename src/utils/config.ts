@@ -1,5 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os'; 
+
 import { ConfigMaestro } from '../types/global';
 
 let configMaestro: ConfigMaestro | null = null;
@@ -16,7 +18,7 @@ export function setProjectPath(projectPath: string): void {
     multiModels: path.join(defaultPath, 'multi-model.json'),
     outputPath: path.join(projectPath, 'results', 'cosimulation', 'default'),
     maestroJarPath: path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar'),
-    tempMaestroJarPath: path.join('/tmp', 'maestro-webapi-3.0.0-bundle.jar'),
+    tempMaestroJarPath: path.join(os.tmpdir(), 'maestro-webapi-3.0.0-bundle.jar'),
   };
 
   const outputPath = configMaestro.outputPath;

@@ -8,7 +8,7 @@ export const SimulationStatus = {
     Simulating: 'Simulating...',
     SimulationCompleted: 'Simulation completed.',
     SimulationFailed: 'Simulation failed: ',
-    FetchFailed: 'Fetch Failed. Please start Maestro before launching the cosimulation.',
+    FetchFailedSimulationError: 'Typer Error: Fetch Failed.',
     SimulationAlreadyInProgress: 'Simulation request already in progress',
 } as const;
 

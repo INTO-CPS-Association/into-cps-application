@@ -252,7 +252,7 @@ async function startSimulation(): Promise<void> {
   } catch (error) {
     const customMessage =
       error instanceof Error && error.message.includes('fetch failed')
-        ? SimulationStatus.FetchFailed
+        ? SimulationStatus.FetchFailedSimulationError
         : error;
 
     handleError(customMessage);
