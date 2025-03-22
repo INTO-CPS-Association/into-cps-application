@@ -18,7 +18,7 @@ export const MaestroNotifications = {
         StoppingMaestro: 'Stopping Maestro...',
         MaestroStarted: 'Maestro started successfully.',
         MaestroStopped: 'Maestro stopped successfully.',
-        MaestroStoppedBeforeReady: 'Maestro process closed before server was ready.',
+        MaestroStoppedBeforeReady: 'Maestro process terminated before the server was ready. Please wait until Maestro is fully initialized.',
         MaestroJarExtracted: 'Maestro JAR already extracted.',
         MaestroServerReady: 'Maestro server is ready.',
     },

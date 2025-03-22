@@ -75,3 +75,15 @@ export async function killProcessOnPort(port: number): Promise<void> {
     });
   });
 }
+
+/**
+ * Generates a timestamp string in a user-friendly format: YYYY-MM-DD_HH-MM-SS
+ */
+export function getReadableTimestamp(): string {
+  const now = new Date();
+  return now
+    .toISOString()
+    .replace(/T/, '_')
+    .replace(/:/g, '-')
+    .replace(/\..+/, '');
+}
