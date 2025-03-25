@@ -78,7 +78,7 @@ window.electronAPI.sendNotification('Simulation started', 'success');
 
 The core `App` component initializes the UI for the INTO-CPS Application, manages global states and handle the navigation.\
 The `Bottom.tsx` component allows users to start/stop the Maestro engine, required to run a CoSimulation, using `CoSimulationApi`. The `CoSimulation.tsx` component displays simulation status and results path using the useCosimulation hook, which makes use of `CoSimulationApi`.\
-Error handling is managed by `ErrorSnackbar.tsx`, which is being triggered and updated at each error captured, and displayed in a notification at the bottom of the screen.
+Error —and Warnings— handling is managed by `ErrorSnackbar.tsx`, which is being triggered and updated at each error captured, and displayed in a notification at the bottom of the screen.
 
 #### Package Diagram
 
@@ -252,6 +252,8 @@ classDiagram
         - sendSimulationStatus(status: string): void
         - isSimulationInProgress: boolean
         - maestroProcess: ChildProcess | null
+        - safeWrite(stream, message, type): void
+        - initializeLoggingFile(type): string | null
     }
 
     %% Cosimulation API %%
@@ -340,9 +342,16 @@ sequenceDiagram
     MM->>MM: sendSimulationStatus("Simulation Initialized")
 
     %% Running Simulation %%
-    MM->>MM: fetch(`${MAESTRO_BASE_URL}/initialize/${sessionId}`)
-    MM->>MM: fetch(`${MAESTRO_BASE_URL}/simulate/${sessionId}`)
-    MM->>MM: sendSimulationStatus("Simulating...")
+    MM->>MM: Check if isStartSimulationRunning
+    alt Already running
+        MM-->>EH: sendNotification("Simulation already in progress", "error")
+    else Not running
+        MM->>MM: isStartSimulationRunning = true
+        MM->>MM: fetch(`${MAESTRO_BASE_URL}/initialize/${sessionId}`)
+        MM->>MM: fetch(`${MAESTRO_BASE_URL}/simulate/${sessionId}`)
+        MM->>MM: sendSimulationStatus("Simulating...")
+        MM->>MM: isStartSimulationRunning = false
+    end
 
     %% Simulation Completion %%
     MM->>MM: sendSimulationStatus("Simulation Completed")
@@ -354,6 +363,28 @@ sequenceDiagram
     %% Handling Errors %%
     MM->>EH: handleError(error)
 
+```
+
+#### Logging Features, Safety & File Monitoring
+
+The logging system has been enhanced to handle runtime edge cases and improve reliability. The logs go through the `safeWrite()` function for the following behavior:
+
+- Before writing any message, the system:
+  - Verifies that the target log file exists
+  - Detects and warns the user if the log file has been deleted or is not writable
+- Two types of logs are generated:
+  - `Maestro.log`: related to Maestro engine startup and lifecycle
+  - `CoSimulation-<timestamp>.log`: specific to each simulation session
+- In case one of the log is deleted during Maestro startup or during the CoSimulation, the system displays a warning in the UI to avoid silent data loss
+- Log files are saved under `results/cosimulation/default/logs`
+
+Generated CoSimulation logs have a human-readable timestamps in the format `YYYY-MM-DD_HH-MM-SS` in their file names. This is used to timestamp log files for each simulation execution:
+
+```ts
+export function getReadableTimestamp(): string {
+  const now = new Date();
+  return now.toISOString().replace(/T/, '_').replace(/:/g, '-').replace(/\..+/, '');
+}
 ```
 
 ### Maestro Model and React communication using IPC

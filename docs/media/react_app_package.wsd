@@ -107,6 +107,7 @@ package "INTO-CPS React App" {
         class MaestroUtils {
             + isPortInUse(port: number): Promise<boolean>
             + killProcessOnPort(port: number): Promise<void>
+            + getReadableTimestamp(): string
         }
 
         class ErrorHandler {
@@ -125,7 +126,22 @@ package "INTO-CPS React App" {
         }
     }
 
-    'Relationships (using UML notation)
+    'Package MaestroManager
+    package "MaestroManager" {
+        class MaestroManager {
+            + startMaestro(): Promise<MaestroResponse>
+            + stopMaestro(): Promise<void>
+            + startSimulation(): Promise<void>
+            + getSimulationResult(sessionId: string): Promise<string>
+            - extractMaestroJar(): void
+            - sendSimulationStatus(status: string): void
+            - initializeLoggingFile(type: string): string | null
+            - safeWrite(stream, message, type): void
+            - isStartSimulationRunning: boolean
+        }
+    }
+
+    'Relationships
     App --> Sidebar : uses
     App --> Bottom : uses
     App --> CoSimulation : uses
@@ -144,5 +160,11 @@ package "INTO-CPS React App" {
     CosimulationAPI --> SimulationContext : «session management»
     CosimulationAPI --> MenuManager : «UI update»
     CosimulationAPI --> ErrorHandler : «error management»
+
+    MaestroManager --> MaestroUtils : «uses»
+    MaestroManager --> SimulationContext : «session management»
+    MaestroManager --> ErrorHandler : «error handling»
+    MaestroManager --> MenuManager : «UI update»
+}
 
 @enduml
