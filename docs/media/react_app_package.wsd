@@ -108,6 +108,7 @@ package "INTO-CPS React App" {
             + isPortInUse(port: number): Promise<boolean>
             + killProcessOnPort(port: number): Promise<void>
             + getReadableTimestamp(): string
+            + getJavaCommand(): string
         }
 
         class ErrorHandler {

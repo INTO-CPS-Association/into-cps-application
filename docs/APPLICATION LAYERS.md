@@ -288,6 +288,7 @@ classDiagram
     class MaestroUtils {
         + isPortInUse(port: number): Promise<boolean>
         + killProcessOnPort(port: number): Promise<void>
+        +getJavaCommand(): string
     }
 
     %% Menu Manager %%
@@ -327,12 +328,12 @@ sequenceDiagram
     MM->>MU: isPortInUse(MAESTRO_PORT)
     MU-->>MM: Port status
     MM->>MU: killProcessOnPort(MAESTRO_PORT) (if needed)
-    MM->>MM: extractMaestroJar()
-    MM->>MM: spawn Maestro JAR
+    MM->>MM: extractMaestroJar() MM->>MU: getJavaCommand()
+    MU-->>MM: /usr/bin/java (or fallback)
+    MM->>MM: spawn('java', ['-jar'...], { env: process.env })
     MM->>Menu: updateCosimulationMenu(mainWindow, true)
-
-    %% Maestro successfully started %%
-    MM->>MM: sendSimulationStatus("Maestro Started")
+    MM->>IPC: emit('simulation-status', "Maestro Started")
+    IPC->>Bottom: simulation-status("Maestro Started")
 
     %% Simulation Initialization %%
     MM->>MM: load experiment.json, multi-model.json
@@ -386,6 +387,10 @@ export function getReadableTimestamp(): string {
   return now.toISOString().replace(/T/, '_').replace(/:/g, '-').replace(/\..+/, '');
 }
 ```
+
+#### Java Configuration
+
+The application safely resolves the system’s default Java path with `getJavaCommand()`, compatible with update-alternatives and avoids relying on tools like sdkman that might not be active when running `.AppImage` GUIs, as the `.AppImage` might fail to locate it. The system now detects the default Java executable via `which java` (Linux/macOS) or `where java` (Windows).
 
 ### Maestro Model and React communication using IPC
 

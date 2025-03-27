@@ -5,6 +5,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { setSessionId } from './simulationContext';
 import { pathToFileURL } from 'url';
 import {
+  getJavaCommand,
   isPortInUse,
   killProcessOnPort,
 } from '../utils/processes/maestroUtils';
@@ -158,12 +159,24 @@ async function startMaestro(): Promise<MaestroResponse> {
 
     extractMaestroJar();
     sendSimulationStatus(MaestroNotifications.Status.StartingMaestro);
-
+    const javaExecutable = getJavaCommand();
+    if (!javaExecutable) {
+      sendNotification(MaestroNotifications.Error.JavaNotConfigured, 'error');
+      return {
+        success: false,
+        error: MaestroNotifications.Error.JavaNotConfigured,
+      };
+    }
     return new Promise((resolve, reject) => {
-      maestroProcess = spawn('java', ['-jar', tempMaestroJarPath], {
+      maestroProcess = spawn(javaExecutable, ['-jar', tempMaestroJarPath], {
         detached: false,
         stdio: ['pipe', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          PATH: process.env.PATH || '', // force PATH from current environment to get Java Path
+        },
       });
+      console.log('[DEBUG] PATH:', process.env.PATH);
 
       let serverReady = false;
 

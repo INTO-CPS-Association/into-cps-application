@@ -1,5 +1,5 @@
 import net from 'net';
-import { exec } from 'node:child_process';
+import { exec, execSync } from 'node:child_process';
 import kill from 'tree-kill';
 import { handleError, sendNotification } from '../errorHandler';
 
@@ -86,4 +86,25 @@ export function getReadableTimestamp(): string {
     .replace(/T/, '_')
     .replace(/:/g, '-')
     .replace(/\..+/, '');
+}
+
+/**
+ * Returns the Java executable path if found in the system PATH, otherwise returns 'java'.
+ */
+
+export function getJavaCommand(): string {
+  try {
+    const platform = process.platform;
+    const cmd = platform === 'win32' ? 'where java' : 'which java';
+    const output = execSync(cmd).toString().trim();
+
+    // 'where' can return multiple lines, take the first
+    const javaPath = output.split(/\r?\n/)[0];
+
+    if (javaPath) return javaPath;
+  } catch (err) {
+    console.warn('[Maestro] Java not found in PATH:', err);
+  }
+
+  return 'java'; // fallback
 }
