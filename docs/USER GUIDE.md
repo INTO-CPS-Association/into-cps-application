@@ -74,6 +74,7 @@ Please be sure to have the exact same project folder structure described before.
 - Navigate to the Sidebar and change the page to Cosimulation.
 - Navigate to the Bottom bar.
 - Click the "Start CoE" button.
+  - If prompted by Windows Firewall, it is recommended to allow access: if denied, Maestro may not execute properly.
 - A new Maestro process will be launched and you will see updates on the status of Maestro.
   - "Starting Maestro..."
   - "Maestro Started Successfully
