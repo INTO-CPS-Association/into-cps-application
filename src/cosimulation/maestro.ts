@@ -176,7 +176,6 @@ async function startMaestro(): Promise<MaestroResponse> {
           PATH: process.env.PATH || '', // force PATH from current environment to get Java Path
         },
       });
-      console.log('[DEBUG] PATH:', process.env.PATH);
 
       let serverReady = false;
 
@@ -435,7 +434,7 @@ async function startSimulation(): Promise<void> {
     sendSimulationStatus(SimulationStatus.SimulationCompleted);
     safeWrite(simLogStream, '[INFO]: Simulation completed successfully.\n', 'cosimulation')
   } catch (error) {
-    const message =
+    const message = 
       error instanceof Error && error.message.includes('fetch failed')
         ? SimulationStatus.FetchFailedSimulationError
         : String(error);
