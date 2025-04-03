@@ -7,7 +7,7 @@ describe('SimulationStatus', () => {
     expect(SimulationStatus.Simulating).toBe('Simulating...');
     expect(SimulationStatus.SimulationCompleted).toBe('Simulation completed.');
     expect(SimulationStatus.SimulationFailed).toBe('Simulation failed: ');
-    expect(SimulationStatus.FetchFailed).toBe(
+    expect(SimulationStatus.FetchFailedSimulationError).toBe(
       'Fetch Failed. Please start Maestro before launching the cosimulation.'
     );
   });
@@ -20,7 +20,7 @@ describe('MaestroStatus', () => {
     expect(MaestroNotifications.Status.MaestroStarted).toBe('Maestro started successfully.');
     expect(MaestroNotifications.Status.MaestroStopped).toBe('Maestro stopped successfully.');
     expect(MaestroNotifications.Status.MaestroStoppedBeforeReady).toBe(
-      'Maestro process closed before server was ready.'
+      'Maestro process terminated before the server was ready. Please wait until Maestro is fully initialized.'
     );
     expect(MaestroNotifications.Error.MaestroJarNotFound).toBe(
       'Maestro JAR not found. Please ensure it is installed correctly.'

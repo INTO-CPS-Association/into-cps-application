@@ -12,11 +12,13 @@ The guide is structured as follow:
 
 ## Required dependencies
 
-You need to ensure that Java is installed in your system in order to use the application:
+You need to ensure that Java is installed in your system in order to use the application. At the current state, Java 8.x.x or Java 11.x.x are required to properly use Maestro.\
+To manage different versions of Java on Linux, `update-alternatives` is recommended, as other tools like `SDKMan` may configure the Java path only in the shell environment and can lead to issues when launching `.AppImage` GUIs without a terminal.
 
-- Java (SE Runtime):
-  - Windows
-  - Linux
+```bash
+sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-11-openjdk-amd64/bin/java 1
+sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+```
 
 ### Project configuration
 
@@ -72,6 +74,7 @@ Please be sure to have the exact same project folder structure described before.
 - Navigate to the Sidebar and change the page to Cosimulation.
 - Navigate to the Bottom bar.
 - Click the "Start CoE" button.
+  - If prompted by Windows Firewall, it is recommended to allow access: if denied, Maestro may not execute properly.
 - A new Maestro process will be launched and you will see updates on the status of Maestro.
   - "Starting Maestro..."
   - "Maestro Started Successfully
@@ -89,6 +92,8 @@ Please be sure to have the exact same project folder structure described before.
     - "Simulating..."
   - If errors occur, they will be shown in the error snackbar at the bottom right.
 
+Note: If you try to run a simulation while another one is still in progress, the application will block the request and show a warning. This prevents unexpected behavior or data corruption.
+
 ### Retrieving the results
 
 - Once the simulation is completed, the results will be saved.
@@ -96,6 +101,18 @@ Please be sure to have the exact same project folder structure described before.
   - Simulation status "Simulation Completed"
   - The path of the folder containing your results
 - If errors occur, they will be shown in the error snackbar at the bottom right.
+
+### Simulation Logs and Timestamps
+
+Each simulation automatically generates a dedicated log file under:
+
+```plaintext
+results/cosimulation/default/logs
+```
+
+Files are named with a readable timestamp, e.g. `CoSimulation-2025-03-22_12-35-10.log`.
+
+Logs include simulation steps, errors, and result statuses. If the log file is deleted during runtime, the app will detect this and notify the user, but the CoSimulation will keep running. To generate again a Maestro or CoSimulation log, restart Maestro or run another CoSimulation.
 
 ### Stopping the Maestro Engine
 
@@ -109,3 +126,4 @@ Please be sure to have the exact same project folder structure described before.
 
 - Maestro doesn't start?\
   Maestro is automatically installed with the application and the only dependency needed is Java. Ensure that Java is installed and properly configured, then restart the application.
+- Maestro gets stuck at `Starting Maestro`? Check if you are using the correct Java version.
