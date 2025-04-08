@@ -297,7 +297,7 @@
     </ExclusionItems>
   </Settings>
   <PrepareComputer DisableWindowsSearchService="true" DisableWindowsUpdateService="true" />
-  <SaveLocation PackagePath="C:\Users\smica\OneDrive\Immagini\Documenti\INTO-CPS-APPLICATION_forked\into-cps-application\release\INTO-CPS Application.msix" TemplatePath="C:\Users\smica\OneDrive\Immagini\Documenti\INTO-CPS-APPLICATION_forked\into-cps-application\INTO-CPS Application-Template.xml" />
-  <Installer Path="C:\Users\smica\OneDrive\Immagini\Documenti\INTO-CPS-APPLICATION_forked\into-cps-application\release\INTO-CPS-Application 5.0.0.msi" InstallLocation="C:\Program Files (x86)\INTO-CPS App (MSIX)" />
+  <SaveLocation PackagePath="C:\Users\smica\OneDrive\Immagini\Documenti\LAVORO\FORK_Into-CPS React\into-cps-application\release\INTO-CPS Application.msix" TemplatePath="C:\Users\smica\OneDrive\Immagini\Documenti\LAVORO\FORK_Into-CPS React\into-cps-application\INTO-CPS Application-Template.xml" />
+  <Installer Path="C:\Users\smica\OneDrive\Immagini\Documenti\LAVORO\FORK_Into-CPS React\into-cps-application\release\INTO-CPS-Application 5.0.0.msi" InstallLocation="C:\Program Files (x86)\INTO-CPS App" />
   <PackageInformation PackageName="INTO-CPS-Application" PackageDisplayName="INTO-CPS-Application" PublisherName="CN=INTO-CPS Project" PublisherDisplayName="INTO-CPS Project" Version="5.0.0.0" p4:PackageDescription="INTO-CPS-Application" xmlns:p4="http://schemas.microsoft.com/msix/msixpackagingtool/template/1910" />
 </MsixPackagingToolTemplate>
