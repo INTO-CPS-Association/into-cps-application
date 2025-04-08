@@ -1,6 +1,9 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os'; 
+import maestroConfig from '../resources/maestro/maestro-version.json';
+
+const MAESTRO_VERSION = maestroConfig.version;
 
 import { ConfigMaestro } from '../types/global';
 
@@ -19,8 +22,8 @@ export function setProjectPath(projectPath: string): void {
     multiModels: path.join(defaultPath, 'multi-model.json'),
     outputPath: outputPath,
     logDirectory: path.join(outputPath, 'logs'),
-    maestroJarPath: path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar'),
-    tempMaestroJarPath: path.join(os.tmpdir(), 'maestro-webapi-3.0.0-bundle.jar'),
+    maestroJarPath: path.resolve(__dirname, `resources/maestro/maestro-webapi-${MAESTRO_VERSION}-bundle.jar`),
+    tempMaestroJarPath: path.join(os.tmpdir(), `maestro-webapi-${MAESTRO_VERSION}-bundle.jar`),
   };
 
   if (!fs.existsSync(outputPath)) {

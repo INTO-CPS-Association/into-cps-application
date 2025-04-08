@@ -179,50 +179,42 @@ async function startMaestro(): Promise<MaestroResponse> {
 
       let serverReady = false;
 
-      const stdoutHandler = (data: Buffer) => {
+      const handleProcessOutput = (data: Buffer) => {
         const message = data.toString();
-        console.log(`[Maestro STDOUT]: ${message}`);
-
+        console.log(`[Maestro OUTPUT]: ${message}`);
+      
         if (!serverReady) {
-          safeWrite(logStream, `[STDOUT]: ${message}`, 'maestro');
+          safeWrite(logStream, `[OUTPUT]: ${message}`, 'maestro');
         }
-
-        if (message.includes('Starting ProtocolHandler ["http-nio-8082"]')) {
+      
+        if (!serverReady && message.includes('Starting ProtocolHandler ["http-nio-8082"]')) {
           serverReady = true;
           logStream.end();
-          maestroProcess?.stdout?.off('data', stdoutHandler);
-          maestroProcess?.stderr?.off('data', stderrHandler);
-
+      
+          maestroProcess?.stdout?.off('data', handleProcessOutput);
+          maestroProcess?.stderr?.off('data', handleProcessOutput);
+      
           sendSimulationStatus(MaestroNotifications.Status.MaestroStarted);
           if (mainWindow) {
             updateCosimulationMenu(mainWindow, true);
           }
-
+      
           resolve({
             success: true,
             message: MaestroNotifications.Status.MaestroStarted,
           });
         }
-      };
-
-      const stderrHandler = (data: Buffer) => {
-        const errorOutput = data.toString();
-        console.error(`[Maestro STDERR]: ${errorOutput}`);
-        if (!serverReady) {
-          safeWrite(logStream, `[STDERR]: ${errorOutput}`, 'maestro');
-        }
-
-        if (!serverReady) {
-          const errorMessage = errorOutput.includes('java')
-            ? MaestroNotifications.Error.JavaNotConfigured
-            : MaestroNotifications.Error.GenericStartupError;
+      
+        if (!serverReady && (message.toLowerCase().includes('exception') || message.toLowerCase().includes('error'))) {
+          const errorMessage = MaestroNotifications.Error.GenericStartupError;
           sendNotification(errorMessage, 'error');
           reject({ success: false, error: errorMessage });
         }
       };
 
-      maestroProcess.stdout?.on('data', stdoutHandler);
-      maestroProcess.stderr?.on('data', stderrHandler);
+      maestroProcess.stdout?.on('data', handleProcessOutput);
+      maestroProcess.stderr?.on('data', handleProcessOutput);
+
 
       maestroProcess.on('error', (error) => {
         handleError(error);
