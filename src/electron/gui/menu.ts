@@ -1,5 +1,5 @@
 import { Menu, BrowserWindow, MenuItemConstructorOptions, dialog } from 'electron';
-import { setProjectPath } from '../../utils/config';
+import { getConfig, setProjectPath } from '../../utils/config';
 
 let cosimulationEnabled = false;
 
@@ -20,7 +20,13 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
             if (!result.canceled && result.filePaths.length > 0) {
               const selectedPath = result.filePaths[0];          
               setProjectPath(selectedPath);
+              
               mainWindow.webContents.send('project-selected', selectedPath);
+
+              const config = getConfig();
+              if (config && config.multiModels) {
+                mainWindow.webContents.send('multi-model-path', config.multiModels);
+              }
             }
           },
         },

@@ -7,6 +7,8 @@ import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
+import ConfigurationEditor from './components/ConfigurationEditor/ConfigurationEditor';
+
 import { styleConstants } from './utils/constants';
 import { getSessionId } from './cosimulation/simulationContext';
 
@@ -127,7 +129,8 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
-            </Routes>
+              <Route path="/configuration-editor" element={<ConfigurationEditor sidebarOpen={sidebarOpen} />} />
+              </Routes>
           </Box>
           <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} />
         </Box>

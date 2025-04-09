@@ -12,6 +12,8 @@ export interface CosimulationAPI {
   off: (event: string, callback: (...args: unknown[]) => void) => void;
   getConfig: () => Promise<{ maestroJarPath: string; simulationConfigPath: string; cosimulationPath: string } | null>;
   getSessionId: () => Promise<string | null>;
+  addMultiModelPathListener: (callback: (path: string) => void) => void;
+  removeMultiModelPathListener: (callback: (path: string) => void) => void;
 }
 
 
@@ -27,6 +29,8 @@ export const cosimulationAPI: CosimulationAPI = {
   off: (event, callback) => ipcRenderer.off(event, callback),
   getSessionId: () => ipcRenderer.invoke('get-session-id'),
   getConfig: async () => ipcRenderer.invoke('get-config'),
+  addMultiModelPathListener: (callback) => ipcRenderer.on('multi-model-path', (_, path) => callback(path)),
+  removeMultiModelPathListener: (callback) => ipcRenderer.off('multi-model-path', (_, path) => callback(path)),
 };
 
 contextBridge.exposeInMainWorld('cosimulationAPI', cosimulationAPI);

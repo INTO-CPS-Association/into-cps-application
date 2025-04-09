@@ -35,7 +35,9 @@ export const electronAPI = {
   },
   sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
     ipcRenderer.send('show-notification', message, type);
-  }
+  },
+  readFile: (path: string) => ipcRenderer.invoke('read-file', path),
+  writeFile: (path: string, content: string) => ipcRenderer.invoke('write-file', { path, content }),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

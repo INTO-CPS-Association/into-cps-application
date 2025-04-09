@@ -6,6 +6,7 @@ import { MaestroResponse } from './types/global';
 import { getSessionId } from './cosimulation/simulationContext';
 import { getConfig } from './utils/config';
 import { MaestroNotifications, SimulationStatus } from './utils/constants/cosimulation/statuses';
+import fs from 'fs';
 
 export let mainWindow: BrowserWindow | null = null;
 
@@ -116,3 +117,10 @@ ipcMain.on('show-notification', (event, message: string, type: 'success' | 'erro
   }
 });
 
+ipcMain.handle('read-file', async (_, path) => {
+  return fs.promises.readFile(path, 'utf8');
+});
+
+ipcMain.handle('write-file', async (_, { path, content }) => {
+  return fs.promises.writeFile(path, content, 'utf8');
+});

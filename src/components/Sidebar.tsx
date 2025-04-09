@@ -10,6 +10,7 @@ import { styleConstants } from "../utils/constants";
 const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open, toggleSidebar }) => {
   const [isResponsive, setIsResponsive] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [multiModelPath, setMultiModelPath] = useState<string | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -29,6 +30,18 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
     };
   }, []);
 
+  useEffect(() => {
+    const handleMultiModelPath = (path: string) => {
+      setMultiModelPath(path);
+    };
+  
+    window.cosimulationAPI.addMultiModelPathListener(handleMultiModelPath);
+  
+    return () => {
+      window.cosimulationAPI.removeMultiModelPathListener(handleMultiModelPath);
+    };
+  }, []);
+    
   const handleToggle = () => {
     setManualOpen(!manualOpen);
     toggleSidebar();
@@ -75,6 +88,20 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
             {isOpen && <ListItemText primary="Cosimulation" sx={{ marginLeft: 1 }} />}
           </ListItemButton>
         </ListItem>
+        {multiModelPath && (
+          <ListItem disablePadding>
+            <ListItemButton component={NavLink} to="/configuration-editor">
+              <SettingsIcon />
+              {isOpen && (
+                <ListItemText
+                  primary={multiModelPath.split(/[\\/]/).pop()}
+                  sx={{ marginLeft: 1 }}
+                />
+              )}
+            </ListItemButton>
+          </ListItem>
+)}
+
       </List>
     </Drawer>
   );

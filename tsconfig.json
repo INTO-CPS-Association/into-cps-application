@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "es6",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ES2020",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

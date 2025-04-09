@@ -9,6 +9,8 @@ export interface IElectronAPI {
   addNotificationListener: (callback?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void) => void;
   removeNotificationListener: () => void;
   sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  readFile: (path: string) => Promise<string>;
+  writeFile: (path: string, content: string) => Promise<void>;
 }
 
 export interface ICosimulationAPI {
@@ -26,6 +28,8 @@ export interface ICosimulationAPI {
   getSimulationResult: (sessionId: string) => Promise<string>;
   addListener: (event: string, callback: (...args: unknown[]) => void) => void;
   removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  addMultiModelPathListener: (callback: (path: string) => void) => void;
+  removeMultiModelPathListener: (callback: (path: string) => void) => void;
 }
 
 
