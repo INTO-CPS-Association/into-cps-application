@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
+
 import { styleConstants } from './utils/constants';
 
 const App: React.FC = () => {

@@ -73,6 +73,7 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
     "@reduxjs/toolkit": "^2.5.0",
@@ -81,6 +82,7 @@
     "dotenv": "^16.4.5",
     "execa": "^9.5.3",
     "install": "^0.13.0",
+    "monaco-editor": "^0.52.2",
     "monocart-coverage-reports": "^2.11.1",
     "net": "^1.0.2",
     "node-fetch": "^3.3.2",
