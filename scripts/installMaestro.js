@@ -4,9 +4,9 @@ const https = require('https');
 const maestroConfig = require('../src/resources/maestro/maestro-version.json');
 
 const MAESTRO_VERSION = maestroConfig.version;
-const MAESTRO_JAR_URL = `https://repo1.maven.org/maven2/org/into-cps/maestro/maestro-webapi/${MAESTRO_VERSION}/maestro-webapi-${MAESTRO_VERSION}-bundle.jar`;
+const MAESTRO_JAR_URL = `https://repo1.maven.org/maven2/org/into-cps/maestro/maestro/${MAESTRO_VERSION}/maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`;
 const DESTINATION_DIR = path.join(__dirname, '../src/resources/maestro');
-const DESTINATION_FILE = path.join(DESTINATION_DIR, `maestro-webapi-${MAESTRO_VERSION}-bundle.jar`);
+const DESTINATION_FILE = path.join(DESTINATION_DIR, `maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`);
 
 function downloadFile(url, destination) {
   return new Promise((resolve, reject) => {

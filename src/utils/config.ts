@@ -22,8 +22,8 @@ export function setProjectPath(projectPath: string): void {
     multiModels: path.join(defaultPath, 'multi-model.json'),
     outputPath: outputPath,
     logDirectory: path.join(outputPath, 'logs'),
-    maestroJarPath: path.resolve(__dirname, `resources/maestro/maestro-webapi-${MAESTRO_VERSION}-bundle.jar`),
-    tempMaestroJarPath: path.join(os.tmpdir(), `maestro-webapi-${MAESTRO_VERSION}-bundle.jar`),
+    maestroJarPath: path.resolve(__dirname, `resources/maestro/maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`),
+    tempMaestroJarPath: path.join(os.tmpdir(), `maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`),
   };
 
   if (!fs.existsSync(outputPath)) {
