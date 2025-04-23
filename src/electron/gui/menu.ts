@@ -26,6 +26,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
               const config = getConfig();
               if (config && config.multiModels) {
                 mainWindow.webContents.send('multi-model-path', config.multiModels);
+                updateCosimulationMenu(mainWindow, true);
               }
             }
           },

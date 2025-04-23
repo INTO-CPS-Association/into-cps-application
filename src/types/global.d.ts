@@ -24,12 +24,12 @@ export interface ICosimulationAPI {
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
   getConfig: () => Promise<ConfigMaestro | null>;
-  getSessionId: () => Promise<string | null>;
   getSimulationResult: (sessionId: string) => Promise<string>;
   addListener: (event: string, callback: (...args: unknown[]) => void) => void;
   removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
   addMultiModelPathListener: (callback: (path: string) => void) => void;
   removeMultiModelPathListener: (callback: (path: string) => void) => void;
+  getLatestResultFolder: () => Promise<string | null>;
 }
 
 

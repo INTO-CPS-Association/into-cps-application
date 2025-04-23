@@ -3,14 +3,13 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
-import Bottom from './components/Bottom';
+// import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
 import ConfigurationEditor from './components/ConfigurationEditor/ConfigurationEditor';
 
 import { styleConstants } from './utils/constants';
-import { getSessionId } from './cosimulation/simulationContext';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -80,28 +79,18 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let simulationInProgress = false;
-  
     const handleMenuStartSimulation = async () => {
-      if (simulationInProgress) {
-        console.warn('Simulation already in progress.');
-        return;
-      }
-  
-      simulationInProgress = true;
+
       try {
         const response = await window?.cosimulationAPI?.maestro({
           type: 'start-simulation',
-          data: { sessionId: getSessionId() },
         });
           if (!response?.success) {
           console.error('Simulation failed to start:', response?.error || 'Unknown error');
         }
       } catch (err) {
         console.error('Error in starting the simulation:', err);
-      } finally {
-        simulationInProgress = false;
-      }
+      } 
     };
   
     window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
@@ -132,7 +121,7 @@ const App: React.FC = () => {
               <Route path="/configuration-editor" element={<ConfigurationEditor sidebarOpen={sidebarOpen} />} />
               </Routes>
           </Box>
-          <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} />
+          {/* <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} /> */}
         </Box>
         <ErrorSnackbar />
       </Router>

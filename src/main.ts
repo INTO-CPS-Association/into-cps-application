@@ -1,9 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { createWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
-import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from './cosimulation/maestro';
+import { getLatestSimulationFolder, startSimulation } from './cosimulation/maestro';
 import { MaestroResponse } from './types/global';
-import { getSessionId } from './cosimulation/simulationContext';
 import { getConfig } from './utils/config';
 import { MaestroNotifications, SimulationStatus } from './utils/constants/cosimulation/statuses';
 import fs from 'fs';
@@ -44,36 +43,26 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
     return { success: false, error: 'Invalid arguments provided to maestro handler' };
   }
 
-  const { type, data } = args;
+  const { type } = args;
+
   try {
     switch (type) {
-      case 'start':{
-        const result = await startMaestro();
-        return result;}
-
-      case 'stop':
-        await stopMaestro();
-        if (mainWindow?.webContents) {
-          mainWindow.webContents.send('reset-simulation-state');
+      case 'start-simulation': {
+        if (isStartSimulationRunning) {
+          return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
         }
-        return { success: true, message: MaestroNotifications.Status.MaestroStopped };
-
-        case 'start-simulation':{
-          if (isStartSimulationRunning) {
-            return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
-          }
-  
-          isStartSimulationRunning = true; // to avoid unwanted double calls  
-          await startSimulation();
-          
-          isStartSimulationRunning = false;
-          return { success: true, message: SimulationStatus.Started };}
-  
-      case 'get-result':{
-        const resultPath = await getSimulationResult(data?.sessionId);
-        return { success: true, resultPath };
+      
+        isStartSimulationRunning = true;
+        const result = await startSimulation();
+        isStartSimulationRunning = false;
+      
+        if (!result.success) {
+          return { success: false, error: result.error || 'Failed to start simulation.' };
+        }
+      
+        return { success: true, message: SimulationStatus.Started };
       }
-
+            
       default:
         throw new Error(`Unknown type: ${type}`);
     }
@@ -84,15 +73,11 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   }
 });
 
+
 ipcMain.on('trigger-error', (_, message: string) => {
   if (mainWindow?.webContents) {
   mainWindow.webContents.send('show-error', message);
   }
-});
-
-ipcMain.handle('get-session-id', async () => {
-  const sessionId = getSessionId();
-  return sessionId;
 });
 
 ipcMain.handle('get-config', async () => {
@@ -123,4 +108,8 @@ ipcMain.handle('read-file', async (_, path) => {
 
 ipcMain.handle('write-file', async (_, { path, content }) => {
   return fs.promises.writeFile(path, content, 'utf8');
+});
+
+ipcMain.handle('get-latest-result-folder', () => {
+  return getLatestSimulationFolder();
 });

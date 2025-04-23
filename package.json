@@ -32,7 +32,10 @@
     "electronVersion": "32.1.2",
     "files": [
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/playwright",
+      "!node_modules/playwright-core",
+      "!node_modules/**/playwright*/**"
     ],
     "directories": {
       "output": "release",

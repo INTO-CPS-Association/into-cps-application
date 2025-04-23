@@ -1,479 +1,195 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import kill from 'tree-kill';
-import { spawn, ChildProcess } from 'child_process';
-import { setSessionId } from './simulationContext';
-import { pathToFileURL } from 'url';
-import {
-  getJavaCommand,
-  isPortInUse,
-  killProcessOnPort,
-} from '../utils/processes/maestroUtils';
-import {
-  SimulationStatus,
-  MaestroNotifications,
-} from '../utils/constants/cosimulation/statuses';
+import { spawn } from 'child_process';
 import { handleError, sendNotification } from '../utils/errorHandler';
-import { updateCosimulationMenu } from '../electron/gui/menu';
-import { mainWindow } from '../main';
 import { getConfig } from '../utils/config';
-import { MaestroResponse } from '../types/global';
+import { SimulationStatus } from '../utils/constants/cosimulation/statuses';
 import { getReadableTimestamp } from '../utils/processes/maestroUtils';
 
-const MAESTRO_PORT = 8082;
-const MAESTRO_BASE_URL = `http://localhost:${MAESTRO_PORT}`;
-
-let maestroProcess: ChildProcess | null = null;
-let isSimulationInProgress: boolean = false;
-
-function initializeLoggingFile(
-  type: 'maestro' | 'cosimulation',
-): string | null {
-  const config = getConfig();
-
-  if (!config?.logDirectory) {
-    sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
-    return null;
-  }
-
-  try {
-    const { logDirectory } = config;
-
-    if (!fs.existsSync(logDirectory)) {
-      fs.mkdirSync(logDirectory, { recursive: true });
-    }
-
-    const filePath =
-      type === 'maestro'
-        ? path.join(logDirectory, 'Maestro.log')
-        : path.join(logDirectory, `CoSimulation-${getReadableTimestamp()}.log`);
-
-    fs.writeFileSync(filePath, '', { flag: 'w' });
-
-    // this double checks immediately after creation
-    try {
-      fs.accessSync(filePath, fs.constants.W_OK);
-    } catch (accessErr) {
-      sendNotification(
-        `[LogFile Warning]: ${type === 'maestro' ? 'Maestro' : 'Co-simulation'} log file is not writable. Logs may be incomplete.`,
-        'error',
-      );
-    }
-    return filePath;
-  } catch (error) {
-    sendNotification(
-      `[LogFile Error]: Failed to prepare ${type} log file. Logs may not be saved.`,
-      'error',
-    );
-    handleError(error);
-    return null;
-  }
-}
-
-function safeWrite(
-  stream: fs.WriteStream | null,
-  message: string,
-  logType: 'maestro' | 'cosimulation',
-) {
-  if (!stream) return;
-  const filePath = stream.path.toString();
-  if (!fs.existsSync(filePath)) {
-    sendNotification(
-      `[LogFile Warning]: ${logType === 'maestro' ? 'Maestro' : 'Co-simulation'} log file was deleted during execution. Further logs will be lost unless restarted.`,
-      'error',
-    );
-    return;
-  }
-  try {
-    stream.write(message);
-  } catch {
-    sendNotification(
-      `[LogFile Warning]: Unable to write to ${logType === 'maestro' ? 'Maestro' : 'Co-simulation'} log file. It may have been deleted or locked.`,
-      'error',
-    );
-  }
-}
-
-function extractMaestroJar() {
-  const config = getConfig();
-  if (!config) {
-    sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
-    return {
-      success: false,
-      error: MaestroNotifications.Error.ConfigurationNotSet,
-    };
-  }
-
-  const { maestroJarPath, tempMaestroJarPath } = config;
-
-  try {
-    if (!fs.existsSync(maestroJarPath)) {
-      sendNotification(`Maestro JAR not found at ${maestroJarPath}.`, 'error');
-      return {
-        success: false,
-        error: `Maestro JAR not found at ${maestroJarPath}.`,
-      };
-    }
-
-    if (!fs.existsSync(tempMaestroJarPath)) {
-      fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
-    }
-    return;
-  } catch (error) {
-    handleError(error);
-    return;
-  }
-}
-
-async function startMaestro(): Promise<MaestroResponse> {
-  const config = getConfig();
-  if (!config) {
-    sendNotification(MaestroNotifications.Error.ConfigurationNotSet, 'error');
-    return {
-      success: false,
-      error: MaestroNotifications.Error.ConfigurationNotSet,
-    };
-  }
-
-  const { tempMaestroJarPath } = config;
-
-  try {
-    await stopMaestro();
-    const maestroLogFile = initializeLoggingFile('maestro');
-    if (!maestroLogFile) {
-      return {
-        success: false,
-        error: 'Failed to initialize log file',
-      };
-    }
-    const logStream = fs.createWriteStream(maestroLogFile, { flags: 'a' });
-
-    const portInUse = await isPortInUse(MAESTRO_PORT);
-    if (portInUse) {
-      sendNotification(
-        MaestroNotifications.Error.PortInUse(MAESTRO_PORT),
-        'error',
-      );
-      await killProcessOnPort(MAESTRO_PORT);
-    }
-
-    extractMaestroJar();
-    sendSimulationStatus(MaestroNotifications.Status.StartingMaestro);
-    const javaExecutable = getJavaCommand();
-    if (!javaExecutable) {
-      sendNotification(MaestroNotifications.Error.JavaNotConfigured, 'error');
-      return {
-        success: false,
-        error: MaestroNotifications.Error.JavaNotConfigured,
-      };
-    }
-    return new Promise((resolve, reject) => {
-      maestroProcess = spawn(javaExecutable, ['-jar', tempMaestroJarPath], {
-        detached: false,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          PATH: process.env.PATH || '', // force PATH from current environment to get Java Path
-        },
-      });
-
-      let serverReady = false;
-
-      const handleProcessOutput = (data: Buffer) => {
-        const message = data.toString();
-        console.log(`[Maestro OUTPUT]: ${message}`);
-      
-        if (!serverReady) {
-          safeWrite(logStream, `[OUTPUT]: ${message}`, 'maestro');
-        }
-      
-        if (!serverReady && message.includes('Starting ProtocolHandler ["http-nio-8082"]')) {
-          serverReady = true;
-          logStream.end();
-      
-          maestroProcess?.stdout?.off('data', handleProcessOutput);
-          maestroProcess?.stderr?.off('data', handleProcessOutput);
-      
-          sendSimulationStatus(MaestroNotifications.Status.MaestroStarted);
-          if (mainWindow) {
-            updateCosimulationMenu(mainWindow, true);
-          }
-      
-          resolve({
-            success: true,
-            message: MaestroNotifications.Status.MaestroStarted,
-          });
-        }
-      
-        if (!serverReady && (message.toLowerCase().includes('exception') || message.toLowerCase().includes('error'))) {
-          const errorMessage = MaestroNotifications.Error.GenericStartupError;
-          sendNotification(errorMessage, 'error');
-          reject({ success: false, error: errorMessage });
-        }
-      };
-
-      maestroProcess.stdout?.on('data', handleProcessOutput);
-      maestroProcess.stderr?.on('data', handleProcessOutput);
-
-
-      maestroProcess.on('error', (error) => {
-        handleError(error);
-        safeWrite(logStream, `[ERROR]: ${error.message}\n`, 'maestro');
-        if (!serverReady) reject({ success: false, error: error.message });
-      });
-
-      maestroProcess.on('close', (code) => {
-        console.log(`[Maestro] Process exited with code: ${code}`);
-
-        maestroProcess = null;
-        if (mainWindow) {
-          updateCosimulationMenu(mainWindow, false);
-        }
-        if (!serverReady) {
-          sendNotification(
-            MaestroNotifications.Status.MaestroStoppedBeforeReady,
-            'error',
-          );
-          reject({
-            success: false,
-            error: MaestroNotifications.Status.MaestroStoppedBeforeReady,
-          });
-        }
-      });
-
-      maestroProcess.unref();
-    });
-  } catch (error) {
-    handleError(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-async function stopMaestro(): Promise<void> {
-  try {
-    if (!maestroProcess || maestroProcess.pid === undefined) {
-      sendSimulationStatus(SimulationStatus.Idle);
-      return;
-    }
-
-    const pid = maestroProcess.pid;
-    return new Promise((resolve, reject) => {
-      kill(pid, 'SIGTERM', (err) => {
-        if (err) {
-          handleError(err);
-          reject(err);
-        } else {
-          maestroProcess = null;
-          sendSimulationStatus(SimulationStatus.Idle);
-          resolve();
-        }
-      });
-    });
-  } catch (error) {
-    handleError(error);
-  }
-}
+let isSimulationInProgress = false;
 
 function sendSimulationStatus(status: string): void {
+  const { mainWindow } = require('../main');
   if (mainWindow?.webContents) {
     mainWindow.webContents.send('simulation-status', status);
   }
 }
 
-async function startSimulation(): Promise<void> {
+function safeWrite(stream: fs.WriteStream | null, message: string) {
+  if (!stream) return;
+  try {
+    stream.write(message);
+  } catch (err) {
+    sendNotification('[LogFile Error]: Failed to write to log file.', 'error');
+  }
+}
+
+function extractMaestroJar(maestroJarPath: string, tempMaestroJarPath: string): boolean {
+  try {
+    if (!fs.existsSync(maestroJarPath)) {
+      sendNotification(`[Simulation Error]: Maestro JAR not found at ${maestroJarPath}`, 'error');
+      return false;
+    }
+
+    if (!fs.existsSync(tempMaestroJarPath)) {
+      fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
+      console.log(`[INFO]: Copied Maestro JAR to temp path: ${tempMaestroJarPath}`);
+    }
+
+    return true;
+  } catch (err) {
+    handleError(err);
+    sendNotification('[Simulation Error]: Failed to extract Maestro JAR.', 'error');
+    return false;
+  }
+}
+
+function getLatestSimulationFolder(): string | null {
+  const config = getConfig();
+  if (!config) return null;
+
+  const baseDir = config.outputPath;
+  if (!fs.existsSync(baseDir)) return null;
+
+  const folders = fs
+    .readdirSync(baseDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('CoSimulation-'))
+    .map((entry) => {
+      const fullPath = path.join(baseDir, entry.name);
+      return {
+        name: entry.name,
+        fullPath,
+        timestamp: fs.statSync(fullPath).mtime.getTime(),
+      };
+    })
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  return folders[0]?.fullPath || null;
+}
+
+export { getLatestSimulationFolder };
+
+
+async function startSimulation(): Promise<{ success: boolean; error?: string }> {
+  if (isSimulationInProgress) {
+    sendNotification('[Simulation] Simulation already in progress.', 'error');
+    return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
+  }
+
+  isSimulationInProgress = true;
+
   let simLogStream: fs.WriteStream | null = null;
+  let simProcess: ReturnType<typeof spawn> | null = null;
 
   try {
-    if (isSimulationInProgress) {
-      sendNotification('[Simulation] Simulation already in progress.', 'error');
-      return;
-    }
-
-    isSimulationInProgress = true;
     const config = getConfig();
-
     if (!config) {
-      sendNotification(
-        'Configuration not set. Please select a project.',
-        'error',
-      );
+      sendNotification('Configuration not set. Please select a project.', 'error');
       isSimulationInProgress = false;
-      return;
+      return { success: false, error: 'Configuration not set' };
     }
 
-    const { simulationConfigPath, multiModels, fmusPath } = config;
+    const {
+      simulationConfigPath,
+      multiModels,
+      fmusPath,
+      maestroJarPath,
+      tempMaestroJarPath,
+      outputPath
+    } = config;
 
+    const jarReady = extractMaestroJar(maestroJarPath, tempMaestroJarPath);
+    if (!jarReady) {
+      isSimulationInProgress = false;
+      return { success: false, error: 'Maestro JAR not found or copy failed' };
+    }
+
+    const timestamp = getReadableTimestamp().replace(/[: ]/g, '-');
+    const simFolderName = `CoSimulation-${timestamp}`;
+    const simOutputDir = path.join(outputPath, simFolderName);
+
+    fs.mkdirSync(simOutputDir, { recursive: true });
+
+    const logFile = path.join(simOutputDir, `cosimulation-${timestamp}.log`);
+    fs.writeFileSync(logFile, '', { flag: 'w' });
+    simLogStream = fs.createWriteStream(logFile, { flags: 'a' });
+
+    safeWrite(simLogStream, `[INFO]: Starting simulation at ${new Date().toLocaleString()}\n`);
     sendSimulationStatus(SimulationStatus.StartingSimulation);
 
-    const cosimLogFile = initializeLoggingFile('cosimulation');
-    simLogStream = cosimLogFile
-      ? fs.createWriteStream(cosimLogFile, { flags: 'a' })
-      : null;
-      safeWrite(simLogStream, `[INFO]: Starting simulation at ${new Date().toLocaleString()}\n`, 'cosimulation');
+    const args = [
+      '-jar', tempMaestroJarPath,
+      'import', 'sg1',
+      multiModels,
+      simulationConfigPath,
+      '-output', simOutputDir,
+      '--dump-intermediate',
+      '--interpret',
+      '-fsp', fmusPath
+    ];
 
-    if (!fs.existsSync(simulationConfigPath)) {
-      const msg = `[Simulation] Missing file: ${simulationConfigPath}`;
-      sendNotification(msg, 'error');
-      safeWrite(simLogStream, `[ERROR]: ${msg}\n`, 'cosimulation');
-      return;
+    const javaExecutable = require('../utils/processes/maestroUtils').getJavaCommand();
+    if (!javaExecutable) {
+      sendNotification('Java not configured or not found in PATH.', 'error');
+      isSimulationInProgress = false;
+      return { success: false, error: 'Java not found' };
     }
 
-    if (!fs.existsSync(multiModels)) {
-      const msg = `[Simulation] Missing file: ${multiModels}`;
-      sendNotification(msg, 'error');
-      safeWrite(simLogStream, `[ERROR]: ${msg}\n`, 'cosimulation');
-      return;
-    }
+    simProcess = spawn(javaExecutable, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
-    const experimentConfig = JSON.parse(
-      fs.readFileSync(simulationConfigPath, 'utf8'),
-    );
-    const multiModelConfig = JSON.parse(fs.readFileSync(multiModels, 'utf8'));
-
-    const resolvedFmus = Object.fromEntries(
-      Object.entries(multiModelConfig.fmus)
-        .filter(
-          ([_, relativePath]) =>
-            typeof relativePath === 'string' && relativePath.trim() !== '',
-        )
-        .map(([key, relativePath]) => [
-          key,
-          pathToFileURL(
-            path.resolve(fmusPath, relativePath as string),
-          ).toString(),
-        ]),
-    );
-
-    experimentConfig.connections = multiModelConfig.connections;
-    experimentConfig.parameters = multiModelConfig.parameters;
-    experimentConfig.fmus = resolvedFmus;
-
-    safeWrite(simLogStream, '[INFO]: Configuration and FMUs resolved.\n', 'cosimulation');
-
-    const sessionResponse = await fetch(`${MAESTRO_BASE_URL}/createSession`, {
-      method: 'GET',
+    simProcess.stdout?.on('data', (data) => {
+      const msg = data.toString();
+      console.log(`[CLI STDOUT]: ${msg}`);
+      safeWrite(simLogStream, `[STDOUT]: ${msg}`);
     });
 
-    if (!sessionResponse.ok) {
-      const errorText = await sessionResponse.text();
-      sendNotification(`Failed to create session: ${errorText}`, 'error');
-      safeWrite(simLogStream,`[ERROR]: Failed to create session: ${errorText}\n`, 'cosimulation')
-      return;
-    }
+    simProcess.stderr?.on('data', (data) => {
+      const msg = data.toString();
+      console.error(`[CLI STDERR]: ${msg}`);
+      safeWrite(simLogStream, `[STDERR]: ${msg}`);
+    });
 
-    const { sessionId } = await sessionResponse.json();
-    setSessionId(sessionId);
-    safeWrite(simLogStream, `[INFO]: Session created: ${sessionId}\n`, 'cosimulation');
+    simProcess.on('close', (code) => {
+      safeWrite(simLogStream, `[INFO]: Simulation ended with code ${code}\n`);
+      simLogStream?.end();
 
-    if (maestroProcess) {
-      maestroProcess.stdout?.on('data', (data) => {
-        const message = data.toString();
-        safeWrite(simLogStream, `[STDOUT]: ${message}`, 'cosimulation');
-        // console.log(`[Maestro STDOUT]: ${message}`); //uncomment for debug
-      });
+      const outputsDir = path.join(simOutputDir, 'outputs');
+      const renamedOutputsDir = path.join(simOutputDir, `outputs-${timestamp}`);
+      if (fs.existsSync(outputsDir)) {
+        fs.renameSync(outputsDir, renamedOutputsDir);
+      }
 
-      maestroProcess.stderr?.on('data', (data) => {
-        const error = data.toString();
-        safeWrite(simLogStream, `[STDERR]: ${error}`, 'cosimulation');
-        // console.error(`[Maestro STDERR]: ${error}`); //uncomment for debug
-      });
-    }
+      if (code === 0) {
+        sendSimulationStatus(SimulationStatus.SimulationCompleted);
+        sendNotification('[Simulation] Completed successfully.', 'success');
+      } else {
+        sendSimulationStatus(SimulationStatus.SimulationFailed);
+        sendNotification(`[Simulation Error]: Process exited with code ${code}`, 'error');
+      }
 
-    const initializeResponse = await fetch(
-      `${MAESTRO_BASE_URL}/initialize/${sessionId}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(experimentConfig),
-      },
-    );
+      isSimulationInProgress = false;
+    });
 
-    if (!initializeResponse.ok) {
-      const errorText = await initializeResponse.text();
-      sendNotification(
-        `Failed to initialize simulation: ${errorText}`,
-        'error',
-      );
-      safeWrite(simLogStream, `[ERROR]: Failed to initialize simulation: ${errorText}\n`, 'cosimulation');
-      return;
-    }
+    simProcess.on('error', (err) => {
+      const errorMsg = `[ERROR]: ${err.message}`;
+      handleError(err);
+      safeWrite(simLogStream, errorMsg + '\n');
+      sendNotification('[Simulation Error]: Failed to launch process.', 'error');
+      sendSimulationStatus(SimulationStatus.SimulationFailed);
+      isSimulationInProgress = false;
+      simLogStream?.end();
+    });
 
-    safeWrite(simLogStream, '[INFO]: Simulation initialized.\n', 'cosimulation')
-    sendSimulationStatus(SimulationStatus.Simulating);
-
-    const simulateResponse = await fetch(
-      `${MAESTRO_BASE_URL}/simulate/${sessionId}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startTime: experimentConfig.startTime,
-          endTime: experimentConfig.endTime,
-        }),
-      },
-    );
-
-    if (!simulateResponse.ok) {
-      const errorText = await simulateResponse.text();
-      sendNotification(`Failed to start simulation: ${errorText}`, 'error');
-      safeWrite(simLogStream, `[ERROR]: Failed to start simulation: ${errorText}\n`, 'cosimulation')
-      return;
-    }
-
-    sendSimulationStatus(SimulationStatus.SimulationCompleted);
-    safeWrite(simLogStream, '[INFO]: Simulation completed successfully.\n', 'cosimulation')
+    return { success: true };
   } catch (error) {
-    const message = 
-      error instanceof Error && error.message.includes('fetch failed')
-        ? SimulationStatus.FetchFailedSimulationError
-        : String(error);
-
-    handleError(message);
-    sendSimulationStatus(SimulationStatus.SimulationFailed + message);
-    safeWrite(simLogStream, `[ERROR]: ${message}\n`, 'cosimulation')
-  } finally {
-    safeWrite(simLogStream, `[INFO]: Simulation ended at ${new Date().toLocaleString()}\n`, 'cosimulation')
-    simLogStream?.end();
-    isSimulationInProgress = false;
-  }
-}
-
-async function getSimulationResult(sessionId: string): Promise<string> {
-  try {
-    const config = getConfig();
-    if (!config) {
-      sendNotification(
-        'Configuration not set. Please select a project.',
-        'error',
-      );
-      return '';
-    }
-
-    const { outputPath } = config;
-
-    const resultResponse = await fetch(
-      `${MAESTRO_BASE_URL}/result/${sessionId}/plain`,
-    );
-    if (!resultResponse.ok) {
-      sendNotification(
-        `Error fetching CSV results: ${resultResponse.statusText}`,
-        'error',
-      );
-      return '';
-    }
-
-    const csvData = await resultResponse.text();
-    const outputFile = path.join(outputPath, `simulation-${sessionId}.csv`);
-
-    fs.writeFileSync(outputFile, csvData);
-    return outputFile;
-  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     handleError(error);
-    return '';
+    safeWrite(simLogStream, `[CATCH ERROR]: ${errMsg}\n`);
+    sendSimulationStatus(SimulationStatus.SimulationFailed);
+    isSimulationInProgress = false;
+    simLogStream?.end();
+    return { success: false, error: errMsg };
   }
 }
 
-export { startMaestro, stopMaestro, startSimulation, getSimulationResult };
+export { startSimulation };
