@@ -3,18 +3,15 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
-// import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
-import ConfigurationEditor from './components/ConfigurationEditor/ConfigurationEditor';
-
 import { styleConstants } from './utils/constants';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
+  // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
@@ -118,10 +115,8 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
-              <Route path="/configuration-editor" element={<ConfigurationEditor sidebarOpen={sidebarOpen} />} />
               </Routes>
           </Box>
-          {/* <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} /> */}
         </Box>
         <ErrorSnackbar />
       </Router>

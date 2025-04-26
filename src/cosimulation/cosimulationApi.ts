@@ -11,8 +11,6 @@ export interface CosimulationAPI {
   on: (event: string, callback: (...args: unknown[]) => void) => void;
   off: (event: string, callback: (...args: unknown[]) => void) => void;
   getConfig: () => Promise<{ maestroJarPath: string; simulationConfigPath: string; cosimulationPath: string } | null>;
-  addMultiModelPathListener: (callback: (path: string) => void) => void;
-  removeMultiModelPathListener: (callback: (path: string) => void) => void;
   getLatestResultFolder: () => Promise<string | null>;
 }
 
@@ -28,8 +26,6 @@ export const cosimulationAPI: CosimulationAPI = {
   on: (event, callback) => ipcRenderer.on(event, (_, ...args) => callback(...args)),
   off: (event, callback) => ipcRenderer.off(event, callback),
   getConfig: async () => ipcRenderer.invoke('get-config'),
-  addMultiModelPathListener: (callback) => ipcRenderer.on('multi-model-path', (_, path) => callback(path)),
-  removeMultiModelPathListener: (callback) => ipcRenderer.off('multi-model-path', (_, path) => callback(path)),
   getLatestResultFolder: () => ipcRenderer.invoke('get-latest-result-folder'),
 
 };

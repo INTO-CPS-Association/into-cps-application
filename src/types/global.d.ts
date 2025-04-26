@@ -27,7 +27,6 @@ export interface ICosimulationAPI {
   getSimulationResult: (sessionId: string) => Promise<string>;
   addListener: (event: string, callback: (...args: unknown[]) => void) => void;
   removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-  addMultiModelPathListener: (callback: (path: string) => void) => void;
   removeMultiModelPathListener: (callback: (path: string) => void) => void;
   getLatestResultFolder: () => Promise<string | null>;
 }
