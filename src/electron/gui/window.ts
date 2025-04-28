@@ -1,7 +1,9 @@
 import * as path from 'path';
 import { BrowserWindow, app } from 'electron';
+import { logInfo, logError } from '../../utils/logger';
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = (process as any).env.NODE_ENV === 'development';
+
 const preloadPath = isDev
   ? path.resolve(__dirname, 'preload.js')
   : path.resolve(app.getAppPath(), 'dist/preload.js');
@@ -16,8 +18,6 @@ const iconPath = isDev
 
 let mainWindow: BrowserWindow | null = null;
 
-const isTesting = process.env.CI === 'e2e' || process.env.PLAYWRIGHT_TEST === 'true';
-
 export function createWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -30,10 +30,10 @@ export function createWindow(): BrowserWindow {
     },
   }); 
 
-  console.log(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
+  logInfo(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
 
   mainWindow.loadURL(startUrl).catch((error) => {
-    console.error('Failed to load URL:', error);
+    logError('Failed to load URL: ' + error);
   });
 
   mainWindow.on('closed', () => {

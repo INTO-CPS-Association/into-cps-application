@@ -5,6 +5,7 @@ import { getLatestSimulationFolder, startSimulation } from './cosimulation/maest
 import { MaestroResponse } from './types/global';
 import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
+import { logInfo, logWarn } from './utils/logger';
 
 import fs from 'fs';
 
@@ -98,11 +99,11 @@ ipcMain.on('trigger-notification', (_, message: string, type) => {
 });
 
 ipcMain.on('show-notification', (event, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
-  console.log(`[Main] Sending notification to renderer: ${message} (${type})`);
+  logInfo(`[Main] Sending notification to renderer: ${message} (${type})`);
   if (mainWindow?.webContents) {
     mainWindow.webContents.send('show-notification', message, type);
   } else {
-    console.warn('[Main] mainWindow.webContents is NULL, cannot send notification!');
+    logWarn('[Main] mainWindow.webContents is NULL, cannot send notification.');
   }
 });
 

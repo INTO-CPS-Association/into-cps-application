@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { logWarn } from '../logger';
 
 /**
  * Generates a timestamp string in a user-friendly format: YYYY-MM-DD_HH-MM-SS
@@ -28,7 +29,7 @@ export function getJavaCommand(): string {
 
     if (javaPath) return javaPath;
   } catch (err) {
-    console.warn('[Maestro] Java not found in PATH:', err);
+    logWarn('[Maestro] Java not found in PATH:');
   }
 
   return 'java'; // fallback

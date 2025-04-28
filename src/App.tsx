@@ -83,10 +83,15 @@ const App: React.FC = () => {
           type: 'start-simulation',
         });
           if (!response?.success) {
-          console.error('Simulation failed to start:', response?.error || 'Unknown error');
+            const errorMessage = response?.error || 'Unknown error';
+            console.error('Simulation failed to start:', errorMessage);
+          
+            window.electronAPI?.sendNotification(errorMessage, 'error');
         }
       } catch (err) {
-        console.error('Error in starting the simulation:', err);
+        console.error('Failed to start simulation due to technical error:', err);
+
+        window.electronAPI?.sendNotification('Failed to start simulation due to technical error.', 'error');
       } 
     };
   

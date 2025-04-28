@@ -6,6 +6,7 @@ import maestroConfig from '../resources/maestro/maestro-version.json';
 const MAESTRO_VERSION = maestroConfig.version;
 
 import { ConfigMaestro } from '../types/global';
+import { logError } from './logger';
 
 let configMaestro: ConfigMaestro | null = null;
 
@@ -41,7 +42,7 @@ export function setProjectPath(projectPath: string): void {
       fs.copyFileSync(multiModels, path.join(outputPath, 'multi-model.json'));
     }
   } catch (error) {
-    console.error('[Project Configuration] Error copying configuration files to results folder:', error);
+    logError(`[Project Configuration] Error copying configuration files to results folder: ${error}`);
   }
 }
 
