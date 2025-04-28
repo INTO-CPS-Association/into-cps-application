@@ -49,6 +49,12 @@ export interface SimulationResult {
   status: string;
 }
 
+export interface SimulationResult {
+  success: boolean;
+  error?: string;
+  status: string;
+}
+
 export interface MaestroResponse {
   success: boolean;
   message?: string;

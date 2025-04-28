@@ -70,7 +70,7 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
 
         return { success: true, message: SimulationStatus.Started };
       }
-            
+
       default:
         throw new Error(`Unknown type: ${type}`);
     }
@@ -81,7 +81,6 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
     startSimulationRunning = false;
   }
 });
-
 
 ipcMain.on('trigger-error', (_, message: string) => {
   if (mainWindow?.webContents) {
