@@ -4,10 +4,13 @@ import { createTopMenu } from './electron/gui/menu';
 import { getLatestSimulationFolder, startSimulation } from './cosimulation/maestro';
 import { MaestroResponse } from './types/global';
 import { getConfig } from './utils/config';
-import { MaestroNotifications, SimulationStatus } from './utils/constants/cosimulation/statuses';
+import { SimulationStatus } from './utils/constants/cosimulation/statuses';
+
 import fs from 'fs';
 
 export let mainWindow: BrowserWindow | null = null;
+
+const platform = (process as any).platform;
 
 app.on('ready', () => {
   mainWindow = createWindow();
@@ -26,9 +29,8 @@ app.on('activate', () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (platform !== 'darwin') app.quit();
 });
-
 
 ipcMain.on('toggle-dark-mode', () => {
   if (mainWindow?.webContents) {
@@ -36,7 +38,7 @@ ipcMain.on('toggle-dark-mode', () => {
   }
 });
 
-let isStartSimulationRunning = false;
+let startSimulationRunning = false;
 
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   if (!args || typeof args.type !== 'string') {
@@ -48,35 +50,39 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   try {
     switch (type) {
       case 'start-simulation': {
-        if (isStartSimulationRunning) {
+        if (startSimulationRunning) {
           return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
         }
-      
-        isStartSimulationRunning = true;
+
+        startSimulationRunning = true;
+
         const result = await startSimulation();
-        isStartSimulationRunning = false;
-      
+
+        if (mainWindow?.webContents) {
+          mainWindow.webContents.send('simulation-status', result.status);
+        }
+
         if (!result.success) {
           return { success: false, error: result.error || 'Failed to start simulation.' };
         }
-      
+
         return { success: true, message: SimulationStatus.Started };
       }
-            
+
       default:
         throw new Error(`Unknown type: ${type}`);
     }
   } catch (error) {
-    isStartSimulationRunning = false;
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return { success: false, error: message };
+  } finally {
+    startSimulationRunning = false;
   }
 });
 
-
 ipcMain.on('trigger-error', (_, message: string) => {
   if (mainWindow?.webContents) {
-  mainWindow.webContents.send('show-error', message);
+    mainWindow.webContents.send('show-error', message);
   }
 });
 
@@ -87,15 +93,13 @@ ipcMain.handle('get-config', async () => {
 
 ipcMain.on('trigger-notification', (_, message: string, type) => {
   if (mainWindow?.webContents) {
-  mainWindow.webContents.send('show-notification', message, type);
+    mainWindow.webContents.send('show-notification', message, type);
   }
 });
 
 ipcMain.on('show-notification', (event, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
   console.log(`[Main] Sending notification to renderer: ${message} (${type})`);
-
   if (mainWindow?.webContents) {
-    console.log('[Main] Found mainWindow.webContents, sending event...');
     mainWindow.webContents.send('show-notification', message, type);
   } else {
     console.warn('[Main] mainWindow.webContents is NULL, cannot send notification!');

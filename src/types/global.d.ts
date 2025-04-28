@@ -24,10 +24,8 @@ export interface ICosimulationAPI {
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
   getConfig: () => Promise<ConfigMaestro | null>;
-  getSimulationResult: (sessionId: string) => Promise<string>;
   addListener: (event: string, callback: (...args: unknown[]) => void) => void;
   removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-  removeMultiModelPathListener: (callback: (path: string) => void) => void;
   getLatestResultFolder: () => Promise<string | null>;
 }
 
@@ -42,6 +40,12 @@ export interface ConfigMaestro {
   multiModels: string;
   logDirectory: string;
   outputPath: string;
+}
+
+export interface SimulationResult {
+  success: boolean;
+  error?: string;
+  status: string;
 }
 
 export interface MaestroResponse {

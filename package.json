@@ -72,7 +72,6 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
     "@reduxjs/toolkit": "^2.5.0",
@@ -80,7 +79,6 @@
     "del": "^7.1.0",
     "dotenv": "^16.4.5",
     "install": "^0.13.0",
-    "monaco-editor": "^0.52.2",
     "monocart-coverage-reports": "^2.11.1",
     "net": "^1.0.2",
     "node-fetch": "^3.3.2",
@@ -90,7 +88,8 @@
     "react-dom": "^18.3.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.0.1",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@chialab/esbuild-plugin-worker": "^0.18.1",

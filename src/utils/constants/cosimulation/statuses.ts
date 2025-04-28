@@ -7,10 +7,11 @@ export const SimulationStatus = {
     Started: 'Simulation started',
     Simulating: 'Simulating...',
     SimulationCompleted: 'Simulation completed.',
-    SimulationFailed: 'Simulation failed: ',
+    SimulationFailed: 'Simulation failed.',
     FetchFailedSimulationError: 'Type Error: Fetch Failed.',
     SimulationAlreadyInProgress: 'Simulation request already in progress',
 } as const;
+export type SimulationStatusType = typeof SimulationStatus[keyof typeof SimulationStatus];
 
 export const MaestroNotifications = {
     Status: {
