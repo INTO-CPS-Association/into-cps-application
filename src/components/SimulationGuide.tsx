@@ -10,13 +10,10 @@ const SimulationGuide: React.FC = () => (
       1. Select a Co-Simulation project from <strong>File &gt; Choose Project</strong>.
     </Typography>
     <Typography variant="body2">
-      2. Start Maestro by clicking <strong>&quot;Start CoE&quot;</strong> in the bottom bar.
+      2. Run the simulation from the menu under <strong>CoSimulation &gt; Start Simulation</strong>.
     </Typography>
     <Typography variant="body2">
-      3. Run the simulation from the menu under <strong>CoSimulation &gt; Start Simulation</strong>.
-    </Typography>
-    <Typography variant="body2">
-      4. View status updates and results in the CoSimulation page.
+      3. View status updates and results in the CoSimulation page.
     </Typography>
   </Box>
 );
