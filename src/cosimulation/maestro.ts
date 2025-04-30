@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { handleError, sendNotification } from '../utils/errorHandler';
 import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
-import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
+import { getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
 import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
@@ -63,8 +63,7 @@ function getLatestSimulationFolder(): string | null {
     .sort((a, b) => b.timestamp - a.timestamp);
 
   return folders[0]?.fullPath || null;
-}
-
+  }
 export { getLatestSimulationFolder };
 
 let graphWindowOpened = false;
@@ -117,7 +116,7 @@ async function startSimulation(): Promise<SimulationResult> {
       '-fsp', fmusPath,
     ];
 
-    const javaExecutable = getJavaCommand();
+    const javaExecutable = require('../utils/processes/maestroUtils').getJavaCommand();
     if (!javaExecutable) {
       const errorMsg = 'Java not configured or not found in PATH.';
       logError(errorMsg);
