@@ -3,8 +3,9 @@ import * as fs from 'fs';
 import { handleError, sendNotification } from '../utils/errorHandler';
 import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
-import { getReadableTimestamp } from '../utils/processes/maestroUtils';
+import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
+import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
 import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
 
@@ -116,7 +117,7 @@ async function startSimulation(): Promise<SimulationResult> {
       '-fsp', fmusPath,
     ];
 
-    const javaExecutable = require('../utils/processes/maestroUtils').getJavaCommand();
+    const javaExecutable = getJavaCommand();
     if (!javaExecutable) {
       const errorMsg = 'Java not configured or not found in PATH.';
       logError(errorMsg);
