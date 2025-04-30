@@ -6,7 +6,6 @@ import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosim
 import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
 import { getExeca } from '../utils/execaWrapper';
-import { getJavaCommand } from '../utils/processes/maestroUtils';
 
 const execa = getExeca();
 import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
