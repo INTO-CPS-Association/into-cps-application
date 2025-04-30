@@ -40,6 +40,7 @@ export interface ConfigMaestro {
   multiModels: string;
   logDirectory: string;
   outputPath: string;
+  livePlotting: string;
 }
 
 export interface SimulationResult {

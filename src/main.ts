@@ -6,6 +6,7 @@ import { MaestroResponse, NotificationType } from './types/global';
 import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
+import { openGraphHtmlWindow } from './electron/gui/livePlottingWindow';
 
 import fs from 'fs';
 
@@ -117,4 +118,14 @@ ipcMain.handle('write-file', async (_, { path, content }) => {
 
 ipcMain.handle('get-latest-result-folder', () => {
   return getLatestSimulationFolder();
+});
+
+ipcMain.on('open-graph-window', (_event, graphPath: string) => {
+  if (!graphPath || !fs.existsSync(graphPath)) {
+    logWarn(`[Main] Tried to open missing graph.html at path: ${graphPath}`);
+    return;
+  }
+
+  logInfo(`[Main] Opening live plotting window at: ${graphPath}`);
+  openGraphHtmlWindow(graphPath);
 });

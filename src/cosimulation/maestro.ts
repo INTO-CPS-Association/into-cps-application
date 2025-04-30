@@ -3,8 +3,9 @@ import * as fs from 'fs';
 import { handleError, sendNotification } from '../utils/errorHandler';
 import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
-import { getReadableTimestamp } from '../utils/processes/maestroUtils';
+import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
+import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
 import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
 
@@ -110,7 +111,8 @@ async function startSimulation(): Promise<SimulationResult> {
       '-output', simOutputDir,
       '--dump-intermediate',
       '--interpret',
-      '-fsp', fmusPath
+      '--websocket', '8085',
+      '-fsp', fmusPath,
     ];
 
     const javaExecutable = getJavaCommand();
@@ -121,6 +123,21 @@ async function startSimulation(): Promise<SimulationResult> {
     }
 
     const subprocess = execa(javaExecutable, args, { all: true });
+
+    const generatedGraphPath = path.join(simOutputDir, 'graph.html');
+
+    fs.watchFile(generatedGraphPath, (curr, prev) => {
+      if (curr.size > 0) {
+        try {
+          fs.copyFileSync(generatedGraphPath, config.livePlotting);
+          fs.unwatchFile(generatedGraphPath);
+          sendGraphWindowOpen(config.livePlotting);
+
+        } catch (err) {
+          sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error');
+        }
+      }
+    });
 
     subprocess.all?.on('data', (chunk: Buffer) => {
       const msg = chunk.toString();
