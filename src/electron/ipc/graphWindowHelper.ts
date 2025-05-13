@@ -1,12 +1,9 @@
 import { ipcRenderer, ipcMain } from 'electron';
-import { logWarn } from '../../utils/logger';
 
-export function sendGraphWindowOpen(graphHtmlPath: string): void {
+export function sendGraphWindowOpen(): void {
   if (process?.type === 'renderer') {
-    ipcRenderer.send('open-graph-window', graphHtmlPath);
+    ipcRenderer.send('open-graph-window');
   } else if (process?.type === 'browser') {
-    ipcMain.emit('open-graph-window', null, graphHtmlPath);
-  } else {
-    logWarn('[GraphDispatcher] Unknown process type. Unable to send request.');
+    ipcMain.emit('open-graph-window', null);
   }
 }

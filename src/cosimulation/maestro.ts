@@ -123,7 +123,7 @@ async function startSimulation(): Promise<SimulationResult> {
     }
 
     if (!graphWindowOpened) {
-      sendGraphWindowOpen(config.livePlotting);
+      sendGraphWindowOpen();
       graphWindowOpened = true;
     }
     
@@ -136,7 +136,7 @@ async function startSimulation(): Promise<SimulationResult> {
         try {
           fs.copyFileSync(generatedGraphPath, config.livePlotting);
           fs.unwatchFile(generatedGraphPath);
-          sendGraphWindowOpen(config.livePlotting);
+          sendGraphWindowOpen();
 
         } catch (err) {
           sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error');
