@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
@@ -8,11 +8,14 @@ import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
 
 import { styleConstants } from './utils/constants';
+import LivePlotting from './components/LivePlotting';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
+  const location = useLocation();
+  const isSidebarHidden = location.pathname === '/live-plotting';
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
@@ -94,19 +97,20 @@ const App: React.FC = () => {
       }
     };
 
-    window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
+    if (window?.electronAPI?.on) {
+      window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
+    }
 
     return () => {
-      window.electronAPI.off('menu-start-simulation', handleMenuStartSimulation);
+      window?.electronAPI?.off('menu-start-simulation', handleMenuStartSimulation);
     };
   }, []);
 
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>
       <CssBaseline />
-      <Router>
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-          <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+          {!isSidebarHidden && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />}
           <Box
             component="main"
             sx={{
@@ -119,11 +123,11 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
+              <Route path="/live-plotting" element={<LivePlotting />} />
             </Routes>
           </Box>
         </Box>
         <ErrorSnackbar />
-      </Router>
     </ThemeProvider>
   );
 };

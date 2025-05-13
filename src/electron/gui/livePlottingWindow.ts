@@ -1,13 +1,19 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, app } from 'electron';
+import * as path from 'path';
 
 let graphWindow: BrowserWindow | null = null;
 
-export function openGraphHtmlWindow(graphHtmlPath: string) {
+export function openGraphHtmlWindow() {
   if (graphWindow && !graphWindow.isDestroyed()) {
     if (graphWindow.isMinimized()) graphWindow.restore();
     graphWindow.focus();
     return;
   }
+
+  const isDev = process.env.NODE_ENV === 'development';
+  const startUrl = isDev
+    ? 'http://localhost:3000/#/live-plotting'
+    : `file://${path.join(app.getAppPath(), 'dist/index.html')}#/live-plotting`;
 
   graphWindow = new BrowserWindow({
     width: 900,
@@ -19,7 +25,12 @@ export function openGraphHtmlWindow(graphHtmlPath: string) {
     },
   });
 
-  graphWindow.loadFile(graphHtmlPath);
+  graphWindow.once('ready-to-show', () => {
+    graphWindow?.show();
+  });
+
+  graphWindow.loadURL(startUrl);
+  graphWindow.webContents.openDevTools();
 
   graphWindow.on('closed', () => {
     graphWindow = null;

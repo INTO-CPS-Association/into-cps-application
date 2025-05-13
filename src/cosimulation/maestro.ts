@@ -5,11 +5,11 @@ import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
 import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
-import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
 import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
 
 const execa = getExeca();
+import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
 
 let simulationInProgress = false;
 
@@ -67,6 +67,8 @@ function getLatestSimulationFolder(): string | null {
 
 export { getLatestSimulationFolder };
 
+let graphWindowOpened = false;
+
 async function startSimulation(): Promise<SimulationResult> {
   if (simulationInProgress) {
     logWarn('Simulation already in progress.');
@@ -122,6 +124,11 @@ async function startSimulation(): Promise<SimulationResult> {
       throw new Error(errorMsg);
     }
 
+    if (!graphWindowOpened) {
+      sendGraphWindowOpen(config.livePlotting);
+      graphWindowOpened = true;
+    }
+    
     const subprocess = execa(javaExecutable, args, { all: true });
 
     const generatedGraphPath = path.join(simOutputDir, 'graph.html');
@@ -162,6 +169,7 @@ async function startSimulation(): Promise<SimulationResult> {
     }
 
     simulationInProgress = false;
+    graphWindowOpened = false;
 
     if (exitCode === 0) {
       logInfo('Simulation completed successfully.');
