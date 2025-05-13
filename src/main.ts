@@ -120,12 +120,6 @@ ipcMain.handle('get-latest-result-folder', () => {
   return getLatestSimulationFolder();
 });
 
-ipcMain.on('open-graph-window', (_event, graphPath: string) => {
-  if (!graphPath || !fs.existsSync(graphPath)) {
-    logWarn(`[Main] Tried to open missing graph.html at path: ${graphPath}`);
-    return;
-  }
-
-  logInfo(`[Main] Opening live plotting window at: ${graphPath}`);
-  openGraphHtmlWindow(graphPath);
+ipcMain.on('open-graph-window', () => {
+  openGraphHtmlWindow();
 });

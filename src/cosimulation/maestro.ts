@@ -5,7 +5,6 @@ import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
 import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
-import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
 import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
 
