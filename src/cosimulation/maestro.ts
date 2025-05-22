@@ -5,7 +5,7 @@ import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
 import { getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
-import execa from 'execa';
+import { execa } from 'execa';
 
 let simulationInProgress = false;
 
