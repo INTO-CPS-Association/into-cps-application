@@ -23,10 +23,9 @@ test.describe("Application Initialization", () => {
         expect(title).toMatch(/INTO-CPS App/);
     });
 
-    test("Sidebar and Bottom navigation should be visible", async () => {
+    test("Sidebar should be visible", async () => {
         if (!helper.window) throw new Error("Window is not initialized");
 
         await expect(helper.window.locator(".MuiDrawer-root")).toBeVisible();
-        await expect(helper.window.locator(".MuiBottomNavigation-root")).toBeVisible();
     });
 });

@@ -15,15 +15,26 @@
     "sourceMap": true, //generate .map files
     "jsx": "react",
     "allowJs": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
     "types": [
       "react",
       "node",
       "jest",
-      "@testing-library/jest-dom"
     ],
     "strictNullChecks": true, //enable strict null checks
     "resolveJsonModule": true, //allow to import JSON files directly
     "moduleResolution": "node",
-    },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts", "jest.config.ts"],
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "types/**/*.d.ts",
+    "tests/**/*.ts",
+    "jest.config.ts",
+    "src",
+    "tests",
+  ],
 }

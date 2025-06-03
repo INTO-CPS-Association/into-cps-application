@@ -1,99 +1,162 @@
-import { handleError } from '../../../src/utils/errorHandler';
-import { ipcMain } from 'electron';
-
-jest.mock('electron', () => ({
-  ipcMain: {
-    emit: jest.fn(),
-  },
+jest.mock("../../../src/utils/logger", () => ({
+  logError: jest.fn(),
+  logWarn: jest.fn(),
 }));
 
-describe('handleError', () => {
-  let consoleErrorSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
-  let originalProcess: typeof process;
-  let originalWindow: typeof window;
+// helper
+const setProcessType = (
+  value: 'renderer' | 'browser' | 'worker' | 'utility' | undefined
+) => {
+  Object.defineProperty(process, 'type', {
+    value,
+    configurable: true,
+  });
+};
+
+describe("errorHandler", () => {
+  const originalProcessType = process.type;
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-    
-    originalProcess = global.process;
-    originalWindow = globalThis.window;
+    setProcessType(originalProcessType);
 
-    Object.defineProperty(globalThis, 'process', {
-      value: { ...originalProcess },
-      writable: true,
-    });
-
-    Object.defineProperty(globalThis, 'window', {
-      value: { electronAPI: { dispatchActionToMain: jest.fn() } },
-      writable: true,
-    });
+    window.electronAPI = {
+      dispatchActionToMain: jest.fn(),
+      addToggleDarkModeListener: jest.fn(),
+      removeToggleDarkModeListener: jest.fn(),
+      addErrorListener: jest.fn(),
+      removeErrorListener: jest.fn(),
+      on: jest.fn(),
+      off: jest.fn(),
+      addNotificationListener: jest.fn(),
+      removeNotificationListener: jest.fn(),
+      sendNotification: jest.fn(),
+      readFile: jest.fn(),
+      writeFile: jest.fn()
+    };
   });
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
-    Object.defineProperty(globalThis, 'process', { value: originalProcess });
-    Object.defineProperty(globalThis, 'window', { value: originalWindow });
+    jest.resetModules();
+    setProcessType(originalProcessType);
   });
 
-  it('logs an error message', () => {
-    handleError(new Error('Test Error'));
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[handleError Triggered]:', 'Test Error');
-  });
+  it("handles error in renderer", () => {
+    setProcessType("renderer");
 
-  it('sends error to main process in renderer mode', () => {
-    Object.defineProperty(globalThis.process, 'type', { value: 'renderer' });
+    const { handleError } = require("../../../src/utils/errorHandler");
+    handleError(new Error("Test error"));
 
-    handleError(new Error('Renderer Error'));
-
-    expect(globalThis.window.electronAPI.dispatchActionToMain).toHaveBeenCalledWith({
-      type: 'error',
-      payload: { message: 'Renderer Error' },
+    expect(window.electronAPI.dispatchActionToMain).toHaveBeenCalledWith({
+      type: "error",
+      payload: { message: "Test error" },
     });
   });
 
-  it('warns if electronAPI is missing in renderer mode', () => {
-    Object.defineProperty(globalThis.process, 'type', { value: 'renderer' });
-    Object.defineProperty(globalThis, 'window', { value: {} });
+  it("handles error in main", () => {
+    jest.resetModules();
+  
+    jest.isolateModules(() => {
+      jest.doMock("electron", () => ({
+        ipcMain: { emit: jest.fn() },
+      }));
+  
+      jest.doMock("../../../src/utils/logger", () => ({
+        logError: jest.fn(),
+        logWarn: jest.fn(),
+      }));
+  
+      setProcessType("browser");
+  
+      const { handleError } = require("../../../src/utils/errorHandler");
+      const { logError } = require("../../../src/utils/logger");
+      handleError("Main error");
+  
+      expect(logError).toHaveBeenCalledWith("[Error Main Process]: Main error");
+    });
+  });
+  
+  it("logs warning on unknown process type", () => {
+    jest.resetModules();
+  
+    jest.isolateModules(() => {
+      jest.doMock("../../../src/utils/logger", () => ({
+        logError: jest.fn(),
+        logWarn: jest.fn(),
+      }));
+  
+      setProcessType(undefined);
+  
+      const { handleError } = require("../../../src/utils/errorHandler");
+      const { logWarn } = require("../../../src/utils/logger");
+  
+      handleError("Unknown");
+  
+      expect(logWarn).toHaveBeenCalledWith("[Error] Unknown process type.");
+    });
+  });
+ 
+});
 
-    handleError(new Error('Renderer Error'));
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith('[handleError] electronAPI not found in renderer!');
+describe("sendNotification", () => {
+  afterEach(() => {
+    jest.resetModules();
   });
 
-  it('emits error event in main process (browser)', () => {
-    Object.defineProperty(globalThis.process, 'type', { value: 'browser' });
+  it("sends notification in renderer", () => {
+    setProcessType("renderer");
 
-    handleError(new Error('Main Process Error'));
+    const { sendNotification } = require("../../../src/utils/errorHandler");
+    sendNotification("Notify me", "info");
 
-    expect(ipcMain.emit).toHaveBeenCalledWith('trigger-error', null, 'Main Process Error');
+    expect(window.electronAPI.dispatchActionToMain).toHaveBeenCalledWith({
+      type: "notification",
+      payload: { message: "Notify me", type: "info" },
+    });
   });
 
-  it('logs a warning for unknown process type', () => {
-    Object.defineProperty(globalThis.process, 'type', { value: 'unknown' });
-
-    handleError(new Error('Unknown Process Error'));
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith('[handleError] Unknown process type!');
+  it("sends notification in main process (browser)", () => {
+    jest.resetModules();
+  
+    const mockEmit = jest.fn();
+  
+    jest.isolateModules(() => {
+      jest.doMock("electron", () => ({
+        ipcMain: { emit: mockEmit },
+      }));
+  
+      setProcessType("browser");
+  
+      const { sendNotification } = require("../../../src/utils/errorHandler");
+  
+      sendNotification("Test notify", "success");
+  
+      expect(mockEmit).toHaveBeenCalledWith(
+        "trigger-notification",
+        null,
+        "Test notify",
+        "success"
+      );
+    });
+  });  
+   
+  it("logs warning on unknown process type (sendNotification)", () => {
+    jest.resetModules();
+  
+    jest.isolateModules(() => {
+      jest.doMock("../../../src/utils/logger", () => ({
+        logError: jest.fn(),
+        logWarn: jest.fn(),
+      }));
+  
+      setProcessType(undefined);
+  
+      const { sendNotification } = require("../../../src/utils/errorHandler");
+      const { logWarn } = require("../../../src/utils/logger");
+  
+      sendNotification("Test message", "warning");
+  
+      expect(logWarn).toHaveBeenCalledWith("[Notification] Unknown process type.");
+    });
   });
-
-  it('handles non-Error values correctly', () => {
-    handleError('Simple string error');
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[handleError Triggered]:', 'Simple string error');
-  });
-
-  it('handles null error input correctly', () => {
-    handleError(null);
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[handleError Triggered]:', 'null');
-  });
-
-  it('handles undefined error input correctly', () => {
-    handleError(undefined);
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[handleError Triggered]:', 'undefined');
-  });
+  
 });

@@ -23,7 +23,8 @@
     "syntax": "npx eslint . --fix",
     "clean": "npx rimraf dist monocart-report release pkg test-results tkacest/coverage-reports && npm ci",
     "postinstall": "node ./scripts/installMaestro.js",
-    "test-e2e": "PLAYWRIGHT_TEST=true npm run build && PLAYWRIGHT_TEST=true playwright test"
+    "test-e2e": "PLAYWRIGHT_TEST=true npm run build && PLAYWRIGHT_TEST=true playwright test",
+    "test:unit": "jest --config jest.config.ts"
   },
   "build": {
     "appId": "org.into-cps-association.into-cps-app",

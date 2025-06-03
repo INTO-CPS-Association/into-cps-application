@@ -63,3 +63,9 @@ declare global {
     MaestroResponse: MaestroResponse;
   }
 }
+
+declare namespace NodeJS {
+  interface Process {
+    type?: 'browser' | 'renderer';
+  }
+}

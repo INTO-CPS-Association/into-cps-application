@@ -1,145 +1,105 @@
-import { startMaestro, stopMaestro, startSimulation, getSimulationResult } from "../../../src/cosimulation/maestro";
-import { getConfig } from "../../../src/utils/config";
-import { setSessionId } from "../../../src/cosimulation/simulationContext";
-import { mainWindow } from "../../../src/main";
-import { handleError } from "../../../src/utils/errorHandler";
-import { isPortInUse } from "../../../src/utils/processes/maestroUtils";
-import * as fs from "fs";
-import { spawn, ChildProcess } from "child_process";
-import kill from "tree-kill";
+import fs from 'fs';
+import { execa } from 'execa';
+import * as config from '../../../src/utils/config';
+import * as errorHandler from '../../../src/utils/errorHandler';
+import * as logger from '../../../src/utils/logger';
+import * as utils from '../../../src/utils/processes/maestroUtils';
+import { SimulationStatus } from '../../../src/utils/constants/cosimulation/statuses';
 
-jest.mock("../../../src/utils/config", () => ({
-  getConfig: jest.fn(),
+jest.mock('fs');
+jest.mock('execa', () => ({
+  __esModule: true,
+  execa: jest.fn(),
 }));
 
-jest.mock("../../../src/utils/errorHandler", () => ({
-  handleError: jest.fn(),
-}));
+const mockedExeca = execa as unknown as jest.Mock;
 
-jest.mock("../../../src/utils/processes/maestroUtils", () => ({
-  isPortInUse: jest.fn(),
-  killProcessOnPort: jest.fn(),
-}));
+const mockWriteStream = {
+  write: jest.fn(),
+  end: jest.fn(),
+};
 
-jest.mock("../../../src/electron/gui/menu", () => ({
-  updateCosimulationMenu: jest.fn(),
-}));
-
-jest.mock("../../../src/main", () => ({
-  mainWindow: {
-    webContents: { send: jest.fn() },
-  },
-}));
-
-jest.mock("../../../src/cosimulation/simulationContext", () => ({
-  setSessionId: jest.fn(),
-}));
-
-jest.mock("fs", () => ({
-  existsSync: jest.fn(),
-  copyFileSync: jest.fn(),
-  readFileSync: jest.fn(),
-  writeFileSync: jest.fn(),
-}));
-
-jest.mock("child_process", () => ({
-  spawn: jest.fn(),
-}));
-
-jest.mock("tree-kill", () => jest.fn());
-
-global.fetch = jest.fn();
-
-describe("Maestro Module", () => {
+describe('maestro.ts', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.resetAllMocks();
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    jest.spyOn(fs, 'copyFileSync').mockImplementation(() => {});
+    jest.spyOn(fs, 'mkdirSync').mockImplementation(() => 'mocked-path');
+    jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockWriteStream as any);
 
-  it("starts Maestro successfully", async () => {
-    jest.setTimeout(5000);
-
-    (getConfig as jest.Mock).mockReturnValue({
-      tempMaestroJarPath: "/mock/path/to/tempMaestro.jar",
-      maestroJarPath: "/mock/path/to/maestro.jar",
+    jest.spyOn(config, 'getConfig').mockReturnValue({
+      simulationConfigPath: 'sim.conf',
+      multiModels: 'multi.json',
+      fmusPath: 'fmus/',
+      maestroJarPath: 'maestro.jar',
+      tempMaestroJarPath: 'temp/maestro.jar',
+      outputPath: 'output',
+      cosimulationPath: 'cosim/',
+      defaultPath: 'default/',
+      logDirectory: 'logs/',
     });
 
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (isPortInUse as jest.Mock).mockResolvedValue(false);
-
-    (spawn as jest.Mock).mockReturnValue({
-      stdout: {
-        on: jest.fn((event, callback) => {
-          if (event === "data") {
-            callback("Starting ProtocolHandler [http-nio-8082]");
-          }
-        }),
-      },
-      stderr: { on: jest.fn() },
-      on: jest.fn(),
-      unref: jest.fn(),
-    } as unknown as ChildProcess);
-
-    await startMaestro();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    expect(mainWindow?.webContents.send).toHaveBeenCalledWith("simulation-status", "Maestro started.");
+    jest.spyOn(utils, 'getJavaCommand').mockReturnValue('java');
+    jest.spyOn(logger, 'setupSimulationLogger').mockImplementation(() => {});
+    jest.spyOn(logger, 'logInfo').mockImplementation(() => {});
+    jest.spyOn(logger, 'logError').mockImplementation(() => {});
+    jest.spyOn(logger, 'logWarn').mockImplementation(() => {});
+    jest.spyOn(errorHandler, 'handleError').mockImplementation(() => {});
+    jest.spyOn(errorHandler, 'sendNotification').mockImplementation(() => {});
   });
 
-  it("handles error when starting Maestro with missing config", async () => {
-    (getConfig as jest.Mock).mockReturnValue(null);
+  it('should start simulation successfully', async () => {
+    mockedExeca.mockResolvedValue({
+      all: { on: jest.fn() },
+      exitCode: 0,
+    });
 
-    await expect(startMaestro()).rejects.toThrow("Configuration not set. Please select a project.");
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const { startSimulation } = await import('../../../src/cosimulation/maestro');
+    const result = await startSimulation();
 
-    expect(handleError).toHaveBeenCalled();
+    expect(fs.copyFileSync).toHaveBeenCalled();
+    expect(fs.mkdirSync).toHaveBeenCalled();
+    expect(mockWriteStream.write).toHaveBeenCalled();
+    expect(logger.logInfo).toHaveBeenCalledWith(expect.stringContaining('Simulation completed successfully.'));
+    expect(errorHandler.sendNotification).toHaveBeenCalledWith('[Simulation] Completed successfully.', 'success');
+    expect(result).toEqual({
+      success: true,
+      status: SimulationStatus.SimulationCompleted,
+    });
   });
 
-  it("stops Maestro successfully", async () => {
-    const mockKill = kill as jest.Mock;
-    mockKill.mockImplementation((pid, signal, callback) => callback(null));
+  it('should handle error when java not found', async () => {
+    jest.spyOn(utils, 'getJavaCommand').mockReturnValue(null as unknown as string);
 
-    await stopMaestro();
-    expect(mainWindow?.webContents.send).toHaveBeenCalledWith("simulation-status", "Idle");
+    const { startSimulation } = await import('../../../src/cosimulation/maestro');
+    const result = await startSimulation();
+
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(SimulationStatus.SimulationFailed);
+    expect(errorHandler.sendNotification).toHaveBeenCalledWith(expect.stringContaining('Java not configured'), 'error');
   });
 
-  it("starts simulation successfully", async () => {
-    (getConfig as jest.Mock).mockReturnValue({
-      simulationConfigPath: "/mock/path/experiment.json",
-      multiModels: "/mock/path/multi-model.json",
-      fmusPath: "/mock/path/fmus",
-    });
+  it('should return error if config is missing', async () => {
+    jest.spyOn(config, 'getConfig').mockReturnValue(null);
 
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify({}));
+    const { startSimulation } = await import('../../../src/cosimulation/maestro');
+    const result = await startSimulation();
 
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ sessionId: "mock-session-id" }),
-      text: jest.fn().mockResolvedValue(""),
-    });
-
-    await startSimulation();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    expect(setSessionId).toHaveBeenCalledWith("mock-session-id");
-    expect(mainWindow?.webContents.send).toHaveBeenCalledWith("simulation-status", "Simulation completed.");
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(SimulationStatus.SimulationFailed);
+    expect(errorHandler.sendNotification).toHaveBeenCalledWith(expect.stringContaining('Configuration not set'), 'error');
   });
 
-  it("fetches simulation result successfully", async () => {
-    (getConfig as jest.Mock).mockReturnValue({
-      outputPath: "/mock/path/output",
-    });
+  it('should detect simulation already in progress (without direct set)', async () => {
+    const { startSimulation } = await import('../../../src/cosimulation/maestro');
 
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      text: jest.fn().mockResolvedValue("csv-data"),
-    });
+    jest.spyOn(utils, 'getJavaCommand').mockImplementation(() => { throw new Error('dummy'); });
+    await startSimulation(); // fails and resets the flag
 
-    (fs.writeFileSync as jest.Mock).mockImplementation();
+    const result = await startSimulation();
 
-    const resultPath = await getSimulationResult("mock-session-id");
-
-    expect(resultPath).toBe("/mock/path/output/simulation-mock-session-id.csv");
-    expect(fs.writeFileSync).toHaveBeenCalledWith("/mock/path/output/simulation-mock-session-id.csv", "csv-data");
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(SimulationStatus.SimulationFailed);
   });
 });

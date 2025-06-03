@@ -1,7 +1,6 @@
-import { cosimulationAPI } from "../../../src/cosimulation/cosimulationApi";
-import { ipcRenderer } from "electron";
+import { ipcRenderer } from 'electron';
 
-jest.mock("electron", () => ({
+jest.mock('electron', () => ({
   ipcRenderer: {
     invoke: jest.fn(),
     on: jest.fn(),
@@ -9,70 +8,76 @@ jest.mock("electron", () => ({
     removeAllListeners: jest.fn(),
   },
   contextBridge: {
-    exposeInMainWorld: jest.fn(),
-  },
+    exposeInMainWorld: jest.fn()
+  }
 }));
 
-describe("cosimulationAPI", () => {
+describe('cosimulationAPI', () => {
+  let cosimulationAPI: typeof import('../../../src/cosimulation/cosimulationApi').cosimulationAPI;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetModules();
+    cosimulationAPI = require('../../../src/cosimulation/cosimulationApi').cosimulationAPI;
   });
 
-  it("calls maestro with correct arguments", async () => {
-    await cosimulationAPI.maestro({ type: "start" });
-    expect(ipcRenderer.invoke).toHaveBeenCalledWith("maestro", { type: "start" });
+  it('calls ipcRenderer.invoke for maestro', async () => {
+    const args = { type: 'start', data: { foo: 'bar' } };
+    await cosimulationAPI.maestro(args);
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith('maestro', args);
   });
 
-  it("registers a simulation status listener", () => {
-    const callback = jest.fn();
-    cosimulationAPI.onSimulationStatus(callback);
-    expect(ipcRenderer.on).toHaveBeenCalledWith("simulation-status", callback);
+  it('registers and unregisters simulation-status listener', () => {
+    const cb = jest.fn();
+    cosimulationAPI.onSimulationStatus(cb);
+    expect(ipcRenderer.on).toHaveBeenCalledWith('simulation-status', cb);
+
+    cosimulationAPI.removeSimulationStatusListener(cb);
+    expect(ipcRenderer.off).toHaveBeenCalledWith('simulation-status', cb);
   });
 
-  it("removes a simulation status listener", () => {
-    const callback = jest.fn();
-    cosimulationAPI.removeSimulationStatusListener(callback);
-    expect(ipcRenderer.off).toHaveBeenCalledWith("simulation-status", callback);
-  });
+  it('adds and removes coe-error listener', () => {
+    const cb = jest.fn();
+    cosimulationAPI.addCoeErrorListener(cb);
 
-  it("registers a COE error listener", () => {
-    const callback = jest.fn();
-    cosimulationAPI.addCoeErrorListener(callback);
-    expect(ipcRenderer.on).toHaveBeenCalledWith("coe-error", expect.any(Function));
-  });
+    const [eventName, wrappedCallback] = (ipcRenderer.on as jest.Mock).mock.calls[0];
+    expect(eventName).toBe('coe-error');
+    wrappedCallback('event', 'ERROR MSG');
+    expect(cb).toHaveBeenCalledWith('event', 'ERROR MSG');
 
-  it("removes all COE error listeners", () => {
     cosimulationAPI.removeCoeErrorListener();
-    expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith("coe-error");
+    expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith('coe-error');
   });
 
-  it("registers a COE reset listener", () => {
-    const callback = jest.fn();
-    cosimulationAPI.addCoeResetListener(callback);
-    expect(ipcRenderer.on).toHaveBeenCalledWith("coe-reset", callback);
-  });
+  it('adds and removes coe-reset listener', () => {
+    const cb = jest.fn();
+    cosimulationAPI.addCoeResetListener(cb);
+    expect(ipcRenderer.on).toHaveBeenCalledWith('coe-reset', cb);
 
-  it("removes all COE reset listeners", () => {
     cosimulationAPI.removeCoeResetListener();
-    expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith("coe-reset");
+    expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith('coe-reset');
   });
 
-  it("registers a custom event listener", () => {
-    const callback = jest.fn();
-    cosimulationAPI.on("custom-event", callback);
-    expect(ipcRenderer.on).toHaveBeenCalledWith("custom-event", expect.any(Function));
+  it('uses generic on and off correctly', () => {
+    const cb = jest.fn();
+    cosimulationAPI.on('custom-event', cb);
+
+    const [eventName, wrapper] = (ipcRenderer.on as jest.Mock).mock.calls.find(call => call[0] === 'custom-event');
+    expect(eventName).toBe('custom-event');
+
+    wrapper('event', 'arg1', 'arg2');
+    expect(cb).toHaveBeenCalledWith('arg1', 'arg2');
+
+    cosimulationAPI.off('custom-event', cb);
+    expect(ipcRenderer.off).toHaveBeenCalledWith('custom-event', cb);
   });
 
-  it("removes a custom event listener", () => {
-    const callback = jest.fn();
-    cosimulationAPI.off("custom-event", callback);
-    expect(ipcRenderer.off).toHaveBeenCalledWith("custom-event", callback);
+  it('invokes getConfig', async () => {
+    await cosimulationAPI.getConfig();
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith('get-config');
   });
 
-  it("retrieves session ID", async () => {
-    (ipcRenderer.invoke as jest.Mock).mockResolvedValue("mock-session-id");
-    const sessionId = await cosimulationAPI.getSessionId();
-    expect(sessionId).toBe("mock-session-id");
-    expect(ipcRenderer.invoke).toHaveBeenCalledWith("get-session-id");
+  it('invokes getLatestResultFolder', async () => {
+    await cosimulationAPI.getLatestResultFolder();
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith('get-latest-result-folder');
   });
 });

@@ -1,71 +1,65 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { render, screen, fireEvent } from "@testing-library/react";
 import Sidebar from "../../../src/components/Sidebar";
-import "@testing-library/jest-dom";
-import { styleConstants } from "../../../src/utils/constants";
+import { MemoryRouter } from "react-router-dom";
+import React from "react";
+
+jest.mock("../../../src/utils/constants", () => ({
+  styleConstants: {
+    DRAWER_WIDTH: 240,
+    COLLAPSED_WIDTH: 60,
+    TOOLBAR_HEIGHT: 64,
+    TRANSITION_DURATION: "0.3s",
+    INNER_WIDTH_SIZE: 800,
+  },
+}));
 
 describe("Sidebar component", () => {
-  it("renders the sidebar with Home and Cosimulation links", () => {
-    render(<Sidebar open={true} toggleSidebar={jest.fn()} />, {
-      wrapper: MemoryRouter,
-    });
+  const toggleSidebarMock = jest.fn();
 
-    expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
+  beforeEach(() => {
+    toggleSidebarMock.mockClear();
   });
 
-  it("toggles sidebar when the button is clicked", () => {
-    const toggleSidebar = jest.fn();
-    render(<Sidebar open={true} toggleSidebar={toggleSidebar} />, {
-      wrapper: MemoryRouter,
-    });
+  const renderSidebar = (open: boolean) =>
+    render(
+      <MemoryRouter>
+        <Sidebar open={open} toggleSidebar={toggleSidebarMock} />
+      </MemoryRouter>
+    );
 
-    const toggleButton = screen.getByRole("button");
-    fireEvent.click(toggleButton);
-
-    expect(toggleSidebar).toHaveBeenCalled();
-  });
-
-  it("displays only icons when sidebar is collapsed", () => {
-    render(<Sidebar open={false} toggleSidebar={jest.fn()} />, {
-      wrapper: MemoryRouter,
-    });
+  it("renders closed sidebar correctly", () => {
+    renderSidebar(false);
 
     expect(screen.queryByText("Home")).not.toBeInTheDocument();
     expect(screen.queryByText("Cosimulation")).not.toBeInTheDocument();
   });
 
-  it("expands the sidebar when clicking the menu icon in responsive mode", async () => {
-    global.innerWidth = styleConstants.INNER_WIDTH_SIZE - 1;
-    window.dispatchEvent(new Event("resize"));
+  it("renders open sidebar with navigation items", () => {
+    renderSidebar(true);
 
-    const { container } = render(<Sidebar open={false} toggleSidebar={jest.fn()} />, {
-      wrapper: MemoryRouter,
-    });
-
-    const toggleButton = container.querySelector("button");
-    if (toggleButton) fireEvent.click(toggleButton);
-
-    await waitFor(() => {
-      expect(container.querySelector(".MuiDrawer-paper")).toHaveStyle(
-        `width: ${styleConstants.DRAWER_WIDTH}px`
-      );
-    });
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
   });
 
-  it("collapses the sidebar when clicking the close icon", async () => {
-    const { container } = render(<Sidebar open={true} toggleSidebar={jest.fn()} />, {
-      wrapper: MemoryRouter,
-    });
+  it("calls toggleSidebar when icon button is clicked", () => {
+    renderSidebar(true);
 
-    const toggleButton = container.querySelector("button");
-    if (toggleButton) fireEvent.click(toggleButton);
+    const toggleButton = screen.getByRole("button");
+    fireEvent.click(toggleButton);
 
-    await waitFor(() => {
-      expect(container.querySelector(".MuiDrawer-paper")).toHaveStyle(
-        `width: ${styleConstants.COLLAPSED_WIDTH}px`
-      );
-    });
+    expect(toggleSidebarMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("switches to responsive mode on small window width", () => {
+    window.innerWidth = 500;
+    window.dispatchEvent(new Event("resize"));
+
+    renderSidebar(false);
+
+    const toggleButton = screen.getByRole("button");
+    fireEvent.click(toggleButton);
+
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
   });
 });
