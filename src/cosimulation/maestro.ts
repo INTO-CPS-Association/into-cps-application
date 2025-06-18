@@ -5,7 +5,9 @@ import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
 import { getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
-import { execa } from 'execa';
+import { getExeca } from '../utils/execaWrapper';
+
+const execa = getExeca();
 
 let simulationInProgress = false;
 
@@ -15,7 +17,11 @@ export type SimulationResult = {
   status: SimulationStatusType;
 };
 
-function extractMaestroJar(maestroJarPath: string, tempMaestroJarPath: string): void {
+export function __setSimulationInProgress(value: boolean) {
+  simulationInProgress = value;
+}
+
+export function extractMaestroJar(maestroJarPath: string, tempMaestroJarPath: string): void {
   if (!fs.existsSync(maestroJarPath)) {
     const errorMsg = `Maestro JAR not found at ${maestroJarPath}.`;
     logError(errorMsg);
@@ -115,7 +121,7 @@ async function startSimulation(): Promise<SimulationResult> {
 
     const subprocess = execa(javaExecutable, args, { all: true });
 
-    subprocess.all?.on('data', (chunk) => {
+    subprocess.all?.on('data', (chunk: Buffer) => {
       const msg = chunk.toString();
       if (msg.includes('ERROR') || msg.includes('Error')) {
         logError(`[CLI STDERR]: ${msg.trim()}`);

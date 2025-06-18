@@ -1,5 +1,3 @@
-import { ipcRenderer } from 'electron';
-
 jest.mock('electron', () => ({
   ipcRenderer: {
     invoke: jest.fn(),
@@ -12,14 +10,20 @@ jest.mock('electron', () => ({
   }
 }));
 
-describe('cosimulationAPI', () => {
-  let cosimulationAPI: typeof import('../../../src/cosimulation/cosimulationApi').cosimulationAPI;
+let cosimulationAPI: typeof import('../../../src/cosimulation/cosimulationApi').cosimulationAPI;
+let ipcRenderer: typeof import('electron').ipcRenderer;
 
-  beforeEach(() => {
-    jest.resetModules();
+beforeEach(() => {
+  jest.resetModules();
+  jest.clearAllMocks();
+
+  jest.isolateModules(() => {
+    ({ ipcRenderer } = require('electron'));
     cosimulationAPI = require('../../../src/cosimulation/cosimulationApi').cosimulationAPI;
   });
+});
 
+describe('cosimulationAPI', () => {
   it('calls ipcRenderer.invoke for maestro', async () => {
     const args = { type: 'start', data: { foo: 'bar' } };
     await cosimulationAPI.maestro(args);
@@ -39,8 +43,9 @@ describe('cosimulationAPI', () => {
     const cb = jest.fn();
     cosimulationAPI.addCoeErrorListener(cb);
 
-    const [eventName, wrappedCallback] = (ipcRenderer.on as jest.Mock).mock.calls[0];
-    expect(eventName).toBe('coe-error');
+    const call = (ipcRenderer.on as jest.Mock).mock.calls.find((call: any) => call[0] === 'coe-error');
+    expect(call).toBeDefined();
+    const [, wrappedCallback] = call!;
     wrappedCallback('event', 'ERROR MSG');
     expect(cb).toHaveBeenCalledWith('event', 'ERROR MSG');
 
@@ -61,9 +66,9 @@ describe('cosimulationAPI', () => {
     const cb = jest.fn();
     cosimulationAPI.on('custom-event', cb);
 
-    const [eventName, wrapper] = (ipcRenderer.on as jest.Mock).mock.calls.find(call => call[0] === 'custom-event');
-    expect(eventName).toBe('custom-event');
-
+    const call = (ipcRenderer.on as jest.Mock).mock.calls.find((call: any) => call[0] === 'custom-event');
+    expect(call).toBeDefined();
+    const [, wrapper] = call!;
     wrapper('event', 'arg1', 'arg2');
     expect(cb).toHaveBeenCalledWith('arg1', 'arg2');
 

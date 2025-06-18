@@ -6,7 +6,7 @@ describe('SimulationStatus', () => {
     expect(SimulationStatus.StartingSimulation).toBe('Starting simulation...');
     expect(SimulationStatus.Simulating).toBe('Simulating...');
     expect(SimulationStatus.SimulationCompleted).toBe('Simulation completed.');
-    expect(SimulationStatus.SimulationFailed).toBe('Simulation failed. ');
+    expect(SimulationStatus.SimulationFailed).toBe('Simulation failed.');
     expect(SimulationStatus.FetchFailedSimulationError).toBe(
       'Fetch Failed. Please start Maestro before launching the cosimulation.'
     );

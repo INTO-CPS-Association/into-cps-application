@@ -8,8 +8,10 @@ export const electronAPI = {
       ipcRenderer.on('show-error', (_, message: string) => {
         callback(message);
       });
+    } else {
+      console.warn("[ElectronAPI] addErrorListener called without a valid callback");
     }
-  },
+  },  
   removeErrorListener: () => {
     ipcRenderer.removeAllListeners('show-error');
   },

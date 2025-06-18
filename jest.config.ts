@@ -9,19 +9,14 @@ const config: Config = {
     "\\.(css|scss|sass)$": "identity-obj-proxy",
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  "transform": {
-    "^.+\\.(ts|tsx|js|jsx)$": "ts-jest",
-  },
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
+  transform: {
+    "^.+\\.(ts|tsx|js|jsx)$": ["ts-jest", { useESM: true }],
   },
   extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: [
     '/node_modules/(?!(execa)/)',
   ],
-    collectCoverage: true,
+  collectCoverage: true,
   collectCoverageFrom: [
     "src/**/*.{ts,tsx,js,jsx}",
     "!src/main.tsx",

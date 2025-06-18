@@ -8,7 +8,7 @@ export const SimulationStatus = {
     Simulating: 'Simulating...',
     SimulationCompleted: 'Simulation completed.',
     SimulationFailed: 'Simulation failed.',
-    FetchFailedSimulationError: 'Type Error: Fetch Failed.',
+    FetchFailedSimulationError: 'Fetch Failed. Please start Maestro before launching the cosimulation.',
     SimulationAlreadyInProgress: 'Simulation request already in progress',
 } as const;
 export type SimulationStatusType = typeof SimulationStatus[keyof typeof SimulationStatus];
