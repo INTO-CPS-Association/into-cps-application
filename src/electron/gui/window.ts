@@ -6,7 +6,7 @@ const isDev = (process.env.NODE_ENV ?? 'production') === 'development';
 
 const preloadPath = isDev
   ? path.resolve(__dirname, 'preload.js')
-  : path.resolve(app.getAppPath(), 'dist/preload.js');
+  : path.resolve(app.getAppPath(), 'preload.js');
 
 const startUrl = isDev
   ? 'http://localhost:3000'
