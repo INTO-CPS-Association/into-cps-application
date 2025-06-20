@@ -1,72 +1,71 @@
-import { expect, test } from '@playwright/test';
-import { 
-  clickMenuItemById,
-  parseElectronApp,
-} from 'electron-playwright-helpers';
-import { ElectronApplication, Page, _electron as electron } from 'playwright';
+import { test, expect } from "@playwright/test";
+import { TestHelper } from "./TestHelpers/TestHelper";
 
-let electronApp: ElectronApplication;
-let page: Page;
+const helper = new TestHelper();
 
-test.beforeAll(async () => {
-    const appInfo = parseElectronApp("release/linux-unpacked");
-  
-    electronApp = await electron.launch({
-      args: [appInfo.main],
-      executablePath: appInfo.executable,
+test.describe("Menu Test", () => {
+  test.beforeAll(async () => {
+    await helper.launch();
+    if (!helper.electronApp) throw new Error("Electron App failed to launch");
+    await helper.startCoverage();
+
+    await helper.electronApp.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      win.webContents.send("project-selected", "dummy");
     });
-  
-    page = await electronApp.firstWindow();
-    await page.waitForLoadState();
-  });
-  
-
-test.afterAll(async () => {
-  await electronApp.close();
-});
-
-
-test("Menu should have 'File', 'View', and 'Cosimulation' options", async () => {
-  const menuItems = await electronApp.evaluate(({ Menu }) => {
-    return Menu.getApplicationMenu()?.items
-      .filter(item => ["File", "View", "Cosimulation"].includes(item.label)) // Filtra solo i menu definiti
-      .map(item => ({
-        label: item.label,
-        submenu: item.submenu?.items
-          .filter(subItem => subItem.type !== "separator")
-          .map(subItem => subItem.label) || []
-      }));
   });
 
-  expect(menuItems?.length).toBe(3);
-
-  expect(menuItems?.map(item => item.label)).toEqual(["File", "View", "Cosimulation"]);
-
-  const fileSubmenu = menuItems?.find(m => m.label === "File")!.submenu;
-  expect(fileSubmenu).toEqual(["Choose Project", "Quit"]);
-
-  const viewSubmenu = menuItems?.find(m => m.label === "View")!.submenu;
-  expect(viewSubmenu).toEqual(["Toggle Dark Mode", "Toggle Developer Tools"]);
-
-  const cosimulationSubmenu = menuItems?.find(m => m.label === "Cosimulation")!.submenu;
-  expect(cosimulationSubmenu).toEqual(["Start Simulation"]);
-});
-
-test("Dark mode should toggle correctly", async () => {
-  const initialColorScheme = await page.evaluate(() => {
-      return window.getComputedStyle(document.documentElement).getPropertyValue('color-scheme').trim();
+  test.afterAll(async () => {
+    const coverageList = await helper.stopCoverage();
+    await helper.addCoverageToReport(coverageList);
+    await helper.shutdown();
   });
 
-  await clickMenuItemById(electronApp, 'toggle-dark-mode');
-  await page.waitForTimeout(500);
+  test("Menu should have 'File', 'View', and 'Cosimulation' options", async () => {
+    const menuItems = await helper.electronApp!.evaluate(({ Menu }) => {
+      return Menu.getApplicationMenu()?.items
+        .filter(item => ["File", "View", "Cosimulation"].includes(item.label))
+        .map(item => ({
+          label: item.label,
+          submenu: item.submenu?.items
+            .filter(subItem => subItem.type !== "separator")
+            .map(subItem => subItem.label) || []
+        }));
+    });
 
-  const newColorScheme = await page.evaluate(() => {
-      return window.getComputedStyle(document.documentElement).getPropertyValue('color-scheme').trim();
+    expect(menuItems?.length).toBe(3);
+    expect(menuItems?.map(item => item.label)).toEqual(["File", "View", "Cosimulation"]);
+
+    const fileSubmenu = menuItems?.find(m => m.label === "File")!.submenu;
+    expect(fileSubmenu).toEqual(["Choose Project", "Quit"]);
+
+    const viewSubmenu = menuItems?.find(m => m.label === "View")!.submenu;
+    expect(viewSubmenu).toEqual(["Toggle Dark Mode", "Toggle Developer Tools"]);
+
+    const cosimulationSubmenu = menuItems?.find(m => m.label === "Cosimulation")!.submenu;
+    expect(cosimulationSubmenu).toEqual(["Start Simulation"]);
   });
 
-  console.log("Initial color scheme:", initialColorScheme);
-  console.log("New color scheme:", newColorScheme);
+  test("Dark mode should toggle correctly", async () => {
+    const initialColorScheme = await helper.window!.evaluate(() => {
+      return window.getComputedStyle(document.documentElement).getPropertyValue("color-scheme").trim();
+    });
 
-  expect(newColorScheme).not.toBe(initialColorScheme);
-  expect(["light", "dark"]).toContain(newColorScheme);
+    await helper.window!.evaluate(() => {
+      // @ts-ignore
+      window.electronAPI.toggleDarkMode();
+    });
+
+    await helper.window!.waitForTimeout(500);
+
+    const newColorScheme = await helper.window!.evaluate(() => {
+      return window.getComputedStyle(document.documentElement).getPropertyValue("color-scheme").trim();
+    });
+
+    console.log("Initial:", initialColorScheme, "→ New:", newColorScheme);
+
+    expect(newColorScheme).not.toBe(initialColorScheme);
+    expect(["light", "dark"]).toContain(newColorScheme);
+  });
+
 });

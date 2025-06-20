@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 export const electronAPI = {
   addToggleDarkModeListener: (callback: () => void) => ipcRenderer.on('toggle-dark-mode', callback),
   removeToggleDarkModeListener: () => ipcRenderer.removeAllListeners('toggle-dark-mode'),
+  toggleDarkMode: () => ipcRenderer.send('toggle-dark-mode'),
   addErrorListener: (callback?: (message: string) => void) => {
     if (callback && typeof callback === 'function') {
       ipcRenderer.on('show-error', (_, message: string) => {

@@ -6,11 +6,11 @@ const isDev = (process as any).env.NODE_ENV === 'development';
 
 const preloadPath = isDev
   ? path.resolve(__dirname, 'preload.js')
-  : path.resolve(app.getAppPath(), 'dist/preload.js');
+  : path.resolve(app.getAppPath(), 'preload.js');
 
 const startUrl = isDev
   ? 'http://localhost:3000'
-  : `file://${path.resolve(app.getAppPath(), 'dist/index.html')}`;
+  : `file://${path.join(app.getAppPath(), 'index.html')}`;
 
 const iconPath = isDev
   ? path.resolve(__dirname, 'resources/into-cps/appicon/into-cps-logo.png.ico')
