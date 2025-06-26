@@ -1,8 +1,12 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os'; 
+import maestroConfig from '../resources/maestro/maestro-version.json';
+
+const MAESTRO_VERSION = maestroConfig.version;
 
 import { ConfigMaestro } from '../types/global';
+import { logError } from './logger';
 
 let configMaestro: ConfigMaestro | null = null;
 
@@ -19,8 +23,8 @@ export function setProjectPath(projectPath: string): void {
     multiModels: path.join(defaultPath, 'multi-model.json'),
     outputPath: outputPath,
     logDirectory: path.join(outputPath, 'logs'),
-    maestroJarPath: path.resolve(__dirname, 'resources/maestro/maestro-webapi-3.0.0-bundle.jar'),
-    tempMaestroJarPath: path.join(os.tmpdir(), 'maestro-webapi-3.0.0-bundle.jar'),
+    maestroJarPath: path.resolve(__dirname, `resources/maestro/maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`),
+    tempMaestroJarPath: path.join(os.tmpdir(), `maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`),
   };
 
   if (!fs.existsSync(outputPath)) {
@@ -38,7 +42,7 @@ export function setProjectPath(projectPath: string): void {
       fs.copyFileSync(multiModels, path.join(outputPath, 'multi-model.json'));
     }
   } catch (error) {
-    console.error('[Project Configuration] Error copying configuration files to results folder:', error);
+    logError(`[Project Configuration] Error copying configuration files to results folder: ${error}`);
   }
 }
 

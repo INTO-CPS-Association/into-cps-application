@@ -3,13 +3,16 @@ import { contextBridge, ipcRenderer } from 'electron';
 export const electronAPI = {
   addToggleDarkModeListener: (callback: () => void) => ipcRenderer.on('toggle-dark-mode', callback),
   removeToggleDarkModeListener: () => ipcRenderer.removeAllListeners('toggle-dark-mode'),
+  toggleDarkMode: () => ipcRenderer.send('toggle-dark-mode'),
   addErrorListener: (callback?: (message: string) => void) => {
     if (callback && typeof callback === 'function') {
       ipcRenderer.on('show-error', (_, message: string) => {
         callback(message);
       });
+    } else {
+      console.warn("[ElectronAPI] addErrorListener called without a valid callback");
     }
-  },
+  },  
   removeErrorListener: () => {
     ipcRenderer.removeAllListeners('show-error');
   },
@@ -35,7 +38,9 @@ export const electronAPI = {
   },
   sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
     ipcRenderer.send('show-notification', message, type);
-  }
+  },
+  readFile: (path: string) => ipcRenderer.invoke('read-file', path),
+  writeFile: (path: string, content: string) => ipcRenderer.invoke('write-file', { path, content }),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

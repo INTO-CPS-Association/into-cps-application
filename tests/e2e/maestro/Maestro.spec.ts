@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import { TestHelper } from "../TestHelpers/TestHelper";
 
 const helper = new TestHelper();
@@ -15,10 +15,4 @@ test.describe("Maestro Button Tests", () => {
         await helper.shutdown();
     });
 
-    test("Initial state: Button should show 'Start CoE'", async () => {
-        if (!helper.window) throw new Error("Window is not initialized");
-
-        const buttonText = await helper.window?.locator('#maestro-btn-launch-bottom').innerText();
-        expect(buttonText).toContain("Start CoE");
-    });
 });

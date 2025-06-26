@@ -3,17 +3,15 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
-import Bottom from './components/Bottom';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
 import { styleConstants } from './utils/constants';
-import { getSessionId } from './cosimulation/simulationContext';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
+  // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
@@ -78,28 +76,23 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let simulationInProgress = false;
-  
     const handleMenuStartSimulation = async () => {
-      if (simulationInProgress) {
-        console.warn('Simulation already in progress.');
-        return;
-      }
-  
-      simulationInProgress = true;
+
       try {
         const response = await window?.cosimulationAPI?.maestro({
           type: 'start-simulation',
-          data: { sessionId: getSessionId() },
         });
           if (!response?.success) {
-          console.error('Simulation failed to start:', response?.error || 'Unknown error');
+            const errorMessage = response?.error || 'Unknown error';
+            console.error('Simulation failed to start:', errorMessage);
+          
+            window.electronAPI?.sendNotification(errorMessage, 'error');
         }
       } catch (err) {
-        console.error('Error in starting the simulation:', err);
-      } finally {
-        simulationInProgress = false;
-      }
+        console.error('Failed to start simulation due to technical error:', err);
+
+        window.electronAPI?.sendNotification('Failed to start simulation due to technical error.', 'error');
+      } 
     };
   
     window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
@@ -127,9 +120,8 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
-            </Routes>
+              </Routes>
           </Box>
-          <Bottom sidebarWidth={sidebarWidth} sidebarOpen={sidebarOpen} />
         </Box>
         <ErrorSnackbar />
       </Router>

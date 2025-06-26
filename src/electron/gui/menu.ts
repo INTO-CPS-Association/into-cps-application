@@ -1,7 +1,9 @@
 import { Menu, BrowserWindow, MenuItemConstructorOptions, dialog } from 'electron';
-import { setProjectPath } from '../../utils/config';
+import { getConfig, setProjectPath } from '../../utils/config';
+import { logError } from '../../utils/logger';
 
 let cosimulationEnabled = false;
+const platform = (process as any).platform;
 
 export function createTopMenu(mainWindow: BrowserWindow): void {
   const template: MenuItemConstructorOptions[] = [
@@ -20,7 +22,14 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
             if (!result.canceled && result.filePaths.length > 0) {
               const selectedPath = result.filePaths[0];          
               setProjectPath(selectedPath);
+              
               mainWindow.webContents.send('project-selected', selectedPath);
+
+              const config = getConfig();
+              if (config && config.multiModels) {
+                mainWindow.webContents.send('multi-model-path', config.multiModels);
+                updateCosimulationMenu(mainWindow, true);
+              }
             }
           },
         },
@@ -38,7 +47,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
             if (mainWindow?.webContents) {
               mainWindow.webContents.send('toggle-dark-mode');
             } else {
-              console.error('Main window or webContents is not available.');
+              logError('Main window or webContents is not available.');
             }
           },
         },
@@ -60,7 +69,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
         {
           label: 'Start Simulation',
           id: 'start-simulation',
-          accelerator: process.platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
+          accelerator: platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
           enabled: cosimulationEnabled,
           click: () => {
             if (mainWindow?.webContents) {
