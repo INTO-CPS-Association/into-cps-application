@@ -1,3 +1,5 @@
+import { logError, logWarn } from '../utils/logger';
+
 /**
  * Handles errors in Electron based on process type.
  * 
@@ -9,22 +11,23 @@
  */
 
 export function handleError(error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[Error]:', message);
-  
-    if (process?.type === 'renderer') {
-      if (window?.electronAPI?.dispatchActionToMain) {
-        window.electronAPI.dispatchActionToMain({ type: 'error', payload: { message } });
-      } else {
-        console.warn('[Error] electronAPI not found in renderer!');
-      }
-    } else if (process?.type === 'browser') {
-      const { ipcMain } = require('electron');
-      ipcMain.emit('trigger-error', null, message);
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (process?.type === 'renderer') {
+    console.error('[Error Renderer]:', message);
+    if (window?.electronAPI?.dispatchActionToMain) {
+      window.electronAPI.dispatchActionToMain({ type: 'error', payload: { message } });
     } else {
-      console.warn('[Error] Unknown process type!');
+      console.warn('[Error Renderer] electronAPI not found.');
     }
+  } else if (process?.type === 'browser') {
+    logError('[Error Main Process]: ' + message);
+    const { ipcMain } = require('electron');
+    ipcMain.emit('trigger-error', null, message);
+  } else {
+    logWarn('[Error] Unknown process type.');
   }
+}
 
 /**
  * Sends a notification from Electron's main process to the renderer.
@@ -41,6 +44,6 @@ export function sendNotification(message: string, type: 'success' | 'error' | 'w
     const { ipcMain } = require('electron');
     ipcMain.emit('trigger-notification', null, message, type);
   } else {
-    console.warn('[Notification] Unknown process type!');
+    logWarn('[Notification] Unknown process type.');
   }
 }

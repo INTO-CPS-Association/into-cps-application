@@ -28,7 +28,7 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
+    
   const handleToggle = () => {
     setManualOpen(!manualOpen);
     toggleSidebar();

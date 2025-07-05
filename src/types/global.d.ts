@@ -9,6 +9,8 @@ export interface IElectronAPI {
   addNotificationListener: (callback?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void) => void;
   removeNotificationListener: () => void;
   sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  readFile: (path: string) => Promise<string>;
+  writeFile: (path: string, content: string) => Promise<void>;
 }
 
 export interface ICosimulationAPI {
@@ -22,10 +24,9 @@ export interface ICosimulationAPI {
   addCoeResetListener: (callback: () => void) => void;
   removeCoeResetListener: () => void;
   getConfig: () => Promise<ConfigMaestro | null>;
-  getSessionId: () => Promise<string | null>;
-  getSimulationResult: (sessionId: string) => Promise<string>;
   addListener: (event: string, callback: (...args: unknown[]) => void) => void;
   removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  getLatestResultFolder: () => Promise<string | null>;
 }
 
 
@@ -41,6 +42,12 @@ export interface ConfigMaestro {
   outputPath: string;
 }
 
+export interface SimulationResult {
+  success: boolean;
+  error?: string;
+  status: string;
+}
+
 export interface MaestroResponse {
   success: boolean;
   message?: string;
@@ -54,5 +61,11 @@ declare global {
     cosimulationAPI: ICosimulationAPI;
     ConfigMaestro?: ConfigMaestro;
     MaestroResponse: MaestroResponse;
+  }
+}
+
+declare namespace NodeJS {
+  interface Process {
+    type?: 'browser' | 'renderer';
   }
 }

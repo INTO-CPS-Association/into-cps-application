@@ -30,11 +30,10 @@ const mockCosimulationAPI: ICosimulationAPI = {
   removeCoeResetListener: jest.fn(),
   on: jest.fn(),
   off: jest.fn(),
-  getSessionId: jest.fn().mockResolvedValue("mock-session-id"),
   getConfig: jest.fn().mockResolvedValue({}),
-  getSimulationResult: jest.fn().mockResolvedValue({}),
   addListener: jest.fn(),
   removeListener: jest.fn(),
+  getLatestResultFolder: jest.fn().mockResolvedValue("mock-folder-path"),
 };
 
 global.window.cosimulationAPI = mockCosimulationAPI;
@@ -50,6 +49,9 @@ const mockElectronAPI = {
   sendNotification: jest.fn(),
   on: jest.fn(),
   off: jest.fn(),
+  readFile: jest.fn().mockResolvedValue("mock content"),
+  writeFile: jest.fn().mockResolvedValue(true),
 };
+
 
 global.window.electronAPI = mockElectronAPI;

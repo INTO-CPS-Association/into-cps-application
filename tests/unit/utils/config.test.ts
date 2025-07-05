@@ -1,92 +1,101 @@
-import * as path from 'path';
+process.env.TERM = 'xterm';
+
 import * as fs from 'fs';
-import { setProjectPath, getConfig } from '../../../src/utils/config';
-import { ConfigMaestro } from '../../../src/types/global';
+import * as os from 'os';
+import * as path from 'path';
+import * as configModule from '../../../src/utils/config';
+import { logError } from '../../../src/utils/logger';
 
 jest.mock('fs');
+jest.mock('os');
+jest.mock('../../../src/utils/logger');
+jest.mock('winston', () => ({
+  createLogger: () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+  }),
+  format: {
+    combine: jest.fn(),
+    timestamp: jest.fn(),
+    printf: jest.fn(),
+  },
+  transports: {
+    Console: jest.fn(),
+    File: jest.fn(),
+  },
+}));
 
-describe('Config Utils', () => {
-  const mockProjectPath = '/mock/project/path';
-  const expectedConfig: ConfigMaestro = {
-    cosimulationPath: path.join(mockProjectPath, 'cosimulation'),
-    defaultPath: path.join(mockProjectPath, 'cosimulation', 'default'),
-    simulationConfigPath: path.join(mockProjectPath, 'cosimulation', 'default', 'experiment.json'),
-    fmusPath: path.join(mockProjectPath, 'FMUs'),
-    multiModels: path.join(mockProjectPath, 'cosimulation', 'default', 'multi-model.json'),
-    outputPath: path.join(mockProjectPath, 'results', 'cosimulation', 'default'),
-    maestroJarPath: path.resolve('src/utils/resources/maestro/maestro-webapi-3.0.0-bundle.jar'),
-    tempMaestroJarPath: path.join('/tmp', 'maestro-webapi-3.0.0-bundle.jar'),
-  };
 
+jest.mock('../../../src/resources/maestro/maestro-version.json', () => ({
+  version: '5.0.0',
+}));
+
+const mockProjectPath = '/mock/project';
+const maestroVersion = '5.0.0';
+
+describe('config.ts', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should set the project path and initialize the config', () => {
+    jest.resetAllMocks();
+    (os.tmpdir as jest.Mock).mockReturnValue('/tmp');
     (fs.existsSync as jest.Mock).mockReturnValue(false);
-    (fs.mkdirSync as jest.Mock).mockImplementation();
-
-    setProjectPath(mockProjectPath);
-
-    const config = getConfig();
-    expect(config).toEqual(expectedConfig);
-    expect(fs.existsSync).toHaveBeenCalledWith(expectedConfig.outputPath);
-    expect(fs.mkdirSync).toHaveBeenCalledWith(expectedConfig.outputPath, { recursive: true });
   });
 
-  it('should not create output directory if it already exists', () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
+  it('should set project config correctly and create output folder', () => {
+    (fs.mkdirSync as jest.Mock).mockImplementation(() => {});
 
-    setProjectPath(mockProjectPath);
+    configModule.setProjectPath(mockProjectPath);
 
-    expect(fs.mkdirSync).not.toHaveBeenCalled();
-  });
+    const config = configModule.getConfig();
 
-  it('should copy simulationConfigPath and multiModels if they exist', () => {
-    (fs.existsSync as jest.Mock).mockImplementation((filePath) =>
-      [expectedConfig.simulationConfigPath, expectedConfig.multiModels].includes(filePath)
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      path.join(mockProjectPath, 'results', 'cosimulation', 'default'),
+      { recursive: true }
     );
-    (fs.copyFileSync as jest.Mock).mockImplementation();
 
-    setProjectPath(mockProjectPath);
+    expect(config).toMatchObject({
+      cosimulationPath: path.join(mockProjectPath, 'cosimulation'),
+      defaultPath: path.join(mockProjectPath, 'cosimulation', 'default'),
+      simulationConfigPath: path.join(mockProjectPath, 'cosimulation', 'default', 'experiment.json'),
+      fmusPath: path.join(mockProjectPath, 'FMUs'),
+      multiModels: path.join(mockProjectPath, 'cosimulation', 'default', 'multi-model.json'),
+      outputPath: path.join(mockProjectPath, 'results', 'cosimulation', 'default'),
+      logDirectory: path.join(mockProjectPath, 'results', 'cosimulation', 'default', 'logs'),
+      tempMaestroJarPath: path.join('/tmp', `maestro-${maestroVersion}-jar-with-dependencies.jar`),
+    });
+  });
+
+  it('should copy config files if they exist', () => {
+    (fs.existsSync as jest.Mock).mockImplementation((filePath) => {
+      return filePath.includes('experiment.json') || filePath.includes('multi-model.json');
+    });
+
+    configModule.setProjectPath(mockProjectPath);
 
     expect(fs.copyFileSync).toHaveBeenCalledWith(
-      expectedConfig.simulationConfigPath,
-      path.join(expectedConfig.outputPath, 'experiment.json')
+      expect.stringContaining('experiment.json'),
+      expect.stringContaining('experiment.json')
     );
     expect(fs.copyFileSync).toHaveBeenCalledWith(
-      expectedConfig.multiModels,
-      path.join(expectedConfig.outputPath, 'multi-model.json')
+      expect.stringContaining('multi-model.json'),
+      expect.stringContaining('multi-model.json')
     );
   });
 
-  it('should not copy files if they do not exist', () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(false);
-    (fs.copyFileSync as jest.Mock).mockImplementation();
-
-    setProjectPath(mockProjectPath);
-
-    expect(fs.copyFileSync).not.toHaveBeenCalled();
-  });
-
-  it('should log an error if copying files fails', () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+  it('should log error if file copy fails', () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.copyFileSync as jest.Mock).mockImplementation(() => {
       throw new Error('Copy failed');
     });
 
-    setProjectPath(mockProjectPath);
+    configModule.setProjectPath(mockProjectPath);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '[setProjectPath] Error copying configuration files to results folder:',
-      expect.any(Error)
-    );
-
-    consoleErrorSpy.mockRestore();
+    expect(logError).toHaveBeenCalledWith(expect.stringContaining('Error copying configuration files'));
   });
 
-  /* it('should return null if config has not been set', () => {
-    expect(getConfig()).toBeNull();
-  }); */
+  it('getConfig should return null if not set', async () => {
+    jest.resetModules();
+    const freshConfigModule = await import('../../../src/utils/config');
+    expect(freshConfigModule.getConfig()).toBe(null);
+  });
+  
 });

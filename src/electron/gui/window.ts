@@ -1,22 +1,22 @@
 import * as path from 'path';
 import { BrowserWindow, app } from 'electron';
+import { logInfo, logError } from '../../utils/logger';
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = (process as any).env.NODE_ENV === 'development';
+
 const preloadPath = isDev
   ? path.resolve(__dirname, 'preload.js')
-  : path.resolve(app.getAppPath(), 'dist/preload.js');
+  : path.resolve(app.getAppPath(), 'preload.js');
 
 const startUrl = isDev
   ? 'http://localhost:3000'
-  : `file://${path.resolve(app.getAppPath(), 'dist/index.html')}`;
+  : `file://${path.join(app.getAppPath(), 'index.html')}`;
 
 const iconPath = isDev
   ? path.resolve(__dirname, 'resources/into-cps/appicon/into-cps-logo.png.ico')
   : path.resolve(app.getAppPath(), 'dist/resources/into-cps/appicon/into-cps-logo.png.ico');
 
 let mainWindow: BrowserWindow | null = null;
-
-const isTesting = process.env.CI === 'e2e' || process.env.PLAYWRIGHT_TEST === 'true';
 
 export function createWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
@@ -30,10 +30,10 @@ export function createWindow(): BrowserWindow {
     },
   }); 
 
-  console.log(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
+  logInfo(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
 
   mainWindow.loadURL(startUrl).catch((error) => {
-    console.error('Failed to load URL:', error);
+    logError('Failed to load URL: ' + error);
   });
 
   mainWindow.on('closed', () => {

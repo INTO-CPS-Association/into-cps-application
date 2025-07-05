@@ -11,7 +11,7 @@ export interface CosimulationAPI {
   on: (event: string, callback: (...args: unknown[]) => void) => void;
   off: (event: string, callback: (...args: unknown[]) => void) => void;
   getConfig: () => Promise<{ maestroJarPath: string; simulationConfigPath: string; cosimulationPath: string } | null>;
-  getSessionId: () => Promise<string | null>;
+  getLatestResultFolder: () => Promise<string | null>;
 }
 
 
@@ -25,8 +25,9 @@ export const cosimulationAPI: CosimulationAPI = {
   removeCoeResetListener: () => ipcRenderer.removeAllListeners('coe-reset'),
   on: (event, callback) => ipcRenderer.on(event, (_, ...args) => callback(...args)),
   off: (event, callback) => ipcRenderer.off(event, callback),
-  getSessionId: () => ipcRenderer.invoke('get-session-id'),
   getConfig: async () => ipcRenderer.invoke('get-config'),
+  getLatestResultFolder: () => ipcRenderer.invoke('get-latest-result-folder'),
+
 };
 
 contextBridge.exposeInMainWorld('cosimulationAPI', cosimulationAPI);

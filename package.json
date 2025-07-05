@@ -23,7 +23,8 @@
     "syntax": "npx eslint . --fix",
     "clean": "npx rimraf dist monocart-report release pkg test-results tkacest/coverage-reports && npm ci",
     "postinstall": "node ./scripts/installMaestro.js",
-    "test-e2e": "PLAYWRIGHT_TEST=true npm run build && PLAYWRIGHT_TEST=true playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "test:unit": "jest --config jest.config.ts"
   },
   "build": {
     "appId": "org.into-cps-association.into-cps-app",
@@ -32,7 +33,10 @@
     "electronVersion": "32.1.2",
     "files": [
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/playwright",
+      "!node_modules/playwright-core",
+      "!node_modules/**/playwright*/**"
     ],
     "directories": {
       "output": "release",
@@ -75,6 +79,7 @@
     "@types/node-fetch": "^2.6.12",
     "del": "^7.1.0",
     "dotenv": "^16.4.5",
+    "execa": "^9.5.3",
     "install": "^0.13.0",
     "monocart-coverage-reports": "^2.11.1",
     "net": "^1.0.2",
@@ -85,9 +90,11 @@
     "react-dom": "^18.3.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.0.1",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@chialab/esbuild-plugin-worker": "^0.18.1",
     "@eslint/js": "^9.14.0",
     "@playwright/test": "^1.48.2",
     "@testing-library/jest-dom": "^6.6.3",

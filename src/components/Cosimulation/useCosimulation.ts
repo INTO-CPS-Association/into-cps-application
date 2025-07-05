@@ -21,24 +21,14 @@ export const useCosimulation = () => {
 
       if (status === SimulationStatus.SimulationCompleted) {
         try {
-          const sessionId = await window?.cosimulationAPI?.getSessionId();
-          if (!sessionId) {
-            throw new Error('Session ID is not available.');
+          const latestResultPath = await window?.cosimulationAPI?.getLatestResultFolder();
+          if (!latestResultPath) {
+            throw new Error('No recent simulation result folder found.');
           }
-
-          const resultPath = await window?.cosimulationAPI?.maestro({
-            type: 'get-result',
-            data: { sessionId },
-          });
-
-          if (resultPath?.success) {
-            setResultsPath(resultPath.resultPath || null);
-          } else {
-            throw new Error(resultPath?.error || 'Failed to fetch simulation results.');
-          }
+          setResultsPath(latestResultPath);
         } catch (err) {
-          console.error('[useCosimulation] Error fetching simulation results:', err);
-          setError('Failed to fetch simulation results.');
+          console.error('[useCosimulation] Error getting results folder:', err);
+          setError('Failed to find simulation results.');
         }
       }
     };
