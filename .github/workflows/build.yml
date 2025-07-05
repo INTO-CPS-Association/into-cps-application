@@ -1,0 +1,47 @@
+name: Build INTO-CPS App
+
+on:
+  push:
+    branches:
+      - development
+      - snapshot/**
+      - gh-actions
+
+  pull_request:
+    branches:
+      - development
+      
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the app
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.os }}
+          path: |
+            release/*.AppImage
+            release/*.exe
+            release/*.msi
+            release/*.zip
+            release/*.dmg
+          if-no-files-found: ignore
