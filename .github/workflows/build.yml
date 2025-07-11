@@ -43,14 +43,20 @@ jobs:
         run: npm run test:unit
 
       - name: Install Playwright Browsers
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            npx playwright install --with-deps
-          else
-            npx playwright install
-          fi
+        if: runner.os == 'Linux'
+        run: npx playwright install --with-deps
 
-      - name: Run E2E tests on Electron app (non blocking)
+      - name: Install Playwright Browsers (Win/macOS)
+        if: runner.os != 'Linux'
+        run: npx playwright install
+
+      - name: Run E2E tests (Linux - non blocking)
+        continue-on-error: true
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:e2e || echo "E2E tests failed"
+
+      - name: Run E2E tests (Win/macOS - non blocking)
+        if: runner.os != 'Linux'
         continue-on-error: true
         run: npm run test:e2e
 
