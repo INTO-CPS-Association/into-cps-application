@@ -26,13 +26,33 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Clean Install
+        run: npm run clean
+      
+      - name: Lint code (non blocking)
+        continue-on-error: true
+        run: npm run syntax
 
       - name: Build the app
         run: npm run build -- --publish=never
+
+      - name: Run unit tests (non blocking)
+        continue-on-error: true
+        run: npm run test:unit
+
+      - name: Install Playwright Browsers
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            npx playwright install --with-deps
+          else
+            npx playwright install
+          fi
+
+      - name: Run E2E tests on Electron app (non blocking)
+        continue-on-error: true
+        run: npm run test:e2e
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -45,3 +65,4 @@ jobs:
             release/*.zip
             release/*.dmg
           if-no-files-found: ignore
+          retention-days: 1
