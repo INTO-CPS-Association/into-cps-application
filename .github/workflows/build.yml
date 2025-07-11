@@ -53,12 +53,12 @@ jobs:
       - name: Run E2E tests (Linux - non blocking)
         continue-on-error: true
         if: runner.os == 'Linux'
-        run: xvfb-run --auto-servernum playwright test || echo "E2E tests failed"
+        run: xvfb-run --auto-servernum npx playwright test || echo "E2E tests failed"
 
       - name: Run E2E tests (Win/macOS - non blocking)
         if: runner.os != 'Linux'
         continue-on-error: true
-        run: playwright test
+        run: npx playwright test
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
