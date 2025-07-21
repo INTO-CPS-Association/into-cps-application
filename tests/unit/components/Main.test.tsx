@@ -2,9 +2,11 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import Main from "../../../src/components/Main";
 
-jest.mock("../../../src/components/SimulationGuide", () => () => (
-  <div data-testid="simulation-guide">Mock Simulation Guide</div>
-));
+jest.mock("../../../src/components/SimulationGuide", () => {
+  const MockComponent = () => <div data-testid="simulation-guide">Mock Simulation Guide</div>;
+  MockComponent.displayName = 'MockSimulationGuide';
+  return MockComponent;
+});
 
 describe("Main component", () => {
   it("renders the welcome heading", () => {

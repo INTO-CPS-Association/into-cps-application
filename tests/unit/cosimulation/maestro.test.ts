@@ -6,7 +6,6 @@ import { SimulationStatus } from '../../../src/utils/constants/cosimulation/stat
 import * as configModule from '../../../src/utils/config';
 import { __setSimulationInProgress } from '../../../src/cosimulation/maestro';
 
-
 jest.mock('fs');
 jest.mock('path');
 jest.mock('../../../src/utils/execaWrapper', () => ({
@@ -40,7 +39,6 @@ describe('maestro.ts', () => {
     it('throws if maestroJarPath does not exist', () => {
       (fs.existsSync as jest.Mock).mockImplementation((p) => p !== '/mock/maestro.jar');
       expect(() => {
-        // @ts-ignore
         maestro['extractMaestroJar']('/mock/maestro.jar', '/tmp/maestro-temp.jar');
       }).toThrow();
     });
@@ -48,7 +46,6 @@ describe('maestro.ts', () => {
     it('copies JAR if not already copied', () => {
       (fs.existsSync as jest.Mock).mockReturnValueOnce(true).mockReturnValueOnce(false);
       (fs.copyFileSync as jest.Mock).mockImplementation(() => { });
-      // @ts-ignore
       maestro['extractMaestroJar']('/mock/maestro.jar', '/tmp/maestro-temp.jar');
       expect(fs.copyFileSync).toHaveBeenCalled();
     });
@@ -57,7 +54,6 @@ describe('maestro.ts', () => {
       (fs.existsSync as jest.Mock).mockReturnValueOnce(true).mockReturnValueOnce(false);
       (fs.copyFileSync as jest.Mock).mockImplementation(() => { throw new Error('fail'); });
       expect(() => {
-        // @ts-ignore
         maestro['extractMaestroJar']('/mock/maestro.jar', '/tmp/maestro-temp.jar');
       }).toThrow();
     });
@@ -72,17 +68,14 @@ describe('maestro.ts', () => {
     it('returns null if baseDir does not exist', () => {
       jest.spyOn(configModule, 'getConfig').mockReturnValue(mockConfig);
       (fs.existsSync as jest.Mock).mockReturnValue(false);
-    
       const result = maestro.getLatestSimulationFolder();
       expect(result).toBeNull();
     });
-
 
     it('returns null if no simulation folders found', () => {
       jest.spyOn(configModule, 'getConfig').mockReturnValue(mockConfig);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (fs.readdirSync as jest.Mock).mockReturnValue([]);
-    
       const result = maestro.getLatestSimulationFolder();
       expect(result).toBeNull();
     });
@@ -90,125 +83,112 @@ describe('maestro.ts', () => {
     it('returns the most recent folder', () => {
       jest.spyOn(configModule, 'getConfig').mockReturnValue(mockConfig);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-    
       const mockDirents = [
         { name: 'CoSimulation-1', isDirectory: () => true },
         { name: 'CoSimulation-2', isDirectory: () => true }
       ];
       (fs.readdirSync as jest.Mock).mockReturnValue(mockDirents);
-    
       const timestamps: Record<string, Date> = {
         '/mock/output/CoSimulation-1': new Date('2024-01-01'),
         '/mock/output/CoSimulation-2': new Date('2024-06-01'),
       };
-    
       (fs.statSync as jest.Mock).mockImplementation((path: string) => ({
         mtime: timestamps[path],
       }));
-    
       (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
-    
       const result = maestro.getLatestSimulationFolder();
       expect(result).toBe('/mock/output/CoSimulation-2');
     });
-    
   });
 
   describe('startSimulation', () => {
     beforeEach(() => {
       jest.spyOn(configModule, 'getConfig').mockReturnValue({ ...mockConfig });
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.mkdirSync as jest.Mock).mockImplementation(() => {});
-      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+      (fs.mkdirSync as jest.Mock).mockImplementation(() => { });
+      (fs.writeFileSync as jest.Mock).mockImplementation(() => { });
       (fs.createWriteStream as jest.Mock).mockReturnValue({
         write: jest.fn(),
         end: jest.fn(),
       });
-      (fs.renameSync as jest.Mock).mockImplementation(() => {});
+      (fs.renameSync as jest.Mock).mockImplementation(() => { });
     });
-  
+
     it('should return SimulationAlreadyInProgress', async () => {
       __setSimulationInProgress(true);
       const result = await maestro.startSimulation();
       expect(result.status).toBe(SimulationStatus.SimulationAlreadyInProgress);
       __setSimulationInProgress(false);
     });
-  
+
     it('should throw if config is missing', async () => {
       jest.spyOn(configModule, 'getConfig').mockReturnValue(null);
       const result = await maestro.startSimulation();
       expect(result.status).toBe(SimulationStatus.SimulationFailed);
     });
-  
+
     it('should throw if javaExecutable is not found', async () => {
-      jest.spyOn(configModule, 'getConfig').mockReturnValue(mockConfig);
-      const javaGetter = require('../../../src/utils/processes/maestroUtils');
-      const originalJavaGetter = javaGetter.getJavaCommand;
-      javaGetter.getJavaCommand = jest.fn(() => null);
-  
+      const { getJavaCommand } = await import('../../../src/utils/processes/maestroUtils');
+      (getJavaCommand as jest.Mock).mockReturnValue(null);
       const result = await maestro.startSimulation();
-  
       expect(result.success).toBe(false);
       expect(result.status).toBe(SimulationStatus.SimulationFailed);
-  
-      javaGetter.getJavaCommand = originalJavaGetter;
     });
-  
+
     it('should return success if simulation completes', async () => {
-      execaMock.mockReturnValue({
+      execaMock.mockResolvedValue({
         all: {
-          on: jest.fn((_, cb) => cb(Buffer.from('Simulation OK')))
+          on: jest.fn((event, cb) => {
+            if (event === 'data') cb(Buffer.from('Simulation Completed'));
+          }),
         },
-        exitCode: 0
+        exitCode: 0,
+        stdout: 'Simulation Completed.',
+        stderr: '',
       });
-  
       const result = await maestro.startSimulation();
+      console.log(result);
       expect(result.success).toBe(true);
       expect(result.status).toBe(SimulationStatus.SimulationCompleted);
     });
-  
+
     it('should return failure if simulation fails with exitCode', async () => {
-      execaMock.mockReturnValue({
+      execaMock.mockResolvedValue({
         all: {
-          on: jest.fn((_, cb) => cb(Buffer.from('Some error'))),
+          on: jest.fn((_, cb) => cb(Buffer.from('Simulation OK')))
         },
-        exitCode: 1,
+        exitCode: 1
       });
-  
       const result = await maestro.startSimulation();
       expect(result.success).toBe(false);
       expect(result.status).toBe(SimulationStatus.SimulationFailed);
     });
-  
+
     it('should handle non-Error exception object', async () => {
       jest.spyOn(configModule, 'getConfig').mockReturnValueOnce({ ...mockConfig });
       execaMock.mockImplementation(() => { throw 'string error'; });
-    
       const result = await maestro.startSimulation();
       expect(result.success).toBe(false);
       expect(result.status).toBe(SimulationStatus.SimulationFailed);
     });
 
     it('should log stderr errors', async () => {
-      execaMock.mockReturnValue({
+      execaMock.mockResolvedValue({
         all: {
-          on: jest.fn((_, cb) => cb(Buffer.from('ERROR: something bad')))
+          on: jest.fn((_, cb) => cb(Buffer.from('Simulation OK')))
         },
-        exitCode: 1,
+        exitCode: 1
       });
-  
       const result = await maestro.startSimulation();
       expect(result.success).toBe(false);
     });
-  
+
     it('should handle exception in simulation', async () => {
       jest.spyOn(configModule, 'getConfig').mockReturnValueOnce({ ...mockConfig });
       execaMock.mockImplementation(() => { throw new Error('Boom') });
-  
       const result = await maestro.startSimulation();
       expect(result.success).toBe(false);
       expect(result.status).toBe(SimulationStatus.SimulationFailed);
     });
   });
-  
 });

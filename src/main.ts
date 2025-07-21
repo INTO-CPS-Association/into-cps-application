@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { createWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
 import { getLatestSimulationFolder, startSimulation } from './cosimulation/maestro';
-import { MaestroResponse } from './types/global';
+import { MaestroResponse, NotificationType } from './types/global';
 import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
@@ -11,7 +11,7 @@ import fs from 'fs';
 
 export let mainWindow: BrowserWindow | null = null;
 
-const platform = (process as any).platform;
+const platform = process.platform as NodeJS.Platform;
 
 app.on('ready', () => {
   mainWindow = createWindow();
@@ -98,7 +98,7 @@ ipcMain.on('trigger-notification', (_, message: string, type) => {
   }
 });
 
-ipcMain.on('show-notification', (event, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+ipcMain.on('show-notification', (event, message: string, type: NotificationType) => {
   logInfo(`[Main] Sending notification to renderer: ${message} (${type})`);
   if (mainWindow?.webContents) {
     mainWindow.webContents.send('show-notification', message, type);

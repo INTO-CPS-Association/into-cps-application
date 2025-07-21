@@ -22,7 +22,7 @@
     "electron-start": "wait-on http://localhost:3000 && npx electron dist/main.js",
     "syntax": "npx eslint . --fix",
     "clean": "npx rimraf dist monocart-report release pkg test-results tkacest/coverage-reports && npm ci",
-    "postinstall": "node ./scripts/installMaestro.js",
+    "postinstall": "node ./scripts/installMaestro.mjs",
     "test:e2e": "npm run build && playwright test",
     "test:unit": "jest --config jest.config.ts"
   },

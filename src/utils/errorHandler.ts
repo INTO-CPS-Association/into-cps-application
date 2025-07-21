@@ -1,4 +1,6 @@
+import { NotificationType } from '../types/global';
 import { logError, logWarn } from '../utils/logger';
+import { ipcMain } from 'electron';
 
 /**
  * Handles errors in Electron based on process type.
@@ -22,7 +24,6 @@ export function handleError(error: unknown) {
     }
   } else if (process?.type === 'browser') {
     logError('[Error Main Process]: ' + message);
-    const { ipcMain } = require('electron');
     ipcMain.emit('trigger-error', null, message);
   } else {
     logWarn('[Error] Unknown process type.');
@@ -33,15 +34,14 @@ export function handleError(error: unknown) {
  * Sends a notification from Electron's main process to the renderer.
  *
  * @param message - The message to display in the notification.
- * @param type - The type of notification ('success', 'error', 'warning', 'info').
+ * @param type - The type of notification ('success', 'error', 'warning', 'info'), taken from NotificationType.
  */
-export function sendNotification(message: string, type: 'success' | 'error' | 'warning' | 'info') {
+export function sendNotification(message: string, type: NotificationType) {
   if (process?.type === 'renderer') {
     if (window?.electronAPI?.dispatchActionToMain) {
       window.electronAPI.dispatchActionToMain({ type: 'notification', payload: { message, type } });
     }
   } else if (process?.type === 'browser') {
-    const { ipcMain } = require('electron');
     ipcMain.emit('trigger-notification', null, message, type);
   } else {
     logWarn('[Notification] Unknown process type.');

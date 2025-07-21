@@ -6,6 +6,7 @@ import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosim
 import { getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
 import { getExeca } from '../utils/execaWrapper';
+import { getJavaCommand } from '../utils/processes/maestroUtils';
 
 const execa = getExeca();
 
@@ -32,7 +33,7 @@ export function extractMaestroJar(maestroJarPath: string, tempMaestroJarPath: st
     try {
       fs.copyFileSync(maestroJarPath, tempMaestroJarPath);
       logInfo(`Copied Maestro JAR to temp path: ${tempMaestroJarPath}`);
-    } catch (err) {
+    } catch {
       const errorMsg = 'Failed to copy Maestro JAR to temp path.';
       logError(errorMsg);
       throw new Error(errorMsg);
@@ -65,7 +66,7 @@ function getLatestSimulationFolder(): string | null {
 
 export { getLatestSimulationFolder };
 
-async function startSimulation(): Promise<SimulationResult> {
+async function tstartSimulation(): Promise<SimulationResult> {
   if (simulationInProgress) {
     logWarn('Simulation already in progress.');
     sendNotification('[Simulation] Simulation already in progress.', 'error');
@@ -112,7 +113,7 @@ async function startSimulation(): Promise<SimulationResult> {
       '-fsp', fmusPath
     ];
 
-    const javaExecutable = require('../utils/processes/maestroUtils').getJavaCommand();
+    const javaExecutable = getJavaCommand();
     if (!javaExecutable) {
       const errorMsg = 'Java not configured or not found in PATH.';
       logError(errorMsg);

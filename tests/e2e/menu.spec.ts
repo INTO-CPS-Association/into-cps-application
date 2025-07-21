@@ -52,7 +52,7 @@ test.describe("Menu Test", () => {
     });
 
     await helper.window!.evaluate(() => {
-      // @ts-ignore
+      // @ts-expect-error: mocking electronAPI in browser window context for test
       window.electronAPI.toggleDarkMode();
     });
 

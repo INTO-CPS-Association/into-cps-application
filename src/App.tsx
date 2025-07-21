@@ -37,7 +37,7 @@ const App: React.FC = () => {
 
     if (window.electronAPI) {
       window.electronAPI.addToggleDarkModeListener(handleToggleDarkMode);
-    } 
+    }
 
     return () => {
       if (window.electronAPI) {
@@ -47,27 +47,25 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleProjectSelected = (...args: unknown[]) => {
-      const selectedPath = args[0] as string;
+    const handleProjectSelected = () => {
     };
-  
+
     window.electronAPI?.on('project-selected', handleProjectSelected);
-  
+
     return () => {
       window.electronAPI?.off('project-selected', handleProjectSelected);
     };
   }, []);
 
-  
   useEffect(() => {
     const handleError = (errorMessage: string) => {
       console.error('[App] Error received:', errorMessage);
     };
-  
+
     if (window.electronAPI) {
       window.electronAPI.addErrorListener(handleError);
     }
-  
+
     return () => {
       if (window.electronAPI) {
         window.electronAPI.removeErrorListener();
@@ -82,26 +80,26 @@ const App: React.FC = () => {
         const response = await window?.cosimulationAPI?.maestro({
           type: 'start-simulation',
         });
-          if (!response?.success) {
-            const errorMessage = response?.error || 'Unknown error';
-            console.error('Simulation failed to start:', errorMessage);
-          
-            window.electronAPI?.sendNotification(errorMessage, 'error');
+        if (!response?.success) {
+          const errorMessage = response?.error || 'Unknown error';
+          console.error('Simulation failed to start:', errorMessage);
+
+          window.electronAPI?.sendNotification(errorMessage, 'error');
         }
       } catch (err) {
         console.error('Failed to start simulation due to technical error:', err);
 
         window.electronAPI?.sendNotification('Failed to start simulation due to technical error.', 'error');
-      } 
+      }
     };
-  
+
     window.electronAPI.on('menu-start-simulation', handleMenuStartSimulation);
-  
+
     return () => {
       window.electronAPI.off('menu-start-simulation', handleMenuStartSimulation);
     };
   }, []);
-  
+
   return (
     <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>
       <CssBaseline />
@@ -120,7 +118,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
-              </Routes>
+            </Routes>
           </Box>
         </Box>
         <ErrorSnackbar />

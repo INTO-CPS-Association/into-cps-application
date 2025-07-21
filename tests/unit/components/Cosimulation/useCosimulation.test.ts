@@ -8,7 +8,7 @@ describe("useCosimulation hook", () => {
   let resetCallback: (() => void) | undefined;
 
   beforeEach(() => {
-    // @ts-ignore
+    // @ts-expect-error: mocking global cosimulationAPI in test environment
     window.cosimulationAPI = {
       onSimulationStatus: jest.fn(cb => {
         statusCallback = cb;
@@ -21,7 +21,7 @@ describe("useCosimulation hook", () => {
       removeCoeErrorListener: jest.fn(),
     };
 
-    // @ts-ignore
+    // @ts-expect-error: mocking global electronAPI in test environment
     window.electronAPI = {
       on: jest.fn((event, cb) => {
         if (event === 'reset-simulation-state') {
@@ -80,7 +80,6 @@ describe("useCosimulation hook", () => {
   });
 
   it("handles missing results path gracefully", async () => {
-    // @ts-ignore
     window.cosimulationAPI.getLatestResultFolder = jest.fn().mockResolvedValue(null);
 
     const { result } = renderHook(() => useCosimulation());

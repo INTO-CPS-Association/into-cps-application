@@ -1,7 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const maestroConfig = require('../src/resources/maestro/maestro-version.json');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import { fileURLToPath } from 'url';
+import maestroConfig from '../src/resources/maestro/maestro-version.json' with { type: 'json' };
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const MAESTRO_VERSION = maestroConfig.version;
 const MAESTRO_JAR_URL = `https://repo1.maven.org/maven2/org/into-cps/maestro/maestro/${MAESTRO_VERSION}/maestro-${MAESTRO_VERSION}-jar-with-dependencies.jar`;

@@ -1,8 +1,5 @@
-let execaInstance: any;
+import { execa } from 'execa';
 
 export function getExeca() {
-  if (!execaInstance) {
-    execaInstance = require('execa');
-  }
-  return execaInstance.execa;
+  return execa;
 }
