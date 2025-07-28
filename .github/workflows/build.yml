@@ -27,15 +27,13 @@ jobs:
       - name: Clean Install
         run: npm run clean
       
-      - name: Lint code (non blocking)
-        continue-on-error: true
+      - name: Lint code
         run: npm run syntax
 
       - name: Build the app
         run: npm run build -- --publish=never
 
-      - name: Run unit tests (non blocking)
-        continue-on-error: true
+      - name: Run unit tests
         run: npm run test:unit
 
       - name: Install Playwright Browsers
