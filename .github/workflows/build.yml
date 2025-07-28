@@ -1,12 +1,6 @@
 name: Build INTO-CPS App
 
 on:
-  push:
-    branches:
-      - development
-      - snapshot/**
-      - gh-actions
-
   pull_request:
     branches:
       - development
