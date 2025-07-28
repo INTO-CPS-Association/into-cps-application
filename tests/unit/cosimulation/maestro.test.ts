@@ -1,22 +1,30 @@
 const execaMock = jest.fn();
 import fs from 'fs';
 import path from 'path';
-import * as maestro from '../../../src/cosimulation/maestro';
 import { SimulationStatus } from '../../../src/utils/constants/cosimulation/statuses';
 import * as configModule from '../../../src/utils/config';
-import { __setSimulationInProgress } from '../../../src/cosimulation/maestro';
 
 jest.mock('fs');
 jest.mock('path');
-jest.mock('../../../src/utils/execaWrapper', () => ({
-  getExeca: () => execaMock
-}));
 jest.mock('../../../src/utils/logger');
 jest.mock('../../../src/utils/errorHandler');
+jest.mock('../../../src/utils/execaWrapper', () => ({
+  getExeca: () => execaMock,
+}));
 jest.mock('../../../src/utils/processes/maestroUtils', () => ({
   getReadableTimestamp: jest.fn(() => '2024-06-01 12:00:00'),
-  getJavaCommand: jest.fn(() => 'java')
+  getJavaCommand: jest.fn(),
 }));
+
+import * as maestro from '../../../src/cosimulation/maestro';
+import { __setSimulationInProgress } from '../../../src/cosimulation/maestro';
+import * as maestroUtils from '../../../src/utils/processes/maestroUtils';
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  (maestroUtils.getJavaCommand as jest.Mock).mockReturnValue('java');
+});
+
 
 const mockConfig = {
   cosimulationPath: '/mock/cosim',

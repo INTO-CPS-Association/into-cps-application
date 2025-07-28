@@ -66,7 +66,7 @@ function getLatestSimulationFolder(): string | null {
 
 export { getLatestSimulationFolder };
 
-async function tstartSimulation(): Promise<SimulationResult> {
+async function startSimulation(): Promise<SimulationResult> {
   if (simulationInProgress) {
     logWarn('Simulation already in progress.');
     sendNotification('[Simulation] Simulation already in progress.', 'error');
