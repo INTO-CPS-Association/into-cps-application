@@ -6,9 +6,9 @@ export interface IElectronAPI {
   removeErrorListener: () => void;
   on: (event: string, callback: (...args: unknown[]) => void) => void;
   off: (event: string, callback: (...args: unknown[]) => void) => void;
-  addNotificationListener: (callback?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void) => void;
+  addNotificationListener: (callback?: (message: string, type: NotificationType) => void) => void;
   removeNotificationListener: () => void;
-  sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  sendNotification: (message: string, type: NotificationType) => void;
   readFile: (path: string) => Promise<string>;
   writeFile: (path: string, content: string) => Promise<void>;
 }
@@ -54,6 +54,8 @@ export interface MaestroResponse {
   resultPath?: string;
   error?: string;
 }
+
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
 declare global {
   interface Window {

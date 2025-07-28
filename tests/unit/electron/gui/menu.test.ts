@@ -42,26 +42,30 @@ describe('menu.ts', () => {
       canceled: false,
       filePaths: ['/mock/path'],
     });
-  
+
     (config.getConfig as jest.Mock).mockReturnValue({
       multiModels: 'multi.json',
     });
-  
+
     await createTopMenu(mockWindow);
     const fileMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][0];
     const chooseProjectItem = fileMenu.submenu?.find(
-      (item: any) => item.id === 'choose-project'
+      (item: { id: string }) => item.id === 'choose-project'
     );
-  
+
     if (!chooseProjectItem?.click) throw new Error('choose-project click missing');
-  
-    await chooseProjectItem.click({} as any, mockWindow, {} as any);
-  
+
+    await chooseProjectItem.click!(
+      {} as import('electron').MenuItem,
+      mockWindow,
+      {} as Electron.Event
+    );
+    
     expect(config.setProjectPath).toHaveBeenCalledWith('/mock/path');
     expect(mockSend).toHaveBeenCalledWith('project-selected', '/mock/path');
     expect(mockSend).toHaveBeenCalledWith('multi-model-path', 'multi.json');
     expect(Menu.setApplicationMenu).toHaveBeenCalled();
-  });  
+  });
 
   it('should update cosimulation menu by calling createTopMenu', () => {
     updateCosimulationMenu(mockWindow, true);
@@ -71,7 +75,7 @@ describe('menu.ts', () => {
   it('should toggle dark mode if webContents exists', async () => {
     createTopMenu(mockWindow);
     const viewMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][1];
-    const toggleItem = viewMenu.submenu?.find((item: any) => item.id === 'toggle-dark-mode');
+    const toggleItem = viewMenu.submenu?.find((item: { id: string }) => item.id === 'toggle-dark-mode');
     toggleItem.click();
     expect(mockSend).toHaveBeenCalledWith('toggle-dark-mode');
   });
@@ -79,10 +83,10 @@ describe('menu.ts', () => {
   it('should log error if mainWindow or webContents is missing (toggle-dark-mode)', () => {
     const brokenWindow = {} as unknown as BrowserWindow;
     createTopMenu(brokenWindow);
-  
+
     const viewMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][1];
-    const toggleItem = viewMenu.submenu?.find((item: any) => item.id === 'toggle-dark-mode');
-  
+    const toggleItem = viewMenu.submenu?.find((item: { id: string }) => item.id === 'toggle-dark-mode');
+
     toggleItem.click();
     expect(logError).toHaveBeenCalledWith('Main window or webContents is not available.');
   });
@@ -90,29 +94,19 @@ describe('menu.ts', () => {
   it('should toggle dev tools if mainWindow exists', () => {
     createTopMenu(mockWindow);
     const viewMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][1];
-    const devToolsItem = viewMenu.submenu?.find((item: any) => item.id === 'toggle-dev-tools');
-  
+    const devToolsItem = viewMenu.submenu?.find((item: { id: string }) => item.id === 'toggle-dev-tools');
+
     devToolsItem.click();
     expect(mockWindow.webContents.toggleDevTools).toHaveBeenCalled();
   });
 
   it('should send simulation event if webContents exists', () => {
-  createTopMenu(mockWindow);
-  const cosimMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][2];
-  const simItem = cosimMenu.submenu?.find((item: any) => item.id === 'start-simulation');
+    createTopMenu(mockWindow);
+    const cosimMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][2];
+    const simItem = cosimMenu.submenu?.find((item: { id: string }) => item.id === 'start-simulation');
 
-  simItem.click();
-  expect(mockSend).toHaveBeenCalledWith('menu-start-simulation');
-});
-
-// it('should log error if webContents is missing for start simulation', () => {
-//   const brokenWindow = {} as unknown as BrowserWindow;
-//   createTopMenu(brokenWindow);
-//   const cosimMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][2];
-//   const simItem = cosimMenu.submenu?.find((item: any) => item.id === 'start-simulation');
-
-//   simItem.click();
-//   expect(logError).toHaveBeenCalledWith('Main window or webContents is not available.');
-// });
+    simItem.click();
+    expect(mockSend).toHaveBeenCalledWith('menu-start-simulation');
+  });
 
 });

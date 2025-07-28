@@ -3,7 +3,7 @@ import { getConfig, setProjectPath } from '../../utils/config';
 import { logError } from '../../utils/logger';
 
 let cosimulationEnabled = false;
-const platform = (process as any).platform;
+const platform = process.platform as NodeJS.Platform;
 
 export function createTopMenu(mainWindow: BrowserWindow): void {
   const template: MenuItemConstructorOptions[] = [

@@ -2,15 +2,15 @@ import * as path from 'path';
 import { BrowserWindow, app } from 'electron';
 import { logInfo, logError } from '../../utils/logger';
 
-const isDev = (process as any).env.NODE_ENV === 'development';
+const isDev = (process.env.NODE_ENV ?? 'production') === 'development';
 
 const preloadPath = isDev
   ? path.resolve(__dirname, 'preload.js')
-  : path.resolve(app.getAppPath(), 'preload.js');
+  : path.resolve(app.getAppPath(), 'dist/preload.js');
 
 const startUrl = isDev
   ? 'http://localhost:3000'
-  : `file://${path.join(app.getAppPath(), 'index.html')}`;
+  : `file://${path.join(app.getAppPath(), 'dist', 'index.html')}`;
 
 const iconPath = isDev
   ? path.resolve(__dirname, 'resources/into-cps/appicon/into-cps-logo.png.ico')
