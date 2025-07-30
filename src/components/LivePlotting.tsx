@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { EChart } from './EChart';
-import get from 'lodash.get';
 
 type PlotData = { time: number; value: number };
+type DataMap = Record<string, PlotData[]>;
 
 const MAX_POINTS = 10000;
 const WEBSOCKET_URL = 'ws://localhost:8085';
 
 const LivePlotting: React.FC = () => {
-  const [data, setData] = useState<PlotData[]>([]);
+  const [data, setData] = useState<DataMap>({});
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
 
   function createWebSocketWithRetry(
@@ -54,29 +54,56 @@ const LivePlotting: React.FC = () => {
     return () => socket.close();
   }
 
+  function extractSignals(obj: any, prefix = ''): Record<string, number> {
+    const result: Record<string, number> = {};
+
+    for (const key in obj) {
+      const value = obj[key];
+      const path = prefix ? `${prefix}.${key}` : key;
+
+      if (typeof value === 'number') {
+        result[path] = value;
+      } else if (typeof value === 'boolean') {
+        result[path] = value ? 1 : 0;
+      } else if (typeof value === 'object' && value !== null) {
+        Object.assign(result, extractSignals(value, path));
+      }
+    }
+
+    return result;
+  }
+
   useEffect(() => {
     const cleanup = createWebSocketWithRetry(
       WEBSOCKET_URL,
       (event) => {
         try {
           const msg = JSON.parse(event.data);
-          const level = get(msg, 'data.{wt}.wtInstance.level');
+          const timestamp = msg.time * 1000;
+          const signals = extractSignals(msg.data);
 
-          if (typeof level === 'number') {
-            setData((prev) => {
-              const updated = [...prev, {
-                time: msg.time * 1000,
-                value: level,
-              }];
-              return updated.length > MAX_POINTS ? updated.slice(-MAX_POINTS) : updated;
-            });
-          }
+          setData((prev) => {
+            const updated: DataMap = { ...prev };
+
+            for (const key in signals) {
+              const value = signals[key];
+
+              if (!updated[key]) updated[key] = [];
+              updated[key].push({ time: timestamp, value });
+
+              if (updated[key].length > MAX_POINTS) {
+                updated[key] = updated[key].slice(-MAX_POINTS);
+              }
+            }
+
+            return updated;
+          });
         } catch (err) {
           console.warn(`[LivePlotting] Failed to parse or extract message: ${err}`);
         }
       },
-      () => {}, // onOpen
-      () => {}, // onError
+      () => { }, // onOpen
+      () => { }, // onError
       () => {
         setAutoZoomEnd(100);
       }
@@ -85,32 +112,30 @@ const LivePlotting: React.FC = () => {
     return cleanup;
   }, []);
 
-  const total = data.length;
+  const total = Object.values(data)[0]?.length || 0;
   const zoomRange = 100;
+  const timeLabels =
+    Object.values(data)[0]?.map((d) => new Date(d.time).toLocaleTimeString()) || [];
 
   const option = {
     tooltip: { trigger: 'axis' },
     xAxis: {
       type: 'category',
-      data: data.map((d) => new Date(d.time).toLocaleTimeString()),
+      data: timeLabels,
       name: 'Time',
     },
     yAxis: {
       type: 'value',
-      name: 'Level',
+      name: 'Value',
     },
-    series: [
-      {
-        name: 'Level',
-        type: 'line',
-        data: data.map((d) => d.value),
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          width: 2,
-        },
-      },
-    ],
+    series: Object.entries(data).map(([key, values]) => ({
+      name: key,
+      type: 'line',
+      data: values.map((d) => d.value),
+      smooth: true,
+      showSymbol: false,
+      lineStyle: { width: 2 },
+    })),
     grid: {
       top: 40,
       bottom: 80,
@@ -122,17 +147,15 @@ const LivePlotting: React.FC = () => {
       {
         type: 'slider',
         xAxisIndex: 0,
-        start: autoZoomEnd !== null
-          ? Math.max(0, 100 - (zoomRange / total) * 100)
-          : 0,
+        start:
+          autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0,
         end: 100,
       },
       {
         type: 'inside',
         xAxisIndex: 0,
-        start: autoZoomEnd !== null
-          ? Math.max(0, 100 - (zoomRange / total) * 100)
-          : 0,
+        start:
+          autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0,
         end: 100,
       },
     ],
