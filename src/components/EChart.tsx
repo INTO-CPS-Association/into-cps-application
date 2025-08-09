@@ -1,13 +1,13 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import { init, getInstanceByDom } from 'echarts';
+import { init, getInstanceByDom, ECharts, EChartsOption } from 'echarts';
 import { debounce } from 'lodash';
 
 type EChartProps = {
-  option: any;
-  chartSettings?: any;
-  optionSettings?: any;
+  option: EChartsOption;
+  chartSettings?: Parameters<typeof init>[2]; 
+  optionSettings?: Parameters<ECharts['setOption']>[1];
   style?: React.CSSProperties;
-  events?: Record<string, (params: any) => void>;
+  events?: Record<string, (params: unknown) => void>;
 };
 
 export const EChart: React.FC<EChartProps> = ({

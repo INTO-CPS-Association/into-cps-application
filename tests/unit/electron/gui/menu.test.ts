@@ -75,8 +75,9 @@ describe('menu.ts', () => {
   it('should toggle dark mode if webContents exists', async () => {
     createTopMenu(mockWindow);
     const viewMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][1];
-    const toggleItem = viewMenu.submenu?.find((item: any) => item.id === 'toggle-dark-mode');
-  
+    const toggleItem = viewMenu.submenu?.find(
+      (item: { id?: string }) => item.id === 'toggle-dark-mode'
+    );  
     toggleItem.click();
     expect(logError).toHaveBeenCalledWith('Main window or webContents is not available.');
   });

@@ -131,7 +131,7 @@ async function startSimulation(): Promise<SimulationResult> {
 
     const generatedGraphPath = path.join(simOutputDir, 'graph.html');
 
-    fs.watchFile(generatedGraphPath, (curr, prev) => {
+    fs.watchFile(generatedGraphPath, (curr) => {
       if (curr.size > 0) {
         try {
           fs.copyFileSync(generatedGraphPath, config.livePlotting);

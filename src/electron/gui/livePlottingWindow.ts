@@ -30,7 +30,6 @@ export function openGraphHtmlWindow() {
   });
 
   graphWindow.loadURL(startUrl);
-  graphWindow.webContents.openDevTools();
 
   graphWindow.on('closed', () => {
     graphWindow = null;

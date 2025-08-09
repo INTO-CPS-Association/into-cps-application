@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { EChart } from './EChart';
+import { EChartsOption } from 'echarts';
 
 type PlotData = { time: number; value: number };
 type DataMap = Record<string, PlotData[]>;
@@ -54,11 +55,12 @@ const LivePlotting: React.FC = () => {
     return () => socket.close();
   }
 
-  function extractSignals(obj: any, prefix = ''): Record<string, number> {
+  function extractSignals(obj: unknown, prefix = ''): Record<string, number> {
     const result: Record<string, number> = {};
+    if (typeof obj !== 'object' || obj === null) return result;
 
-    for (const key in obj) {
-      const value = obj[key];
+    for (const key in obj as Record<string, unknown>) {
+      const value = (obj as Record<string, unknown>)[key];
       const path = prefix ? `${prefix}.${key}` : key;
 
       if (typeof value === 'number') {
@@ -117,49 +119,26 @@ const LivePlotting: React.FC = () => {
   const timeLabels =
     Object.values(data)[0]?.map((d) => new Date(d.time).toLocaleTimeString()) || [];
 
-  const option = {
+  const option: EChartsOption = {
     tooltip: { trigger: 'axis' },
-    xAxis: {
-      type: 'category',
-      data: timeLabels,
-      name: 'Time',
-    },
-    yAxis: {
-      type: 'value',
-      name: 'Value',
-    },
+    xAxis: { type: 'category', data: timeLabels, name: 'Time' },
+    yAxis: { type: 'value', name: 'Value' },
     series: Object.entries(data).map(([key, values]) => ({
       name: key,
-      type: 'line',
+      type: 'line' as const,
       data: values.map((d) => d.value),
       smooth: true,
       showSymbol: false,
       lineStyle: { width: 2 },
     })),
-    grid: {
-      top: 40,
-      bottom: 80,
-      left: 50,
-      right: 30,
-    },
+    grid: { top: 40, bottom: 80, left: 50, right: 30 },
     animation: false,
     dataZoom: [
-      {
-        type: 'slider',
-        xAxisIndex: 0,
-        start:
-          autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0,
-        end: 100,
-      },
-      {
-        type: 'inside',
-        xAxisIndex: 0,
-        start:
-          autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0,
-        end: 100,
-      },
+      { type: 'slider' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
+      { type: 'inside' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
     ],
   };
+
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
