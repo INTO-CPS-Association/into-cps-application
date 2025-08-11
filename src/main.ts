@@ -6,7 +6,7 @@ import { MaestroResponse, NotificationType } from './types/global';
 import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
-import { openGraphHtmlWindow } from './electron/gui/livePlottingWindow';
+import { graphWindowManager } from './electron/gui/livePlottingWindow';
 
 import fs from 'fs';
 
@@ -121,5 +121,5 @@ ipcMain.handle('get-latest-result-folder', () => {
 });
 
 ipcMain.on('open-graph-window', () => {
-  openGraphHtmlWindow();
+  graphWindowManager.openGraphHtmlWindow();
 });
