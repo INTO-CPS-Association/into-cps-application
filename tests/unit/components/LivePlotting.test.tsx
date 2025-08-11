@@ -12,29 +12,30 @@ let wsOnClose: (() => void) | null = null;
 let wsOnError: (() => void) | null = null;
 
 class MockWebSocket {
-  constructor(url: string) {
-    setTimeout(() => {
-      wsOnOpen?.();
-    }, 0);
-  }
-  close = jest.fn();
-  send = jest.fn();
-  set onmessage(cb: (ev: MessageEvent) => void) {
-    wsOnMessage = cb;
-  }
-  set onopen(cb: () => void) {
-    wsOnOpen = cb;
-  }
-  set onclose(cb: () => void) {
-    wsOnClose = cb;
-  }
-  set onerror(cb: () => void) {
-    wsOnError = cb;
-  }
-}
+    constructor() {
+      setTimeout(() => {
+        wsOnOpen?.();
+      }, 0);
+    }
+    close = jest.fn();
+    send = jest.fn();
+    set onmessage(cb: (ev: MessageEvent) => void) {
+      wsOnMessage = cb;
+    }
+    set onopen(cb: () => void) {
+      wsOnOpen = cb;
+    }
+    set onclose(cb: () => void) {
+      wsOnClose = cb;
+    }
+    set onerror(cb: () => void) {
+      wsOnError = cb;
+    }
+  }  
+
+(global as unknown as { WebSocket: typeof WebSocket }).WebSocket = MockWebSocket as unknown as typeof WebSocket;
 
 beforeEach(() => {
-  (global as any).WebSocket = MockWebSocket;
   jest.clearAllMocks();
 });
 

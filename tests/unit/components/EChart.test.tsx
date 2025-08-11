@@ -25,10 +25,15 @@ const ResizeObserverMock = jest.fn((cb: () => void) => {
   };
 });
 
-(global as any).ResizeObserver = ResizeObserverMock;
+(global as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 
 describe('EChart component', () => {
-  let chartInstance: any;
+  let chartInstance: {
+    resize: jest.Mock;
+    dispose: jest.Mock;
+    setOption: jest.Mock;
+    on: jest.Mock;
+  };
 
   beforeEach(() => {
     chartInstance = {
@@ -74,17 +79,15 @@ describe('EChart component', () => {
   it('should call resize on ResizeObserver trigger', () => {
     jest.useFakeTimers();
     render(<EChart option={{}} />);
-    
+
     act(() => {
       resizeCallback();
-      jest.advanceTimersByTime(51); //debounce
+      jest.advanceTimersByTime(51); // debounce
     });
-  
+
     expect(mockResize).toHaveBeenCalled();
-  
     jest.useRealTimers();
   });
-  
 
   it('should dispose chart and disconnect observer on unmount', () => {
     const { unmount } = render(<EChart option={{}} />);

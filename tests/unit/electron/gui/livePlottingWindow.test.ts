@@ -1,4 +1,5 @@
 import { BrowserWindow } from 'electron';
+import type { BrowserWindow as ElectronBrowserWindow } from 'electron';
 import { graphWindowManager } from '../../../../src/electron/gui/livePlottingWindow';
 
 jest.mock('electron', () => {
@@ -16,8 +17,19 @@ jest.mock('path', () => ({
   join: jest.fn((...args) => args.join('/')),
 }));
 
+type MockBrowserWindow = {
+  isDestroyed: jest.Mock<boolean, []>;
+  isMinimized: jest.Mock<boolean, []>;
+  restore: jest.Mock<void, []>;
+  focus: jest.Mock<void, []>;
+  once: jest.Mock<void, [string, () => void]>;
+  loadURL: jest.Mock<void, [string]>;
+  on: jest.Mock<void, [string, () => void]>;
+  show: jest.Mock<void, []>;
+};
+
 describe('openGraphHtmlWindow', () => {
-  let mockBrowserWindowInstance: any;
+  let mockBrowserWindowInstance: MockBrowserWindow;
 
   beforeEach(() => {
     jest.resetModules();
@@ -42,7 +54,7 @@ describe('openGraphHtmlWindow', () => {
     mockBrowserWindowInstance.isDestroyed.mockReturnValue(false);
     mockBrowserWindowInstance.isMinimized.mockReturnValue(false);
 
-    graphWindowManager.graphWindow = mockBrowserWindowInstance;
+    graphWindowManager.graphWindow = mockBrowserWindowInstance as unknown as ElectronBrowserWindow;
 
     graphWindowManager.openGraphHtmlWindow();
 
@@ -55,7 +67,7 @@ describe('openGraphHtmlWindow', () => {
     mockBrowserWindowInstance.isDestroyed.mockReturnValue(false);
     mockBrowserWindowInstance.isMinimized.mockReturnValue(true);
 
-    graphWindowManager.graphWindow = mockBrowserWindowInstance;
+    graphWindowManager.graphWindow = mockBrowserWindowInstance as unknown as ElectronBrowserWindow;
 
     graphWindowManager.openGraphHtmlWindow();
 
@@ -102,12 +114,12 @@ describe('openGraphHtmlWindow', () => {
     graphWindowManager.openGraphHtmlWindow();
 
     const closedHandler = mockBrowserWindowInstance.on.mock.calls.find(
-      (call: [string, Function]) => call[0] === 'closed'
+      (call: [string, () => void]) => call[0] === 'closed'
     )?.[1];
 
     expect(closedHandler).toBeDefined();
 
-    closedHandler();
+    closedHandler?.();
 
     expect(graphWindowManager.graphWindow).toBeNull();
   });
@@ -118,12 +130,12 @@ describe('openGraphHtmlWindow', () => {
     graphWindowManager.openGraphHtmlWindow();
 
     const readyToShowHandler = mockBrowserWindowInstance.once.mock.calls.find(
-      (call: [string, Function]) => call[0] === 'ready-to-show'
+      (call: [string, () => void]) => call[0] === 'ready-to-show'
     )?.[1];
 
     expect(readyToShowHandler).toBeDefined();
 
-    readyToShowHandler();
+    readyToShowHandler?.();
 
     expect(mockBrowserWindowInstance.show).toHaveBeenCalled();
   });
