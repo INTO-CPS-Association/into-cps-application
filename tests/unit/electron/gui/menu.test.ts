@@ -60,7 +60,7 @@ describe('menu.ts', () => {
       mockWindow,
       {} as Electron.Event
     );
-    
+
     expect(config.setProjectPath).toHaveBeenCalledWith('/mock/path');
     expect(mockSend).toHaveBeenCalledWith('project-selected', '/mock/path');
     expect(mockSend).toHaveBeenCalledWith('multi-model-path', 'multi.json');
@@ -72,32 +72,51 @@ describe('menu.ts', () => {
     expect(Menu.setApplicationMenu).toHaveBeenCalled();
   });
 
-  it('should toggle dark mode if webContents exists', async () => {
-    createTopMenu(mockWindow);
+  it('should toggle dark mode if webContents exists', () => {
+    const mockSendDark = jest.fn();
+
+    const mockWindowWithSend = {
+      webContents: {
+        send: mockSendDark,
+      },
+    } as unknown as BrowserWindow;
+
+    createTopMenu(mockWindowWithSend);
+
     const viewMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][1];
-    const toggleItem = viewMenu.submenu?.find(
-      (item: { id?: string }) => item.id === 'toggle-dark-mode'
-    );  
+    const toggleItem = viewMenu.submenu?.find((item: { id?: string }) => item.id === 'toggle-dark-mode');
+
+    if (!toggleItem || !toggleItem.click) throw new Error('toggle-dark-mode item or click missing');
+
     toggleItem.click();
-    expect(logError).toHaveBeenCalledWith('Main window or webContents is not available.');
+
+    expect(mockSendDark).toHaveBeenCalledWith('toggle-dark-mode');
+    expect(logError).not.toHaveBeenCalled();
   });
 
   it('should toggle dev tools if mainWindow exists', () => {
     createTopMenu(mockWindow);
+
     const viewMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][1];
     const devToolsItem = viewMenu.submenu?.find((item: { id: string }) => item.id === 'toggle-dev-tools');
 
+    if (!devToolsItem || !devToolsItem.click) throw new Error('toggle-dev-tools item or click missing');
+
     devToolsItem.click();
+
     expect(mockWindow.webContents.toggleDevTools).toHaveBeenCalled();
   });
 
   it('should send simulation event if webContents exists', () => {
     createTopMenu(mockWindow);
+
     const cosimMenu = (Menu.buildFromTemplate as jest.Mock).mock.calls[0][0][2];
     const simItem = cosimMenu.submenu?.find((item: { id: string }) => item.id === 'start-simulation');
 
+    if (!simItem || !simItem.click) throw new Error('start-simulation item or click missing');
+
     simItem.click();
+
     expect(mockSend).toHaveBeenCalledWith('menu-start-simulation');
   });
-
 });
