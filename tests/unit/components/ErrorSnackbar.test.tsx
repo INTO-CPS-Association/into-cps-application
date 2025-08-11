@@ -1,17 +1,19 @@
 import React from 'react';
 import { render, screen, act, fireEvent, cleanup } from '@testing-library/react';
 import ErrorSnackbar from '../../../src/components/ErrorSnackbar';
+import type { IElectronAPI, NotificationType } from '../../../src/types/global'; 
 
 beforeEach(() => {
-  const mockElectronAPI = {
+  const mockElectronAPI: Partial<IElectronAPI> = {
     addErrorListener: jest.fn(),
     removeErrorListener: jest.fn(),
     addNotificationListener: jest.fn(),
     removeNotificationListener: jest.fn(),
   };
 
-  window.electronAPI = mockElectronAPI as any;
+  window.electronAPI = mockElectronAPI as IElectronAPI;
 });
+
 
 afterEach(() => {
   cleanup();
@@ -49,7 +51,7 @@ describe('ErrorSnackbar', () => {
   });
 
   it('displays a notification message with type "info"', () => {
-    let notifyCallback: ((msg: string, type: any) => void) | undefined;
+    let notifyCallback: ((msg: string, type: NotificationType) => void) | undefined;
 
     window.electronAPI.addNotificationListener = jest.fn(cb => {
       notifyCallback = cb;

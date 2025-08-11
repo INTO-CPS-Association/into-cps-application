@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { NotificationType } from '../types/global';
 
 export const electronAPI = {
   addToggleDarkModeListener: (callback: () => void) => ipcRenderer.on('toggle-dark-mode', callback),
@@ -22,9 +23,9 @@ export const electronAPI = {
   off: (event: string, callback: (...args: unknown[]) => void) => {
     ipcRenderer.off(event, callback);
   },
-  addNotificationListener: (callback?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void) => {
+  addNotificationListener: (callback?: (message: string, type: NotificationType) => void) => {
     if (callback && typeof callback === 'function') {
-      ipcRenderer.on('show-notification', (_, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+      ipcRenderer.on('show-notification', (_, message: string, type: NotificationType) => {
         console.log(`[Renderer] Received notification: ${message} (${type})`);
         callback(message, type);
       });
@@ -36,7 +37,7 @@ export const electronAPI = {
   removeNotificationListener: () => {
     ipcRenderer.removeAllListeners('show-notification');
   },
-  sendNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  sendNotification: (message: string, type: NotificationType) => {
     ipcRenderer.send('show-notification', message, type);
   },
   readFile: (path: string) => ipcRenderer.invoke('read-file', path),

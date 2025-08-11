@@ -20,7 +20,7 @@ export function getReadableTimestamp(): string {
 export function getJavaCommand(): string {
   
   try {
-    const platform = (process as any).platform;
+    const platform = process.platform as NodeJS.Platform;
     const cmd = platform === 'win32' ? 'where java' : 'which java';
     const output = execSync(cmd).toString().trim();
 
@@ -28,7 +28,7 @@ export function getJavaCommand(): string {
     const javaPath = output.split(/\r?\n/)[0];
 
     if (javaPath) return javaPath;
-  } catch (err) {
+  } catch {
     logWarn('[Maestro] Java not found in PATH:');
   }
 

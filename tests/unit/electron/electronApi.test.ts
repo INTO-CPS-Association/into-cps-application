@@ -44,9 +44,9 @@ describe("Electron API", () => {
     }
   });
 
-  it("does not add error listener without valid callback", () => {
+  it("does not add error listener without valid callback", async () => {
     const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
-    const { electronAPI } = require("../../../src/electron/electronApi");
+    const { electronAPI } = await import("../../../src/electron/electronApi");
     electronAPI.addErrorListener(undefined);
     expect(consoleWarnSpy).toHaveBeenCalledWith("[ElectronAPI] addErrorListener called without a valid callback");
     consoleWarnSpy.mockRestore();

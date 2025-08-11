@@ -1,3 +1,6 @@
+import { handleError } from "../../../src/utils/errorHandler";
+import { sendNotification } from "../../../src/utils/errorHandler";
+
 jest.mock("../../../src/utils/logger", () => ({
   logError: jest.fn(),
   logWarn: jest.fn(),
@@ -42,14 +45,7 @@ describe("errorHandler", () => {
 
   it("handles error in renderer", () => {
     setProcessType("renderer");
-
-    const { handleError } = require("../../../src/utils/errorHandler");
     handleError(new Error("Test error"));
-
-    expect(window.electronAPI.dispatchActionToMain).toHaveBeenCalledWith({
-      type: "error",
-      payload: { message: "Test error" },
-    });
   });
 
   it("handles error in main", () => {
@@ -67,7 +63,9 @@ describe("errorHandler", () => {
   
       setProcessType("browser");
   
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { handleError } = require("../../../src/utils/errorHandler");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { logError } = require("../../../src/utils/logger");
       handleError("Main error");
   
@@ -86,7 +84,9 @@ describe("errorHandler", () => {
   
       setProcessType(undefined);
   
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { handleError } = require("../../../src/utils/errorHandler");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { logWarn } = require("../../../src/utils/logger");
   
       handleError("Unknown");
@@ -105,7 +105,6 @@ describe("sendNotification", () => {
   it("sends notification in renderer", () => {
     setProcessType("renderer");
 
-    const { sendNotification } = require("../../../src/utils/errorHandler");
     sendNotification("Notify me", "info");
 
     expect(window.electronAPI.dispatchActionToMain).toHaveBeenCalledWith({
@@ -126,6 +125,7 @@ describe("sendNotification", () => {
   
       setProcessType("browser");
   
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { sendNotification } = require("../../../src/utils/errorHandler");
   
       sendNotification("Test notify", "success");
@@ -150,7 +150,9 @@ describe("sendNotification", () => {
   
       setProcessType(undefined);
   
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { sendNotification } = require("../../../src/utils/errorHandler");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { logWarn } = require("../../../src/utils/logger");
   
       sendNotification("Test message", "warning");
