@@ -12,7 +12,6 @@ import LivePlotting from './components/LivePlotting';
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
   const location = useLocation();
   const isSidebarHidden = location.pathname === '/live-plotting';
 

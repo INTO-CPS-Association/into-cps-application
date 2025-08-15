@@ -7,18 +7,36 @@ import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
 import { graphWindowManager } from './electron/gui/livePlottingWindow';
-
+import { nativeTheme } from 'electron';
+import { registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
 import fs from 'fs';
 
 export let mainWindow: BrowserWindow | null = null;
+let darkMode = nativeTheme.shouldUseDarkColors;
 
 const platform = process.platform as NodeJS.Platform;
 
 app.on('ready', () => {
   mainWindow = createWindow();
+  registerMainWindow(mainWindow);
+
   mainWindow.once('ready-to-show', () => {
     createTopMenu(mainWindow!);
   });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    sendDarkModeUpdate(darkMode);
+  });
+});
+
+ipcMain.on('toggle-dark-mode', () => {
+  darkMode = !darkMode;
+  sendDarkModeUpdate(darkMode);
+});
+
+nativeTheme.on('updated', () => {
+  darkMode = nativeTheme.shouldUseDarkColors;
+  sendDarkModeUpdate(darkMode);
 });
 
 app.on('activate', () => {
@@ -32,12 +50,6 @@ app.on('activate', () => {
 
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') app.quit();
-});
-
-ipcMain.on('toggle-dark-mode', () => {
-  if (mainWindow?.webContents) {
-    mainWindow.webContents.send('toggle-dark-mode');
-  }
 });
 
 let startSimulationRunning = false;
@@ -121,5 +133,8 @@ ipcMain.handle('get-latest-result-folder', () => {
 });
 
 ipcMain.on('open-graph-window', () => {
-  graphWindowManager.openGraphHtmlWindow();
+  graphWindowManager.openGraphHtmlWindow(darkMode);
+  // graphWindowManager.graphWindow?.webContents.once('did-finish-load', () => {
+  //   graphWindowManager.graphWindow?.webContents.send('dark-mode-update', darkMode);
+  // });
 });

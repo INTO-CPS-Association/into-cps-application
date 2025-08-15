@@ -7,11 +7,33 @@ type DataMap = Record<string, PlotData[]>;
 
 const MAX_POINTS = 10000;
 const WEBSOCKET_URL = 'ws://localhost:8085';
-
 const LivePlotting: React.FC = () => {
   const [data, setData] = useState<DataMap>({});
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
 
+  useEffect(() => {
+
+    const handleToggle = () => {
+      setDarkMode(prev => {
+        return !prev;
+      });
+    };
+  
+    const handleDarkModeUpdate = (...args: unknown[]) => {
+      const isDark = args[0] as boolean;
+      setDarkMode(isDark);
+    };
+      
+    window.electronAPI?.on('toggle-dark-mode', handleToggle);
+    window.electronAPI?.on('dark-mode-update', handleDarkModeUpdate);
+  
+    return () => {
+      window.electronAPI?.off('toggle-dark-mode', handleToggle);
+      window.electronAPI?.off('dark-mode-update', handleDarkModeUpdate);
+    };
+  }, []);
+  
   function createWebSocketWithRetry(
     url: string,
     onMessage: (event: MessageEvent) => void,
@@ -119,30 +141,50 @@ const LivePlotting: React.FC = () => {
   const timeLabels =
     Object.values(data)[0]?.map((d) => new Date(d.time).toLocaleTimeString()) || [];
 
-  const option: EChartsOption = {
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: timeLabels, name: 'Time' },
-    yAxis: { type: 'value', name: 'Value' },
-    series: Object.entries(data).map(([key, values]) => ({
-      name: key,
-      type: 'line' as const,
-      data: values.map((d) => d.value),
-      smooth: true,
-      showSymbol: false,
-      lineStyle: { width: 2 },
-    })),
-    grid: { top: 40, bottom: 80, left: 50, right: 30 },
-    animation: false,
-    dataZoom: [
-      { type: 'slider' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
-      { type: 'inside' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
-    ],
-  };
-
+  function getChartOption(data: DataMap, darkMode: boolean): EChartsOption {
+    const option: EChartsOption = {
+      backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
+      textStyle: {
+        color: darkMode ? '#ffffff' : '#000000',
+      },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: darkMode ? '#333' : '#fff',
+        textStyle: { color: darkMode ? '#fff' : '#000' }
+      },
+      xAxis: {
+        type: 'category', data: timeLabels,
+        name: 'Time',
+        axisLine: { lineStyle: { color: darkMode ? '#aaa' : '#333' } },
+        axisLabel: { color: darkMode ? '#aaa' : '#333' },
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Value',
+        axisLine: { lineStyle: { color: darkMode ? '#aaa' : '#333' } },
+        axisLabel: { color: darkMode ? '#aaa' : '#333' },
+      },
+      series: Object.entries(data).map(([key, values]) => ({
+        name: key,
+        type: 'line' as const,
+        data: values.map((d) => d.value),
+        smooth: true,
+        showSymbol: false,
+        lineStyle: { width: 2 },
+      })),
+      grid: { top: 40, bottom: 80, left: 50, right: 30 },
+      animation: false,
+      dataZoom: [
+        { type: 'slider' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
+        { type: 'inside' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
+      ],
+    };
+    return option;
+  }
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <EChart option={option} style={{ width: '100%', height: '100%' }} />
+      <EChart option={getChartOption(data, darkMode)} style={{ width: '100%', height: '100%' }} />
     </div>
   );
 };
