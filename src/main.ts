@@ -8,7 +8,7 @@ import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
 import { graphWindowManager } from './electron/gui/livePlottingWindow';
 import { nativeTheme } from 'electron';
-import { registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
+import { getCurrentDarkMode, registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
 import fs from 'fs';
 
 export let mainWindow: BrowserWindow | null = null;
@@ -22,10 +22,13 @@ app.on('ready', () => {
 
   mainWindow.once('ready-to-show', () => {
     createTopMenu(mainWindow!);
+    sendDarkModeUpdate(darkMode);
   });
 
   mainWindow.webContents.on('did-finish-load', () => {
-    sendDarkModeUpdate(darkMode);
+    setTimeout(() => {
+      sendDarkModeUpdate(darkMode);
+    }, 100); // Small delay to ensure renderer is ready
   });
 });
 
@@ -34,8 +37,20 @@ ipcMain.on('toggle-dark-mode', () => {
   sendDarkModeUpdate(darkMode);
 });
 
+ipcMain.on('update-dark-mode', (_event, isDark: boolean) => {
+  darkMode = isDark;
+  sendDarkModeUpdate(isDark);
+});
+
+ipcMain.handle('get-dark-mode', () => {
+  console.log('[Main] get-dark-mode called, returning:', darkMode);
+  return darkMode;
+});
+
 nativeTheme.on('updated', () => {
-  darkMode = nativeTheme.shouldUseDarkColors;
+  const systemDarkMode = nativeTheme.shouldUseDarkColors;
+  console.log('[Main] System theme updated to:', systemDarkMode);
+  darkMode = systemDarkMode;
   sendDarkModeUpdate(darkMode);
 });
 
@@ -44,6 +59,7 @@ app.on('activate', () => {
     mainWindow = createWindow();
     mainWindow.once('ready-to-show', () => {
       createTopMenu(mainWindow!);
+      sendDarkModeUpdate(darkMode);
     });
   }
 });
@@ -133,5 +149,5 @@ ipcMain.handle('get-latest-result-folder', () => {
 });
 
 ipcMain.on('open-graph-window', () => {
-  graphWindowManager.openGraphHtmlWindow(darkMode);
+  graphWindowManager.openGraphHtmlWindow(getCurrentDarkMode());
 });

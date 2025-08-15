@@ -18,6 +18,9 @@ class GraphWindowManager {
       this._graphWindow.focus();
       if (currentDarkMode !== undefined) {
         this._graphWindow.webContents.send('dark-mode-update', currentDarkMode);
+        setTimeout(() => {
+          this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
+        }, 100);
       }
       return;
     }
@@ -35,6 +38,7 @@ class GraphWindowManager {
       width: 900,
       height: 700,
       autoHideMenuBar: true,
+      backgroundColor: currentDarkMode ? '#1e1e1e' : '#ffffff',
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -42,14 +46,32 @@ class GraphWindowManager {
       },
     });
 
+    // Send dark mode update multiple times to ensure synchronization
     if (currentDarkMode !== undefined) {
-      this._graphWindow.webContents.once('did-finish-load', () => {
+      this._graphWindow.webContents.on('dom-ready', () => {
+        console.log('[GraphWindow] DOM ready, sending dark mode:', currentDarkMode);
         this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
+      });
+
+      this._graphWindow.webContents.once('did-finish-load', () => {
+        console.log('[GraphWindow] Page loaded, sending dark mode:', currentDarkMode);
+        this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
+        
+        setTimeout(() => {
+          console.log('[GraphWindow] Delayed dark mode update:', currentDarkMode);
+          this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
+        }, 200);
       });
     }
 
     this._graphWindow.once('ready-to-show', () => {
       this._graphWindow?.show();
+      if (currentDarkMode !== undefined) {
+        setTimeout(() => {
+          console.log('[GraphWindow] Window shown, final dark mode update:', currentDarkMode);
+          this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
+        }, 300);
+      }
     });
 
     this._graphWindow.loadURL(startUrl);

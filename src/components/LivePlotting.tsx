@@ -7,17 +7,29 @@ type DataMap = Record<string, PlotData[]>;
 
 const MAX_POINTS = 10000;
 const WEBSOCKET_URL = 'ws://localhost:8085';
+
 const LivePlotting: React.FC = () => {
   const [data, setData] = useState<DataMap>({});
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  // Initialize with null to indicate we haven't loaded the initial state yet
+  const [darkMode, setDarkMode] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Fetch initial dark mode state from main process
+    const initializeDarkMode = async () => {
+      try {
+        const initialDarkMode = await window.electronAPI?.getDarkMode();
+        setDarkMode(initialDarkMode ?? false);
+      } catch (error) {
+        console.error('Failed to get initial dark mode:', error);
+        setDarkMode(false); // Fallback to light mode
+      }
+    };
+
+    initializeDarkMode();
 
     const handleToggle = () => {
-      setDarkMode(prev => {
-        return !prev;
-      });
+      setDarkMode(prev => !prev);
     };
   
     const handleDarkModeUpdate = (...args: unknown[]) => {
@@ -182,8 +194,29 @@ const LivePlotting: React.FC = () => {
     return option;
   }
 
+  // Don't render chart until we have the initial dark mode state
+  if (darkMode === null) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: '#1e1e1e', // Use dark background while loading
+        color: '#ffffff'
+      }}>
+        Loading chart...
+      </div>
+    );
+  }
+
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ 
+      width: '100%', 
+      height: '100%',
+      backgroundColor: darkMode ? '#1e1e1e' : '#ffffff'
+    }}>
       <EChart option={getChartOption(data, darkMode)} style={{ width: '100%', height: '100%' }} />
     </div>
   );

@@ -1,4 +1,6 @@
 export interface IElectronAPI {
+  updateDarkMode(newValue: boolean): unknown;
+  getDarkMode: () => Promise<boolean>;
   dispatchActionToMain: (action: unknown) => void;
   addToggleDarkModeListener: (callback: () => void) => void;
   removeToggleDarkModeListener: () => void;

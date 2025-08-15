@@ -10,13 +10,28 @@ import { styleConstants } from './utils/constants';
 import LivePlotting from './components/LivePlotting';
 
 const App: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  // Initialize with null to indicate we haven't loaded the initial state yet
+  const [darkMode, setDarkMode] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const isSidebarHidden = location.pathname === '/live-plotting';
 
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  // Fetch initial dark mode state from main process
+  useEffect(() => {
+    const initializeDarkMode = async () => {
+      try {
+        const initialDarkMode = await window.electronAPI?.getDarkMode();
+        setDarkMode(initialDarkMode ?? false);
+      } catch (error) {
+        console.error('Failed to get initial dark mode:', error);
+        setDarkMode(false); // Fallback to light mode
+      }
+    };
+
+    initializeDarkMode();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -34,17 +49,25 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleToggleDarkMode = () => {
-      toggleDarkMode();
+      setDarkMode((prev) => {
+        const newValue = !prev;
+        window.electronAPI?.updateDarkMode(newValue);
+        return newValue;
+      });
     };
 
-    if (window.electronAPI) {
-      window.electronAPI.addToggleDarkModeListener(handleToggleDarkMode);
-    }
+    // Listen for dark mode updates from main process
+    const handleDarkModeUpdate = (...args: unknown[]) => {
+      const isDark = args[0] as boolean;
+      setDarkMode(isDark);
+    };
+
+    window.electronAPI?.addToggleDarkModeListener(handleToggleDarkMode);
+    window.electronAPI?.on('dark-mode-update', handleDarkModeUpdate);
 
     return () => {
-      if (window.electronAPI) {
-        window.electronAPI.removeToggleDarkModeListener();
-      }
+      window.electronAPI?.removeToggleDarkModeListener();
+      window.electronAPI?.off('dark-mode-update', handleDarkModeUpdate);
     };
   }, []);
 
@@ -77,7 +100,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleMenuStartSimulation = async () => {
-
       try {
         const response = await window?.cosimulationAPI?.maestro({
           type: 'start-simulation',
@@ -85,12 +107,10 @@ const App: React.FC = () => {
         if (!response?.success) {
           const errorMessage = response?.error || 'Unknown error';
           console.error('Simulation failed to start:', errorMessage);
-
           window.electronAPI?.sendNotification(errorMessage, 'error');
         }
       } catch (err) {
         console.error('Failed to start simulation due to technical error:', err);
-
         window.electronAPI?.sendNotification('Failed to start simulation due to technical error.', 'error');
       }
     };
@@ -104,28 +124,46 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Don't render until we have the initial dark mode state
+  if (darkMode === null) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          backgroundColor: '#1e1e1e', // Use dark background while loading
+          color: '#ffffff'
+        }}
+      >
+        Loading...
+      </Box>
+    );
+  }
+
   return (
-    <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
-        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-          {!isSidebarHidden && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />}
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: 3,
-              transition: `margin-left ${styleConstants.TRANSITION_DURATION} ease`,
-              marginLeft: `-10px`,
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Main />} />
-              <Route path="/cosimulation" element={<CoSimulation />} />
-              <Route path="/live-plotting" element={<LivePlotting />} />
-            </Routes>
-          </Box>
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        {!isSidebarHidden && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            transition: `margin-left ${styleConstants.TRANSITION_DURATION} ease`,
+            marginLeft: `-10px`,
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Main />} />
+            <Route path="/cosimulation" element={<CoSimulation />} />
+            <Route path="/live-plotting" element={<LivePlotting />} />
+          </Routes>
         </Box>
-        <ErrorSnackbar />
+      </Box>
+      <ErrorSnackbar />
     </ThemeProvider>
   );
 };
