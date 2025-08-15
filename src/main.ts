@@ -134,7 +134,4 @@ ipcMain.handle('get-latest-result-folder', () => {
 
 ipcMain.on('open-graph-window', () => {
   graphWindowManager.openGraphHtmlWindow(darkMode);
-  // graphWindowManager.graphWindow?.webContents.once('did-finish-load', () => {
-  //   graphWindowManager.graphWindow?.webContents.send('dark-mode-update', darkMode);
-  // });
 });
