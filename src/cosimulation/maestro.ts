@@ -6,6 +6,7 @@ import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosim
 import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
 import { getExeca } from '../utils/execaWrapper';
+import { ipcMain } from 'electron';
 
 const execa = getExeca();
 import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
@@ -18,8 +19,19 @@ export type SimulationResult = {
   status: SimulationStatusType;
 };
 
+// Helper function to update simulation status
+function updateSimulationStatus(status: SimulationStatusType) {
+  console.log('[Maestro] Updating simulation status to:', status);
+  ipcMain.emit('simulation-status-update', null, status);
+}
+
 export function __setSimulationInProgress(value: boolean) {
   simulationInProgress = value;
+  if (value) {
+    updateSimulationStatus(SimulationStatus.StartingSimulation);
+  } else {
+    updateSimulationStatus(SimulationStatus.Idle);
+  }
 }
 
 export function extractMaestroJar(maestroJarPath: string, tempMaestroJarPath: string): void {
@@ -62,19 +74,24 @@ function getLatestSimulationFolder(): string | null {
     .sort((a, b) => b.timestamp - a.timestamp);
 
   return folders[0]?.fullPath || null;
-  }
+}
 export { getLatestSimulationFolder };
 
 let graphWindowOpened = false;
 
 async function startSimulation(): Promise<SimulationResult> {
+  console.log('[Maestro] startSimulation called, simulationInProgress:', simulationInProgress);
+  
   if (simulationInProgress) {
+    const errorMsg = SimulationStatus.SimulationAlreadyInProgress;
     logWarn('Simulation already in progress.');
-    sendNotification('[Simulation] Simulation already in progress.', 'error');
-    return { success: false, error: SimulationStatus.SimulationAlreadyInProgress, status: SimulationStatus.SimulationAlreadyInProgress };
+    sendNotification('[Simulation] Simulation already in progress.', 'warning');
+    return { success: false, error: errorMsg, status: errorMsg };
   }
 
   simulationInProgress = true;
+  updateSimulationStatus(SimulationStatus.StartingSimulation);
+  
   let simLogStream: fs.WriteStream | null = null;
 
   try {
@@ -87,6 +104,8 @@ async function startSimulation(): Promise<SimulationResult> {
 
     const { simulationConfigPath, multiModels, fmusPath, maestroJarPath, tempMaestroJarPath, outputPath } = config;
 
+    updateSimulationStatus(SimulationStatus.StartingSimulation);
+    
     extractMaestroJar(maestroJarPath, tempMaestroJarPath);
 
     const timestamp = getReadableTimestamp().replace(/[: ]/g, '-');
@@ -127,6 +146,8 @@ async function startSimulation(): Promise<SimulationResult> {
       graphWindowOpened = true;
     }
     
+    updateSimulationStatus(SimulationStatus.Started);
+    
     const subprocess = execa(javaExecutable, args, { all: true });
 
     const generatedGraphPath = path.join(simOutputDir, 'graph.html');
@@ -137,15 +158,23 @@ async function startSimulation(): Promise<SimulationResult> {
           fs.copyFileSync(generatedGraphPath, config.livePlotting);
           fs.unwatchFile(generatedGraphPath);
           sendGraphWindowOpen();
-
+          updateSimulationStatus(SimulationStatus.Simulating);
         } catch (err) {
           sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error');
         }
       }
     });
 
+    let hasStartedSimulating = false;
+    
     subprocess.all?.on('data', (chunk: Buffer) => {
       const msg = chunk.toString();
+      
+      if (!hasStartedSimulating && (msg.includes('Starting simulation') || msg.includes('Running simulation'))) {
+        updateSimulationStatus(SimulationStatus.Simulating);
+        hasStartedSimulating = true;
+      }
+      
       if (msg.includes('ERROR') || msg.includes('Error')) {
         logError(`[CLI STDERR]: ${msg.trim()}`);
       } else {
@@ -172,11 +201,23 @@ async function startSimulation(): Promise<SimulationResult> {
     if (exitCode === 0) {
       logInfo('Simulation completed successfully.');
       sendNotification('[Simulation] Completed successfully.', 'success');
+      updateSimulationStatus(SimulationStatus.SimulationCompleted);
+      
+      setTimeout(() => {
+        updateSimulationStatus(SimulationStatus.Idle);
+      }, 3000);
+      
       return { success: true, status: SimulationStatus.SimulationCompleted };
     } else {
       const errorMsg = `Simulation failed with exit code ${exitCode}`;
       logError(errorMsg);
       sendNotification(`[Simulation Error]: ${errorMsg}`, 'error');
+      updateSimulationStatus(SimulationStatus.SimulationFailed);
+      
+      setTimeout(() => {
+        updateSimulationStatus(SimulationStatus.Idle);
+      }, 3000);
+      
       return { success: false, error: errorMsg, status: SimulationStatus.SimulationFailed };
     }
 
@@ -187,6 +228,13 @@ async function startSimulation(): Promise<SimulationResult> {
     sendNotification(`[Simulation Error]: ${errMsg}`, 'error');
     simulationInProgress = false;
     simLogStream?.end();
+    
+    updateSimulationStatus(SimulationStatus.SimulationFailed);
+    
+    setTimeout(() => {
+      updateSimulationStatus(SimulationStatus.Idle);
+    }, 3000);
+    
     return { success: false, error: errMsg, status: SimulationStatus.SimulationFailed };
   }
 }

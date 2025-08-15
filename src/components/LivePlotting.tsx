@@ -11,8 +11,8 @@ const WEBSOCKET_URL = 'ws://localhost:8085';
 const LivePlotting: React.FC = () => {
   const [data, setData] = useState<DataMap>({});
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
-  // Initialize with null to indicate we haven't loaded the initial state yet
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
+  const effectiveDarkMode = darkMode ?? false;
 
   useEffect(() => {
     // Fetch initial dark mode state from main process
@@ -194,30 +194,13 @@ const LivePlotting: React.FC = () => {
     return option;
   }
 
-  // Don't render chart until we have the initial dark mode state
-  if (darkMode === null) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        backgroundColor: '#1e1e1e', // Use dark background while loading
-        color: '#ffffff'
-      }}>
-        Loading chart...
-      </div>
-    );
-  }
-
   return (
     <div style={{ 
       width: '100%', 
       height: '100%',
       backgroundColor: darkMode ? '#1e1e1e' : '#ffffff'
     }}>
-      <EChart option={getChartOption(data, darkMode)} style={{ width: '100%', height: '100%' }} />
+      <EChart option={getChartOption(data, effectiveDarkMode)} style={{ width: '100%', height: '100%' }} />
     </div>
   );
 };

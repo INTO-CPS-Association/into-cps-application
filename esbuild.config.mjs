@@ -65,14 +65,14 @@ function copyStaticFiles() {
 
   if (!fs.existsSync(distPath)) fs.mkdirSync(distPath, { recursive: true });
 
-  // Copy index.html
-  const sourceHtmlPath = path.join(publicPath, 'index.html');
-  const destHtmlPath = path.join(distPath, 'index.html');
-  fs.copyFileSync(sourceHtmlPath, destHtmlPath);
+   // Copy index.html
+   fs.copyFileSync(path.join(publicPath, 'index.html'), path.join(distPath, 'index.html'));
 
-  // Copy resources folder
-  const destResourcesPath = path.join(distPath, 'resources');
-  copyRecursiveSync(resourcesPath, destResourcesPath);
+   // Copy resources folder
+   copyRecursiveSync(resourcesPath, path.join(distPath, 'resources'));
+ 
+   // Copy preload.js
+   fs.copyFileSync('dist/preload.js', path.join(distPath, 'preload.js'));
 }
 
 // Recursive function to copy files and directories

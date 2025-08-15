@@ -16,6 +16,16 @@ let darkMode = nativeTheme.shouldUseDarkColors;
 
 const platform = process.platform as NodeJS.Platform;
 
+// Helper function to send simulation status to all windows
+function broadcastSimulationStatus(status: string) {
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('simulation-status', status);
+  }
+  if (graphWindowManager.graphWindow?.webContents) {
+    graphWindowManager.graphWindow.webContents.send('simulation-status', status);
+  }
+}
+
 app.on('ready', () => {
   mainWindow = createWindow();
   registerMainWindow(mainWindow);
@@ -23,12 +33,14 @@ app.on('ready', () => {
   mainWindow.once('ready-to-show', () => {
     createTopMenu(mainWindow!);
     sendDarkModeUpdate(darkMode);
+    broadcastSimulationStatus(SimulationStatus.Idle);
   });
 
   mainWindow.webContents.on('did-finish-load', () => {
     setTimeout(() => {
       sendDarkModeUpdate(darkMode);
-    }, 100); // Small delay to ensure renderer is ready
+      broadcastSimulationStatus(SimulationStatus.Idle);
+    }, 100);
   });
 });
 
@@ -43,13 +55,11 @@ ipcMain.on('update-dark-mode', (_event, isDark: boolean) => {
 });
 
 ipcMain.handle('get-dark-mode', () => {
-  console.log('[Main] get-dark-mode called, returning:', darkMode);
   return darkMode;
 });
 
 nativeTheme.on('updated', () => {
   const systemDarkMode = nativeTheme.shouldUseDarkColors;
-  console.log('[Main] System theme updated to:', systemDarkMode);
   darkMode = systemDarkMode;
   sendDarkModeUpdate(darkMode);
 });
@@ -60,6 +70,7 @@ app.on('activate', () => {
     mainWindow.once('ready-to-show', () => {
       createTopMenu(mainWindow!);
       sendDarkModeUpdate(darkMode);
+      broadcastSimulationStatus(SimulationStatus.Idle);
     });
   }
 });
@@ -68,7 +79,6 @@ app.on('window-all-closed', () => {
   if (platform !== 'darwin') app.quit();
 });
 
-let startSimulationRunning = false;
 
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   if (!args || typeof args.type !== 'string') {
@@ -80,23 +90,19 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   try {
     switch (type) {
       case 'start-simulation': {
-        if (startSimulationRunning) {
-          return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
-        }
-
-        startSimulationRunning = true;
+        console.log('[Main] Starting simulation request...');
+        
+        broadcastSimulationStatus(SimulationStatus.StartingSimulation);
 
         const result = await startSimulation();
 
-        if (mainWindow?.webContents) {
-          mainWindow.webContents.send('simulation-status', result.status);
-        }
+        broadcastSimulationStatus(result.status);
 
         if (!result.success) {
           return { success: false, error: result.error || 'Failed to start simulation.' };
         }
 
-        return { success: true, message: SimulationStatus.Started };
+        return { success: true, message: result.status };
       }
 
       default:
@@ -104,10 +110,14 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    broadcastSimulationStatus(SimulationStatus.SimulationFailed);
     return { success: false, error: message };
-  } finally {
-    startSimulationRunning = false;
   }
+});
+
+ipcMain.on('simulation-status-update', (_, status: string) => {
+  console.log('[Main] Received simulation status update:', status);
+  broadcastSimulationStatus(status);
 });
 
 ipcMain.on('trigger-error', (_, message: string) => {

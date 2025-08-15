@@ -32,7 +32,7 @@ class GraphWindowManager {
 
     const preloadPath = isDev
       ? path.resolve(__dirname, 'preload.js')
-      : path.resolve(app.getAppPath(), 'preload.js');
+      : path.resolve(app.getAppPath(), 'dist', 'preload.js');
 
     this._graphWindow = new BrowserWindow({
       width: 900,
@@ -49,16 +49,13 @@ class GraphWindowManager {
     // Send dark mode update multiple times to ensure synchronization
     if (currentDarkMode !== undefined) {
       this._graphWindow.webContents.on('dom-ready', () => {
-        console.log('[GraphWindow] DOM ready, sending dark mode:', currentDarkMode);
         this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
       });
 
       this._graphWindow.webContents.once('did-finish-load', () => {
-        console.log('[GraphWindow] Page loaded, sending dark mode:', currentDarkMode);
         this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
         
         setTimeout(() => {
-          console.log('[GraphWindow] Delayed dark mode update:', currentDarkMode);
           this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
         }, 200);
       });
@@ -68,7 +65,6 @@ class GraphWindowManager {
       this._graphWindow?.show();
       if (currentDarkMode !== undefined) {
         setTimeout(() => {
-          console.log('[GraphWindow] Window shown, final dark mode update:', currentDarkMode);
           this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
         }, 300);
       }

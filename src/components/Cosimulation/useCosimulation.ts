@@ -54,5 +54,5 @@ export const useCosimulation = () => {
     };
   }, []);
 
-  return { error, simulationStatus, resultsPath };
+  return { error, simulationStatus, resultsPath, setSimulationStatus };
 };

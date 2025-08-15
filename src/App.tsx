@@ -124,24 +124,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Don't render until we have the initial dark mode state
-  if (darkMode === null) {
-    return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '100vh',
-          backgroundColor: '#1e1e1e', // Use dark background while loading
-          color: '#ffffff'
-        }}
-      >
-        Loading...
-      </Box>
-    );
-  }
-
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />

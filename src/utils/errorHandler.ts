@@ -24,7 +24,7 @@ export function handleError(error: unknown) {
     }
   } else if (process?.type === 'browser') {
     logError('[Error Main Process]: ' + message);
-    ipcMain.emit('trigger-error', null, message);
+    ipcMain.emit('show-notification', null, message, 'error');
   } else {
     logWarn('[Error] Unknown process type.');
   }
@@ -42,7 +42,7 @@ export function sendNotification(message: string, type: NotificationType) {
       window.electronAPI.dispatchActionToMain({ type: 'notification', payload: { message, type } });
     }
   } else if (process?.type === 'browser') {
-    ipcMain.emit('trigger-notification', null, message, type);
+    ipcMain.emit('show-notification', null, message, type);
   } else {
     logWarn('[Notification] Unknown process type.');
   }
