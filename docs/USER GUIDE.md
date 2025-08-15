@@ -53,12 +53,16 @@ The application consists of four main parts: the main content area, the sidebar,
 - Toggle Developer Mode
 - Select Co-Simulation project
 - Co-Simulation:
-  - Launch Maestro Co-Simulation Engine on selected project
   - Run Co-Simulation
   - Retrieve the Co-Simulation results
-  - Stop Maestro Co-Simulation Engine
-
+  
 ## Using the Application
+
+### Important Notes
+
+If prompted by Windows Firewall, it is recommended to allow access: if denied, Maestro may not execute properly.
+
+Ensure that the port 8082 and WebSocket port 8085 are open on your system, otherwise the application may not communicate properly with the Maestro Engine.
 
 ### Selecting a project
 
@@ -68,18 +72,6 @@ To run Maestro, a Co-Simulation project is required:
 - A dialog box will appear. Select the folder containing your project and confirm.
 - The application will load the selected project and enable the co-simulation menu.
 Please be sure to have the exact same project folder structure described before.
-
-### Starting the Maestro Co-Simulation Engine
-
-- Navigate to the Sidebar and change the page to Cosimulation.
-- Navigate to the Bottom bar.
-- Click the "Start CoE" button.
-  - If prompted by Windows Firewall, it is recommended to allow access: if denied, Maestro may not execute properly.
-- A new Maestro process will be launched and you will see updates on the status of Maestro.
-  - "Starting Maestro..."
-  - "Maestro Started Successfully
-- Please note that if an existing Maestro instance is found open, it will be shut down and a new one will be launched.
-- If errors occur, they will be shown in the error snackbar at the bottom right.
 
 ### Running the Co-Simulation
 
@@ -113,14 +105,6 @@ results/cosimulation/default/logs
 Files are named with a readable timestamp, e.g. `CoSimulation-2025-03-22_12-35-10.log`.
 
 Logs include simulation steps, errors, and result statuses. If the log file is deleted during runtime, the app will detect this and notify the user, but the CoSimulation will keep running. To generate again a Maestro or CoSimulation log, restart Maestro or run another CoSimulation.
-
-### Stopping the Maestro Engine
-
-- To stop the Maestro process, click "Stop CoE" in the bottom bar.
-- The system will:
-  - Shut down the engine
-  - Reset the Co-Simulation session
-  - Update the UI status
 
 ## Troubleshooting
 

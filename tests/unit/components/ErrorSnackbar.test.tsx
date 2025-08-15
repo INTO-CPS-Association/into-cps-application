@@ -9,6 +9,9 @@ beforeEach(() => {
     removeErrorListener: jest.fn(),
     addNotificationListener: jest.fn(),
     removeNotificationListener: jest.fn(),
+    writeFile: jest.fn(),
+    updateDarkMode: jest.fn(() => {}),
+    getDarkMode: jest.fn(() => Promise.resolve(true)),
   };
 
   window.electronAPI = mockElectronAPI as IElectronAPI;
