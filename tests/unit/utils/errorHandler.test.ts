@@ -34,7 +34,9 @@ describe("errorHandler", () => {
       removeNotificationListener: jest.fn(),
       sendNotification: jest.fn(),
       readFile: jest.fn(),
-      writeFile: jest.fn()
+      writeFile: jest.fn(),
+      updateDarkMode: jest.fn(),
+      getDarkMode: jest.fn().mockResolvedValue(true),
     };
   });
 
@@ -131,7 +133,7 @@ describe("sendNotification", () => {
       sendNotification("Test notify", "success");
   
       expect(mockEmit).toHaveBeenCalledWith(
-        "trigger-notification",
+        "show-notification",
         null,
         "Test notify",
         "success"

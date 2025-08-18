@@ -15,7 +15,9 @@ jest.mock('electron', () => {
 
 jest.mock('path', () => ({
   join: jest.fn((...args) => args.join('/')),
+  resolve: jest.fn((...args) => args.join('/')),
 }));
+
 
 type MockBrowserWindow = {
   isDestroyed: jest.Mock<boolean, []>;
@@ -87,9 +89,11 @@ describe('openGraphHtmlWindow', () => {
       width: 900,
       height: 700,
       autoHideMenuBar: true,
+      backgroundColor: '#ffffff',
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
+        preload: expect.any(String),
       },
     });
 
