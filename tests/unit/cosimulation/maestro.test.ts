@@ -36,6 +36,7 @@ const mockConfig = {
   logDirectory: '/mock/output/logs',
   maestroJarPath: '/mock/maestro.jar',
   tempMaestroJarPath: '/tmp/maestro-temp.jar',
+  livePlotting: '/mock/output/graph.html'
 };
 
 describe('maestro.ts', () => {

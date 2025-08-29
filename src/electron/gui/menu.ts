@@ -1,6 +1,6 @@
 import { Menu, BrowserWindow, MenuItemConstructorOptions, dialog } from 'electron';
 import { getConfig, setProjectPath } from '../../utils/config';
-import { logError } from '../../utils/logger';
+import { graphWindowManager } from './livePlottingWindow';
 
 let cosimulationEnabled = false;
 const platform = process.platform as NodeJS.Platform;
@@ -18,11 +18,11 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
               properties: ['openDirectory'],
               title: 'Select Project Folder',
             });
-          
+
             if (!result.canceled && result.filePaths.length > 0) {
-              const selectedPath = result.filePaths[0];          
+              const selectedPath = result.filePaths[0];
               setProjectPath(selectedPath);
-              
+
               mainWindow.webContents.send('project-selected', selectedPath);
 
               const config = getConfig();
@@ -44,11 +44,8 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
           label: 'Toggle Dark Mode',
           id: 'toggle-dark-mode',
           click: () => {
-            if (mainWindow?.webContents) {
-              mainWindow.webContents.send('toggle-dark-mode');
-            } else {
-              logError('Main window or webContents is not available.');
-            }
+            mainWindow?.webContents.send('toggle-dark-mode');
+            graphWindowManager.graphWindow?.webContents.send('toggle-dark-mode');
           },
         },
         {
@@ -78,7 +75,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
           },
         },
       ],
-    },    
+    },
   ];
 
   const menu = Menu.buildFromTemplate(template);
