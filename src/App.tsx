@@ -7,7 +7,8 @@ import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
 import { styleConstants } from './utils/constants';
-import LivePlotting from './components/LivePlotting';
+import LivePlotting from './components/LivePlotting/LivePlotting';
+import { useLivePlottingData } from './components/LivePlotting/useLivePlotting';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
   const location = useLocation();
   const isSidebarHidden = location.pathname === '/live-plotting';
+  const { data, autoZoomEnd } = useLivePlottingData();
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
@@ -142,7 +144,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
-              <Route path="/live-plotting" element={<LivePlotting />} />
+              <Route path="/live-plotting" element={<LivePlotting data={data} darkMode={darkMode} autoZoomEnd={autoZoomEnd} />} />
             </Routes>
           </Box>
         </Box>

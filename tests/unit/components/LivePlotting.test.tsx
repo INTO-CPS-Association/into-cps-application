@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
-import LivePlotting from '../../../src/components/LivePlotting';
+import LivePlotting from '../../../src/components/LivePlotting/LivePlotting';
 
 jest.mock('../../../src/components/EChart', () => ({
   __esModule: true,
@@ -42,15 +42,15 @@ beforeEach(() => {
 
 describe('LivePlotting Component', () => {
   it('renders EChart', async () => {
-    const { default: LivePlotting } = await import('../../../src/components/LivePlotting');
-    render(<LivePlotting />);
+    const { default: LivePlotting } = await import('../../../src/components/LivePlotting/LivePlotting');
+    render(<LivePlotting data={{}}/>);
     const chart = await screen.findByTestId('mock-echart');
     expect(chart).toBeInTheDocument();
   });
 
   it('updates data when receiving a valid websocket message', async () => {
     await act(async () => {
-      render(<LivePlotting />);
+      render(<LivePlotting data={{}}/>);
     });
 
     act(() => {
@@ -70,7 +70,7 @@ describe('LivePlotting Component', () => {
 
   it('handles invalid websocket messages without crashing', async () => {
     await act(async () => {
-      render(<LivePlotting />);
+      render(<LivePlotting data={{}}/>);
     });
     act(() => {
       wsOnMessage?.({ data: 'INVALID_JSON' } as MessageEvent);
@@ -80,7 +80,7 @@ describe('LivePlotting Component', () => {
 
   it('sets autoZoomEnd when websocket closes', async () => {
     await act(async () => {
-      render(<LivePlotting />);
+      render(<LivePlotting data={{}}/>);
     });
     act(() => {
       wsOnClose?.();
@@ -92,7 +92,7 @@ describe('LivePlotting Component', () => {
 
   it('handles websocket errors gracefully', async () => {
     await act(async () => {
-      render(<LivePlotting />);
+      render(<LivePlotting data={{}}/>);
     });
     act(() => {
       wsOnError?.();
