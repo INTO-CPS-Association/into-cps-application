@@ -55,3 +55,5 @@ export const EChart = forwardRef<ECharts | null, EChartProps>(({
 
   return <div ref={chartRef} {...props} />;
 });
+
+EChart.displayName = 'EChart';

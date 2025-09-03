@@ -9,7 +9,6 @@ import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
 
 const execa = getExeca();
-import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
   
 let simulationInProgress = false;
 
@@ -67,7 +66,6 @@ function getLatestSimulationFolder(): string | null {
 
 export { getLatestSimulationFolder };
 
-let graphWindowOpened = false;
 
 async function startSimulation(): Promise<SimulationResult> {
   if (simulationInProgress) {
@@ -124,11 +122,6 @@ async function startSimulation(): Promise<SimulationResult> {
       throw new Error(errorMsg);
     }
 
-    if (!graphWindowOpened) {
-      sendGraphWindowOpen();
-      graphWindowOpened = true;
-    }
-
     const subprocess = execa(javaExecutable, args, { all: true });
 
     const generatedGraphPath = path.join(simOutputDir, 'graph.html');
@@ -138,7 +131,6 @@ async function startSimulation(): Promise<SimulationResult> {
         try {
           fs.copyFileSync(generatedGraphPath, config.livePlotting);
           fs.unwatchFile(generatedGraphPath);
-          sendGraphWindowOpen();
         } catch (err) {
           sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error');
         }
@@ -176,7 +168,6 @@ async function startSimulation(): Promise<SimulationResult> {
     }
 
     simulationInProgress = false;
-    graphWindowOpened = false;
 
     if (exitCode === 0) {
       logInfo('Simulation completed successfully.');
