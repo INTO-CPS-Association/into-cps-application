@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { EChart } from './EChart';
 import { EChartsOption } from 'echarts';
 
@@ -13,6 +13,18 @@ const LivePlotting: React.FC = () => {
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
   const effectiveDarkMode = darkMode ?? false;
+
+  const chartRef = useRef<echarts.ECharts | null>(null);
+
+  // Resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      chartRef.current?.resize();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   useEffect(() => {
     // Fetch initial dark mode state from main process
@@ -31,21 +43,21 @@ const LivePlotting: React.FC = () => {
     const handleToggle = () => {
       setDarkMode(prev => !prev);
     };
-  
+
     const handleDarkModeUpdate = (...args: unknown[]) => {
       const isDark = args[0] as boolean;
       setDarkMode(isDark);
     };
-      
+
     window.electronAPI?.on('toggle-dark-mode', handleToggle);
     window.electronAPI?.on('dark-mode-update', handleDarkModeUpdate);
-  
+
     return () => {
       window.electronAPI?.off('toggle-dark-mode', handleToggle);
       window.electronAPI?.off('dark-mode-update', handleDarkModeUpdate);
     };
   }, []);
-  
+
   function createWebSocketWithRetry(
     url: string,
     onMessage: (event: MessageEvent) => void,
@@ -165,10 +177,18 @@ const LivePlotting: React.FC = () => {
         textStyle: { color: darkMode ? '#fff' : '#000' }
       },
       xAxis: {
-        type: 'category', data: timeLabels,
+        type: 'category',
+        boundaryGap: false,
+        data: timeLabels,
         name: 'Time',
+        nameLocation: 'end',
+        nameGap: 10,
         axisLine: { lineStyle: { color: darkMode ? '#aaa' : '#333' } },
-        axisLabel: { color: darkMode ? '#aaa' : '#333' },
+        axisLabel: {
+          color: darkMode ? '#aaa' : '#333',
+          rotate: 45,
+          interval: 'auto'
+        },
       },
       yAxis: {
         type: 'value',
@@ -184,10 +204,10 @@ const LivePlotting: React.FC = () => {
         showSymbol: false,
         lineStyle: { width: 2 },
       })),
-      grid: { top: 40, bottom: 80, left: 50, right: 30 },
+      grid: { top: 40, bottom: 40, left: 50, right: 80, containLabel: true },
       animation: false,
       dataZoom: [
-        { type: 'slider' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
+        { type: 'slider' as const, bottom: 20, height: 20, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
         { type: 'inside' as const, xAxisIndex: 0, start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0, end: 100 },
       ],
     };
@@ -195,12 +215,23 @@ const LivePlotting: React.FC = () => {
   }
 
   return (
-    <div style={{ 
-      width: '100%', 
-      height: '100%',
-      backgroundColor: darkMode ? '#1e1e1e' : '#ffffff'
-    }}>
-      <EChart option={getChartOption(data, effectiveDarkMode)} style={{ width: '100%', height: '100%' }} />
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'hidden',
+      backgroundColor: effectiveDarkMode ? '#1e1e1e' : '#fff',
+    }}
+    >
+      <EChart
+        ref={chartRef}
+        option={getChartOption(data, effectiveDarkMode)}
+        style={{
+          width: '100%',
+          height: '100%',
+        }} />
     </div>
   );
 };
