@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './themes';
 import Sidebar from './components/Sidebar';
@@ -7,14 +7,31 @@ import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
 import { styleConstants } from './utils/constants';
+import LivePlotting from './components/LivePlotting';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
+  const location = useLocation();
+  const isSidebarHidden = location.pathname === '/live-plotting';
 
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  // Fetch initial dark mode state from main process
+  useEffect(() => {
+    const initializeDarkMode = async () => {
+      try {
+        const initialDarkMode = await window.electronAPI?.getDarkMode();
+        setDarkMode(initialDarkMode ?? false);
+      } catch (error) {
+        console.error('Failed to get initial dark mode:', error);
+        setDarkMode(false); // Fallback to light mode
+      }
+    };
+
+    initializeDarkMode();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -32,17 +49,25 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleToggleDarkMode = () => {
-      toggleDarkMode();
+      setDarkMode((prev) => {
+        const newValue = !prev;
+        window.electronAPI?.updateDarkMode(newValue);
+        return newValue;
+      });
     };
 
-    if (window.electronAPI) {
-      window.electronAPI.addToggleDarkModeListener(handleToggleDarkMode);
-    }
+    // Listen for dark mode updates from main process
+    const handleDarkModeUpdate = (...args: unknown[]) => {
+      const isDark = args[0] as boolean;
+      setDarkMode(isDark);
+    };
+
+    window.electronAPI?.addToggleDarkModeListener(handleToggleDarkMode);
+    window.electronAPI?.on('dark-mode-update', handleDarkModeUpdate);
 
     return () => {
-      if (window.electronAPI) {
-        window.electronAPI.removeToggleDarkModeListener();
-      }
+      window.electronAPI?.removeToggleDarkModeListener();
+      window.electronAPI?.off('dark-mode-update', handleDarkModeUpdate);
     };
   }, []);
 
@@ -101,11 +126,10 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ThemeProvider theme={darkMode ? lightTheme : darkTheme}>
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
-      <Router>
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-          <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+        {!isSidebarHidden && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />}
           <Box
             component="main"
             sx={{
@@ -118,11 +142,11 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/cosimulation" element={<CoSimulation />} />
+              <Route path="/live-plotting" element={<LivePlotting />} />
             </Routes>
           </Box>
         </Box>
         <ErrorSnackbar />
-      </Router>
     </ThemeProvider>
   );
 };

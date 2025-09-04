@@ -9,7 +9,8 @@ import { getExeca } from '../utils/execaWrapper';
 import { getJavaCommand } from '../utils/processes/maestroUtils';
 
 const execa = getExeca();
-
+import { sendGraphWindowOpen } from '../electron/ipc/graphWindowHelper';
+  
 let simulationInProgress = false;
 
 export type SimulationResult = {
@@ -66,6 +67,8 @@ function getLatestSimulationFolder(): string | null {
 
 export { getLatestSimulationFolder };
 
+let graphWindowOpened = false;
+
 async function startSimulation(): Promise<SimulationResult> {
   if (simulationInProgress) {
     logWarn('Simulation already in progress.');
@@ -110,6 +113,7 @@ async function startSimulation(): Promise<SimulationResult> {
       '-output', simOutputDir,
       '--dump-intermediate',
       '--interpret',
+      '--websocket', '8085',
       '-fsp', fmusPath
     ];
 
@@ -120,10 +124,37 @@ async function startSimulation(): Promise<SimulationResult> {
       throw new Error(errorMsg);
     }
 
+    if (!graphWindowOpened) {
+      sendGraphWindowOpen();
+      graphWindowOpened = true;
+    }
+
     const subprocess = execa(javaExecutable, args, { all: true });
+
+    const generatedGraphPath = path.join(simOutputDir, 'graph.html');
+
+    fs.watchFile(generatedGraphPath, (curr) => {
+      if (curr.size > 0) {
+        try {
+          fs.copyFileSync(generatedGraphPath, config.livePlotting);
+          fs.unwatchFile(generatedGraphPath);
+          sendGraphWindowOpen();
+        } catch (err) {
+          sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error');
+        }
+      }
+    });
+
+    let hasStartedSimulating = false;
+
 
     subprocess.all?.on('data', (chunk: Buffer) => {
       const msg = chunk.toString();
+
+      if (!hasStartedSimulating && (msg.includes('Starting simulation') || msg.includes('Running simulation'))) {
+        hasStartedSimulating = true;
+      }
+
       if (msg.includes('ERROR') || msg.includes('Error')) {
         logError(`[CLI STDERR]: ${msg.trim()}`);
       } else {
@@ -145,6 +176,7 @@ async function startSimulation(): Promise<SimulationResult> {
     }
 
     simulationInProgress = false;
+    graphWindowOpened = false;
 
     if (exitCode === 0) {
       logInfo('Simulation completed successfully.');

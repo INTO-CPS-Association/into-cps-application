@@ -6,18 +6,60 @@ import { MaestroResponse, NotificationType } from './types/global';
 import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
-
+import { graphWindowManager } from './electron/gui/livePlottingWindow';
+import { nativeTheme } from 'electron';
+import { getCurrentDarkMode, registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
 import fs from 'fs';
 
 export let mainWindow: BrowserWindow | null = null;
+let darkMode = nativeTheme.shouldUseDarkColors;
 
 const platform = process.platform as NodeJS.Platform;
 
+// Helper function to send simulation status to all windows
+function broadcastSimulationStatus(status: string) {
+  if (mainWindow?.webContents) {
+    mainWindow.webContents.send('simulation-status', status);
+  }
+  if (graphWindowManager.graphWindow?.webContents) {
+    graphWindowManager.graphWindow.webContents.send('simulation-status', status);
+  }
+}
+
 app.on('ready', () => {
   mainWindow = createWindow();
+  registerMainWindow(mainWindow);
+
   mainWindow.once('ready-to-show', () => {
     createTopMenu(mainWindow!);
+    sendDarkModeUpdate(darkMode);
   });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    setTimeout(() => {
+      sendDarkModeUpdate(darkMode);
+    }, 100);
+  });
+});
+
+ipcMain.on('toggle-dark-mode', () => {
+  darkMode = !darkMode;
+  sendDarkModeUpdate(darkMode);
+});
+
+ipcMain.on('update-dark-mode', (_event, isDark: boolean) => {
+  darkMode = isDark;
+  sendDarkModeUpdate(isDark);
+});
+
+ipcMain.handle('get-dark-mode', () => {
+  return darkMode;
+});
+
+nativeTheme.on('updated', () => {
+  const systemDarkMode = nativeTheme.shouldUseDarkColors;
+  darkMode = systemDarkMode;
+  sendDarkModeUpdate(darkMode);
 });
 
 app.on('activate', () => {
@@ -25,6 +67,7 @@ app.on('activate', () => {
     mainWindow = createWindow();
     mainWindow.once('ready-to-show', () => {
       createTopMenu(mainWindow!);
+      sendDarkModeUpdate(darkMode);
     });
   }
 });
@@ -32,14 +75,6 @@ app.on('activate', () => {
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') app.quit();
 });
-
-ipcMain.on('toggle-dark-mode', () => {
-  if (mainWindow?.webContents) {
-    mainWindow.webContents.send('toggle-dark-mode');
-  }
-});
-
-let startSimulationRunning = false;
 
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   if (!args || typeof args.type !== 'string') {
@@ -51,23 +86,17 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   try {
     switch (type) {
       case 'start-simulation': {
-        if (startSimulationRunning) {
-          return { success: false, error: SimulationStatus.SimulationAlreadyInProgress };
-        }
-
-        startSimulationRunning = true;
+        console.log('[Main] Starting simulation request...');
+        broadcastSimulationStatus(SimulationStatus.StartingSimulation);
 
         const result = await startSimulation();
-
-        if (mainWindow?.webContents) {
-          mainWindow.webContents.send('simulation-status', result.status);
-        }
+        broadcastSimulationStatus(result.status);
 
         if (!result.success) {
           return { success: false, error: result.error || 'Failed to start simulation.' };
         }
 
-        return { success: true, message: SimulationStatus.Started };
+        return { success: true, message: result.status };
       }
 
       default:
@@ -75,10 +104,14 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    broadcastSimulationStatus(SimulationStatus.SimulationFailed);
     return { success: false, error: message };
-  } finally {
-    startSimulationRunning = false;
   }
+  });
+
+ipcMain.on('simulation-status-update', (_, status: string) => {
+  console.log('[Main] Received simulation status update:', status);
+  broadcastSimulationStatus(status);
 });
 
 ipcMain.on('trigger-error', (_, message: string) => {
@@ -117,4 +150,8 @@ ipcMain.handle('write-file', async (_, { path, content }) => {
 
 ipcMain.handle('get-latest-result-folder', () => {
   return getLatestSimulationFolder();
+});
+
+ipcMain.on('open-graph-window', () => {
+  graphWindowManager.openGraphHtmlWindow(getCurrentDarkMode());
 });

@@ -51,6 +51,8 @@ const mockElectronAPI = {
   off: jest.fn(),
   readFile: jest.fn().mockResolvedValue("mock content"),
   writeFile: jest.fn().mockResolvedValue(true),
+  updateDarkMode: jest.fn(),
+  getDarkMode: jest.fn().mockReturnValue(false),
 };
 
 

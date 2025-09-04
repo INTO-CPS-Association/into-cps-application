@@ -14,10 +14,12 @@ export function setProjectPath(projectPath: string): void {
   const cosimulationPath = path.join(projectPath, 'cosimulation');
   const defaultPath = path.join(cosimulationPath, 'default');
   const outputPath= path.join(projectPath, 'results', 'cosimulation', 'default');
-  
+  const livePlotting = path.join(outputPath, 'graph.html');
+
   configMaestro = {
     cosimulationPath,
     defaultPath, 
+    livePlotting,
     simulationConfigPath: path.join(defaultPath, 'experiment.json'),
     fmusPath: path.join(projectPath, 'FMUs'),
     multiModels: path.join(defaultPath, 'multi-model.json'),
