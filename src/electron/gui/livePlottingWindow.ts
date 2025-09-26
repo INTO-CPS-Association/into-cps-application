@@ -35,8 +35,9 @@ class GraphWindowManager {
       : path.resolve(app.getAppPath(), 'dist', 'preload.js');
 
     this._graphWindow = new BrowserWindow({
-      width: 900,
-      height: 700,
+      width: 800,
+      height: 600,
+      resizable: true,
       autoHideMenuBar: true,
       backgroundColor: currentDarkMode ? '#1e1e1e' : '#ffffff',
       webPreferences: {

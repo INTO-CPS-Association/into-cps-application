@@ -28,6 +28,11 @@ type MockBrowserWindow = {
   loadURL: jest.Mock<void, [string]>;
   on: jest.Mock<void, [string, () => void]>;
   show: jest.Mock<void, []>;
+  webContents?: {
+    send: jest.Mock<void, [string, unknown]>;
+    on: jest.Mock<void, [string, () => void]>;
+    once: jest.Mock<void, [string, () => void]>;
+  };
 };
 
 describe('openGraphHtmlWindow', () => {
@@ -80,28 +85,32 @@ describe('openGraphHtmlWindow', () => {
 
   it('should create a new BrowserWindow if none exists or destroyed', () => {
     graphWindowManager.graphWindow = null;
-
     process.env.NODE_ENV = 'development';
-
+  
     graphWindowManager.openGraphHtmlWindow();
-
-    expect(BrowserWindow).toHaveBeenCalledWith({
-      width: 900,
-      height: 700,
-      autoHideMenuBar: true,
-      backgroundColor: '#ffffff',
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: expect.any(String),
-      },
-    });
-
-    expect(mockBrowserWindowInstance.loadURL).toHaveBeenCalledWith('http://localhost:3000/#/live-plotting');
+  
+    expect(BrowserWindow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        width: 800,
+        height: 600,
+        autoHideMenuBar: true,
+        backgroundColor: '#ffffff',
+        webPreferences: expect.objectContaining({
+          nodeIntegration: false,
+          contextIsolation: true,
+          preload: expect.any(String),
+        }),
+        resizable: true,
+      })
+    );
+  
+    expect(mockBrowserWindowInstance.loadURL).toHaveBeenCalledWith(
+      'http://localhost:3000/#/live-plotting'
+    );
     expect(mockBrowserWindowInstance.once).toHaveBeenCalledWith('ready-to-show', expect.any(Function));
     expect(mockBrowserWindowInstance.on).toHaveBeenCalledWith('closed', expect.any(Function));
   });
-
+  
   it('should load file URL in production mode', () => {
     graphWindowManager.graphWindow = null;
     process.env.NODE_ENV = 'production';
@@ -143,4 +152,52 @@ describe('openGraphHtmlWindow', () => {
 
     expect(mockBrowserWindowInstance.show).toHaveBeenCalled();
   });
+
+  it('should send dark-mode-update when window already exists', () => {
+    const mockSend = jest.fn();
+    mockBrowserWindowInstance.webContents = {
+      send: mockSend,
+      on: jest.fn(),
+      once: jest.fn(),
+    };
+    mockBrowserWindowInstance.isDestroyed.mockReturnValue(false);
+    mockBrowserWindowInstance.isMinimized.mockReturnValue(false);
+  
+    graphWindowManager.graphWindow = mockBrowserWindowInstance as unknown as ElectronBrowserWindow;
+  
+    jest.useFakeTimers();
+    graphWindowManager.openGraphHtmlWindow(true);
+  
+    expect(mockSend).toHaveBeenCalledWith('dark-mode-update', true);
+  
+    jest.advanceTimersByTime(100);
+    expect(mockSend).toHaveBeenCalledTimes(2);
+  
+    jest.useRealTimers();
+  });
+
+  it('should send dark-mode-update after ready-to-show timeout', () => {
+    const mockSend = jest.fn();
+    mockBrowserWindowInstance.webContents = {
+      send: mockSend,
+      on: jest.fn(),
+      once: jest.fn(),
+    };
+    graphWindowManager.graphWindow = null;
+  
+    jest.useFakeTimers();
+    graphWindowManager.openGraphHtmlWindow(true);
+  
+    const readyToShowHandler = mockBrowserWindowInstance.once.mock.calls.find(
+      (call) => call[0] === 'ready-to-show'
+    )?.[1];
+    readyToShowHandler?.();
+  
+    jest.advanceTimersByTime(300);
+    expect(mockSend).toHaveBeenCalledWith('dark-mode-update', true);
+  
+    jest.useRealTimers();
+  });
+  
+  
 });

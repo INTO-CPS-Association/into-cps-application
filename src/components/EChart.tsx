@@ -1,6 +1,5 @@
-import React, { useMemo, useRef, useEffect } from 'react';
-import { init, getInstanceByDom, ECharts, EChartsOption } from 'echarts';
-import { debounce } from 'lodash';
+import React, {useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { init, ECharts, EChartsOption } from 'echarts';
 
 type EChartProps = {
   option: EChartsOption;
@@ -10,47 +9,51 @@ type EChartProps = {
   events?: Record<string, (params: unknown) => void>;
 };
 
-export const EChart: React.FC<EChartProps> = ({
+export const EChart = forwardRef<ECharts | null, EChartProps>(({
   option,
   chartSettings,
   optionSettings,
-  style = { width: '100%', height: '350px' },
   events = {},
   ...props
-}) => {
+}, ref) => {
   const chartRef = useRef<HTMLDivElement | null>(null);
+  const internalChartRef = useRef<ECharts | null>(null);
 
-  const resizeChart = useMemo(
-    () =>
-      debounce(() => {
-        if (chartRef.current) {
-          const chart = getInstanceByDom(chartRef.current);
-          chart?.resize();
-        }
-      }, 50),
-    []
-  );
+  useImperativeHandle(ref, () => internalChartRef.current!, []);
 
+  const resizeChart = () => {
+    if (internalChartRef.current) {
+      requestAnimationFrame(() => {
+        internalChartRef.current?.resize();
+      });
+    }
+  };
+  
   useEffect(() => {
-    const chart = init(chartRef.current!, null, chartSettings);
-
+    if (!chartRef.current) return;
+  
+    const chart = init(chartRef.current, null, chartSettings);
+    internalChartRef.current = chart;
+  
     for (const [event, handler] of Object.entries(events)) {
       chart.on(event, handler);
     }
-
+  
     const resizeObserver = new ResizeObserver(() => resizeChart());
-    resizeObserver.observe(chartRef.current!);
-
+    resizeObserver.observe(chartRef.current);
+  
     return () => {
       chart.dispose();
       resizeObserver.disconnect();
+      internalChartRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    const chart = getInstanceByDom(chartRef.current!);
-    chart?.setOption(option, optionSettings);
+    internalChartRef.current?.setOption(option, optionSettings);
   }, [option]);
 
-  return <div ref={chartRef} style={style} {...props} />;
-};
+  return <div ref={chartRef} {...props} />;
+});
+
+EChart.displayName = 'EChart';

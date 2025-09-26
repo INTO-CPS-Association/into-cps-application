@@ -2,16 +2,27 @@
     content: "\25cf";
     font-size: 1.0em;
     vertical-align: 0.1em;
-    }
-    
-.link-button{
+}
+
+.link-button {
     display: block;
     padding: 10px 15px;
     color: #337ab7;
     background-color: transparent;
 }
 
-.link-button:focus, .link-button:hover{
+.link-button:focus,
+.link-button:hover {
     text-decoration: none;
     background-color: #eee;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }

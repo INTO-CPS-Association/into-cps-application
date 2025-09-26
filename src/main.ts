@@ -89,9 +89,11 @@ ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
         console.log('[Main] Starting simulation request...');
         broadcastSimulationStatus(SimulationStatus.StartingSimulation);
 
+        graphWindowManager.openGraphHtmlWindow(getCurrentDarkMode());
+
         const result = await startSimulation();
         broadcastSimulationStatus(result.status);
-
+        
         if (!result.success) {
           return { success: false, error: result.error || 'Failed to start simulation.' };
         }
