@@ -1,8 +1,7 @@
 # INTO-CPS Application
 
 The INTO-CPS Application is the frontend of the INTO-CPS Tool Chain. It is used
-to configure and run FMI-based co-simulations. Other features include model
-checking, test automation and design space exploration.
+to configure and run FMI-based Co-Simulations.
 
 ## About
 
