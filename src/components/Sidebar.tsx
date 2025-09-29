@@ -72,7 +72,7 @@ const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open,
         <ListItem disablePadding>
           <ListItemButton component={NavLink} to="/cosimulation">
             <SettingsIcon />
-            {isOpen && <ListItemText primary="Cosimulation" sx={{ marginLeft: 1 }} />}
+            {isOpen && <ListItemText primary="CoSimulation" sx={{ marginLeft: 1 }} />}
           </ListItemButton>
         </ListItem>
       </List>
