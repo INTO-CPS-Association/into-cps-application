@@ -27,15 +27,17 @@ skinparam DefaultFontColor white
 !define RECTANGLE class
 
 package "INTO-CPS React App" {
-    
-    'Package Components
+
+    ' -------------------
+    ' Components
+    ' -------------------
     package "Components" {
         class App {
             - darkMode: boolean
             - sidebarOpen: boolean
             - sidebarWidth: number
-            + toggleDarkMode(): void
             + toggleSidebar(): void
+            + toggleDarkMode(): void
             + handleResize(): void
             + handleToggleDarkMode(): void
             + handleError(errorMessage: string): void
@@ -44,51 +46,70 @@ package "INTO-CPS React App" {
         class Sidebar {
             - isResponsive: boolean
             - manualOpen: boolean
+            - width: number
             + handleResize(): void
             + handleToggle(): void
+            + setWidth(width: number): void
         }
 
-        class Bottom {
-            - maestroRunning: boolean
-            + toggleMaestroState(): Promise<void>
+        class Main {
+            + renderContent(): JSX.Element
         }
 
         class CoSimulation {
-            + error: string | null
-            + simulationStatus: string
-            + resultsPath: string | null
+            - error: string | null
+            - simulationStatus: string
+            - resultsPath: string | null
+            + startSimulation(): void
+            + stopSimulation(): void
+            + resetSimulation(): void
         }
 
         class ErrorSnackbar {
             - open: boolean
             - message: string
             - severity: 'info' | 'error' | 'warning' | 'success'
-            + handleError(errorMessage: string): void
-            + handleClose(): void
+            + showError(message: string): void
+            + close(): void
+        }
+
+        class LivePlotting {
+            - data: DataMap
+            - darkMode?: boolean
+            - autoZoomEnd?: number | null
+            + updateData(newData: DataMap): void
+            + setAutoZoomEnd(value: number | null): void
         }
     }
 
-    'Package Hooks
+    ' -------------------
+    ' Hooks
+    ' -------------------
     package "Hooks" {
         class useCosimulation {
             - error: string | null
             - simulationStatus: string
             - resultsPath: string | null
-            + handleStatusUpdate(event: unknown, status: string): Promise<void>
-            + handleCoeError(event: unknown, errorMessage: string): void
-            + handleCoeReset(): void
+            + start(): void
+            + stop(): void
+            + reset(): void
         }
 
-        class useMaestro {
-            + startMaestro(): Promise<void>
-            + stopMaestro(): Promise<void>
-            + getSessionId(): Promise<string | null>
+        class useLivePlotting {
+            - data: DataMap
+            - darkMode: boolean
+            - autoZoomEnd: number | null
+            + subscribe(callback): void
+            + unsubscribe(callback): void
+            + clearData(): void
         }
     }
 
-    'Package APIs
+    ' -------------------
+    ' APIs
+    ' -------------------
     package "APIs" {
-        class CosimulationAPI {
+        class cosimulationAPI {
             + maestro(args: { type: string, data?: unknown }): Promise<MaestroResponse>
             + onSimulationStatus(callback): void
             + removeSimulationStatusListener(callback): void
@@ -96,76 +117,64 @@ package "INTO-CPS React App" {
             + removeCoeErrorListener(): void
             + addCoeResetListener(callback): void
             + removeCoeResetListener(): void
-            + getSessionId(): Promise<string | null>
-            + getConfig(): Promise<ConfigMaestro | null>
-            + getSimulationResult(sessionId: string): Promise<string>
+            + getConfig(): Promise<Config | null>
+            + getLatestResultFolder(): Promise<string | null>
         }
     }
 
-    'Package Utilities
+    ' -------------------
+    ' Utilities
+    ' -------------------
     package "Utilities" {
+        class ErrorHandler {
+            + handleError(error: unknown): void
+            + sendNotification(message: string, type: string): void
+        }
+
         class MaestroUtils {
-            + isPortInUse(port: number): Promise<boolean>
-            + killProcessOnPort(port: number): Promise<void>
             + getReadableTimestamp(): string
             + getJavaCommand(): string
         }
-
-        class ErrorHandler {
-            + handleError(error: unknown): void
-            + sendNotification(message: string, type: 'success' | 'error' | 'warning' | 'info'): void
-        }
-
-        class SimulationContext {
-            - sessionId: string | null
-            + getSessionId(): string | null
-            + setSessionId(id: string): void
-        }
-
-        class MenuManager {
-            + updateCosimulationMenu(enabled: boolean): void
-        }
     }
 
-    'Package MaestroManager
+    ' -------------------
+    ' MaestroManager
+    ' -------------------
     package "MaestroManager" {
         class MaestroManager {
-            + startMaestro(): Promise<MaestroResponse>
-            + stopMaestro(): Promise<void>
-            + startSimulation(): Promise<void>
-            + getSimulationResult(sessionId: string): Promise<string>
-            - extractMaestroJar(): void
-            - sendSimulationStatus(status: string): void
-            - initializeLoggingFile(type: string): string | null
-            - safeWrite(stream, message, type): void
-            - isStartSimulationRunning: boolean
+            + startSimulation(): Promise<SimulationResult>
+            + extractMaestroJar(): void
+            + getLatestSimulationFolder(): string | null
         }
     }
 
-    'Relationships
+    package "Menu"{
+        class MenuManager {
+            + updateCosimulationMenu(status: string): void
+        }
+    }
+    ' -------------------
+    ' Relationships
+    ' -------------------
     App --> Sidebar : uses
-    App --> Bottom : uses
+    App --> Main : uses
     App --> CoSimulation : uses
+    App --> LivePlotting : uses
     App --> ErrorSnackbar : uses
 
-    CoSimulation --> useCosimulation : «use»
-    useCosimulation ..> CosimulationAPI : «listen»
-    useMaestro ..> CosimulationAPI : «invoke»
+    CoSimulation --> useCosimulation : «hook»
+    LivePlotting --> useLivePlotting : «hook»
 
-    Bottom ..> CosimulationAPI : «invoke»
-    Bottom ..> useMaestro : «use»
+    useCosimulation ..> cosimulationAPI : «listen»
+    useLivePlotting ..> cosimulationAPI : «data via WS»
 
-    ErrorSnackbar ..> CosimulationAPI : «error handler»
+    ErrorSnackbar ..> cosimulationAPI : «error/notifications»
 
-    CosimulationAPI --> MaestroUtils : «uses»
-    CosimulationAPI --> SimulationContext : «session management»
-    CosimulationAPI --> MenuManager : «UI update»
-    CosimulationAPI --> ErrorHandler : «error management»
-
-    MaestroManager --> MaestroUtils : «uses»
-    MaestroManager --> SimulationContext : «session management»
+    cosimulationAPI --> MaestroManager : «invoke»
+    cosimulationAPI --> ErrorHandler : «error handling»
     MaestroManager --> ErrorHandler : «error handling»
-    MaestroManager --> MenuManager : «UI update»
+    MaestroManager --> Menu : «update menu»
+    MaestroManager --> MaestroUtils : «timestamp/java detection»
 }
 
 @enduml
