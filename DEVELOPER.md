@@ -13,12 +13,14 @@ To manage multiple versions of **`Node.js`** &/or **`npm`**, consider using a [n
 
 The following are the commands to run the application. After checking out the repo:
 
-1. To install node dependencies: `npm install`
-2. To run it: `npm run start`
-3. To run the tests: `npm test`
-4. To run a syntax check: `npm run syntax`
-5. To build the app for a release: `npm run build`
-6. To build the app for a release for Windows and convert the executable in .msix: `npm run build:win`
+1. To install node dependencies: `npm install`. This will also install Maestro running automatically `npm run postinstall`.
+2. To install playwright for testing: `npx playwright install --with-deps`. This will ask for sudo credentials on Ubuntu, but they are required to install dependencies to manage browser windows.
+3. To run it: `npm run start`.
+4. To run end-to-end tests: `npm run test:e2e`.
+5. To run unit tests: `npm run test:unit`.
+6. To run a syntax check: `npm run syntax`.
+7. To build the app for a release: `npm run build`.
+8. To build the app for a release for Windows and convert the executable in .msix: `npm run build:win`.
 
 ### Converting Windows executable to .msix
 
@@ -45,7 +47,7 @@ Please note that a terminal with administrative rights is needed, as the `MSIX P
 
 ## Useful commands and properties
 
-- `npm run clean`: cleans the working envorinment from different folders, making it ready to be deployed.
+- `npm run clean`: cleans the working envorinment from different folders, making it ready for deploy or running for the first time.
 
 ## Latest builds
 
