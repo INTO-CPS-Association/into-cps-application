@@ -87,6 +87,20 @@ Error —and warnings— handling is managed by `ErrorSnackbar.tsx`, which is be
 #### Class Diagram
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0"
+  }
+}}%%
 classDiagram
     class App {
         - darkMode: boolean
@@ -213,6 +227,20 @@ classDiagram
 ```
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0"
+  }
+}}%%
 sequenceDiagram
     participant User
     participant App
@@ -289,6 +317,20 @@ Backend and Utilities
 - `ErrorHandler`: Centralized error management.
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0"
+  }
+}}%%
 classDiagram
     %% Maestro Manager %%
     class MaestroManager {
@@ -357,6 +399,20 @@ classDiagram
 The following sequence diagram shows the internal workflow of the MaestroManager during the cosimulation process, covering the CoSimulation execution, result handling, and error management
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0"
+  }
+}}%%
 sequenceDiagram
     participant User
     participant Menu as ElectronMenu
@@ -434,6 +490,20 @@ WebSocket subscription: `useLivePlottingData()` connects to a WS server (default
 - Optional auto-zoom ensures the chart scrolls as new data arrives and allows the user to move the graph and visualize data better.
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0"
+  }
+}}%%
 classDiagram
     class LivePlotting {
         +data: DataMap
@@ -459,6 +529,20 @@ classDiagram
 ```
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0"
+  }
+}}%%
 sequenceDiagram
     participant Simulation as CoSimulation
     participant WebSocket
@@ -521,6 +605,21 @@ The following squence diagram illustrates the interaction between the Maestro Mo
 - Any errors are handled by `ErrorHandler` → IPC → `ErrorSnackbar`.
 
 ```mermaid
+%%{init: {
+  "theme": "default",
+  "themeVariables": {
+    "primaryColor": "#000000",
+    "edgeLabelBackground": "#ffffff",
+    "nodeTextColor": "#000000",
+    "nodeBorder": "#000000",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cccccc",
+    "fontFamily": "Arial, sans-serif",
+    "lineColor": "#cccccc",
+    "shadowBlur": "0",
+    "tertiaryColor": "#ffffff"
+  }
+}}%%
 sequenceDiagram
     participant User
     participant Sidebar

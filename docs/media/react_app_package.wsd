@@ -1,28 +1,28 @@
 @startuml react_app_package
-'Set the background to transparent
-skinparam backgroundColor transparent
-skinparam packageBackgroundColor transparent
-skinparam rectangleBackgroundColor transparent
-skinparam classBackgroundColor transparent
-skinparam componentBackgroundColor transparent
-skinparam noteBackgroundColor transparent
-skinparam objectBackgroundColor transparent
+'Set the background to white
+skinparam backgroundColor white
+skinparam packageBackgroundColor white
+skinparam rectangleBackgroundColor white
+skinparam classBackgroundColor white
+skinparam componentBackgroundColor white
+skinparam noteBackgroundColor white
+skinparam objectBackgroundColor white
 
-'Set the border, arrow and text colors to white
-skinparam packageBorderColor white
-skinparam rectangleBorderColor white
-skinparam classBorderColor white
-skinparam componentBorderColor white
-skinparam noteBorderColor white
-skinparam objectBorderColor white
-skinparam ArrowColor white
+'Set the border, arrow and text colors to black
+skinparam packageBorderColor black
+skinparam rectangleBorderColor black
+skinparam classBorderColor black
+skinparam componentBorderColor black
+skinparam noteBorderColor black
+skinparam objectBorderColor black
+skinparam ArrowColor black
 skinparam DefaultTextAlignment center
-skinparam NoteFontColor white
+skinparam NoteFontColor black
 
-'Font colors to white
-skinparam ClassFontColor white
-skinparam PackageFontColor white
-skinparam DefaultFontColor white
+'Font colors to black
+skinparam ClassFontColor black
+skinparam PackageFontColor black
+skinparam DefaultFontColor black
 
 !define RECTANGLE class
 

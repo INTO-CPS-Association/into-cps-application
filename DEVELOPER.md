@@ -3,7 +3,7 @@
 ## Required technologies and tools
 
 - [Node Package Manager (NPM)](https://www.npmjs.com/package/npm): a package management system used to maintain packages used by the application. NPM 3 or higher is required.
-- [Node.js](https://nodejs.org/) (v14.x is required).
+- [Node.js](https://nodejs.org/) (v22.x is required).
 - [Visual Studio Code](https://code.visualstudio.com/) is a good choice as an editor: it's cross-platform and is actually built on top of Electron. That said, everything can be used.
 - [MSIX Packaging Tool](https://apps.microsoft.com/detail/9n5lw3jbcxkf?hl=it-it&gl=DK) is needed to convert the `.msi` installer to `.msix`.
 
