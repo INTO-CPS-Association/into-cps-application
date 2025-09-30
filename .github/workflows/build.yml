@@ -5,7 +5,7 @@ on:
     branches:
       - development
 
-  permissions:
+permissions:
   contents: write
   actions: read 
 
@@ -71,21 +71,21 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
   draft-release:
-  needs: build
-  runs-on: ubuntu-latest
-  steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release
 
-    - name: Create Draft Release
-      uses: softprops/action-gh-release@v2
-      with:
-        draft: true
-        tag_name: v5.1.1
-        name: "INTO-CPS Application 5.1.1"
-        body: "Draft release - details will be added later."
-        files: ./release/**/*
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          tag_name: v5.1.1
+          name: "INTO-CPS Application 5.1.1"
+          body: "Draft release - details will be added later."
+          files: ./release/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
