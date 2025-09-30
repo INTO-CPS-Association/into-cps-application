@@ -31,14 +31,14 @@ describe("Sidebar component", () => {
     renderSidebar(false);
 
     expect(screen.queryByText("Home")).not.toBeInTheDocument();
-    expect(screen.queryByText("Cosimulation")).not.toBeInTheDocument();
+    expect(screen.queryByText("CoSimulation")).not.toBeInTheDocument();
   });
 
   it("renders open sidebar with navigation items", () => {
     renderSidebar(true);
 
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
+    expect(screen.getByText("CoSimulation")).toBeInTheDocument();
   });
 
   it("calls toggleSidebar when icon button is clicked", () => {
@@ -60,6 +60,6 @@ describe("Sidebar component", () => {
     fireEvent.click(toggleButton);
 
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
+    expect(screen.getByText("CoSimulation")).toBeInTheDocument();
   });
 });

@@ -12,17 +12,17 @@ The guide is structured as follow:
 
 ## Required dependencies
 
-You need to ensure that Java is installed in your system in order to use the application. At the current state, Java 8.x.x or Java 11.x.x are required to properly use Maestro.\
+You need to ensure that Java is installed in your system in order to use the application. At the current state, Java 21.x.x are required to properly use Maestro.\
 To manage different versions of Java on Linux, `update-alternatives` is recommended, as other tools like `SDKMan` may configure the Java path only in the shell environment and can lead to issues when launching `.AppImage` GUIs without a terminal.
 
 ```bash
-sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-11-openjdk-amd64/bin/java 1
-sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-21-openjdk-amd64/bin/java 1
+sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
 ```
 
 ### Project configuration
 
-To start the Maestro Co-Simulation Engine, a proper Co-Simulation project has to be configured.\
+To run a Co-Simulation, a proper Co-Simulation project has to be configured.\
 It is necessary to have a folder with the following structure:
 
 ```plaintext
@@ -43,7 +43,7 @@ results/
 ## Application overview
 
 After launching the application, the application opens to the main page.\
-The application consists of four main parts: the main content area, the sidebar, the bottom bar and the top menu.
+The application consists of three main parts: the main content area, the sidebar and the top menu.
 
 !["application main page"](./media/user-guide_1.png)
 
@@ -53,37 +53,25 @@ The application consists of four main parts: the main content area, the sidebar,
 - Toggle Developer Mode
 - Select Co-Simulation project
 - Co-Simulation:
-  - Launch Maestro Co-Simulation Engine on selected project
   - Run Co-Simulation
-  - Retrieve the Co-Simulation results
-  - Stop Maestro Co-Simulation Engine
+  - Watch the graph plotted for the Co-Simulation
+  - Retrieve the Co-Simulation resultss
 
 ## Using the Application
 
 ### Selecting a project
 
-To run Maestro, a Co-Simulation project is required:
+To run a Co-Simulation, a Co-Simulation project is required:
 
 - Click on "File" → "Choose Project" from the top menu.
 - A dialog box will appear. Select the folder containing your project and confirm.
 - The application will load the selected project and enable the co-simulation menu.
 Please be sure to have the exact same project folder structure described before.
 
-### Starting the Maestro Co-Simulation Engine
-
-- Navigate to the Sidebar and change the page to Cosimulation.
-- Navigate to the Bottom bar.
-- Click the "Start CoE" button.
-  - If prompted by Windows Firewall, it is recommended to allow access: if denied, Maestro may not execute properly.
-- A new Maestro process will be launched and you will see updates on the status of Maestro.
-  - "Starting Maestro..."
-  - "Maestro Started Successfully
-- Please note that if an existing Maestro instance is found open, it will be shut down and a new one will be launched.
-- If errors occur, they will be shown in the error snackbar at the bottom right.
-
 ### Running the Co-Simulation
 
-- Click "Start Simulation" in the top menu under "CoSimulation"
+- To read Co-Simulation updates, change page and navigate to "CoSimulation".
+- Click "Start Simulation" in the top menu under "CoSimulation".
 - The application will:
   - Load the project, including the experiment and multi-model configurations.
   - Resolve the paths for FMUs and initialize the session.
@@ -92,7 +80,13 @@ Please be sure to have the exact same project folder structure described before.
     - "Simulating..."
   - If errors occur, they will be shown in the error snackbar at the bottom right.
 
-Note: If you try to run a simulation while another one is still in progress, the application will block the request and show a warning. This prevents unexpected behavior or data corruption.
+### Reading the graph
+
+When a Co-Simulation is launched, a new windows gets opened where a live graph of the Co-Simulation gets plotted.
+!["graph window"](./media/user-guide_2.png)
+
+The variables involved during the Co-Simulation gets shown on the graph, and their values can be read at any instant of the simulated time:
+!["graph window"](./media/user-guide_3.png)
 
 ### Retrieving the results
 
@@ -112,18 +106,10 @@ results/cosimulation/default/logs
 
 Files are named with a readable timestamp, e.g. `CoSimulation-2025-03-22_12-35-10.log`.
 
-Logs include simulation steps, errors, and result statuses. If the log file is deleted during runtime, the app will detect this and notify the user, but the CoSimulation will keep running. To generate again a Maestro or CoSimulation log, restart Maestro or run another CoSimulation.
-
-### Stopping the Maestro Engine
-
-- To stop the Maestro process, click "Stop CoE" in the bottom bar.
-- The system will:
-  - Shut down the engine
-  - Reset the Co-Simulation session
-  - Update the UI status
+Logs include simulation steps, errors, and result statuses. If the log file is deleted during runtime, the app will detect this and notify the user, but the CoSimulation will keep running. To generate again a CoSimulation log, run another CoSimulation.
 
 ## Troubleshooting
 
-- Maestro doesn't start?\
+- The Co-Simulation doesn't start?\
   Maestro is automatically installed with the application and the only dependency needed is Java. Ensure that Java is installed and properly configured, then restart the application.
-- Maestro gets stuck at `Starting Maestro`? Check if you are using the correct Java version.
+- The Co-Simulation gets stuck at `Starting Maestro`? Check if you are using the correct Java version.
