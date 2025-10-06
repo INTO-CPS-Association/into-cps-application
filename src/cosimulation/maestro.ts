@@ -1,12 +1,13 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import { BrowserWindow } from 'electron';
 import { handleError, sendNotification } from '../utils/errorHandler';
 import { getConfig } from '../utils/config';
 import { SimulationStatus, SimulationStatusType } from '../utils/constants/cosimulation/statuses';
-import { getReadableTimestamp } from '../utils/processes/maestroUtils';
+import { getJavaCommand, getReadableTimestamp } from '../utils/processes/maestroUtils';
 import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logger';
 import { getExeca } from '../utils/execaWrapper';
-import { getJavaCommand } from '../utils/processes/maestroUtils';
+import type { NotificationType } from '../types/global';
 
 const execa = getExeca();
   
@@ -18,8 +19,22 @@ export type SimulationResult = {
   status: SimulationStatusType;
 };
 
+// Helper function to update simulation status
+function updateSimulationStatus(status: SimulationStatusType) {
+  console.log('[Maestro] Updating simulation status to:', status);
+  const allWindows = BrowserWindow.getAllWindows();
+  allWindows.forEach(win => {
+    win.webContents.send('simulation-status', status);
+  });
+}
+
 export function __setSimulationInProgress(value: boolean) {
   simulationInProgress = value;
+  if (value) {
+    updateSimulationStatus(SimulationStatus.StartingSimulation);
+  } else {
+    updateSimulationStatus(SimulationStatus.Idle);
+  }
 }
 
 export function extractMaestroJar(maestroJarPath: string, tempMaestroJarPath: string): void {
@@ -69,12 +84,13 @@ export { getLatestSimulationFolder };
 
 async function startSimulation(): Promise<SimulationResult> {
   if (simulationInProgress) {
-    logWarn('Simulation already in progress.');
-    sendNotification('[Simulation] Simulation already in progress.', 'error');
+    logWarn(SimulationStatus.SimulationAlreadyInProgress);
+    sendNotification('[Simulation]' + SimulationStatus.SimulationAlreadyInProgress, 'error' as NotificationType);
     return { success: false, error: SimulationStatus.SimulationAlreadyInProgress, status: SimulationStatus.SimulationAlreadyInProgress };
   }
 
   simulationInProgress = true;
+  updateSimulationStatus(SimulationStatus.StartingSimulation);
   let simLogStream: fs.WriteStream | null = null;
 
   try {
@@ -86,6 +102,7 @@ async function startSimulation(): Promise<SimulationResult> {
     }
 
     const { simulationConfigPath, multiModels, fmusPath, maestroJarPath, tempMaestroJarPath, outputPath } = config;
+    updateSimulationStatus(SimulationStatus.StartingSimulation);
 
     extractMaestroJar(maestroJarPath, tempMaestroJarPath);
 
@@ -132,7 +149,7 @@ async function startSimulation(): Promise<SimulationResult> {
           fs.copyFileSync(generatedGraphPath, config.livePlotting);
           fs.unwatchFile(generatedGraphPath);
         } catch (err) {
-          sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error');
+          sendNotification(`[Graph] Error copying graph.html: ${err}`, 'error' as NotificationType);
         }
       }
     });
@@ -144,6 +161,7 @@ async function startSimulation(): Promise<SimulationResult> {
       const msg = chunk.toString();
 
       if (!hasStartedSimulating && (msg.includes('Starting simulation') || msg.includes('Running simulation'))) {
+        updateSimulationStatus(SimulationStatus.Simulating);
         hasStartedSimulating = true;
       }
 
@@ -171,12 +189,19 @@ async function startSimulation(): Promise<SimulationResult> {
 
     if (exitCode === 0) {
       logInfo('Simulation completed successfully.');
-      sendNotification('[Simulation] Completed successfully.', 'success');
+      sendNotification('[Simulation]: ' + SimulationStatus.SimulationCompleted, 'success' as NotificationType);
+      updateSimulationStatus(SimulationStatus.SimulationCompleted);
       return { success: true, status: SimulationStatus.SimulationCompleted };
     } else {
       const errorMsg = `Simulation failed with exit code ${exitCode}`;
       logError(errorMsg);
-      sendNotification(`[Simulation Error]: ${errorMsg}`, 'error');
+      sendNotification(`[Simulation Error]: ${errorMsg}`, 'error' as NotificationType);
+      updateSimulationStatus(SimulationStatus.SimulationFailed);
+
+      setTimeout(() => {
+        updateSimulationStatus(SimulationStatus.Idle);
+      }, 3000);
+
       return { success: false, error: errorMsg, status: SimulationStatus.SimulationFailed };
     }
 
@@ -184,9 +209,17 @@ async function startSimulation(): Promise<SimulationResult> {
     const errMsg = error instanceof Error ? error.message : String(error);
     handleError(error);
     logError(`Simulation caught exception: ${errMsg}`);
-    sendNotification(`[Simulation Error]: ${errMsg}`, 'error');
+    sendNotification(`[Simulation Error]: ${errMsg}`, 'error' as NotificationType);
     simulationInProgress = false;
     simLogStream?.end();
+
+    updateSimulationStatus(SimulationStatus.SimulationFailed);
+
+    setTimeout(() => {
+      updateSimulationStatus(SimulationStatus.Idle);
+    }, 3000);
+
+
     return { success: false, error: errMsg, status: SimulationStatus.SimulationFailed };
   }
 }

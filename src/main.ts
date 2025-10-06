@@ -1,19 +1,37 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import * as path from "path";
+import * as url from "url";
+import fs from 'fs';
 import { createWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
+import { graphWindowManager } from './electron/gui/livePlottingWindow';
 import { getLatestSimulationFolder, startSimulation } from './cosimulation/maestro';
-import { MaestroResponse, NotificationType } from './types/global';
 import { getConfig } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
-import { graphWindowManager } from './electron/gui/livePlottingWindow';
-import { nativeTheme } from 'electron';
 import { getCurrentDarkMode, registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
-import fs from 'fs';
+import { MaestroResponse, NotificationType } from './types/global';
+import { IS_DEV } from './utils/constants/appShared';
 
 export let mainWindow: BrowserWindow | null = null;
-let darkMode = nativeTheme.shouldUseDarkColors;
 
+export const MAIN_START_URL = IS_DEV
+  ? "http://localhost:3000"
+  : url.format({
+    pathname: path.join(app.getAppPath(), "dist/index.html"),
+    protocol: "file:",
+    slashes: true,
+  });
+
+export const GRAPH_START_URL = IS_DEV
+  ? "http://localhost:3000/#/live-plotting"
+  : url.format({
+    pathname: path.join(app.getAppPath(), "dist/index.html"),
+    protocol: "file:",
+    slashes: true,
+  }) + "#/live-plotting";
+
+let darkMode = nativeTheme.shouldUseDarkColors;
 const platform = process.platform as NodeJS.Platform;
 
 // Helper function to send simulation status to all windows

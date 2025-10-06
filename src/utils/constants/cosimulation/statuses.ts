@@ -1,6 +1,9 @@
 /**
- * Enum-like object representing the various statuses of a simulation.
+ * Simulation statuses and Maestro notifications
+ * Enum-like objects for consistent usage across the app
  */
+
+// -------------------- Simulation Status --------------------
 export const SimulationStatus = {
     Idle: 'Idle',
     StartingSimulation: 'Starting simulation...',
@@ -13,6 +16,7 @@ export const SimulationStatus = {
 } as const;
 export type SimulationStatusType = typeof SimulationStatus[keyof typeof SimulationStatus];
 
+// -------------------- Maestro Notifications --------------------
 export const MaestroNotifications = {
     Status: {
         StartingMaestro: 'Starting Maestro...',

@@ -133,7 +133,7 @@ describe("sendNotification", () => {
       sendNotification("Test notify", "success");
   
       expect(mockEmit).toHaveBeenCalledWith(
-        "trigger-notification",
+        "show-notification",
         null,
         "Test notify",
         "success"

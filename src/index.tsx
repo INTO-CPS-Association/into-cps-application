@@ -2,8 +2,7 @@ import React from 'react';
 import App from './App';
 import { HashRouter as Router } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
-const container = document.getElementById('app');
-const root = createRoot(container!);
+const root = createRoot(document.getElementById('app')!);
 
 root.render(
     <React.StrictMode>

@@ -1,38 +1,27 @@
-import * as path from 'path';
-import { BrowserWindow, app } from 'electron';
+import { BrowserWindow } from 'electron';
 import { logInfo, logError } from '../../utils/logger';
-
-const isDev = (process.env.NODE_ENV ?? 'production') === 'development';
-
-const preloadPath = isDev
-  ? path.resolve(__dirname, 'preload.js')
-  : path.resolve(app.getAppPath(), 'dist/preload.js');
-
-const startUrl = isDev
-  ? 'http://localhost:3000'
-  : `file://${path.join(app.getAppPath(), 'dist', 'index.html')}`;
-
-const iconPath = isDev
-  ? path.resolve(__dirname, 'resources/into-cps/appicon/into-cps-logo.png.ico')
-  : path.resolve(app.getAppPath(), 'dist/resources/into-cps/appicon/into-cps-logo.png.ico');
+import { MAIN_WINDOW } from "../../utils/constants/ui";
+import { PRELOAD_PATH, ICON_PATH } from "../../utils/constants/appMain";
+import { IS_DEV } from "../../utils/constants/appShared";
+import { MAIN_START_URL } from '../../main';
 
 let mainWindow: BrowserWindow | null = null;
-
 export function createWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    icon: iconPath,
+    width: MAIN_WINDOW.WIDTH,
+    height: MAIN_WINDOW.HEIGHT,
+    resizable: true,
+    icon: ICON_PATH,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: preloadPath,
+      preload: PRELOAD_PATH,
     },
-  }); 
+  });
 
-  logInfo(`Starting Electron in ${isDev ? 'development' : 'production'} mode`);
+  logInfo(`Starting Electron in ${IS_DEV ? "development" : "production"} mode`);
 
-  mainWindow.loadURL(startUrl).catch((error) => {
+  mainWindow.loadURL(MAIN_START_URL).catch((error) => {
     logError('Failed to load URL: ' + error);
   });
 
@@ -42,7 +31,6 @@ export function createWindow(): BrowserWindow {
 
   return mainWindow;
 }
-
 export function getMainWindow(): BrowserWindow | null {
   return mainWindow;
 }

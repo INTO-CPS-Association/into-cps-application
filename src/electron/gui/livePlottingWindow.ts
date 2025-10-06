@@ -1,5 +1,7 @@
-import { BrowserWindow, app } from 'electron';
-import * as path from 'path';
+import { BrowserWindow } from 'electron';
+import { DARK_MODE_RETRY_INTERVALS, GRAPH_WINDOW, LIGHTCOLORS, DARKCOLORS, LivePlottingErrors } from "../../utils/constants";
+import { PRELOAD_PATH } from "../../utils/constants/appMain";
+import { GRAPH_START_URL } from '../../main';
 
 class GraphWindowManager {
   private _graphWindow: BrowserWindow | null = null;
@@ -20,30 +22,21 @@ class GraphWindowManager {
         this._graphWindow.webContents.send('dark-mode-update', currentDarkMode);
         setTimeout(() => {
           this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
-        }, 100);
+        }, DARK_MODE_RETRY_INTERVALS[0]);
       }
       return;
     }
 
-    const isDev = process.env.NODE_ENV === 'development';
-    const startUrl = isDev
-      ? 'http://localhost:3000/#/live-plotting'
-      : `file://${path.join(app.getAppPath(), 'dist/index.html')}#/live-plotting`;
-
-    const preloadPath = isDev
-      ? path.resolve(__dirname, 'preload.js')
-      : path.resolve(app.getAppPath(), 'dist', 'preload.js');
-
     this._graphWindow = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: GRAPH_WINDOW.WIDTH,
+      height: GRAPH_WINDOW.HEIGHT,
       resizable: true,
       autoHideMenuBar: true,
-      backgroundColor: currentDarkMode ? '#1e1e1e' : '#ffffff',
+      backgroundColor: currentDarkMode ? DARKCOLORS.BACKGROUND.PAPER : LIGHTCOLORS.BACKGROUND.PAPER,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: preloadPath,
+        preload: PRELOAD_PATH,
       },
     });
 
@@ -58,7 +51,7 @@ class GraphWindowManager {
 
         setTimeout(() => {
           this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
-        }, 200);
+        }, DARK_MODE_RETRY_INTERVALS[1]);
       });
     }
 
@@ -67,11 +60,13 @@ class GraphWindowManager {
       if (currentDarkMode !== undefined) {
         setTimeout(() => {
           this._graphWindow?.webContents.send('dark-mode-update', currentDarkMode);
-        }, 300);
+        }, DARK_MODE_RETRY_INTERVALS[2]);
       }
     });
 
-    this._graphWindow.loadURL(startUrl);
+    this._graphWindow.loadURL(GRAPH_START_URL).catch((err: Error) => {
+      console.error(LivePlottingErrors.FailedToLoad, err);
+    });;
 
     this._graphWindow.on('closed', () => {
       this._graphWindow = null;

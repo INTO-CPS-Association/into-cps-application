@@ -6,6 +6,7 @@ const config: Config = {
   setupFilesAfterEnv: ["<rootDir>/tests/setupTests.ts"],
   testMatch: ["<rootDir>/tests/unit/**/*.test.{ts,tsx,js,jsx}"],
   moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
     "\\.(css|scss|sass)$": "identity-obj-proxy",
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

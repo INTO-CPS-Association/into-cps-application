@@ -47,14 +47,23 @@ function buildRenderer() {
     });
   }
   
-
 function buildPreload() {
   return esbuild.build({
-    ...sharedConfig,
-    entryPoints: ['./preload.js'],
+    entryPoints: ['./preload.ts'],
     outfile: 'dist/preload.js',
     platform: 'node',
-    external: ['electron'],
+    format: 'cjs',
+    bundle: true,
+    target: 'node16',
+    external: [
+      'electron',
+    ],
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
+    },
+    sourcemap: isDev,
+    minify: false,
+    mainFields: ['module', 'main'],
   });
 }
 
@@ -66,13 +75,10 @@ function copyStaticFiles() {
   if (!fs.existsSync(distPath)) fs.mkdirSync(distPath, { recursive: true });
 
   // Copy index.html
-  const sourceHtmlPath = path.join(publicPath, 'index.html');
-  const destHtmlPath = path.join(distPath, 'index.html');
-  fs.copyFileSync(sourceHtmlPath, destHtmlPath);
+  fs.copyFileSync(path.join(publicPath, 'index.html'), path.join(distPath, 'index.html'));
 
-  // Copy resources folder
-  const destResourcesPath = path.join(distPath, 'resources');
-  copyRecursiveSync(resourcesPath, destResourcesPath);
+   // Copy resources folder
+   copyRecursiveSync(resourcesPath, path.join(distPath, 'resources'));
 }
 
 // Recursive function to copy files and directories
@@ -90,12 +96,15 @@ function copyRecursiveSync(src, dest) {
   }
 }
 
-Promise.all([buildMain(), buildRenderer(), buildPreload()])
-  .then(() => {
-    copyStaticFiles();
-    console.log('Build completed.');
-  })
-  .catch((err) => {
-    console.error('Build failed:', err);
-    process.exit(1);
-  });
+async function buildAll() {
+  await buildMain();
+  await buildRenderer();
+  await buildPreload();
+  copyStaticFiles();
+  console.log('Build completed.');
+}
+
+buildAll().catch((err) => {
+  console.error('Build failed:', err);
+  process.exit(1);
+});

@@ -59,6 +59,12 @@ The application consists of three main parts: the main content area, the sidebar
 
 ## Using the Application
 
+### Important Notes
+
+If prompted by Windows Firewall, it is recommended to allow access: if denied, Maestro may not execute properly.
+
+Ensure that the port 8082 and WebSocket port 8085 are open on your system, otherwise the application may not communicate properly with the Maestro Engine.
+
 ### Selecting a project
 
 To run a Co-Simulation, a Co-Simulation project is required:

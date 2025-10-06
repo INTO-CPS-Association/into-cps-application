@@ -1,19 +1,20 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
+import { PAGETITLES, LABELS } from '../utils/constants';
 
 const SimulationGuide: React.FC = () => (
   <Box sx={{ mt: 2, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
     <Typography variant="h6" gutterBottom>
-      How to run a Co-Simulation
+      {PAGETITLES.SimulationGuide}
     </Typography>
     <Typography variant="body2">
-      1. Select a Co-Simulation project from <strong>File &gt; Choose Project</strong>.
+      {LABELS.SimulationGuide.Steps[0]}
     </Typography>
     <Typography variant="body2">
-      2. Run the simulation from the menu under <strong>CoSimulation &gt; Start Simulation</strong>.
+      {LABELS.SimulationGuide.Steps[1]}
     </Typography>
     <Typography variant="body2">
-      3. View status updates and results in the CoSimulation page.
+      {LABELS.SimulationGuide.Steps[2]}
     </Typography>
   </Box>
 );

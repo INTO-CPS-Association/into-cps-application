@@ -1,22 +1,24 @@
 import { Menu, BrowserWindow, MenuItemConstructorOptions, dialog } from 'electron';
 import { getConfig, setProjectPath } from '../../utils/config';
 import { graphWindowManager } from './livePlottingWindow';
+import { LABELS, SHORTCUTS } from '../../utils/constants';
 
 let cosimulationEnabled = false;
-const platform = process.platform as NodeJS.Platform;
 
 export function createTopMenu(mainWindow: BrowserWindow): void {
+  const startSimulationShortcut = process.platform === "darwin" ? "Cmd+F2" : "Alt+F2";
+
   const template: MenuItemConstructorOptions[] = [
     {
-      label: 'File',
+      label: LABELS.Menu.File,
       submenu: [
         {
-          label: 'Choose Project',
+          label: LABELS.Menu.ChooseProject.Label,
           id: 'choose-project',
           click: async () => {
             const result = await dialog.showOpenDialog(mainWindow, {
               properties: ['openDirectory'],
-              title: 'Select Project Folder',
+              title: LABELS.Menu.ChooseProject.Dialogue,
             });
 
             if (!result.canceled && result.filePaths.length > 0) {
@@ -34,14 +36,14 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
           },
         },
         { type: 'separator', id: 'file-separator' },
-        { role: 'quit', label: 'Quit', id: 'quit-app' }
+        { role: 'quit', label: LABELS.Menu.Quit, id: 'quit-app' }
       ],
     },
     {
-      label: 'View',
+      label: LABELS.Menu.View,
       submenu: [
         {
-          label: 'Toggle Dark Mode',
+          label: LABELS.Menu.ToggleDarkMode,
           id: 'toggle-dark-mode',
           click: () => {
             mainWindow?.webContents.send('toggle-dark-mode');
@@ -49,9 +51,9 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
           },
         },
         {
-          label: 'Toggle Developer Tools',
+          label: LABELS.Menu.ToggleDevTools,
           id: 'toggle-dev-tools',
-          accelerator: 'CmdOrCtrl+Shift+I',
+          accelerator: SHORTCUTS.Menu.DevTools,
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.toggleDevTools();
@@ -61,12 +63,12 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
       ],
     },
     {
-      label: 'Cosimulation',
+      label: LABELS.Menu.Cosimulation,
       submenu: [
         {
-          label: 'Start Simulation',
+          label: LABELS.Menu.StartSimulation,
           id: 'start-simulation',
-          accelerator: platform === 'darwin' ? 'Cmd+F2' : 'Alt+F2',
+          accelerator:  startSimulationShortcut,
           enabled: cosimulationEnabled,
           click: () => {
             if (mainWindow?.webContents) {

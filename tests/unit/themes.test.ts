@@ -1,4 +1,4 @@
-import { lightTheme, darkTheme } from '../../src/themes';
+import { lightTheme, darkTheme } from '../../src/utils/constants/style/themes';
 import { lightColors, darkColors } from '../../src/utils/constants';
 
 describe('themes.ts', () => {
