@@ -56,19 +56,23 @@ export function getChartOption(data: DataMap, darkMode: boolean, autoZoomEnd: nu
       trigger: 'axis',
       backgroundColor: darkMode ? ChartStyles.Dark.TooltipBg : ChartStyles.Light.TooltipBg,
       textStyle: { color: darkMode ? ChartStyles.Dark.TooltipText : ChartStyles.Light.TooltipText },
-      formatter: (params: any) => {
+      formatter: (params: unknown) => {
         if (!Array.isArray(params)) return '';
-        const simulated = params[0].value[0];
-        const real = params[0].data[2];
+        const first = params[0] as { value: number[]; data?: (number | undefined)[]; seriesName?: string };
+        const simulated = first.value[0];
+        const real = first.data ? first.data[2] : undefined;
 
         let result = `Simulated Time: ${simulated.toFixed(2)}s<br/>`;
         if (real !== undefined) result += `Real Time: ${real.toFixed(2)}s<br/>`;
 
         const seenSeries = new Set<string>();
-        params.forEach((param: any) => {
-          if (seenSeries.has(param.seriesName)) return;
-          seenSeries.add(param.seriesName);
-          result += `${param.seriesName}: ${param.value[1].toFixed(4)}<br/>`;
+        params.forEach((param) => {
+          const p = param as { seriesName?: string; value?: (number | { toFixed: (n: number) => string })[] };
+          const seriesName = p.seriesName ?? '';
+          if (seenSeries.has(seriesName)) return;
+          seenSeries.add(seriesName);
+          const val = p.value ? p.value[1] as number : NaN;
+          if (!Number.isNaN(val)) result += `${seriesName}: ${val.toFixed(4)}<br/>`;
         });
 
         return result;
@@ -163,7 +167,7 @@ export function getChartOption(data: DataMap, darkMode: boolean, autoZoomEnd: nu
 }
 
 // --- WEBSOCKET HOOK ---
-export function useLivePlottingData(chartRef?: React.RefObject<any>) {
+export function useLivePlottingData() {
   const [data, setData] = useState<DataMap>({});
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
@@ -195,7 +199,7 @@ export function useLivePlottingData(chartRef?: React.RefObject<any>) {
       };
       socket.onmessage = (event) => {
         try {
-          const msg = JSON.parse(event.data);
+          const msg = JSON.parse(event.data as string);
           const timestamp = msg.time;
           if (typeof timestamp !== 'number' || isNaN(timestamp)) {
             console.warn('[WS] Invalid timestamp:', msg.time);
@@ -209,7 +213,7 @@ export function useLivePlottingData(chartRef?: React.RefObject<any>) {
           const relTs = timestamp - (startTsRef.current ?? 0);
           const realTimeSec = (performance.now() - (startTsRef.current ?? performance.now())) / 1000;
 
-          const signals = extractSignals(msg.data);
+          const signals = extractSignals(msg.data as unknown);
           setData(prev => {
             const updated: DataMap = { ...prev };
             for (const [key, value] of Object.entries(signals)) {

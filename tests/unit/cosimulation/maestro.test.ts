@@ -16,6 +16,9 @@ jest.mock('../../../src/utils/processes/maestroUtils', () => ({
   getJavaCommand: jest.fn(),
 }));
 jest.mock('electron', () => ({
+  BrowserWindow: {
+    getAllWindows: jest.fn(() => [{ webContents: { send: jest.fn() } }]),
+  },
   ipcMain: { emit: jest.fn() }
 }));
 

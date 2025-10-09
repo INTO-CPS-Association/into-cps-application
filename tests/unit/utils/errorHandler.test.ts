@@ -6,7 +6,6 @@ jest.mock("../../../src/utils/logger", () => ({
   logWarn: jest.fn(),
 }));
 
-// helper
 const setProcessType = (
   value: 'renderer' | 'browser' | 'worker' | 'utility' | undefined
 ) => {
@@ -37,6 +36,7 @@ describe("errorHandler", () => {
       writeFile: jest.fn(),
       updateDarkMode: jest.fn(),
       getDarkMode: jest.fn().mockResolvedValue(true),
+      toggleDarkMode: jest.fn(),
     };
   });
 

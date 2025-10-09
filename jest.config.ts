@@ -14,9 +14,7 @@ const config: Config = {
     "^.+\\.(ts|tsx|js|jsx)$": ["ts-jest", { useESM: true }],
   },
   extensionsToTreatAsEsm: ['.ts'],
-  transformIgnorePatterns: [
-    '/node_modules/(?!(execa)/)',
-  ],
+  transformIgnorePatterns: [],
   collectCoverage: true,
   collectCoverageFrom: [
     "src/**/*.{ts,tsx,js,jsx}",

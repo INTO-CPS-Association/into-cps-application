@@ -5,7 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 const LivePlottingContainer: React.FC = () => {
   const chartRef = useRef<echarts.ECharts | null>(null);
-  const { data, autoZoomEnd } = useLivePlottingData(chartRef);
+  const { data, autoZoomEnd } = useLivePlottingData();
   const { darkMode } = useTheme();
   
   return (

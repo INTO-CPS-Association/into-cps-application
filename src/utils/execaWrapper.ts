@@ -1,5 +1,9 @@
-import { execa } from 'execa';
+let _cachedExeca: typeof import('execa').execa | undefined;
 
 export function getExeca() {
-  return execa;
+  if (!_cachedExeca) {
+    const { execa } = require('execa');
+    _cachedExeca = execa;
+  }
+  return _cachedExeca;
 }

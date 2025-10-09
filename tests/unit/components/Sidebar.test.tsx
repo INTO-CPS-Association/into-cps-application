@@ -3,15 +3,35 @@ import Sidebar from "../../../src/components/Sidebar";
 import { MemoryRouter } from "react-router-dom";
 import React from "react";
 
-jest.mock("../../../src/utils/constants", () => ({
-  styleConstants: {
-    DRAWER_WIDTH: 240,
-    COLLAPSED_WIDTH: 60,
-    TOOLBAR_HEIGHT: 64,
-    TRANSITION_DURATION: "0.3s",
-    INNER_WIDTH_SIZE: 800,
-  },
-}));
+jest.mock("../../../src/utils/constants", () => {
+  const HomeIcon: React.FC = () => React.createElement('span', { 'data-testid': 'home-icon' });
+  const CoSimulationIcon: React.FC = () => React.createElement('span', { 'data-testid': 'cosim-icon' });
+
+  return {
+    styleConstants: {
+      SIDEBAR: {
+        DRAWER_WIDTH: 240,
+        COLLAPSED_WIDTH: 60,
+        TOOLBAR_HEIGHT: 64,
+        TRANSITION_DURATION: '0.3s',
+      },
+    },
+    ICONS: {
+      Main: HomeIcon,
+      CoSimulation: CoSimulationIcon,
+    },
+    LABELS: {
+      Sidebar: {
+        Main: 'Home',
+        CoSimulation: 'Cosimulation',
+      },
+    },
+    ROUTES: {
+      Main: '/',
+      CoSimulation: '/cosimulation',
+    },
+  };
+});
 
 describe("Sidebar component", () => {
   const toggleSidebarMock = jest.fn();
@@ -38,7 +58,7 @@ describe("Sidebar component", () => {
     renderSidebar(true);
 
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("CoSimulation")).toBeInTheDocument();
+    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
   });
 
   it("calls toggleSidebar when icon button is clicked", () => {
@@ -59,7 +79,10 @@ describe("Sidebar component", () => {
     const toggleButton = screen.getByRole("button");
     fireEvent.click(toggleButton);
 
+    expect(toggleSidebarMock).toHaveBeenCalledTimes(1);
+
+    renderSidebar(true);
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("CoSimulation")).toBeInTheDocument();
+    expect(screen.getByText("Cosimulation")).toBeInTheDocument();
   });
 });

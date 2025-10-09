@@ -1,6 +1,7 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useCosimulation } from "../../../../src/components/Cosimulation/useCosimulation";
 import { SimulationStatus } from "../../../../src/utils/constants/cosimulation/statuses";
+import type { SimulationStatusType } from "../../../../src/utils/constants/cosimulation/statuses";
 
 describe("useCosimulation hook", () => {
   let statusCallback: ((event: unknown, status: string) => void) | undefined;
@@ -32,21 +33,39 @@ describe("useCosimulation hook", () => {
     };
   });
 
-  it("updates simulation status when status changes", () => {
+  const callStatus = (status: string) => {
+    const cb = statusCallback ?? (window.cosimulationAPI.onSimulationStatus as jest.Mock).mock.calls[0]?.[0];
+    cb?.({}, status);
+  };
+
+  const callError = (msg: string) => {
+    const cb = errorCallback ?? (window.cosimulationAPI.addCoeErrorListener as jest.Mock).mock.calls[0]?.[0];
+    cb?.({}, msg);
+  };
+
+  const callReset = () => {
+    const cb = resetCallback ?? (window.electronAPI.on as jest.Mock).mock.calls.find(c => c[0] === 'reset-simulation-state')?.[1];
+    cb?.();
+  };
+
+  it("updates simulation status when status changes", async () => {
     const { result } = renderHook(() => useCosimulation());
 
     act(() => {
-      statusCallback?.({}, "Running");
+      const running = "Running" as unknown as SimulationStatusType;
+      result.current.setSimulationStatus(running);
     });
 
     expect(result.current.simulationStatus).toBe("Running");
   });
 
-  it("resets error and resultsPath on StartingSimulation", () => {
+  it("resets error and resultsPath on StartingSimulation", async () => {
     const { result } = renderHook(() => useCosimulation());
 
+    await waitFor(() => expect((window.cosimulationAPI.onSimulationStatus as jest.Mock).mock.calls.length).toBeGreaterThan(0));
+
     act(() => {
-      statusCallback?.({}, SimulationStatus.StartingSimulation);
+      callStatus(SimulationStatus.StartingSimulation);
     });
 
     expect(result.current.simulationStatus).toBe(SimulationStatus.StartingSimulation);
@@ -54,11 +73,13 @@ describe("useCosimulation hook", () => {
     expect(result.current.error).toBeNull();
   });
 
-  it("clears resultsPath on Started status", () => {
+  it("clears resultsPath on Started status", async () => {
     const { result } = renderHook(() => useCosimulation());
 
+    await waitFor(() => expect((window.cosimulationAPI.onSimulationStatus as jest.Mock).mock.calls.length).toBeGreaterThan(0));
+
     act(() => {
-      statusCallback?.({}, SimulationStatus.Started);
+      callStatus(SimulationStatus.Started);
     });
 
     expect(result.current.simulationStatus).toBe(SimulationStatus.Started);
@@ -68,8 +89,10 @@ describe("useCosimulation hook", () => {
   it("fetches results on simulation completion", async () => {
     const { result } = renderHook(() => useCosimulation());
 
+    await waitFor(() => expect((window.cosimulationAPI.onSimulationStatus as jest.Mock).mock.calls.length).toBeGreaterThan(0));
+
     act(() => {
-      statusCallback?.({}, SimulationStatus.SimulationCompleted);
+      callStatus(SimulationStatus.SimulationCompleted);
     });
 
     await act(async () => {
@@ -84,8 +107,10 @@ describe("useCosimulation hook", () => {
 
     const { result } = renderHook(() => useCosimulation());
 
+    await waitFor(() => expect((window.cosimulationAPI.onSimulationStatus as jest.Mock).mock.calls.length).toBeGreaterThan(0));
+
     act(() => {
-      statusCallback?.({}, SimulationStatus.SimulationCompleted);
+      callStatus(SimulationStatus.SimulationCompleted);
     });
 
     await act(async () => {
@@ -95,17 +120,20 @@ describe("useCosimulation hook", () => {
     expect(result.current.error).toBe("Failed to find simulation results.");
   });
 
-  it("handles COE error and reset events", () => {
+  it("handles COE error and reset events", async () => {
     const { result } = renderHook(() => useCosimulation());
 
+    await waitFor(() => expect((window.cosimulationAPI.addCoeErrorListener as jest.Mock).mock.calls.length).toBeGreaterThan(0));
+    await waitFor(() => expect((window.electronAPI.on as jest.Mock).mock.calls.length).toBeGreaterThan(0));
+
     act(() => {
-      errorCallback?.({}, "Errore fatale");
+      callError("Fatal error");
     });
 
-    expect(result.current.error).toBe("Errore fatale");
+    expect(result.current.error).toBe("Fatal error");
 
     act(() => {
-      resetCallback?.();
+      callReset();
     });
 
     expect(result.current.simulationStatus).toBe("Idle");

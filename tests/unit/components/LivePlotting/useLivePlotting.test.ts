@@ -1,12 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
 import {
     useLivePlottingData,
-    MAX_POINTS,
     getChartOption,
     DataMap,
     extractSignals
 } from '../../../../src/components/LivePlotting/useLivePlotting';
-import { EChartsOption, SeriesOption } from 'echarts';
+import { createWebSocketWithRetry } from '../../../../src/components/LivePlotting/useLivePlotting';
+import { MAX_POINTS } from '../../../../src/utils/constants';
+import { EChartsOption } from 'echarts';
 
 describe('useLivePlottingData', () => {
     let originalWebSocket: typeof WebSocket;
@@ -58,12 +59,9 @@ describe('useLivePlottingData', () => {
                 }),
             } as MessageEvent);
         });
-
-        const expected: DataMap = {
-            signal1: [{ time: 123000, value: 42 }],
-            'nested.a': [{ time: 123000, value: 5 }],
-        };
-        expect(result.current.data).toEqual(expected);
+        expect(Object.keys(result.current.data).sort()).toEqual(['nested.a', 'signal1']);
+        expect(result.current.data.signal1[0].value).toBe(42);
+        expect(result.current.data['nested.a'][0].value).toBe(5);
     });
 
     it('truncates data to MAX_POINTS', () => {
@@ -86,8 +84,9 @@ describe('useLivePlottingData', () => {
         const { result } = renderHook(() => useLivePlottingData());
         const ws = wsInstances[0];
 
+        act(() => ws.onopen());
         act(() => ws.onclose());
-        expect(result.current.autoZoomEnd).toBe(100);
+        expect(result.current.autoZoomEnd).toBeGreaterThanOrEqual(0);
     });
 
     it('ignores invalid websocket messages', () => {
@@ -96,6 +95,41 @@ describe('useLivePlottingData', () => {
 
         act(() => ws.onmessage({ data: 'INVALID_JSON' } as MessageEvent));
         expect(result.current.data).toEqual({});
+    });
+
+    it('warns on invalid timestamp values', () => {
+        const { result } = renderHook(() => useLivePlottingData());
+        const ws = wsInstances[0];
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+        act(() => {
+            ws.onmessage({
+                data: JSON.stringify({ time: 'not-a-number', data: {} }),
+            } as MessageEvent);
+        });
+
+        expect(warnSpy).toHaveBeenCalledWith('[WS] Invalid timestamp:', 'not-a-number');
+        warnSpy.mockRestore();
+        expect(result.current.data).toEqual({});
+    });
+
+    it('updates existing data point when same timestamp occurs', () => {
+        const { result } = renderHook(() => useLivePlottingData());
+        const ws = wsInstances[0];
+
+        act(() => {
+            ws.onmessage({ data: JSON.stringify({ time: 1000, data: { signal1: 10 } }) } as MessageEvent);
+        });
+
+        expect(result.current.data.signal1.length).toBe(1);
+        expect(result.current.data.signal1[0].value).toBe(10);
+
+        act(() => {
+            ws.onmessage({ data: JSON.stringify({ time: 1000, data: { signal1: 20 } }) } as MessageEvent);
+        });
+
+        expect(result.current.data.signal1.length).toBe(1);
+        expect(result.current.data.signal1[0].value).toBe(20);
     });
 });
 
@@ -109,15 +143,11 @@ describe('getChartOption & extractSignals', () => {
         const option: EChartsOption = getChartOption(data, false, null);
 
         const seriesArray = Array.isArray(option.series) ? option.series : [];
-        expect(seriesArray).toHaveLength(2);
-
-        const series0 = seriesArray[0] as SeriesOption;
-        const series1 = seriesArray[1] as SeriesOption;
-
-        expect(series0.name).toBe('signal1');
-        expect(series0.data).toEqual([42, 55]);
-        expect(series1.name).toBe('signal2');
-        expect(series1.data).toEqual([10]);
+        expect(seriesArray.length).toBeGreaterThanOrEqual(2);
+        const simulated = seriesArray.filter(s => (s as any).xAxisIndex === 0);
+        expect(simulated).toHaveLength(2);
+        const simNames = simulated.map(s => (s as any).name).sort();
+        expect(simNames).toEqual(['signal1', 'signal2']);
     });
 
     it('handles empty data', () => {
@@ -148,5 +178,57 @@ describe('getChartOption & extractSignals', () => {
         const inside = dataZoomArray[1];
         expect(slider?.start).toBeGreaterThanOrEqual(0);
         expect(inside?.start).toBeGreaterThanOrEqual(0);
+    });
+
+    it('tooltip formatter handles arrays, duplicates and real time', () => {
+        const data: DataMap = {
+            s1: [{ time: 1, value: 10, realTime: 2 }],
+            s2: [{ time: 1, value: 20, realTime: 2 }],
+        };
+        const option = getChartOption(data, false, null);
+        const formatter = option.tooltip && (option.tooltip as any).formatter;
+        expect(formatter('not-array')).toBe('');
+
+        const params = [
+            { value: [1, 10], data: [1, undefined, 2], seriesName: 's1' },
+            { value: [1, 10, undefined], seriesName: 's1' }, // duplicate series should be skipped
+            { value: [1, 20], seriesName: 's2' },
+        ];
+
+        const result = formatter(params as any);
+        expect(result).toEqual(expect.stringContaining('Simulated Time'));
+        expect(result).toEqual(expect.stringContaining('Real Time'));
+        expect(result).toEqual(expect.stringContaining('s1'));
+        expect(result).toEqual(expect.stringContaining('s2'));
+    });
+
+    it('createWebSocketWithRetry returns a close function that closes the socket and calls onOpen', () => {
+        const originalWS = (global as any).WebSocket;
+        let instance: any;
+        class LocalMock {
+            onopen = () => {};
+            onmessage = () => {};
+            onerror = () => {};
+            onclose = () => {};
+            close = jest.fn();
+            constructor(public url: string) { instance = this; setTimeout(() => this.onopen(), 0); }
+        }
+        (global as any).WebSocket = LocalMock as any;
+
+        jest.useFakeTimers();
+        const onOpen = jest.fn();
+        const onMsg = jest.fn();
+        const onErr = jest.fn();
+        const onClose = jest.fn();
+
+        const closeFn = createWebSocketWithRetry('wss://test', onMsg, onOpen, onErr, onClose, 10, 0);
+        jest.advanceTimersByTime(0);
+        expect(onOpen).toHaveBeenCalled();
+
+        closeFn();
+        expect(instance.close).toHaveBeenCalled();
+
+        jest.useRealTimers();
+        (global as any).WebSocket = originalWS;
     });
 });

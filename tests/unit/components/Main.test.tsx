@@ -21,7 +21,7 @@ describe("Main component", () => {
 
   it("renders the application version", () => {
     render(<Main />);
-    const versionElement = screen.getByText("5.0.0");
+    const versionElement = screen.getByText("5.1.1");
     expect(versionElement).toBeInTheDocument();
     expect(versionElement).toHaveAttribute("id", "appVersion");
   });

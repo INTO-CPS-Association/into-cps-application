@@ -1,5 +1,6 @@
 import { electronAPI } from "../../../src/electron/electronApi";
 import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
+import type { IpcRenderer } from 'electron';
 
 jest.mock("electron", () => ({
   contextBridge: {
@@ -12,29 +13,45 @@ jest.mock("electron", () => ({
   },
 }));
 
+const mockedContextBridge = contextBridge as unknown as { exposeInMainWorld: jest.Mock };
+const mockedIpcRenderer = ipcRenderer as unknown as jest.Mocked<IpcRenderer>;
+
 describe("Electron API", () => {
   it("exposes electronAPI in main world", () => {
-    expect(contextBridge.exposeInMainWorld).toHaveBeenCalledWith("electronAPI", electronAPI);
+    expect(mockedContextBridge.exposeInMainWorld).toHaveBeenCalledWith(
+      "electronAPI",
+      expect.objectContaining({
+        addErrorListener: expect.any(Function),
+        addNotificationListener: expect.any(Function),
+        addToggleDarkModeListener: expect.any(Function),
+        getDarkMode: expect.any(Function),
+        off: expect.any(Function),
+        on: expect.any(Function),
+        readFile: expect.any(Function),
+        writeFile: expect.any(Function),
+        toggleDarkMode: expect.any(Function),
+      })
+    );
   });
 
   it("adds toggle dark mode listener", () => {
     const callback = jest.fn();
-    electronAPI.addToggleDarkModeListener(callback);
-    expect(ipcRenderer.on).toHaveBeenCalledWith("toggle-dark-mode", callback);
+  electronAPI.addToggleDarkModeListener(callback);
+  expect(mockedIpcRenderer.on).toHaveBeenCalledWith("toggle-dark-mode", callback);
   });
 
   it("removes toggle dark mode listener", () => {
-    electronAPI.removeToggleDarkModeListener();
-    expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith("toggle-dark-mode");
+  electronAPI.removeToggleDarkModeListener();
+  expect(mockedIpcRenderer.removeAllListeners).toHaveBeenCalledWith("toggle-dark-mode");
   });
 
   it("adds error listener with valid callback", () => {
     const callback = jest.fn();
     electronAPI.addErrorListener(callback);
 
-    const showErrorHandler = (ipcRenderer.on as jest.Mock).mock.calls.find(call => call[0] === "show-error")?.[1];
+  const showErrorHandler = (mockedIpcRenderer.on as jest.Mock).mock.calls.find(call => call[0] === "show-error")?.[1];
 
-    expect(ipcRenderer.on).toHaveBeenCalledWith("show-error", expect.any(Function));
+  expect(mockedIpcRenderer.on).toHaveBeenCalledWith("show-error", expect.any(Function));
 
     if (showErrorHandler) {
       showErrorHandler({} as IpcRendererEvent, "Test Error");
@@ -54,17 +71,17 @@ describe("Electron API", () => {
   
 
   it("removes error listener", () => {
-    electronAPI.removeErrorListener();
-    expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith("show-error");
+  electronAPI.removeErrorListener();
+  expect(mockedIpcRenderer.removeAllListeners).toHaveBeenCalledWith("show-error");
   });
 
   it("adds a generic event listener", () => {
     const callback = jest.fn();
     electronAPI.on("custom-event", callback);
 
-    const customEventHandler = (ipcRenderer.on as jest.Mock).mock.calls.find(call => call[0] === "custom-event")?.[1];
+    const customEventHandler = (mockedIpcRenderer.on as jest.Mock).mock.calls.find(call => call[0] === "custom-event")?.[1];
 
-    expect(ipcRenderer.on).toHaveBeenCalledWith("custom-event", expect.any(Function));
+    expect(mockedIpcRenderer.on).toHaveBeenCalledWith("custom-event", expect.any(Function));
 
     if (customEventHandler) {
       customEventHandler({} as IpcRendererEvent, "arg1", "arg2");
@@ -76,7 +93,7 @@ describe("Electron API", () => {
 
   it("removes a generic event listener", () => {
     const callback = jest.fn();
-    electronAPI.off("custom-event", callback);
-    expect(ipcRenderer.off).toHaveBeenCalledWith("custom-event", callback);
+  electronAPI.off("custom-event", callback);
+  expect(mockedIpcRenderer.off).toHaveBeenCalledWith("custom-event", callback);
   });
 });

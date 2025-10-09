@@ -8,57 +8,60 @@ export const useCosimulation = () => {
 
   useEffect(() => {
     const handleStatusUpdate = async (_: unknown, status: string) => {
-      if (Object.values(SimulationStatus).includes(status as SimulationStatusType)) {
-        const typedStatus = status as SimulationStatusType;
+      if (!Object.values(SimulationStatus).includes(status as SimulationStatusType)) return;
+      const typedStatus = status as SimulationStatusType;
 
-        setSimulationStatus(typedStatus);
+      setSimulationStatus(typedStatus);
 
-        if (typedStatus === SimulationStatus.StartingSimulation) {
+      switch (typedStatus) {
+        case SimulationStatus.StartingSimulation:
           setResultsPath(null);
           setError(null);
-        }
+          break;
 
-        if (typedStatus === SimulationStatus.Started) {
+        case SimulationStatus.Started:
           setResultsPath(null);
-        }
+          break;
 
-        if (typedStatus === SimulationStatus.SimulationCompleted) {
+        case SimulationStatus.SimulationCompleted:
           try {
             const latestResultPath = await window?.cosimulationAPI?.getLatestResultFolder();
             if (!latestResultPath) {
               throw new Error(CosimulationErrors.NoResultsFolder);
             }
             setResultsPath(latestResultPath);
+            setError(null); // successful completion should clear prior errors
           } catch (err) {
             console.error("[useCosimulation]", CosimulationErrors.FailedToFindResults, err);
             setError(CosimulationErrors.FailedToFindResults);
           }
-        } else {
+          break;
+
+        default:
           console.warn("[useCosimulation]", CosimulationErrors.UnknownStatus, status);
           setError(GlobalErrors.Unknown);
-        }
-      };
+      }
+    };
 
-      const handleCoeError = (_: unknown, errorMessage: string) => {
-        setError(errorMessage);
-      };
+    const handleCoeError = (_: unknown, errorMessage: string) => {
+      setError(errorMessage);
+    };
 
-      const handleCoeReset = () => {
-        setSimulationStatus(SimulationStatus.Idle);
-        setResultsPath(null);
-        setError(null);
-      };
+    const handleCoeReset = () => {
+      setSimulationStatus(SimulationStatus.Idle);
+      setResultsPath(null);
+      setError(null);
+    };
 
-      window.cosimulationAPI?.onSimulationStatus(handleStatusUpdate);
-      window.cosimulationAPI?.addCoeErrorListener(handleCoeError);
-      window.electronAPI?.on('reset-simulation-state', handleCoeReset);
+    window.cosimulationAPI?.onSimulationStatus(handleStatusUpdate);
+    window.cosimulationAPI?.addCoeErrorListener(handleCoeError);
+    window.electronAPI?.on('reset-simulation-state', handleCoeReset);
 
-      return () => {
-        window.cosimulationAPI?.removeSimulationStatusListener(handleStatusUpdate);
-        window.cosimulationAPI?.removeCoeErrorListener();
-        window.electronAPI?.off('reset-simulation-state', handleCoeReset);
-      };
-    }
+    return () => {
+      window.cosimulationAPI?.removeSimulationStatusListener(handleStatusUpdate);
+      window.cosimulationAPI?.removeCoeErrorListener();
+      window.electronAPI?.off('reset-simulation-state', handleCoeReset);
+    };
   }, []);
 
   return { error, simulationStatus, resultsPath, setSimulationStatus };

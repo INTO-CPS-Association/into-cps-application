@@ -9,8 +9,6 @@ import { setupSimulationLogger, logInfo, logError, logWarn } from '../utils/logg
 import { getExeca } from '../utils/execaWrapper';
 import type { NotificationType } from '../types/global';
 
-const execa = getExeca();
-  
 let simulationInProgress = false;
 
 export type SimulationResult = {
@@ -139,6 +137,12 @@ async function startSimulation(): Promise<SimulationResult> {
       throw new Error(errorMsg);
     }
 
+    const execa = getExeca();
+    if (!execa) {
+      const errorMsg = 'Execa is not available.';
+      logError(errorMsg);
+      throw new Error(errorMsg);
+    }
     const subprocess = execa(javaExecutable, args, { all: true });
 
     const generatedGraphPath = path.join(simOutputDir, 'graph.html');

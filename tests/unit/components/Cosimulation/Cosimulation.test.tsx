@@ -42,4 +42,49 @@ describe("CoSimulation component", () => {
 
     expect(screen.getByText("Results saved at: /path/to/results")).toBeInTheDocument();
   });
+
+  it('handles simulation-status events with a valid status', () => {
+    const setSimulationStatus = jest.fn();
+    (useCosimulation as jest.Mock).mockReturnValue({
+      error: null,
+      simulationStatus: 'Idle',
+      resultsPath: null,
+      setSimulationStatus,
+    });
+
+  (global as unknown as any).window = (global as unknown as any).window || {};
+  (global as unknown as any).window.electronAPI = {
+      on: (_event: string, cb: (...args: unknown[]) => void) => {
+        cb('Simulating');
+      },
+      off: jest.fn(),
+    };
+
+    render(<CoSimulation />);
+
+    expect(setSimulationStatus).toHaveBeenCalled();
+  });
+
+  it('handles simulation-status events with an unknown status (falls back to Idle)', () => {
+    const setSimulationStatus = jest.fn();
+    (useCosimulation as jest.Mock).mockReturnValue({
+      error: null,
+      simulationStatus: 'Idle',
+      resultsPath: null,
+      setSimulationStatus,
+    });
+
+  (global as unknown as any).window = (global as unknown as any).window || {};
+  (global as unknown as any).window.electronAPI = {
+      on: (_event: string, cb: (...args: unknown[]) => void) => {
+        cb('UNKNOWN_STATUS');
+      },
+      off: jest.fn(),
+    };
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<CoSimulation />);
+    expect(setSimulationStatus).toHaveBeenCalledWith(expect.any(String));
+    warnSpy.mockRestore();
+  });
 });
