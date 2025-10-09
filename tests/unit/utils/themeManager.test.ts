@@ -3,7 +3,7 @@ describe('themeManager', () => {
     jest.resetModules();
   });
 
-  it('sends dark-mode-update to main and graph windows and updates currentDarkMode', () => {
+  it('sends dark-mode-update to main and graph windows and updates currentDarkMode', async () => {
     const mainSend = jest.fn();
     const graphSend = jest.fn();
 
@@ -11,10 +11,10 @@ describe('themeManager', () => {
       graphWindowManager: { graphWindow: { webContents: { send: graphSend } } }
     }));
 
-    const themeManager = require('../../../src/utils/themeManager');
+  const themeManager = await import('../../../src/utils/themeManager');
 
-    const mainWin = { webContents: { send: mainSend } };
-    themeManager.registerMainWindow(mainWin);
+  const mainWin = { webContents: { send: mainSend } } as unknown as { webContents?: { send: jest.Mock } };
+  (themeManager as unknown as { registerMainWindow: (w: unknown) => void }).registerMainWindow(mainWin);
 
     themeManager.sendDarkModeUpdate(true);
 
@@ -23,28 +23,28 @@ describe('themeManager', () => {
     expect(themeManager.getCurrentDarkMode()).toBe(true);
   });
 
-  it('does not throw when no windows exist and still updates currentDarkMode', () => {
+  it('does not throw when no windows exist and still updates currentDarkMode', async () => {
     jest.doMock('../../../src/electron/gui/livePlottingWindow', () => ({
       graphWindowManager: { graphWindow: null }
     }));
 
-    const themeManager = require('../../../src/utils/themeManager');
+  const themeManager = await import('../../../src/utils/themeManager');
 
-    expect(() => themeManager.sendDarkModeUpdate(false)).not.toThrow();
-    expect(themeManager.getCurrentDarkMode()).toBe(false);
+  expect(() => (themeManager as unknown as { sendDarkModeUpdate: (b: boolean) => void }).sendDarkModeUpdate(false)).not.toThrow();
+  expect((themeManager as unknown as { getCurrentDarkMode: () => boolean }).getCurrentDarkMode()).toBe(false);
   });
 
-  it('skips windows missing webContents without throwing', () => {
-    const graph = { webContents: undefined } as any;
+  it('skips windows missing webContents without throwing', async () => {
+    const graph = { webContents: undefined } as unknown;
     jest.doMock('../../../src/electron/gui/livePlottingWindow', () => ({
       graphWindowManager: { graphWindow: graph }
     }));
 
-    const themeManager = require('../../../src/utils/themeManager');
-    const mainWin = { webContents: undefined } as any;
-    themeManager.registerMainWindow(mainWin);
+  const themeManager = await import('../../../src/utils/themeManager');
+  const mainWin = { webContents: undefined } as unknown;
+  (themeManager as unknown as { registerMainWindow: (w: unknown) => void }).registerMainWindow(mainWin);
 
-    expect(() => themeManager.sendDarkModeUpdate(true)).not.toThrow();
-    expect(themeManager.getCurrentDarkMode()).toBe(true);
+  expect(() => (themeManager as unknown as { sendDarkModeUpdate: (b: boolean) => void }).sendDarkModeUpdate(true)).not.toThrow();
+  expect((themeManager as unknown as { getCurrentDarkMode: () => boolean }).getCurrentDarkMode()).toBe(true);
   });
 });

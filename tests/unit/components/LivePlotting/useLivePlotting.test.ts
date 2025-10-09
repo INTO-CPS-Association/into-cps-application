@@ -28,12 +28,12 @@ describe('useLivePlottingData', () => {
     }
 
     beforeAll(() => {
-        originalWebSocket = global.WebSocket;
-        (global as unknown as { WebSocket: typeof WebSocket }).WebSocket = MockWebSocket as unknown as typeof WebSocket;
+    originalWebSocket = (globalThis as unknown as { WebSocket?: typeof WebSocket }).WebSocket as typeof WebSocket;
+    (globalThis as unknown as { WebSocket?: unknown }).WebSocket = MockWebSocket as unknown as typeof WebSocket;
     });
 
     afterAll(() => {
-        global.WebSocket = originalWebSocket;
+    (globalThis as unknown as { WebSocket?: typeof WebSocket }).WebSocket = originalWebSocket;
     });
 
     beforeEach(() => {
@@ -135,6 +135,9 @@ describe('useLivePlottingData', () => {
 
 describe('getChartOption & extractSignals', () => {
 
+    type SeriesLike = { xAxisIndex?: number; name?: string } & Record<string, unknown>;
+    type TooltipWithFormatter = { formatter?: (params: unknown) => string } & Record<string, unknown>;
+
     it('builds series correctly from data', () => {
         const data: DataMap = {
             signal1: [{ time: 1000, value: 42 }, { time: 2000, value: 55 }],
@@ -144,9 +147,9 @@ describe('getChartOption & extractSignals', () => {
 
         const seriesArray = Array.isArray(option.series) ? option.series : [];
         expect(seriesArray.length).toBeGreaterThanOrEqual(2);
-        const simulated = seriesArray.filter(s => (s as any).xAxisIndex === 0);
+        const simulated = seriesArray.filter(s => (s as SeriesLike).xAxisIndex === 0);
         expect(simulated).toHaveLength(2);
-        const simNames = simulated.map(s => (s as any).name).sort();
+        const simNames = simulated.map(s => (s as SeriesLike).name).sort();
         expect(simNames).toEqual(['signal1', 'signal2']);
     });
 
@@ -186,8 +189,9 @@ describe('getChartOption & extractSignals', () => {
             s2: [{ time: 1, value: 20, realTime: 2 }],
         };
         const option = getChartOption(data, false, null);
-        const formatter = option.tooltip && (option.tooltip as any).formatter;
-        expect(formatter('not-array')).toBe('');
+    const formatter = option.tooltip ? (option.tooltip as unknown as TooltipWithFormatter).formatter : undefined;
+        const fmt = typeof formatter === 'function' ? formatter : (() => '');
+        expect(fmt('not-array')).toBe('');
 
         const params = [
             { value: [1, 10], data: [1, undefined, 2], seriesName: 's1' },
@@ -195,7 +199,7 @@ describe('getChartOption & extractSignals', () => {
             { value: [1, 20], seriesName: 's2' },
         ];
 
-        const result = formatter(params as any);
+    const result = fmt(params as unknown);
         expect(result).toEqual(expect.stringContaining('Simulated Time'));
         expect(result).toEqual(expect.stringContaining('Real Time'));
         expect(result).toEqual(expect.stringContaining('s1'));
@@ -203,17 +207,17 @@ describe('getChartOption & extractSignals', () => {
     });
 
     it('createWebSocketWithRetry returns a close function that closes the socket and calls onOpen', () => {
-        const originalWS = (global as any).WebSocket;
-        let instance: any;
+    const originalWS = (globalThis as unknown as { WebSocket?: typeof WebSocket }).WebSocket;
+    const createdInstances: Array<{ close: jest.Mock }> = [];
         class LocalMock {
             onopen = () => {};
             onmessage = () => {};
             onerror = () => {};
             onclose = () => {};
             close = jest.fn();
-            constructor(public url: string) { instance = this; setTimeout(() => this.onopen(), 0); }
+            constructor(public url: string) { createdInstances.push(this as unknown as { close: jest.Mock }); setTimeout(() => this.onopen(), 0); }
         }
-        (global as any).WebSocket = LocalMock as any;
+        (globalThis as unknown as { WebSocket?: unknown }).WebSocket = LocalMock as unknown as typeof WebSocket;
 
         jest.useFakeTimers();
         const onOpen = jest.fn();
@@ -225,10 +229,11 @@ describe('getChartOption & extractSignals', () => {
         jest.advanceTimersByTime(0);
         expect(onOpen).toHaveBeenCalled();
 
-        closeFn();
-        expect(instance.close).toHaveBeenCalled();
+    closeFn();
+    expect(createdInstances.length).toBeGreaterThan(0);
+    expect(createdInstances[0].close).toHaveBeenCalled();
 
         jest.useRealTimers();
-        (global as any).WebSocket = originalWS;
+    (globalThis as unknown as { WebSocket?: typeof WebSocket }).WebSocket = originalWS as typeof WebSocket | undefined;
     });
 });

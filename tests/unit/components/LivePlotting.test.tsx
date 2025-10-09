@@ -1,32 +1,31 @@
 import React from 'react';
+import type * as echarts from 'echarts';
 import { render, screen } from '@testing-library/react';
 import LivePlotting from '../../../src/components/LivePlotting/LivePlotting';
 import { DataMap, useLivePlottingData } from '../../../src/components/LivePlotting/useLivePlotting';
 
 jest.mock('../../../src/components/EChart', () => {
-  const React = require('react');
-  return {
-    __esModule: true,
-    EChart: React.forwardRef((props: any, ref: any) => {
-      const fakeChart = {
-        setOption: jest.fn(),
-      };
-      React.useEffect(() => {
+  const EChart = React.forwardRef((props: Record<string, unknown>, ref: React.Ref<echarts.ECharts | null>) => {
+    const fakeChart = {
+      setOption: jest.fn(),
+    };
+    React.useEffect(() => {
+      if (ref) {
+        if (typeof ref === 'function') (ref as React.RefCallback<echarts.ECharts | null>)(fakeChart as unknown as echarts.ECharts);
+        else if (typeof ref === 'object' && ref !== null) (ref as React.MutableRefObject<echarts.ECharts | null>).current = fakeChart as unknown as echarts.ECharts;
+      }
+      return () => {
         if (ref) {
-          if (typeof ref === 'function') ref(fakeChart);
-          else ref.current = fakeChart;
+          if (typeof ref === 'function') (ref as React.RefCallback<echarts.ECharts | null>)(null);
+          else if (typeof ref === 'object' && ref !== null) (ref as React.MutableRefObject<echarts.ECharts | null>).current = null;
         }
-        return () => {
-          if (ref) {
-            if (typeof ref === 'function') ref(null);
-            else ref.current = null;
-          }
-        };
-      }, [ref]);
+      };
+    }, [ref]);
 
-      return <div data-testid="mock-echart" {...props} />;
-    }),
-  };
+    return <div data-testid="mock-echart" />;
+  });
+  EChart.displayName = 'EChartMock';
+  return { __esModule: true, EChart };
 });
 
 jest.mock('../../../src/components/LivePlotting/useLivePlotting', () => ({
@@ -42,7 +41,7 @@ describe('LivePlotting Component', () => {
     setDarkMode: jest.Mock<void, [boolean]>;
   };
  
-  let chartRef: React.RefObject<any>;
+  let chartRef: React.RefObject<echarts.ECharts | null>;
 
   beforeEach(() => {
     mockHookReturn = {
@@ -53,7 +52,7 @@ describe('LivePlotting Component', () => {
     };
     (useLivePlottingData as jest.Mock).mockReturnValue(mockHookReturn);
     jest.clearAllMocks();
-    chartRef = React.createRef();
+  chartRef = React.createRef<echarts.ECharts | null>();
   });
 
   it('renders EChart with hook data', () => {

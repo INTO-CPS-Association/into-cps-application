@@ -5,7 +5,7 @@ import { ThemeProviderContext, useTheme } from '../../../src/contexts/ThemeConte
 afterEach(() => {
   cleanup();
   jest.clearAllMocks();
-  (window as any).electronAPI = undefined;
+  (globalThis as unknown as { electronAPI?: unknown }).electronAPI = undefined;
 });
 
 const Consumer: React.FC = () => {
@@ -26,7 +26,7 @@ describe('ThemeContext', () => {
     const removeListenerMock = jest.fn();
     const toggleMock = jest.fn();
 
-    (window as any).electronAPI = {
+    (globalThis as unknown as { electronAPI?: unknown }).electronAPI = {
       on: onMock,
       off: offMock,
       addToggleDarkModeListener: addListenerMock,
@@ -58,7 +58,7 @@ describe('ThemeContext', () => {
     const addListenerMock = jest.fn();
     const removeListenerMock = jest.fn();
 
-    (window as any).electronAPI = {
+    (globalThis as unknown as { electronAPI?: unknown }).electronAPI = {
       on: onMock,
       off: offMock,
       addToggleDarkModeListener: addListenerMock,
@@ -81,7 +81,8 @@ describe('ThemeContext', () => {
     expect(screen.getByTestId('dark').textContent).toBe('true');
 
     act(() => {
-      (window as any).electronAPI.addToggleDarkModeListener.mock.calls[0][0]();
+      const api = (globalThis as unknown as { electronAPI?: { addToggleDarkModeListener?: jest.Mock } }).electronAPI;
+      api?.addToggleDarkModeListener?.mock.calls[0][0]();
     });
 
     expect(screen.getByTestId('dark').textContent).toBe('false');
@@ -94,7 +95,7 @@ describe('ThemeContext', () => {
     const removeListenerMock = jest.fn();
     const toggleMock = jest.fn();
 
-    (window as any).electronAPI = {
+    (globalThis as unknown as { electronAPI?: unknown }).electronAPI = {
       on: onMock,
       off: offMock,
       addToggleDarkModeListener: addListenerMock,

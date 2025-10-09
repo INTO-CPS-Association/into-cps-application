@@ -52,13 +52,14 @@ describe("CoSimulation component", () => {
       setSimulationStatus,
     });
 
-  (global as unknown as any).window = (global as unknown as any).window || {};
-  (global as unknown as any).window.electronAPI = {
+  const win = globalThis as unknown as { electronAPI?: unknown };
+  win.electronAPI = win.electronAPI || undefined;
+  win.electronAPI = {
       on: (_event: string, cb: (...args: unknown[]) => void) => {
         cb('Simulating');
       },
       off: jest.fn(),
-    };
+    } as unknown;
 
     render(<CoSimulation />);
 
@@ -74,13 +75,14 @@ describe("CoSimulation component", () => {
       setSimulationStatus,
     });
 
-  (global as unknown as any).window = (global as unknown as any).window || {};
-  (global as unknown as any).window.electronAPI = {
+  const win2 = globalThis as unknown as { electronAPI?: unknown };
+  win2.electronAPI = win2.electronAPI || undefined;
+  win2.electronAPI = {
       on: (_event: string, cb: (...args: unknown[]) => void) => {
         cb('UNKNOWN_STATUS');
       },
       off: jest.fn(),
-    };
+    } as unknown;
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     render(<CoSimulation />);

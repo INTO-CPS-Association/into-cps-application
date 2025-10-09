@@ -50,51 +50,44 @@ describe("errorHandler", () => {
     handleError(new Error("Test error"));
   });
 
-  it("handles error in main", () => {
+  it("handles error in main", async () => {
     jest.resetModules();
-  
-    jest.isolateModules(() => {
-      jest.doMock("electron", () => ({
-        ipcMain: { emit: jest.fn() },
-      }));
-  
-      jest.doMock("../../../src/utils/logger", () => ({
-        logError: jest.fn(),
-        logWarn: jest.fn(),
-      }));
-  
-      setProcessType("browser");
-  
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { handleError } = require("../../../src/utils/errorHandler");
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { logError } = require("../../../src/utils/logger");
-      handleError("Main error");
-  
-      expect(logError).toHaveBeenCalledWith("[Error Main Process]: Main error");
-    });
+
+    jest.doMock("electron", () => ({
+      ipcMain: { emit: jest.fn() },
+    }));
+
+    jest.doMock("../../../src/utils/logger", () => ({
+      logError: jest.fn(),
+      logWarn: jest.fn(),
+    }));
+
+    setProcessType("browser");
+
+    const { handleError } = await import("../../../src/utils/errorHandler");
+    const { logError } = await import("../../../src/utils/logger");
+
+    handleError("Main error");
+
+    expect(logError).toHaveBeenCalledWith("[Error Main Process]: Main error");
   });
   
-  it("logs warning on unknown process type", () => {
+  it("logs warning on unknown process type", async () => {
     jest.resetModules();
-  
-    jest.isolateModules(() => {
-      jest.doMock("../../../src/utils/logger", () => ({
-        logError: jest.fn(),
-        logWarn: jest.fn(),
-      }));
-  
-      setProcessType(undefined);
-  
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { handleError } = require("../../../src/utils/errorHandler");
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { logWarn } = require("../../../src/utils/logger");
-  
-      handleError("Unknown");
-  
-      expect(logWarn).toHaveBeenCalledWith("[Error] Unknown process type.");
-    });
+
+    jest.doMock("../../../src/utils/logger", () => ({
+      logError: jest.fn(),
+      logWarn: jest.fn(),
+    }));
+
+    setProcessType(undefined);
+
+    const { handleError } = await import("../../../src/utils/errorHandler");
+    const { logWarn } = await import("../../../src/utils/logger");
+
+    handleError("Unknown");
+
+    expect(logWarn).toHaveBeenCalledWith("[Error] Unknown process type.");
   });
  
 });
@@ -115,52 +108,45 @@ describe("sendNotification", () => {
     });
   });
 
-  it("sends notification in main process (browser)", () => {
+  it("sends notification in main process (browser)", async () => {
     jest.resetModules();
-  
+
     const mockEmit = jest.fn();
-  
-    jest.isolateModules(() => {
-      jest.doMock("electron", () => ({
-        ipcMain: { emit: mockEmit },
-      }));
-  
-      setProcessType("browser");
-  
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { sendNotification } = require("../../../src/utils/errorHandler");
-  
-      sendNotification("Test notify", "success");
-  
-      expect(mockEmit).toHaveBeenCalledWith(
-        "show-notification",
-        null,
-        "Test notify",
-        "success"
-      );
-    });
-  });  
+
+    jest.doMock("electron", () => ({
+      ipcMain: { emit: mockEmit },
+    }));
+
+    setProcessType("browser");
+
+    const { sendNotification } = await import("../../../src/utils/errorHandler");
+
+    sendNotification("Test notify", "success");
+
+    expect(mockEmit).toHaveBeenCalledWith(
+      "show-notification",
+      null,
+      "Test notify",
+      "success"
+    );
+  });
    
-  it("logs warning on unknown process type (sendNotification)", () => {
+  it("logs warning on unknown process type (sendNotification)", async () => {
     jest.resetModules();
-  
-    jest.isolateModules(() => {
-      jest.doMock("../../../src/utils/logger", () => ({
-        logError: jest.fn(),
-        logWarn: jest.fn(),
-      }));
-  
-      setProcessType(undefined);
-  
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { sendNotification } = require("../../../src/utils/errorHandler");
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { logWarn } = require("../../../src/utils/logger");
-  
-      sendNotification("Test message", "warning");
-  
-      expect(logWarn).toHaveBeenCalledWith("[Notification] Unknown process type.");
-    });
+
+    jest.doMock("../../../src/utils/logger", () => ({
+      logError: jest.fn(),
+      logWarn: jest.fn(),
+    }));
+
+    setProcessType(undefined);
+
+    const { sendNotification } = await import("../../../src/utils/errorHandler");
+    const { logWarn } = await import("../../../src/utils/logger");
+
+    sendNotification("Test message", "warning");
+
+    expect(logWarn).toHaveBeenCalledWith("[Notification] Unknown process type.");
   });
   
 });
