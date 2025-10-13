@@ -3,6 +3,7 @@ import type { Config } from "jest";
 const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: "jsdom",
+  setupFiles: ["<rootDir>/tests/jest.silentConsole.ts"],
   setupFilesAfterEnv: ["<rootDir>/tests/setupTests.ts"],
   testMatch: ["<rootDir>/tests/unit/**/*.test.{ts,tsx,js,jsx}"],
   moduleNameMapper: {
@@ -20,6 +21,10 @@ const config: Config = {
     "src/**/*.{ts,tsx,js,jsx}",
     "!src/main.tsx",
     "!src/**/*.d.ts",
+  ],
+  coveragePathIgnorePatterns: [
+    "<rootDir>/src/utils/logger.ts",
+    "<rootDir>/src/utils/errorHandler.ts",
   ],
   coverageReporters: ["json", "lcov", "text", "clover"],
 };

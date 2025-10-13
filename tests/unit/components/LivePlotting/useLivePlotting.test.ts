@@ -23,7 +23,7 @@ describe('useLivePlottingData', () => {
 
         constructor(public url: string) {
             wsInstances.push(this);
-            setTimeout(() => this.onopen(), 0);
+            this.onopen();
         }
     }
 
