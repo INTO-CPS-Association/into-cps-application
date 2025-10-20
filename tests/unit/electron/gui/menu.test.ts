@@ -13,6 +13,20 @@ jest.mock('electron', () => ({
     })),
     setApplicationMenu: jest.fn(),
   },
+  app: {
+    getAppPath: jest.fn(() => '/mock/app/path'),
+    on: jest.fn(),
+    once: jest.fn(),
+    quit: jest.fn(),
+  },
+  ipcMain: {
+    on: jest.fn(),
+    handle: jest.fn(),
+  },
+  nativeTheme: {
+    shouldUseDarkColors: false,
+    on: jest.fn(),
+  },
 }));
 
 jest.mock('../../../../src/utils/config', () => ({

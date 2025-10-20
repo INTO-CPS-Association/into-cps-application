@@ -1,17 +1,18 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 import SimulationGuide from './SimulationGuide';
+import { PAGETITLES, LABELS } from '../utils/constants';
+import { APP_VERSION } from '../utils/constants/appShared';
 
 const Main: React.FC = () => (
   <Box>
     <Typography variant="h4" component="h1" gutterBottom>
-      INTO-CPS &gt; Welcome
+      {PAGETITLES.Main}
     </Typography>
     <Typography variant="body1">
-      Welcome to the INTO-CPS Application
+      {LABELS.Main.Message}
       <Typography variant="body1" component="span" id="appVersion">
-        {' '}
-        5.0.0
+        {' '}{APP_VERSION}
       </Typography>
     </Typography>
     <SimulationGuide />

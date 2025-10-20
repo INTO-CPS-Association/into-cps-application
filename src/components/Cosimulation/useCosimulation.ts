@@ -1,35 +1,45 @@
 import { useState, useEffect } from 'react';
-import { SimulationStatus } from '../../utils/constants/cosimulation/statuses';
+import { SimulationStatus, SimulationStatusType, CosimulationErrors, GlobalErrors } from "../../utils/constants";
 
 export const useCosimulation = () => {
   const [error, setError] = useState<string | null>(null);
-  const [simulationStatus, setSimulationStatus] = useState<string>('Idle');
+  const [simulationStatus, setSimulationStatus] = useState<SimulationStatusType>(SimulationStatus.Idle);
   const [resultsPath, setResultsPath] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleStatusUpdate = async (_: unknown, status: string) => {      
-      setSimulationStatus(status);
+    const handleStatusUpdate = async (_: unknown, status: string) => {
+      if (!Object.values(SimulationStatus).includes(status as SimulationStatusType)) return;
+      const typedStatus = status as SimulationStatusType;
 
-      if (status === SimulationStatus.StartingSimulation) {
-        setResultsPath(null);
-        setError(null);
-      }
+      setSimulationStatus(typedStatus);
 
-      if (status === SimulationStatus.Started) {
-        setResultsPath(null);
-      }
+      switch (typedStatus) {
+        case SimulationStatus.StartingSimulation:
+          setResultsPath(null);
+          setError(null);
+          break;
 
-      if (status === SimulationStatus.SimulationCompleted) {
-        try {
-          const latestResultPath = await window?.cosimulationAPI?.getLatestResultFolder();
-          if (!latestResultPath) {
-            throw new Error('No recent simulation result folder found.');
+        case SimulationStatus.Started:
+          setResultsPath(null);
+          break;
+
+        case SimulationStatus.SimulationCompleted:
+          try {
+            const latestResultPath = await window?.cosimulationAPI?.getLatestResultFolder();
+            if (!latestResultPath) {
+              throw new Error(CosimulationErrors.NoResultsFolder);
+            }
+            setResultsPath(latestResultPath);
+            setError(null); // successful completion should clear prior errors
+          } catch (err) {
+            console.error("[useCosimulation]", CosimulationErrors.FailedToFindResults, err);
+            setError(CosimulationErrors.FailedToFindResults);
           }
-          setResultsPath(latestResultPath);
-        } catch (err) {
-          console.error('[useCosimulation] Error getting results folder:', err);
-          setError('Failed to find simulation results.');
-        }
+          break;
+
+        default:
+          console.warn("[useCosimulation]", CosimulationErrors.UnknownStatus, status);
+          setError(GlobalErrors.Unknown);
       }
     };
 
@@ -38,7 +48,7 @@ export const useCosimulation = () => {
     };
 
     const handleCoeReset = () => {
-      setSimulationStatus('Idle');
+      setSimulationStatus(SimulationStatus.Idle);
       setResultsPath(null);
       setError(null);
     };
@@ -54,5 +64,5 @@ export const useCosimulation = () => {
     };
   }, []);
 
-  return { error, simulationStatus, resultsPath };
+  return { error, simulationStatus, resultsPath, setSimulationStatus };
 };

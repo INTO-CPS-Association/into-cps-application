@@ -1,6 +1,12 @@
 import "@testing-library/jest-dom";
 import { ICosimulationAPI } from "../src/types/global";
 
+jest.mock('electron', () => ({
+  BrowserWindow: {
+    getAllWindows: jest.fn(() => [{ webContents: { send: jest.fn() } }]),
+  }
+}));
+
 beforeAll(() => {
   const style = document.createElement("style");
   style.innerHTML = `
@@ -44,15 +50,16 @@ const mockElectronAPI = {
   removeErrorListener: jest.fn(),
   addToggleDarkModeListener: jest.fn(),
   removeToggleDarkModeListener: jest.fn(),
+  toggleDarkMode: jest.fn(),
+  updateDarkMode: jest.fn(),
+  getDarkMode: jest.fn().mockResolvedValue(false),
   addNotificationListener: jest.fn(),
   removeNotificationListener: jest.fn(),
   sendNotification: jest.fn(),
   on: jest.fn(),
   off: jest.fn(),
   readFile: jest.fn().mockResolvedValue("mock content"),
-  writeFile: jest.fn().mockResolvedValue(true),
-  updateDarkMode: jest.fn(),
-  getDarkMode: jest.fn().mockReturnValue(false),
+  writeFile: jest.fn().mockResolvedValue(undefined),
 };
 
 

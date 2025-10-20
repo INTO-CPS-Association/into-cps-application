@@ -1,11 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { EChartsOption } from 'echarts';
+import { MAX_POINTS, ZOOM_RANGE, AUTO_ZOOM_END, MAX_SLIDER_PERCENT, WEBSOCKET, ChartLabels, ChartDimensions, DataZoomTypes, ChartSeriesDefaults, ChartStyles } from "../../utils/constants";
 
-export type PlotData = { time: number; value: number };
+export type PlotData = { time: number; value: number, realTime?: number };
 export type DataMap = Record<string, PlotData[]>;
 
-export const MAX_POINTS = 10000;
-export const WEBSOCKET_URL = 'ws://localhost:8085';
+// --- DATA MAP VALIDATION ---
+export function validateDataMap(data: DataMap): DataMap {
+  const validData: DataMap = {};
+  for (const [key, values] of Object.entries(data)) {
+    if (typeof key !== 'string') continue;
+    const validValues = values.filter(v => typeof v.time === 'number' && typeof v.value === 'number');
+    if (validValues.length > 0) validData[key] = validValues;
+  }
+  return validData;
+}
+
 
 // --- SIGNALS EXTRACTION ---
 export function extractSignals(obj: unknown, prefix = ''): Record<string, number> {
@@ -14,12 +24,15 @@ export function extractSignals(obj: unknown, prefix = ''): Record<string, number
 
   for (const key in obj as Record<string, unknown>) {
     const value = (obj as Record<string, unknown>)[key];
-    const path = prefix ? `${prefix}.${key}` : key;
+    const cleanKey = key.replace(/^{|}$/g, '');
+    const path = prefix ? `${prefix}.${cleanKey}` : cleanKey;
 
     if (typeof value === 'number') result[path] = value;
     else if (typeof value === 'boolean') result[path] = value ? 1 : 0;
-    else if (typeof value === 'object' && value !== null)
-      Object.assign(result, extractSignals(value, path));
+    else if (typeof value === 'object' && value !== null) {
+      const nestedSignals = extractSignals(value, path);
+      Object.assign(result, nestedSignals);
+    }
   }
   return result;
 }
@@ -27,59 +40,129 @@ export function extractSignals(obj: unknown, prefix = ''): Record<string, number
 // --- CHART OPTIONS ---
 export function getChartOption(data: DataMap, darkMode: boolean, autoZoomEnd: number | null): EChartsOption {
   const total = Object.values(data)[0]?.length || 0;
-  const zoomRange = 100;
-  const timeLabels = Object.values(data)[0]?.map(d => new Date(d.time).toLocaleTimeString()) || [];
+
+  const filteredData = validateDataMap(
+    Object.fromEntries(
+      Object.entries(data).filter(([key, values]) =>
+        key !== "dummy" && values && values.length > 0
+      )
+    )
+  );
 
   return {
-    backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
-    textStyle: { color: darkMode ? '#ffffff' : '#000000' },
+    backgroundColor: darkMode ? ChartStyles.Dark.Background : ChartStyles.Light.Background,
+    textStyle: { color: darkMode ? ChartStyles.Dark.Text : ChartStyles.Light.Text },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: darkMode ? '#333' : '#fff',
-      textStyle: { color: darkMode ? '#fff' : '#000' }
+      backgroundColor: darkMode ? ChartStyles.Dark.TooltipBg : ChartStyles.Light.TooltipBg,
+      textStyle: { color: darkMode ? ChartStyles.Dark.TooltipText : ChartStyles.Light.TooltipText },
+      formatter: (params: unknown) => {
+        if (!Array.isArray(params)) return '';
+        const first = params[0] as { value: number[]; data?: (number | undefined)[]; seriesName?: string };
+        const simulated = first.value[0];
+        const real = first.data ? first.data[2] : undefined;
+
+        let result = `Simulated Time: ${simulated.toFixed(2)}s<br/>`;
+        if (real !== undefined) result += `Real Time: ${real.toFixed(2)}s<br/>`;
+
+        const seenSeries = new Set<string>();
+        params.forEach((param) => {
+          const p = param as { seriesName?: string; value?: (number | { toFixed: (n: number) => string })[] };
+          const seriesName = p.seriesName ?? '';
+          if (seenSeries.has(seriesName)) return;
+          seenSeries.add(seriesName);
+          const val = p.value ? p.value[1] as number : NaN;
+          if (!Number.isNaN(val)) result += `${seriesName}: ${val.toFixed(4)}<br/>`;
+        });
+
+        return result;
+      }
     },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: timeLabels,
-      name: 'Time',
-      nameLocation: 'end',
-      nameGap: 10,
-      axisLine: { lineStyle: { color: darkMode ? '#aaa' : '#333' } },
-      axisLabel: { color: darkMode ? '#aaa' : '#333', rotate: 45, interval: 'auto' },
+    legend: {
+      show: true,
+      data: Object.keys(filteredData),
+      textStyle: { color: darkMode ? ChartStyles.Dark.Text : ChartStyles.Light.Text },
+      top: 10,
+      right: 20,
+      backgroundColor: darkMode ? '#222' : '#fff',
+      borderRadius: 5,
+      padding: [5, 10]
     },
+    xAxis:
+      [
+        {
+          type: 'value',
+          name: ChartLabels.SimulatedTime,
+          axisLine: { lineStyle: { color: darkMode ? ChartStyles.Dark.Axis : ChartStyles.Light.Axis } },
+          axisLabel: {
+            color: darkMode ? ChartStyles.Dark.Axis : ChartStyles.Light.Axis,
+            formatter: val => val.toFixed(2),
+          },
+        },
+        {
+          type: 'value',
+          name: ChartLabels.RealTime,
+          axisLine: { show: true, lineStyle: { color: darkMode ? ChartStyles.Dark.Axis : ChartStyles.Light.Axis } },
+          axisLabel: {
+            formatter: (val: number) => `${val.toFixed(1)}s`,
+            showMinLabel: true,
+            showMaxLabel: true
+          },
+          splitLine: { show: false },
+          axisTick: { show: false },
+          position: 'bottom',
+          offset: 20
+        }
+      ],
     yAxis: {
       type: 'value',
-      name: 'Value',
-      axisLine: { lineStyle: { color: darkMode ? '#aaa' : '#333' } },
-      axisLabel: { color: darkMode ? '#aaa' : '#333' },
+      name: ChartLabels.Value,
+      axisLine: { lineStyle: { color: darkMode ? ChartStyles.Dark.Axis : ChartStyles.Light.Axis } },
+      axisLabel: { color: darkMode ? ChartStyles.Dark.Axis : ChartStyles.Light.Axis },
     },
-    series: Object.entries(data).map(([key, values]) => ({
-      name: key,
-      type: 'line' as const,
-      data: values.map(d => d.value),
-      smooth: true,
-      showSymbol: false,
-      lineStyle: { width: 2 },
-    })),
-    grid: { top: 40, bottom: 40, left: 50, right: 80, containLabel: true },
-    animation: false,
+    series: [
+      ...Object.entries(filteredData).map(([key, values]) => ({
+        name: key,
+        type: 'line' as const,
+        xAxisIndex: 0, // Simulated Time
+        data: values.map(d => [d.time, d.value, d.realTime]),
+        smooth: ChartSeriesDefaults.smooth,
+        showSymbol: ChartSeriesDefaults.showSymbol,
+        lineStyle: { width: ChartStyles.LineWidth },
+        connectNulls: false,
+      })),
+      ...Object.entries(filteredData).map(([key, values]) => ({
+        name: key + '_realTime',
+        type: 'line' as const,
+        xAxisIndex: 1,
+        data: values.map(d => [d.realTime ?? 0, d.value]),
+        lineStyle: { width: 0 },
+        showSymbol: false,
+        tooltip: { show: false },
+        emphasis: { focus: 'none' as const },
+        silent: true,
+        legendHoverLink: false,
+      }))
+    ],
+    grid: ChartStyles.Grid,
+    animation: true,
     dataZoom: [
       {
-        type: 'slider' as const,
-        bottom: 20,
-        height: 20,
-        xAxisIndex: 0,
-        start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0,
-        end: 100
+        type: DataZoomTypes.Slider,
+        xAxisIndex: [0, 1],
+        bottom: ChartDimensions.DataZoom.bottom,
+        height: ChartDimensions.DataZoom.height,
+        start: autoZoomEnd !== null ? Math.max(0, MAX_SLIDER_PERCENT - (ZOOM_RANGE / total) * MAX_SLIDER_PERCENT) : 0,
+        end: AUTO_ZOOM_END
       },
       {
-        type: 'inside' as const,
-        xAxisIndex: 0,
-        start: autoZoomEnd !== null ? Math.max(0, 100 - (zoomRange / total) * 100) : 0,
-        end: 100
-      },
-    ],
+        type: DataZoomTypes.Inside,
+        xAxisIndex: [0, 1],
+        start: autoZoomEnd !== null ? Math.max(0, MAX_SLIDER_PERCENT - (ZOOM_RANGE / total) * MAX_SLIDER_PERCENT) : 0,
+        end: AUTO_ZOOM_END
+      }
+    ]
+
   };
 }
 
@@ -88,34 +171,87 @@ export function useLivePlottingData() {
   const [data, setData] = useState<DataMap>({});
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [autoZoomEnd, setAutoZoomEnd] = useState<number | null>(null);
+  const [simulationStarted, setSimulationStarted] = useState(true);
+  const startTsRef = useRef<number | null>(null);
+
+  // Needed for lazy connect
+  useEffect(() => {
+    const handler = () => setSimulationStarted(true);
+    window.electronAPI.on('menu-start-simulation', handler);
+
+    return () => {
+      window.electronAPI.off('menu-start-simulation', handler);
+    };
+  }, []);
 
   useEffect(() => {
-    const cleanup = createWebSocketWithRetry(
-      WEBSOCKET_URL,
-      (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          const timestamp = msg.time * 1000;
-          const signals = extractSignals(msg.data);
+    if (!simulationStarted) return;
 
+    let retries = 0;
+    let socket: WebSocket;
+
+    const connect = () => {
+      socket = new WebSocket(WEBSOCKET.URL);
+      socket.onopen = () => {
+        console.log('[WS] Connected at: ' + WEBSOCKET.URL);
+        retries = 0;
+        setAutoZoomEnd(AUTO_ZOOM_END);
+      };
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data as string);
+          const timestamp = msg.time;
+          if (typeof timestamp !== 'number' || isNaN(timestamp)) {
+            console.warn('[WS] Invalid timestamp:', msg.time);
+            return;
+          }
+
+          if (startTsRef.current === null) {
+            startTsRef.current = timestamp;
+          }
+
+          const relTs = timestamp - (startTsRef.current ?? 0);
+          const realTimeSec = (performance.now() - (startTsRef.current ?? performance.now())) / 1000;
+
+          const signals = extractSignals(msg.data as unknown);
           setData(prev => {
             const updated: DataMap = { ...prev };
-            for (const key in signals) {
+            for (const [key, value] of Object.entries(signals)) {
               if (!updated[key]) updated[key] = [];
-              updated[key].push({ time: timestamp, value: signals[key] });
-              if (updated[key].length > MAX_POINTS) updated[key] = updated[key].slice(-MAX_POINTS);
+              const existingIndex = updated[key].findIndex(p => p.time === relTs);
+              if (existingIndex >= 0)
+                updated[key][existingIndex] = { ...updated[key][existingIndex], value, realTime: realTimeSec };
+              else
+                updated[key].push({ time: relTs, value, realTime: realTimeSec });
+              if (updated[key].length > MAX_POINTS)
+                updated[key] = updated[key].slice(-MAX_POINTS);
             }
             return updated;
           });
-        } catch { /* ignore */ }
-      },
-      () => {}, // onOpen
-      () => {}, // onError
-      () => setAutoZoomEnd(100) // onClose
-    );
 
-    return cleanup;
-  }, []);
+        } catch (e) {
+          console.error('WS parse error', e);
+        }
+      };
+
+      socket.onerror = () => { };
+      socket.onclose = () => {
+        if (retries < WEBSOCKET.MAX_RETRIES) {
+          retries++;
+          setTimeout(connect, WEBSOCKET.RETRY_DELAY);
+
+        }
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+    };
+  }, [simulationStarted]);
 
   return { data, darkMode, autoZoomEnd, setDarkMode };
 }
@@ -127,8 +263,8 @@ export function createWebSocketWithRetry(
   onOpen: () => void,
   onError: () => void,
   onClose: () => void,
-  retryDelay = 1000,
-  maxRetries = 10
+  retryDelay: number,
+  maxRetries: number,
 ) {
   let retries = 0;
   let socket: WebSocket;

@@ -15,6 +15,12 @@ jest.mock('../../../src/utils/processes/maestroUtils', () => ({
   getReadableTimestamp: jest.fn(() => '2024-06-01 12:00:00'),
   getJavaCommand: jest.fn(),
 }));
+jest.mock('electron', () => ({
+  BrowserWindow: {
+    getAllWindows: jest.fn(() => [{ webContents: { send: jest.fn() } }]),
+  },
+  ipcMain: { emit: jest.fn() }
+}));
 
 import * as maestro from '../../../src/cosimulation/maestro';
 import { __setSimulationInProgress } from '../../../src/cosimulation/maestro';
@@ -23,6 +29,13 @@ import * as maestroUtils from '../../../src/utils/processes/maestroUtils';
 beforeEach(() => {
   jest.clearAllMocks();
   (maestroUtils.getJavaCommand as jest.Mock).mockReturnValue('java');
+  __setSimulationInProgress(false);
+  jest.spyOn(configModule, 'getConfig').mockReturnValue({ ...mockConfig });
+  (fs.existsSync as jest.Mock).mockReturnValue(true);
+  (fs.mkdirSync as jest.Mock).mockImplementation(() => { });
+  (fs.writeFileSync as jest.Mock).mockImplementation(() => { });
+  (fs.createWriteStream as jest.Mock).mockReturnValue({ write: jest.fn(), end: jest.fn() });
+  (fs.renameSync as jest.Mock).mockImplementation(() => { });
 });
 
 

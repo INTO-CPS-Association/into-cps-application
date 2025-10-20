@@ -13,6 +13,17 @@ jest.mock('electron', () => {
     })),
     app: {
       getAppPath: jest.fn().mockReturnValue('/mock/app/path'),
+      on: jest.fn(),
+      once: jest.fn(),
+      quit: jest.fn(),
+    },
+    ipcMain: {
+      on: jest.fn(),
+      handle: jest.fn(),
+    },
+    nativeTheme: {
+      shouldUseDarkColors: false,
+      on: jest.fn(),
     },
   };
 });

@@ -1,5 +1,10 @@
-import { execa } from 'execa';
+let _cachedExeca: typeof import('execa').execa | undefined;
 
 export function getExeca() {
-  return execa;
+  if (!_cachedExeca) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- intentional lazy-require to avoid import-time ESM side-effects in tests
+    const { execa } = require('execa');
+    _cachedExeca = execa;
+  }
+  return _cachedExeca;
 }

@@ -1,78 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { ThemeProvider, CssBaseline, Box } from '@mui/material';
-import { lightTheme, darkTheme } from './themes';
+
 import Sidebar from './components/Sidebar';
 import ErrorSnackbar from './components/ErrorSnackbar';
 import Main from './components/Main';
 import CoSimulation from './components/Cosimulation/Cosimulation';
-import { styleConstants } from './utils/constants';
-import LivePlotting from './components/LivePlotting/LivePlotting';
-import { useLivePlottingData } from './components/LivePlotting/useLivePlotting';
+import LivePlottingContainer from './components/LivePlotting/LivePlottingContainer';
 
-const App: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
+import { lightTheme, darkTheme } from './utils/constants/style/themes';
+import { styleConstants } from './utils/constants';
+import { ThemeProviderContext, useTheme } from './contexts/ThemeContext';
+import { ROUTES } from './utils/constants/appShared';
+
+import type { NotificationType } from './types/global';
+
+const AppContent: React.FC = () => {
+  const { darkMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   // const sidebarWidth = sidebarOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH;
   const location = useLocation();
-  const isSidebarHidden = location.pathname === '/live-plotting';
-  const { data, autoZoomEnd } = useLivePlottingData();
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const isSidebarHidden = location.pathname === ROUTES.LivePlotting;
 
-  // Fetch initial dark mode state from main process
-  useEffect(() => {
-    const initializeDarkMode = async () => {
-      try {
-        const initialDarkMode = await window.electronAPI?.getDarkMode();
-        setDarkMode(initialDarkMode ?? false);
-      } catch (error) {
-        console.error('Failed to get initial dark mode:', error);
-        setDarkMode(false); // Fallback to light mode
-      }
-    };
-
-    initializeDarkMode();
-  }, []);
-
+  // --- Window Resize ---
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < styleConstants.INNER_WIDTH_SIZE) {
+      if (window.innerWidth < styleConstants.SIDEBAR.INNER_WIDTH_SIZE) {
         setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
       }
     };
 
+    handleResize(); // inizializza correttamente
     window.addEventListener('resize', handleResize);
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const handleToggleDarkMode = () => {
-      setDarkMode((prev) => {
-        const newValue = !prev;
-        window.electronAPI?.updateDarkMode(newValue);
-        return newValue;
-      });
-    };
-
-    // Listen for dark mode updates from main process
-    const handleDarkModeUpdate = (...args: unknown[]) => {
-      const isDark = args[0] as boolean;
-      setDarkMode(isDark);
-    };
-
-    window.electronAPI?.addToggleDarkModeListener(handleToggleDarkMode);
-    window.electronAPI?.on('dark-mode-update', handleDarkModeUpdate);
-
-    return () => {
-      window.electronAPI?.removeToggleDarkModeListener();
-      window.electronAPI?.off('dark-mode-update', handleDarkModeUpdate);
-    };
-  }, []);
-
+  // --- Project selection ---
   useEffect(() => {
     const handleProjectSelected = () => {
     };
@@ -84,6 +52,7 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // --- Start simulation from menu ---
   useEffect(() => {
     const handleError = (errorMessage: string) => {
       console.error('[App] Error received:', errorMessage);
@@ -115,8 +84,8 @@ const App: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to start simulation due to technical error:', err);
-
-        window.electronAPI?.sendNotification('Failed to start simulation due to technical error.', 'error');
+        const typeError: NotificationType = 'error';
+        window.electronAPI?.sendNotification('Failed to start simulation due to technical error.', typeError);
       }
     };
 
@@ -130,26 +99,27 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
-        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         {!isSidebarHidden && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />}
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: 3,
-              transition: `margin-left ${styleConstants.TRANSITION_DURATION} ease`,
-              marginLeft: `-10px`,
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Main />} />
-              <Route path="/cosimulation" element={<CoSimulation />} />
-              <Route path="/live-plotting" element={<LivePlotting data={data} darkMode={darkMode} autoZoomEnd={autoZoomEnd} />} />
-            </Routes>
-          </Box>
+        <Box component="main" sx={styleConstants.MAIN_CONTENT}>
+          <Routes>
+            <Route path={ROUTES.Main} element={<Main />} />
+            <Route path={ROUTES.CoSimulation} element={<CoSimulation />} />
+            <Route path={ROUTES.LivePlotting} element={<LivePlottingContainer />} />
+          </Routes>
         </Box>
-        <ErrorSnackbar />
-    </ThemeProvider>
+      </Box>
+      <ErrorSnackbar />
+    </ThemeProvider >
+  );
+};
+
+
+const App: React.FC = () => {
+  return (
+    <ThemeProviderContext>
+      <AppContent />
+    </ThemeProviderContext>
   );
 };
 

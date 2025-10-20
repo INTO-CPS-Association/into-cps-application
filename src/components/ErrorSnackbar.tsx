@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Snackbar, Alert } from '@mui/material';
-
-type SnackbarSeverity = 'info' | 'error' | 'warning' | 'success';
+import type { NotificationType } from '../types/global';
 
 const ErrorSnackbar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [severity, setSeverity] = useState<SnackbarSeverity>('info');
+  const [severity, setSeverity] = useState<NotificationType>('info');
 
   useEffect(() => {
     const handleError = (msg: string) => {
@@ -15,7 +14,7 @@ const ErrorSnackbar: React.FC = () => {
       setOpen(true);
     };
 
-    const handleNotification = (msg: string, type: SnackbarSeverity) => {
+    const handleNotification = (msg: string, type: NotificationType) => {
       setMessage(msg);
       setSeverity(type);
       setOpen(true);

@@ -1,78 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { Drawer, List, ListItem, ListItemText, ListItemButton, Toolbar, IconButton } from '@mui/material';
+import { ICONS } from '../utils/constants';
+import { styleConstants, LABELS } from '../utils/constants';
+import { ROUTES } from '../utils/constants/appShared';
+
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import HomeIcon from '@mui/icons-material/Home';
-import SettingsIcon from '@mui/icons-material/Settings';
-import { NavLink } from 'react-router-dom';
-import { styleConstants } from "../utils/constants";
 
-const Sidebar: React.FC<{ open: boolean; toggleSidebar: () => void }> = ({ open, toggleSidebar }) => {
-  const [isResponsive, setIsResponsive] = useState(false);
-  const [manualOpen, setManualOpen] = useState(false);
+interface SidebarProps {
+  open: boolean;
+  toggleSidebar: () => void;
+}
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < styleConstants.INNER_WIDTH_SIZE) {
-        setIsResponsive(true);
-        setManualOpen(false);
-      } else {
-        setIsResponsive(false);
-      }
-    };
+const Sidebar: React.FC<SidebarProps> = ({ open, toggleSidebar }) => {
+  const HomeIcon = ICONS.Main;
+  const CoSimulationIcon = ICONS.CoSimulation;
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-    
-  const handleToggle = () => {
-    setManualOpen(!manualOpen);
-    toggleSidebar();
-  };
-
-  const isOpen = isResponsive ? manualOpen : open;
-
-  return (
+    return (
     <Drawer
       variant="permanent"
-      open={isOpen}
+      open={open}
       sx={{
-        width: isOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH,
+        width: open ? styleConstants.SIDEBAR.DRAWER_WIDTH : styleConstants.SIDEBAR.COLLAPSED_WIDTH,
         flexShrink: 0,
         [`& .MuiDrawer-paper`]: {
-          width: isOpen ? styleConstants.DRAWER_WIDTH : styleConstants.COLLAPSED_WIDTH,
+          width: open ? styleConstants.SIDEBAR.DRAWER_WIDTH : styleConstants.SIDEBAR.COLLAPSED_WIDTH,
           boxSizing: 'border-box',
-          transition: `width ${styleConstants.TRANSITION_DURATION} ease`,
+          transition: `width ${styleConstants.SIDEBAR.TRANSITION_DURATION} ease`,
         },
       }}
     >
       <Toolbar
         sx={{
           display: 'flex',
-          justifyContent: isOpen ? 'flex-end' : 'center',
+          justifyContent: open ? 'flex-end' : 'center',
           alignItems: 'center',
-          height: `${styleConstants.TOOLBAR_HEIGHT}px`,
+          height: `${styleConstants.SIDEBAR.TOOLBAR_HEIGHT}px`,
         }}
       >
-        <IconButton onClick={handleToggle}>
-          {isOpen ? <ChevronLeftIcon /> : <MenuIcon />}
+        <IconButton onClick={toggleSidebar}>
+          {open ? <ChevronLeftIcon /> : <MenuIcon />}
         </IconButton>
       </Toolbar>
       <List>
         <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/">
+          <ListItemButton component={NavLink} to={ROUTES.Main}>
             <HomeIcon />
-            {isOpen && <ListItemText primary="Home" sx={{ marginLeft: 1 }} />}
+            {open && <ListItemText primary={LABELS.Sidebar.Main} sx={{ marginLeft: 1 }} />}
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton component={NavLink} to="/cosimulation">
-            <SettingsIcon />
-            {isOpen && <ListItemText primary="CoSimulation" sx={{ marginLeft: 1 }} />}
+          <ListItemButton component={NavLink} to={ROUTES.CoSimulation}>
+            <CoSimulationIcon />
+            {open && <ListItemText primary={LABELS.Sidebar.CoSimulation} sx={{ marginLeft: 1 }} />}
           </ListItemButton>
         </ListItem>
       </List>
