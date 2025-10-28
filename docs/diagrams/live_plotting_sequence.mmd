@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant Simulation as CoSimulation
+    participant WebSocket
+    participant Hook as useLivePlottingData
+    participant LivePlotting
+    participant EChart
+
+    %% 1. Simulation streams data %%
+    Simulation->>WebSocket: send JSON { time, data }
+
+    %% 2. Hook receives and processes %%
+    WebSocket-->>Hook: onMessage
+    Hook->>Hook: extractSignals()
+    Hook->>Hook: update DataMap state
+
+    %% 3. LivePlotting updates chart %%
+    Hook-->>LivePlotting: new data
+    LivePlotting->>EChart: setOption(updated chart config)
+    EChart->>LivePlotting: render updated chart

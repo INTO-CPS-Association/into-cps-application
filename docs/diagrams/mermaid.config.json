@@ -1,0 +1,14 @@
+{
+    "theme": "default",
+    "themeVariables": {
+      "primaryColor": "#000000",
+      "edgeLabelBackground": "#ffffff",
+      "nodeTextColor": "#000000",
+      "nodeBorder": "#000000",
+      "clusterBkg": "#ffffff",
+      "clusterBorder": "#cccccc",
+      "fontFamily": "Arial, sans-serif",
+      "lineColor": "#cccccc",
+      "shadowBlur": "0"
+    }
+  }  

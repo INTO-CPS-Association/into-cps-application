@@ -1,0 +1,22 @@
+classDiagram
+    class LivePlotting {
+        +data: DataMap
+        +darkMode?: boolean
+        +autoZoomEnd?: number | null
+    }
+
+    class EChart {
+        +option: EChartsOption
+        +chartSettings?: object
+        +optionSettings?: object
+    }
+
+    class useLivePlottingData {
+        -data: DataMap
+        -darkMode: boolean
+        -autoZoomEnd: number | null
+        +subscribeToWS(): void
+    }
+
+    LivePlotting --> EChart : renders
+    LivePlotting --> useLivePlottingData : uses hook
