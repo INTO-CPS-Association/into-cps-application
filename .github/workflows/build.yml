@@ -9,8 +9,6 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    env:
-      GH_TOKEN: fake_token
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
