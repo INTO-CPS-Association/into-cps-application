@@ -5,13 +5,15 @@ on:
     branches:
       - development
       - test-merge-draft
-
   workflow_dispatch:
 
 jobs:
   release:
     name: Create Draft Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout repository
@@ -25,17 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-ubuntu-latest
-          path: ./release/ubuntu
-
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-windows-latest
-          path: ./release/windows
+      - name: Build the app
+        run: npm run build -- --publish=never
 
       - name: Semantic Release (Draft)
         env:
