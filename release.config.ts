@@ -1,7 +1,9 @@
 import type { Options } from 'semantic-release';
 
 const config: Options = {
-  branches: ['main', { name: 'development', prerelease: false }],
+  branches: ['main', 
+    { name: 'development', prerelease: false },
+    { name: 'test-merge-draft', prerelease: false }],
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
