@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - development
+      - draft-and-graphs
   workflow_dispatch:
 
 jobs:
