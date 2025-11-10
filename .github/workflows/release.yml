@@ -34,10 +34,3 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release --extends ./release.config.ts
-
-      - name: Upload artifacts to Draft Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./release/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
