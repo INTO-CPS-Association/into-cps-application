@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - development
-
+      - test-merge-draft
 jobs:
   build:
     name: Build on ${{ matrix.os }}

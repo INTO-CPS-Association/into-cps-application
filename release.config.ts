@@ -1,7 +1,7 @@
 import type { Options } from 'semantic-release';
 
 const config: Options = {
-  branches: ['main', { name: 'development', prerelease: true }],
+  branches: ['main', { name: 'development', prerelease: false }],
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
@@ -21,7 +21,13 @@ const config: Options = {
     [
       '@semantic-release/github',
       {
+        successComment: false,
+        failComment: false,
         draft: true,
+        assets: [
+          './release/**',
+        ],
+        releaseName: 'INTO-CPS Application ${nextRelease.version}',
       },
     ],
   ],
