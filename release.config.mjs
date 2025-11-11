@@ -1,9 +1,12 @@
-import type { Options } from 'semantic-release';
-
-const config: Options = {
-  branches: ['main', 
+/**
+ * @type {import('semantic-release').Options}
+ */
+const config = {
+  branches: [
+    'main',
     { name: 'development', prerelease: false },
-    { name: 'test-merge-draft', prerelease: false }],
+    { name: 'test-merge-draft', channel: 'test-merge-draft', prerelease: false }
+  ],
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
@@ -17,7 +20,8 @@ const config: Options = {
       '@semantic-release/git',
       {
         assets: ['package.json', 'CHANGELOG.md'],
-        message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
+        message:
+          'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
       },
     ],
     [
@@ -26,9 +30,7 @@ const config: Options = {
         successComment: false,
         failComment: false,
         draft: true,
-        assets: [
-          './release/**',
-        ],
+        assets: ['./release/**'],
         releaseName: 'INTO-CPS Application ${nextRelease.version}',
       },
     ],
