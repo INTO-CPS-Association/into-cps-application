@@ -1,0 +1,64 @@
+classDiagram
+    %% Maestro Manager %%
+    class MaestroManager {
+        + startCosimulation(projectPath: string): Promise<void>
+        + getSimulationResult(): Promise<string>
+        - extractMaestroJar(): void
+        - safeWrite(stream, message, type): void
+        - initializeLoggingFile(type): string | null
+    }
+
+    %% Cosimulation API %%
+    class CosimulationAPI {
+        + maestro(type: string, data: unknown): Promise<MaestroResponse>
+        + onSimulationStatus(callback): void
+        + removeSimulationStatusListener(callback): void
+        + addCoeErrorListener(callback): void
+        + removeCoeErrorListener(): void
+        + addCoeResetListener(callback): void
+        + removeCoeResetListener(): void
+        + getConfig(): Promise<ConfigMaestro | null>
+        + getSimulationResult(): Promise<string>
+    }
+
+    %% Electron API %%
+    class ElectronAPI {
+        + on(event: string, callback): void
+        + off(event: string, callback): void
+        + invoke(channel: string, args?): Promise<unknown>
+        + send(channel: string, args...): void
+    }
+
+    %% Error Handler %%
+    class ErrorHandler {
+        + handleError(error): void
+        + sendNotification(message, type): void
+    }
+
+    %% Maestro Process Utilities %%
+    class MaestroUtils {
+        + isPortInUse(port: number): Promise<boolean>
+        + getJavaCommand(): string
+    }
+
+    %% Menu Manager %%
+    class MenuManager {
+        + updateCosimulationMenu(enabled: boolean): void
+    }
+
+    %% Config Manager %%
+    class ConfigManager {
+        + setProjectPath(path: string): void
+        + getConfig(): ConfigMaestro | null
+    }
+
+    %% Relationships %%
+    CosimulationAPI --> MaestroManager
+    MaestroManager --> MaestroUtils
+    MaestroManager --> ErrorHandler
+    MaestroManager --> MenuManager
+    CosimulationAPI --> ElectronAPI
+    ElectronAPI --> ErrorHandler
+    ElectronAPI --> ConfigManager
+    ElectronAPI --> MenuManager
+```

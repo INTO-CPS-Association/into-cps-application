@@ -1,0 +1,123 @@
+classDiagram
+    class App {
+        - darkMode: boolean
+        - sidebarOpen: boolean
+        - sidebarWidth: number
+        + toggleSidebar(): void
+        + toggleDarkMode(): void
+        + handleResize(): void
+        + handleToggleDarkMode(): void
+        + handleError(errorMessage: string): void
+    }
+
+    class Sidebar {
+        - isResponsive: boolean
+        - manualOpen: boolean
+        - width: number
+        + handleResize(): void
+        + handleToggle(): void
+        + setWidth(width: number): void
+    }
+
+    class Main {
+        + renderContent(): JSX.Element
+    }
+
+    class CoSimulation {
+        - error: string or null
+        - simulationStatus: string
+        - resultsPath: string or null
+        + startSimulation(): void
+        + stopSimulation(): void
+        + resetSimulation(): void
+    }
+
+    class ErrorSnackbar {
+        - open: boolean
+        - message: string
+        - severity: 'info' or 'error' or 'warning' or 'success'
+        + showError(message: string): void
+        + close(): void
+    }
+
+    class LivePlotting {
+        - data: DataMap
+        - darkMode?: boolean
+        - autoZoomEnd?: number or null
+        + updateData(newData: DataMap): void
+        + setAutoZoomEnd(value: number or null): void
+    }
+
+    class useCosimulation {
+        - error: string or null
+        - simulationStatus: string
+        - resultsPath: string or null
+        + start(): void
+        + stop(): void
+        + reset(): void
+        + handleStatusUpdate(event: unknown, status: string): void
+        + handleCoeError(event: unknown, errorMessage: string): void
+        + handleCoeReset(): void
+    }
+
+    class useLivePlotting {
+        - data: DataMap
+        - darkMode: boolean
+        - autoZoomEnd: number or null
+        + subscribe(callback): void
+        + unsubscribe(callback): void
+        + clearData(): void
+    }
+
+    class CosimulationAPI {
+        + maestro(args: any): void
+        + onSimulationStatus(callback): void
+        + removeSimulationStatusListener(callback): void
+        + addCoeErrorListener(callback): void
+        + removeCoeErrorListener(): void
+        + addCoeResetListener(callback): void
+        + removeCoeResetListener(): void
+        + getConfig(): any
+        + getLatestResultFolder(): string or null
+        + getSessionId(): string or null
+        + getSimulationResult(sessionId: string): string
+    }
+
+    class MaestroManager {
+        + startSimulation(): void
+        + extractMaestroJar(): void
+        + getLatestSimulationFolder(): string or null
+    }
+
+    class MenuManager {
+        + updateCosimulationMenu(status: string): void
+    }
+
+    class MaestroUtils {
+        + getReadableTimestamp(): string
+        + getJavaCommand(): string
+    }
+
+    class ErrorHandler {
+        + handleError(error: unknown): void
+        + sendNotification(message: string, type: string): void
+    }
+
+    App --> Sidebar
+    App --> Main
+    App --> CoSimulation
+    App --> LivePlotting
+    App --> ErrorSnackbar
+
+    CoSimulation --> useCosimulation : «hook»
+    LivePlotting --> useLivePlotting : «hook»
+
+    useCosimulation ..> CosimulationAPI : «listen»
+    useLivePlotting ..> CosimulationAPI : «data via WS»
+    ErrorSnackbar ..> CosimulationAPI : «error/notifications»
+
+    CosimulationAPI --> MaestroManager : «invoke»
+    CosimulationAPI --> ErrorHandler : «error handling»
+    MaestroManager --> ErrorHandler : «error handling»
+    MaestroManager --> MenuManager : «update menu»
+    MaestroManager --> MaestroUtils : «timestamp/java detection»

@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant User
+    participant Sidebar
+    participant Menu
+    participant IPC as ipcMain / ipcRenderer
+    participant Maestro as MaestroManager
+    participant LivePlot as LivePlottingWindow
+    participant ErrorSnackbar
+
+    %% 1. User opens CoSimulation page
+    User->>Sidebar: open CoSimulation page
+    Sidebar->>IPC: subscribe to simulation-status
+
+    %% 2. User starts simulation from Menu
+    User->>Menu: click "Start Simulation"
+    Menu->>IPC: send('menu-start-simulation')
+    IPC->>Maestro: startSimulation()
+    Maestro->>IPC: emit('simulation-status', "Simulation Started")
+    IPC-->>Sidebar: status update
+    IPC-->>LivePlot: status update
+
+    %% 3. Simulation Running
+    Maestro->>IPC: emit('simulation-status', "Simulating...")
+    IPC-->>Sidebar: status update
+    IPC-->>LivePlot: stream data
+
+    %% 4. Simulation Completed
+    Maestro->>IPC: emit('simulation-status', "Simulation Completed")
+    IPC-->>Sidebar: update final status
+    IPC-->>LivePlot: stop streaming
+
+    %% 5. Error Handling
+    opt Error occurs
+        Maestro->>IPC: emit('show-error', errorMessage)
+        IPC-->>ErrorSnackbar: display error
+    end

@@ -4,13 +4,11 @@ on:
   pull_request:
     branches:
       - development
-
+      - test-merge-draft
 jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    env:
-      GH_TOKEN: fake_token
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -53,16 +51,3 @@ jobs:
         if: runner.os != 'Linux'
         continue-on-error: true
         run: npx playwright test
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ matrix.os }}
-          path: |
-            release/*.AppImage
-            release/*.exe
-            release/*.msi
-            release/*.zip
-            release/*.dmg
-          if-no-files-found: ignore
-          retention-days: 1
