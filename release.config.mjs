@@ -5,7 +5,7 @@ const config = {
   branches: [
     'main',
     { name: 'development', prerelease: false },
-    { name: 'test-merge-draft', channel: 'test-merge-draft', prerelease: false }
+    { name: 'test-merge-draft', channel: 'test-merge-draft' }
   ],
   plugins: [
     '@semantic-release/commit-analyzer',
