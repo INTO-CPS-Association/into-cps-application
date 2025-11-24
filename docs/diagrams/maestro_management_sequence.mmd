@@ -1,0 +1,50 @@
+sequenceDiagram
+    participant User
+    participant Menu as ElectronMenu
+    participant Sidebar
+    participant CoSimulation
+    participant LivePlotting
+    participant CosimulationAPI
+    participant MM as MaestroManager
+    participant EH as ErrorHandler
+
+    %% 0. Create Project %%
+    User->>Menu: Click "Create New Project"
+    Menu->>CosimulationAPI: request project creation
+    CosimulationAPI->>ConfigManager: setProjectPath(projectPath)
+    ConfigManager->>CosimulationAPI: return configMaestro
+    CosimulationAPI-->>Sidebar: enable cosimulation
+    CosimulationAPI-->>ErrorSnackbar: show notification("Project created successfully")
+
+    %% 1. User opens CoSimulation page %%
+    User->>Sidebar: Click "CoSimulation"
+    Sidebar->>CoSimulation: open page
+    CoSimulation->>CosimulationAPI: subscribe to status updates
+
+    %% 2. User starts cosimulation from menu %%
+    User->>Menu: Click "Start CoSimulation"
+    Menu->>CosimulationAPI: request start
+
+    %% 3. MaestroManager orchestrates cosimulation %%
+    CosimulationAPI->>MM: startCosimulation(projectPath)
+    MM->>CosimulationAPI: sendSimulationStatus("Simulation Started")
+
+    %% 4. Cosimulation Running %%
+    MM->>CosimulationAPI: sendSimulationStatus("Simulation Running...")
+    CoSimulation->>LivePlotting: mount()
+    LivePlotting->>CosimulationAPI: subscribe to real-time data
+    CosimulationAPI-->>LivePlotting: stream data
+    LivePlotting->>LivePlotting: update chart
+
+    %% 5. Cosimulation Completion %%
+    MM->>CosimulationAPI: sendSimulationStatus("Simulation Completed")
+    MM->>CosimulationAPI: provide simulation result
+    CoSimulation->>CoSimulation: update resultsPath
+    CoSimulation->>LivePlotting: stop streaming if needed
+
+    %% 6. Optional Error Handling %%
+    opt Error occurs
+        MM->>EH: handleError(error)
+        CosimulationAPI->>CoSimulation: showError(errorMessage)
+        CoSimulation->>ErrorSnackbar: display error
+    end

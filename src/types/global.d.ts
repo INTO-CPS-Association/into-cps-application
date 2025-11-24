@@ -1,4 +1,5 @@
 export interface IElectronAPI {
+  onProjectCreated: (callback: (...args: unknown[]) => void) => void;
   updateDarkMode(newValue: boolean): unknown;
   getDarkMode: () => Promise<boolean>;
   toggleDarkMode: () => void;
@@ -14,6 +15,8 @@ export interface IElectronAPI {
   sendNotification: (message: string, type: NotificationType) => void;
   readFile: (path: string) => Promise<string>;
   writeFile: (path: string, content: string) => Promise<void>;
+  openPath: (path: string) => Promise<void>;
+  send: (channel: string, ...args: unknown[]) => void;
 }
 
 export interface ICosimulationAPI {

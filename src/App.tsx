@@ -40,6 +40,21 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // --- Create Project ---
+  useEffect(() => {
+    const handleCreateProject = (...args: unknown[]) => {
+      const projectPath = args[0] as string; // cast sicuro
+      console.log("[Renderer] Sending create-project for path:", projectPath);
+      window.electronAPI.send("create-project", projectPath);
+    };
+  
+    window.electronAPI.on("create-new-project", handleCreateProject);
+  
+    return () => {
+      window.electronAPI.off("create-new-project", handleCreateProject);
+    };
+  }, []);
+
   // --- Project selection ---
   useEffect(() => {
     const handleProjectSelected = () => {

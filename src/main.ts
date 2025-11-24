@@ -6,7 +6,7 @@ import { createWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
 import { graphWindowManager } from './electron/gui/livePlottingWindow';
 import { getLatestSimulationFolder, startSimulation } from './cosimulation/maestro';
-import { getConfig } from './utils/config';
+import { getConfig, setProjectPath } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
 import { getCurrentDarkMode, registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
@@ -92,6 +92,24 @@ app.on('activate', () => {
 
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') app.quit();
+});
+
+ipcMain.on("create-project", async (_, projectPath: string) => {
+  try {
+    setProjectPath(projectPath);
+
+    mainWindow?.webContents.send("project-created", projectPath);
+
+    mainWindow?.webContents.send("show-notification", "Project created successfully!", "success");
+
+    mainWindow?.webContents.send("simulation-status", "Project created successfully");
+  } catch (err) {
+    console.error(err);
+    mainWindow?.webContents.send(
+      "show-error",
+      `Failed to create project: ${err instanceof Error ? err.message : err}`
+    );
+  }
 });
 
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
