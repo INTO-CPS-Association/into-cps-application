@@ -60,6 +60,9 @@ const mockElectronAPI = {
   off: jest.fn(),
   readFile: jest.fn().mockResolvedValue("mock content"),
   writeFile: jest.fn().mockResolvedValue(undefined),
+  onProjectCreated: jest.fn((callback: (projectPath: string) => void) => {}),
+  openPath: jest.fn().mockResolvedValue(undefined),
+  send: jest.fn(),
 };
 
 

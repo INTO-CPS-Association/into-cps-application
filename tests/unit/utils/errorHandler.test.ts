@@ -37,6 +37,9 @@ describe("errorHandler", () => {
       updateDarkMode: jest.fn(),
       getDarkMode: jest.fn().mockResolvedValue(true),
       toggleDarkMode: jest.fn(),
+      onProjectCreated: jest.fn((callback: (projectPath: string) => void) => {}),
+      openPath: jest.fn().mockResolvedValue(undefined),
+      send: jest.fn(),
     };
   });
 
