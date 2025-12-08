@@ -1,5 +1,6 @@
 export interface IElectronAPI {
-  onProjectCreated: (callback: (...args: unknown[]) => void) => void;
+  onProjectCreated: (callback: (projectPath: string) => void) => void;
+  onProjectSelected: (callback: (projectPath: string) => void) => void;
   updateDarkMode(newValue: boolean): unknown;
   getDarkMode: () => Promise<boolean>;
   toggleDarkMode: () => void;

@@ -20,12 +20,12 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
               buttonLabel: "Create",
               defaultPath: "NewProject"
             });
-        
+
             if (!result.canceled && result.filePath) {
               mainWindow.webContents.send("create-new-project", result.filePath);
             }
           },
-        },        
+        },
         {
           label: LABELS.Menu.ChooseProject.Label,
           id: 'choose-project',

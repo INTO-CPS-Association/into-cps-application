@@ -49,6 +49,10 @@ export const electronAPI = {
   },
   readFile: (path: string) => ipcRenderer.invoke('read-file', path),
   writeFile: (path: string, content: string) => ipcRenderer.invoke('write-file', { path, content }),
+  onProjectSelected: (callback: (projectPath: string) => void) =>
+    ipcRenderer.on("project-selected", (_, projectPath: unknown) =>
+      callback(projectPath as string)
+    ),
   onProjectCreated: (callback: (projectPath: string) => void) =>
     ipcRenderer.on("project-created", (_, projectPath: unknown) =>
       callback(projectPath as string)

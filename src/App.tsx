@@ -10,8 +10,9 @@ import LivePlottingContainer from './components/LivePlotting/LivePlottingContain
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './utils/constants/style/themes';
 import { styleConstants } from './utils/constants';
-import { ThemeProviderContext, useTheme } from './contexts/ThemeContext';
 import { ROUTES } from './utils/constants/appShared';
+import { ThemeProviderContext, useTheme } from './contexts/ThemeContext';
+import { ProjectProvider } from './contexts/ProjectContext';
 
 import type { NotificationType } from './types/global';
 
@@ -34,36 +35,24 @@ const AppContent: React.FC = () => {
       }
     };
 
-    handleResize(); // inizializza correttamente
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- Create Project ---
+  // --- Create Project Request Handling---
   useEffect(() => {
     const handleCreateProject = (...args: unknown[]) => {
-      const projectPath = args[0] as string; // cast sicuro
+      const projectPath = args[0] as string;
       console.log("[Renderer] Sending create-project for path:", projectPath);
       window.electronAPI.send("create-project", projectPath);
     };
-  
+
     window.electronAPI.on("create-new-project", handleCreateProject);
-  
+
     return () => {
       window.electronAPI.off("create-new-project", handleCreateProject);
-    };
-  }, []);
-
-  // --- Project selection ---
-  useEffect(() => {
-    const handleProjectSelected = () => {
-    };
-
-    window.electronAPI?.on('project-selected', handleProjectSelected);
-
-    return () => {
-      window.electronAPI?.off('project-selected', handleProjectSelected);
     };
   }, []);
 
@@ -133,7 +122,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProviderContext>
-      <AppContent />
+      <ProjectProvider>
+        <AppContent />
+      </ProjectProvider>
     </ThemeProviderContext>
   );
 };

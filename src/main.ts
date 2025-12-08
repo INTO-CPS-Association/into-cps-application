@@ -97,11 +97,10 @@ app.on('window-all-closed', () => {
 ipcMain.on("create-project", async (_, projectPath: string) => {
   try {
     setProjectPath(projectPath);
-
+    await fs.promises.access(projectPath, fs.constants.F_OK | fs.constants.W_OK);
+    
     mainWindow?.webContents.send("project-created", projectPath);
-
     mainWindow?.webContents.send("show-notification", "Project created successfully!", "success");
-
     mainWindow?.webContents.send("simulation-status", "Project created successfully");
   } catch (err) {
     console.error(err);

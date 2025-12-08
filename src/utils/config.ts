@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as os from 'os'; 
+import * as os from 'os';
 import maestroConfig from '../resources/maestro/maestro-version.json';
 
 const MAESTRO_VERSION = maestroConfig.version;
@@ -46,6 +46,7 @@ export function setProjectPath(projectPath: string): void {
     }
   } catch (error) {
     logError(`[Project Configuration] Error copying configuration files to results folder: ${error}`);
+    throw new Error(`Failed to copy configuration files: ${error}`);
   }
 }
 
