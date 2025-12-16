@@ -16,7 +16,7 @@ export interface IElectronAPI {
   sendNotification: (message: string, type: NotificationType) => void;
   readFile: (path: string) => Promise<string>;
   writeFile: (path: string, content: string) => Promise<void>;
-  openPath: (path: string) => Promise<void>;
+  openFolder: (path: string) => Promise<void>;
   send: (channel: string, ...args: unknown[]) => void;
 }
 

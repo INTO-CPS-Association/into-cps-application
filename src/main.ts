@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, shell } from 'electron';
 import * as path from "path";
 import * as url from "url";
 import fs from 'fs';
@@ -191,4 +191,14 @@ ipcMain.handle('get-latest-result-folder', () => {
 
 ipcMain.on('open-graph-window', () => {
   graphWindowManager.openGraphHtmlWindow(getCurrentDarkMode());
+});
+
+ipcMain.handle('open-folder', async (_, folderPath: string) => {
+  const errorMessage = await shell.openPath(folderPath);
+  
+  if (errorMessage) {
+    console.error(`[Main] Failed to open folder: ${errorMessage}`);
+  }
+  
+  return errorMessage;
 });

@@ -57,6 +57,7 @@ export const electronAPI = {
     ipcRenderer.on("project-created", (_, projectPath: unknown) =>
       callback(projectPath as string)
     ),
+  openFolder: (path: string) => ipcRenderer.invoke('open-folder', path),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
