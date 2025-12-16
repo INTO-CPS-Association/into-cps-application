@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, shell } from 'electron';
 import * as path from "path";
 import * as url from "url";
 import fs from 'fs';
@@ -6,7 +6,7 @@ import { createWindow } from './electron/gui/window';
 import { createTopMenu } from './electron/gui/menu';
 import { graphWindowManager } from './electron/gui/livePlottingWindow';
 import { getLatestSimulationFolder, startSimulation } from './cosimulation/maestro';
-import { getConfig } from './utils/config';
+import { getConfig, setProjectPath } from './utils/config';
 import { SimulationStatus } from './utils/constants/cosimulation/statuses';
 import { logInfo, logWarn } from './utils/logger';
 import { getCurrentDarkMode, registerMainWindow, sendDarkModeUpdate } from './utils/themeManager';
@@ -94,6 +94,23 @@ app.on('window-all-closed', () => {
   if (platform !== 'darwin') app.quit();
 });
 
+ipcMain.on("create-project", async (_, projectPath: string) => {
+  try {
+    setProjectPath(projectPath);
+    await fs.promises.access(projectPath, fs.constants.F_OK | fs.constants.W_OK);
+    
+    mainWindow?.webContents.send("project-created", projectPath);
+    mainWindow?.webContents.send("show-notification", "Project created successfully!", "success");
+    mainWindow?.webContents.send("simulation-status", "Project created successfully");
+  } catch (err) {
+    console.error(err);
+    mainWindow?.webContents.send(
+      "show-error",
+      `Failed to create project: ${err instanceof Error ? err.message : err}`
+    );
+  }
+});
+
 ipcMain.handle('maestro', async (event, args): Promise<MaestroResponse> => {
   if (!args || typeof args.type !== 'string') {
     return { success: false, error: 'Invalid arguments provided to maestro handler' };
@@ -174,4 +191,14 @@ ipcMain.handle('get-latest-result-folder', () => {
 
 ipcMain.on('open-graph-window', () => {
   graphWindowManager.openGraphHtmlWindow(getCurrentDarkMode());
+});
+
+ipcMain.handle('open-folder', async (_, folderPath: string) => {
+  const errorMessage = await shell.openPath(folderPath);
+  
+  if (errorMessage) {
+    console.error(`[Main] Failed to open folder: ${errorMessage}`);
+  }
+  
+  return errorMessage;
 });

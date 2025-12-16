@@ -19,10 +19,11 @@ export const electronAPI = {
     } else {
       console.warn("[ElectronAPI] addErrorListener called without a valid callback");
     }
-  },  
+  },
   removeErrorListener: () => {
     ipcRenderer.removeAllListeners('show-error');
   },
+  send: (channel: string, ...args: unknown[]) => ipcRenderer.send(channel, ...args),
   on: (event: string, callback: (...args: unknown[]) => void) => {
     ipcRenderer.on(event, (_, ...args) => callback(...args));
   },
@@ -48,7 +49,16 @@ export const electronAPI = {
   },
   readFile: (path: string) => ipcRenderer.invoke('read-file', path),
   writeFile: (path: string, content: string) => ipcRenderer.invoke('write-file', { path, content }),
-};
+  onProjectSelected: (callback: (projectPath: string) => void) =>
+    ipcRenderer.on("project-selected", (_, projectPath: unknown) =>
+      callback(projectPath as string)
+    ),
+  onProjectCreated: (callback: (projectPath: string) => void) =>
+    ipcRenderer.on("project-created", (_, projectPath: unknown) =>
+      callback(projectPath as string)
+    ),
+  openFolder: (path: string) => ipcRenderer.invoke('open-folder', path),
+}
 
 contextBridge.exposeInMainWorld('electronAPI', {
   ...electronAPI,

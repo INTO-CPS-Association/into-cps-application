@@ -29,6 +29,7 @@ export const LABELS = {
     CoSimulation: {
         Status: "Simulation Status:",
         Results: "Results saved at:",
+        CurrentProject: "Current Project"
     },
     Main: {
         Message: "Welcome to the INTO-CPS Application",

@@ -1,0 +1,56 @@
+sequenceDiagram
+    participant User
+    participant App
+    participant Sidebar
+    participant CoSimulation
+    participant LivePlotting
+    participant CosimulationAPI
+    participant ErrorSnackbar
+
+    %% 0. Create Project %%
+    User->>App: Click "Create New Project"
+    App->>ElectronAPI: send("create-project", projectPath)
+    ElectronAPI->>ConfigManager: setProjectPath(projectPath)
+    ConfigManager->>ElectronAPI: return configMaestro
+    ElectronAPI-->>App: project-created
+    App-->>Sidebar: update menu / enable cosimulation
+    App-->>ErrorSnackbar: show success notification
+
+    %% 1. App Initialization %%
+    App->>App: Open Application
+    App->>Sidebar: mount()
+    App->>CoSimulation: mount()
+    Note over App: LivePlotting is NOT mounted yet
+
+    %% 2. Project Selection %%
+    User->>App: Select Project
+    App->>Sidebar: update cosimulation menu
+    App->>CoSimulation: reset state
+    CoSimulation-->>App: status = "Idle", resultsPath = null
+
+    %% 3. Start Cosimulation %%
+    User->>Sidebar: Click "Start Cosimulation"
+    Sidebar->>CoSimulation: startCosimulation()
+    CoSimulation->>CosimulationAPI: subscribe to simulation
+    CosimulationAPI-->>CoSimulation: status updates
+    CoSimulation->>LivePlotting: mount()
+    LivePlotting->>LivePlotting: initialize chart
+    LivePlotting->>CosimulationAPI: subscribe to real-time data
+    CosimulationAPI-->>LivePlotting: stream data
+    LivePlotting->>LivePlotting: update chart
+
+    %% 4. Cosimulation Progress %%
+    CosimulationAPI-->>CoSimulation: status updates
+    CoSimulation->>CoSimulation: update UI status
+
+    %% 5. Cosimulation Completion %%
+    CosimulationAPI-->>CoSimulation: final results available
+    CoSimulation->>CoSimulation: update resultsPath
+    CoSimulation->>LivePlotting: stop streaming if needed
+
+    %% 6. Optional Error Handling %%
+    opt Error occurs
+        CosimulationAPI-->>CoSimulation: error
+        CoSimulation->>ErrorSnackbar: showError(errorMessage)
+        ErrorSnackbar-->>User: display error notification
+    end

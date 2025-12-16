@@ -13,6 +13,20 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
       label: LABELS.Menu.File,
       submenu: [
         {
+          label: "Create New Project",
+          click: async () => {
+            const result = await dialog.showSaveDialog(mainWindow, {
+              title: "Create new project",
+              buttonLabel: "Create",
+              defaultPath: "NewProject"
+            });
+
+            if (!result.canceled && result.filePath) {
+              mainWindow.webContents.send("create-new-project", result.filePath);
+            }
+          },
+        },
+        {
           label: LABELS.Menu.ChooseProject.Label,
           id: 'choose-project',
           click: async () => {
@@ -68,7 +82,7 @@ export function createTopMenu(mainWindow: BrowserWindow): void {
         {
           label: LABELS.Menu.StartSimulation,
           id: 'start-simulation',
-          accelerator:  startSimulationShortcut,
+          accelerator: startSimulationShortcut,
           enabled: cosimulationEnabled,
           click: () => {
             if (mainWindow?.webContents) {
